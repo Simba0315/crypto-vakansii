@@ -4232,14 +4232,7 @@ main.srch #fwrap .fx-n{display:none}
 /* ---- v3, batch 2 (24 Nov 2026, the owner's "все страницы"): the job page on a phone, the job page's side cards, quieter inline links ---- */
 /* A phone showed the whole side column (the tools, the cards and the 800px list of facts) before the job's own text, which began two
    screens down. Now: the Apply button and "Opens …" on top, then the job, then the tools; the bar at the foot keeps Apply in reach. */
-@media(max-width:860px){
-  .cols:has(>aside.side #apply){gap:0}
-  .cols>aside.side:has(#apply){display:contents}
-  .cols>aside.side:has(#apply)>*{order:2;margin-top:14px}
-  .cols>aside.side:has(#apply)>#apply{order:-2;width:100%;margin-top:0}
-  .cols>aside.side:has(#apply)>.note.goes{order:-1;margin:8px 0 22px;text-align:center}
-  .cols:has(>aside.side #apply)>article{order:0;margin-bottom:16px}
-}
+/* (25 Nov 2026, v4: the side column is three cards now; its phone order is in the v4 block at the end) */
 /* side cards: a title in plain ink with an arrow, not an underlined green link */
 .rmbox b{text-decoration:none;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .rmbox b::after{content:"\203A";font-size:18px;line-height:1;color:var(--faint)}
@@ -4396,3 +4389,135 @@ main.lp .sec-head.lst{margin-top:64px;margin-bottom:22px}
 .khero .nums>div{gap:6px;padding:22px 24px 20px}
 .khero .nums dd{font-size:clamp(26px,2.8vw,36px);letter-spacing:-.04em}
 @media(max-width:560px){.khero .nums>div{padding:14px 16px 13px}.khero .nums dd{font-size:24px}}
+
+/* ---- the job page: the first screen as one panel, the posting as a white sheet, the side column as three cards ---- */
+.jhero{margin:18px 0 0;padding:28px 44px 40px}
+.jhero .crumbs{margin:0 0 26px}
+.jhero .jhead{margin:0;gap:30px;align-items:flex-start}
+.jhero .jhead .ava.lg{width:104px;height:104px;border-radius:26px;border:1px solid var(--line);background:#fff;box-shadow:0 18px 40px -26px rgba(14,14,12,.35)}
+.jhero .jhead .ava.lg img{padding:12px;border-radius:26px}
+.jhero .sec-label{margin:4px 0 16px}
+.jhero h1{max-width:26ch;margin:0 0 12px;font-size:clamp(32px,3.8vw,50px);line-height:1.03;letter-spacing:-.045em}
+.jhero .js{display:block;font-size:17.5px;color:var(--muted)}
+.jhero .js a{color:var(--text);font-weight:650}
+.jhero .js a:hover{text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:4px}
+.jhero .pills{justify-content:flex-start;gap:8px;margin-top:22px}
+.jhero .pill{padding:6px 13px;border:1px solid var(--line);border-radius:999px;background:var(--card);font-size:13px;line-height:1.35;color:var(--muted)}
+.jhero .pill.ok,.jhero .pill.perk{border-color:transparent;background:var(--green-soft);color:var(--green)}
+.jhero .pill.sal{padding-left:13px;background:var(--card);color:var(--text);font-weight:650}
+.jhero .pill.warn{border-color:transparent}
+.jhero .pill.urg{border-color:transparent}
+.jhero a.pill:hover{border-color:var(--text);color:var(--text)}
+.jhero .banner{margin:28px 0 0}
+.jhero+.cols,.jhero~.cols{margin-top:28px}
+.cols:has(>.jside){grid-template-columns:minmax(0,1fr) 360px;gap:28px;align-items:stretch}
+.jpost{padding:40px 48px 34px;border:1px solid var(--line);border-radius:28px;background:var(--card)}
+.jpost .tldr{max-width:none;margin:0 0 32px;padding:0 0 30px;border-bottom:1px solid var(--line);font-size:18px;line-height:1.6}
+.jpost>h2,.jpost [itemscope]>h2{margin:0 0 20px;font-size:clamp(24px,2.4vw,30px);letter-spacing:-.035em}
+.jpost .prose{font-size:16.5px;line-height:1.72}
+.jpost .desc h2,.jpost .desc h3,.jpost .desc h4{margin:34px 0 12px;font-size:19px;letter-spacing:-.015em}
+.jpost .desc>:first-child{margin-top:0}
+.jpost .desc li{margin:6px 0}
+.jpost .desc hr{margin:28px 0;border:0;border-top:1px solid var(--line)}
+.jpost>.note{margin:28px 0 0;padding:16px 0 0;border-top:1px solid var(--line);font-size:13.5px}
+.jpost .h2s{margin:44px 0 12px;font-size:22px;letter-spacing:-.025em}
+.jpost .tbadges{margin:18px 0 0}
+.jpost+.sec{margin-top:72px}
+/* the side column: three cards, not one long box of fourteen parts */
+.side.jside{position:static;display:flex;flex-direction:column;gap:14px;min-width:0}
+.jcard{padding:24px;border:1px solid var(--line);border-radius:24px;background:var(--card)}
+.jcard-h{margin:0 0 14px;font:650 15.5px/1.3 var(--display);letter-spacing:-.01em}
+.jdec .paybar{margin:0 0 18px}
+.jdec .pb-h{gap:2px 10px;margin-bottom:12px}
+.jdec .pb-h b{font:700 30px/1.08 var(--display);letter-spacing:-.035em}
+.jdec .pb-t{height:10px;border-radius:999px;background:var(--bg2)}
+.jdec .pb-t i{border-radius:999px}
+.jdec .pb-s{font-size:13.5px}
+.jdec .pb-th{margin:0 0 18px;padding:14px 0 0;border-top:1px solid var(--line);font-size:13.5px}
+.jdec #apply{width:100%;justify-content:space-between;padding:8px 8px 8px 24px;font-size:16px}
+.jdec #apply i,.jstick .btn.go i{width:40px;height:40px}
+.jdec .note.goes{margin:10px 0 0;font-size:12.5px}
+.jdec .sideact{gap:8px;margin-top:14px}
+.jdec .sideact .btn{margin:0;padding:10px 12px;font-size:14px}
+.jdec #apply-hint{margin:12px 0 0;font-size:13px}
+.jdec .applyfit{margin:12px 0 0}
+.jhelp .jtools{margin:0 0 12px;border-radius:16px}
+.jhelp .jtools .linkbtn{padding:12px 16px}
+.jhelp .rmbox,.jhelp .fitbox{margin:10px 0 0;padding:14px 16px;border-radius:16px}
+.jhelp .askai{margin:10px 0 0;padding:14px 16px;border-radius:16px;border-style:solid;border-color:var(--line);background:var(--bg)}
+.jfacts dl.meta{grid-template-columns:minmax(96px,max-content) 1fr;gap:0 16px;margin:0;font-size:14.5px}
+.jfacts dl.meta dt,.jfacts dl.meta dd{padding:11px 0;border-top:1px solid var(--line)}
+.jfacts dl.meta dt:first-of-type,.jfacts dl.meta dt:first-of-type+dd{padding-top:2px;border-top:0}
+.jfacts dl.meta dd .note{display:inline-block;margin-top:4px;font-weight:400;line-height:1.45}
+.jfoot{padding:2px 8px 0;font-size:13.5px}
+.jfoot>.note:first-child{margin-top:0}
+/* once the cards have scrolled away, a small card with Apply stays in view (site.js hides it while the main button is on screen) */
+.jstick{position:sticky;top:84px;display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:6px;padding:14px 14px 14px 20px;
+  border:1px solid var(--line);border-radius:22px;background:var(--card);box-shadow:0 20px 40px -28px rgba(14,14,12,.35);transition:opacity .2s ease}
+.jstick.off{opacity:0;visibility:hidden}
+.jstick p{min-width:0;margin:0;line-height:1.3}
+.jstick b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:14.5px}
+.jstick span{display:block;margin-top:2px;font-size:13px;color:var(--muted)}
+.jstick .btn.go{flex:none;width:auto;margin:0;padding:6px 6px 6px 18px;font-size:14.5px}
+.jstick .btn.go i{width:34px;height:34px}
+@media (prefers-reduced-motion:reduce){.jstick{transition:none}}
+/* the search page's preview pane shows the same page: no panel, the decision first */
+.pane .jhero{margin:0;padding:0;border-radius:0;background:none}
+.pane .jhero .jhead .ava.lg{width:64px;height:64px;border-radius:16px;box-shadow:none}
+.pane .jhero .sec-label{display:none}
+.pane .jhero .pills{margin-top:14px}
+.pane .cols{display:flex;flex-direction:column;gap:14px;margin-top:18px}
+.pane .side.jside{display:contents}
+.pane .jdec{order:-1}
+.pane .jpost{padding:0;border:0;border-radius:0}
+.pane .jstick{display:none}
+@media (max-width:860px){
+  .cols:has(>.jside){grid-template-columns:minmax(0,1fr);gap:14px}
+  .cols>aside.side.jside{display:contents}
+  .cols>aside.side.jside>*{order:2;margin-top:0}
+  .cols>aside.side.jside>.jdec{order:-1;display:flex;flex-direction:column}
+  .cols:has(>.jside)>article{order:0}
+  .jdec #apply{order:-3}
+  .jdec .note.goes{order:-2;margin:10px 0 0;text-align:center}
+  .jdec .sideact{order:-1;margin:12px 0 18px}
+  .jdec .paybar{margin-top:4px;padding-top:18px;border-top:1px solid var(--line)}
+  .jstick{display:none}
+  .jhero .jhead{flex-direction:column;gap:16px}
+}
+@media (max-width:700px){
+  .jhero{margin:8px -10px 0;padding:16px 20px 26px;border-radius:24px}
+  .jhero .crumbs{margin:0 0 16px}
+  .jhero .jhead .ava.lg{width:56px;height:56px;border-radius:16px}
+  .jhero .jhead .ava.lg img{padding:7px;border-radius:16px}
+  .jhero .sec-label{margin:0 0 12px}
+  .jhero h1{font-size:clamp(28px,8vw,34px)}
+  .jhero .js{font-size:16px}
+  .jhero .pills{gap:6px;margin-top:16px}
+  .jhero .pill{padding:4px 10px;font-size:12.5px}
+  .jcard{margin:0 -10px;padding:20px;border-radius:22px}
+  .jpost{margin:0 -10px;padding:26px 20px 24px;border-radius:24px}
+  .jpost .tldr{margin-bottom:24px;padding-bottom:22px;font-size:16.5px}
+  .jpost .prose{font-size:16px}
+}
+.pane .jhero::after,.pane .jhero::before{display:none}
+
+/* ---- the job page's facts row (the owner's backlog, 25 Nov 2026): pay, workplace, level, type, posted, open for — under the title,
+   one white card of cells like the figures of the hubs; on a phone a row of small cards that scrolls sideways ---- */
+.jfrow{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);margin:30px 0 0;border:1px solid var(--line);border-radius:22px;background:var(--card);overflow:hidden}
+.jfrow>div{min-width:0;margin:-1px 0 0 -1px;padding:16px 20px 15px;border:solid var(--line);border-width:1px 0 0 1px}
+.jfrow dt{margin:0 0 5px;font-size:12.5px;font-weight:600;color:var(--faint)}
+.jfrow dd{margin:0;font:650 16.5px/1.25 var(--display);letter-spacing:-.01em;color:var(--text);overflow-wrap:anywhere}
+.jfrow dd.nd{font-weight:500;color:var(--faint)}
+.jdec .jtwo{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.jdec .jtwo .btn{margin:0;padding:10px 12px;border-color:var(--line2);font-size:13.5px;line-height:1.25;white-space:normal}
+.jdec .jtwo+.sideact{margin-top:8px}
+@media (max-width:1100px){.jfrow{grid-auto-flow:row;grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:860px){.jdec .jtwo{order:-1;margin-top:12px}.jdec .jtwo+.sideact{margin-top:8px}}
+@media (max-width:700px){
+  .jfrow{display:flex;gap:8px;margin:18px -20px 0;padding:0 20px 2px;border:0;border-radius:0;background:none;overflow-x:auto;scrollbar-width:none;
+    -webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+  .jfrow::-webkit-scrollbar{display:none}
+  .jfrow>div{flex:none;margin:0;padding:9px 14px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+  .jfrow dt{margin-bottom:2px;font-size:11.5px}
+  .jfrow dd{font-size:14.5px;white-space:nowrap}
+}

@@ -2621,6 +2621,26 @@
       F.set('skills', list.join(', ')); F.draw(); F.save();
       var on = at < 0; b.classList.toggle('ok', on); b.setAttribute('aria-pressed', String(on)); b.textContent = (on ? '✓ ' : '+ ') + x;
     });
+    // ?job=<slug>: "Cover letter for this job" on a job page (25 Nov 2026). The posting is read from its page on this site: the title,
+    // the company and the text go into the form, and the skills it names are offered as chips, as when a posting is pasted.
+    var slug = (location.search.match(/[?&]job=([a-z0-9-]{3,160})/) || [])[1];
+    if (slug && window.fetch && window.DOMParser) {
+      fetch(H.base + '/job/' + slug + '/').then(function (r) { return r.ok ? r.text() : ''; }).then(function (page) {
+        if (!page) return;
+        var doc = new DOMParser().parseFromString(page, 'text/html'), d = doc.querySelector('.prose.desc') || doc.querySelector('.prose');
+        var title = ((doc.querySelector('h1') || {}).textContent || '').trim(), co = ((doc.querySelector('.jhead .js a') || {}).textContent || '').trim();
+        var text = d ? ([].map.call(d.querySelectorAll('h2,h3,h4,p,li'), function (x) { return x.textContent.trim(); }).filter(Boolean).join('\n') || d.textContent.trim()) : '';
+        if (text) F.set('posting', (title ? title + (co ? ' at ' + co : '') + '\n' : '') + text);
+        if (title) F.set('title', title);
+        if (co) F.set('company', co);
+        F.save(); F.draw();
+        if (said) said.textContent = 'Filled in from the job page: ' + (title || 'the posting') + (co ? ' at ' + co : '') + '. Check the details, then add your own results.';
+        var withSkills = function () { chips(T.findSkills(text, pats || [])); F.draw(); };
+        if (pats) withSkills();
+        else fetch(H.base + '/data/skills.json').then(function (res) { if (!res.ok) throw new Error('skills'); return res.json(); })
+          .then(function (data) { pats = T.compilePats(data); withSkills(); }).catch(function () { pats = []; });
+      }).catch(function () {});
+    }
   };
 
   /* ---------- negotiation email ---------- */

@@ -524,9 +524,10 @@
   /* ---------- job page on a phone: the sticky Apply bar only while the page's own Apply button is out of view (24 Nov 2026: since the
      button moved to the top on phones, both showed at once on the first screen) ---------- */
   (function () {
-    var own = document.getElementById('apply'), bar = document.querySelector('.mbar');
-    if (!own || !bar || !window.IntersectionObserver) return;
-    new IntersectionObserver(function (en) { bar.classList.toggle('off', en[0].isIntersecting); }).observe(own);
+    // v4: the same goes for the small Apply card that stays in view in the side column on wide screens (.jstick)
+    var own = document.getElementById('apply'), bars = document.querySelectorAll('.mbar, .jstick');
+    if (!own || !bars.length || !window.IntersectionObserver) return;
+    new IntersectionObserver(function (en) { Array.prototype.forEach.call(bars, function (b) { b.classList.toggle('off', en[0].isIntersecting); }); }).observe(own);
   })();
   /* ---------- job page: where the posting comes from, and a ready question for an AI assistant ---------- */
   (function () {
@@ -644,7 +645,7 @@
   /* ---------- job page: "Tailor my resume to this job" next to "Check my resume for this job" ---------- */
   Array.prototype.forEach.call(document.querySelectorAll('a.rmbox'), function (a) {
     var m = (a.getAttribute('href') || '').match(/[?&]job=([a-z0-9-]+)/);
-    if (!m || a.nextElementSibling && a.nextElementSibling.classList.contains('rmbox')) return;
+    if (!m || a.nextElementSibling && a.nextElementSibling.classList.contains('rmbox') || document.querySelector('.jtwo')) return;   // v4: the page has its own "Tailor my resume" button
     var b = document.createElement('a');
     b.className = 'rmbox'; b.href = P + '/resume/?job=' + m[1];
     b.innerHTML = '<b>Tailor my resume to this job</b><span>Open the resume builder with this posting as the target</span>';
@@ -1246,7 +1247,7 @@
       (window.speechSynthesis ? '<button type="button" class="linkbtn" data-act="listen">Listen to this posting</button>' : '') +
       '<button type="button" class="linkbtn" data-act="ics">Remind me to follow up in 7 days</button>' +
       (tags.length ? '<button type="button" class="linkbtn" data-act="plain">What these skills mean</button>' : '') + '<p class="jout" aria-live="polite" hidden></p>';
-    var after = q1('#apply-hint') || q1('.note.goes') || ap;
+    var after = q1('.jhelp .jcard-h') || q1('#apply-hint') || q1('.note.goes') || ap;      // v4: the tools open the job page's "Before you apply" card
     after.parentNode.insertBefore(box, after.nextSibling);
     var out = box.querySelector('.jout'), say = function (html) { out.innerHTML = html; out.hidden = false; };
     var hhmm = function () { try { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); } catch (e) { return 'now'; } };

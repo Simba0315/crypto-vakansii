@@ -2916,13 +2916,10 @@ def job_page(j, active_by_cat):
                      f'<span class="pill ok src" title="Read from {e(SOURCE_NAME[ats]) + ", the hiring system the employer itself uses" if ats in SOURCE_NAME else "the employer’s own careers site"}, and re-checked every hour">✓ Employer’s own posting</span>')
     if j.get("urgent"): pills.append('<span class="pill urg">Urgently hiring</span>')
     if not j["active"]: pills.append('<span class="pill">Closed</span>')
-    if j["remote"]: pills.append('<span class="pill ok">Remote, anywhere</span>' if j.get("anywhere") else '<span class="pill ok">Remote</span>')
-    elif j.get("hybrid"): pills.append('<span class="pill">Hybrid</span>')
-    if j["salary"]: pills.append(f'<span class="pill sal">{e(pay_shown(j["salary"]))}</span>')
+    # v4: the pay, the workplace and the level are in the facts row under the title now, not repeated as pills
     if days_open >= LONG_OPEN: pills.append(f'<span class="pill warn">Open {days_open} days</span>')
     if j["pool"]: pills.append('<span class="pill warn">Talent pool</span>')
     pills += [(f'<a class="pill perk" href="{P}/perks/{PERK_SLUG[x]}/">{e(x)}</a>' if x in PERK_OK else f'<span class="pill perk">{e(x)}</span>') for x in j.get("perks", []) if x in PERK_SLUG]
-    if j["level"]: pills.append(f'<span class="pill">{e(LVL_NAME[j["level"]])}</span>')
     pills += [f'<a class="pill" href="{P}/skills/{TAG_SLUG.get(t, slugify(t))}/">{e(t)}</a>' for t in j["tags"]]
     head, micro = "", ""
     if j["active"]:
@@ -2957,20 +2954,26 @@ def job_page(j, active_by_cat):
         elif full: head, micro = "", microdata(ld)          # description is marked up in place, see microdata()
         else: head, micro = '<script type="application/ld+json">' + json.dumps(ld, ensure_ascii=False).replace("</", "<\\/") + "</script>", ""
         host_ = re.sub(r"^www\.", "", re.sub(r"^https?://([^/?#]+).*$", r"\1", j["url"] or "")).lower()
-        apply_btn = (f'<a class="btn primary lg" id="apply" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">{"Open the post in Telegram" if j.get("tg") else "Apply on company site"}</a>'
-                     + (f'<p class="note goes">Opens <b>{e(host_)}</b></p>' if host_ and "/" not in host_ and " " not in host_ else "")
-                     + '<p class="note" id="apply-hint" hidden>Applied? Mark it below to keep track of it in My jobs.</p>'
-                     # Rezi's best-converting box, done our way: no account, the posting goes straight into the checker
-                     + f'<a class="rmbox" href="{P}/tools/resume-match/?job={j["slug"]}"><b>Check my resume for this job</b><span>See which of its words your resume is missing</span></a>')
+        # v4 (design night, 25 Nov 2026): the Apply button is the pill with its arrow in a circle (go()), and the side column is three
+        # cards: the decision (pay, Apply, Save), the help before applying, the facts. site.js adds its tools next to the hint and the
+        # resume box, in the second card, because it inserts them beside those elements wherever they stand.
+        apply_btn = (f'<a class="btn primary lg go" id="apply" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">{"Open the post in Telegram" if j.get("tg") else "Apply on company site"}<i aria-hidden="true"></i></a>'
+                     + (f'<p class="note goes">Opens <b>{e(host_)}</b></p>' if host_ and "/" not in host_ and " " not in host_ else ""))
+        # Rezi's best-converting box, done our way: no account, the posting goes straight into the checker
+        help_box = ('<div class="jcard jhelp"><p class="jcard-h">Before you apply</p>'
+                    f'<a class="rmbox" href="{P}/tools/resume-match/?job={j["slug"]}"><b>Check my resume for this job</b><span>See which of its words your resume is missing</span></a></div>')
         banner = ""
     else:
-        apply_btn = f'<a class="btn lg" href="{P}/jobs/{j["cat"]}/">See open {e(CAT[j["cat"]])} jobs</a>'
+        apply_btn = f'<a class="btn primary lg go" href="{P}/jobs/{j["cat"]}/">See open {e(CAT[j["cat"]])} jobs<i aria-hidden="true"></i></a>'
+        help_box = ""
         banner = f'<div class="banner">This job closed{" on " + fdate(j["closed"]) if j.get("closed") else ""}. The page stays here for reference; open roles of the same kind are one click away.</div>'
     head += crumbs_ld([(CAT[j["cat"]], f"jobs/{j['cat']}/"), (j["title"], "")])
     same = [x for x in SIM["comp"].get((j["company"], j["cat"]), []) if x["id"] != j["id"]][:1]
     rest = [x for x in SIM["cat"].get(j["cat"], []) if x["id"] != j["id"] and x["company"] != j["company"]][:3 - len(same)]
-    similar = same + rest if j["active"] else []   # closed jobs stay light: the archive only grows
-    sim = section(f"Similar {CAT[j['cat']]} jobs", f'<ul class="jobs">{"".join(card(x) for x in similar)}</ul>', (f"jobs/{j['cat']}/", f"All {CAT[j['cat']]} jobs")) if similar else ""
+    # a closed job (v4, the owner's backlog): five open jobs of the same kind, so the page still leads somewhere; open jobs keep three
+    similar = same + rest if j["active"] else [x for x in SIM["cat"].get(j["cat"], []) if x["company"] != j["company"]][:5]
+    sim = (section(f"Similar [[{CAT[j['cat']]} jobs]]" if j["active"] else f"Open [[{CAT[j['cat']]} jobs]] like this one", f'<ul class="jobs">{"".join(card(x) for x in similar)}</ul>',
+                   (f"jobs/{j['cat']}/", f"All {CAT[j['cat']]} jobs"), label="More like this" if j["active"] else "Still open") if similar else "")
     loc_ = j["location"]
     placeless = bool(re.match(r"\s*(remote|hybrid|distributed|anywhere|worldwide|global|in-office|multiple|blank)", loc_, re.I))
     where = ((f" ({e(loc_)})" if placeless else f" in {e(loc_)}") if loc_ else "") + (" (remote)" if j["remote"] and "remote" not in loc_.lower() else " (hybrid)" if j.get("hybrid") and "hybrid" not in loc_.lower() else "")
@@ -2999,6 +3002,9 @@ def job_page(j, active_by_cat):
                     if j["excerpt"] else "")
     if FACT.get(j["company"]):
         about += f'<h2 class="h2s">Hiring at {e(j["company"])}</h2><div class="prose"><p>{FACT[j["company"]]} <a href="{comp_url}">See all its roles</a></p></div>'
+    elif not j["active"]:
+        about += (f'<h2 class="h2s">About {e(j["company"])}</h2><div class="prose"><p>{e(j["company"])} has no open roles here right now. '
+                  f'Its closed postings stay on <a href="{comp_url}">its page</a>, so you can see which roles it hired for and when.</p></div>')
     if j["active"] and TB.get(j["company"]):        # the employer's marks, the same as on its page: each with its rule and today's number
         about += ('<p class="tbadges">' + "".join(f'<span class="tb" title="{e(why)}"><b>✓ {e(nm)}</b> {e(why)}</span>' for nm, why in TB[j["company"]])
                   + f'<a href="{P}/companies/#marks">What the marks mean</a></p>')
@@ -3045,12 +3051,32 @@ def job_page(j, active_by_cat):
                  + (f' · <a href="mailto:{e(MAIL["abuse"])}?subject={e(quote("Listing: " + j["title"] + " at " + j["company"] + " (" + FULL + "/job/" + j["slug"] + "/)"))}" rel="nofollow">Report a problem with this listing</a>' if MAIL.get("abuse")
                     else f' · <a href="https://t.me/{e(CFG["contact_telegram"])}" rel="nofollow noopener">Report a problem with this listing</a>' if CFG.get("contact_telegram") else "") + "</p>") if j["active"] else "") + glance
     loc = f" · {e(j['location'])}" if j["location"] else ""
-    body = (crumbs((CAT[j["cat"]], f"jobs/{j['cat']}/"), (j["title"], ""))
-            + f'<div class="jhead">{ava(j["company"], "lg")}<div><h1>{e(j["title"])}</h1><span class="js"><a href="{comp_url}">{e(j["company"])}</a>{loc}</span>'
+    # v4: the first screen is one framed panel (the trail, a label, the logo, the title, the pills), as the hubs and the key pages open;
+    # the posting is a white sheet; the side column is cards; once those have scrolled away a small card with Apply stays in view.
+    # the facts row (v4, the owner's backlog): pay, workplace, level, type, date posted and how long it has been open, under the title
+    wp_ = ("Remote, anywhere" if j.get("anywhere") else "Remote") if j["remote"] else "Hybrid" if j.get("hybrid") else "On-site" if j["location"] else "Not stated"
+    open_ = (("Posted today" if days_open == 0 else f"{days_open} day{'s' if days_open != 1 else ''}") if j["active"] and j["posted"]
+             else (f"Closed {fdate(j['closed'])}" if j.get("closed") else "Closed") if not j["active"] else "")
+    facts_ = [("Pay", e(pay_shown(j["salary"])) if j["salary"] else "Not stated"), ("Workplace", wp_),
+              ("Level", e(LVL_NAME[j["level"]]) if j["level"] else "Not stated"), ("Type", e(j["etype"]) if j.get("etype") else "Not stated"),
+              ("Posted", fdate(j["posted"]) if j["posted"] else "Not stated")] + ([("Open for" if j["active"] else "Status", open_)] if open_ else [])
+    facts_row = '<dl class="jfrow">' + "".join(f'<div><dt>{k}</dt><dd{" class=" + chr(34) + "nd" + chr(34) if v == "Not stated" else ""}>{v}</dd></div>' for k, v in facts_) + "</dl>"
+    two_ = (f'<div class="jtwo"><a class="btn ghost" href="{P}/resume/?job={j["slug"]}">Tailor my resume</a>'
+            f'<a class="btn ghost" href="{P}/tools/cover-letter/?job={j["slug"]}">Cover letter for this job</a></div>' if j["active"] and not j.get("tg") else "")
+    eyebrow = (f'<p class="sec-label">{"Hiring now" if j["active"] else "Closed"}'
+               + (f' · {e(CAT[j["cat"]])}' if j["cat"] != OTHER[0] else "") + "</p>")
+    sideact = save_btn.split("</div>", 1)[0] + "</div>" if '<div class="sideact">' in save_btn else ""
+    side_rest = save_btn.split("</div>", 1)[1] if '<div class="sideact">' in save_btn else save_btn
+    stick = (f'<div class="jstick off"><p><b>{e(j["title"])}</b><span>{e(j["company"])}</span></p><a class="btn primary go" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">'
+             f'{"Open the post" if j.get("tg") else "Apply"}<i aria-hidden="true"></i></a></div>' if j["active"] and j["url"] else "")
+    body = (f'<div class="khero jhero"><div class="khero-t">' + crumbs((CAT[j["cat"]], f"jobs/{j['cat']}/"), (j["title"], ""))
+            + f'<div class="jhead">{ava(j["company"], "lg")}<div>{eyebrow}<h1>{e(j["title"])}</h1><span class="js"><a href="{comp_url}">{e(j["company"])}</a>{loc}</span>'
             + f'<div class="pills">{"".join(pills)}</div>'
-            + (f'<p class="note" id="match" data-tags="{e("|".join(j["tags"]))}" hidden></p>' if j["tags"] and j["active"] else "") + f"</div></div>{banner}"
+            + (f'<p class="note" id="match" data-tags="{e("|".join(j["tags"]))}" hidden></p>' if j["tags"] and j["active"] else "") + f"</div></div>{facts_row}</div>{banner}</div>"
             + (f'<p class="jcover"><img src="{e(j["cover"])}" alt="{e(j["company"])}"></p>' if j.get("cover") and j["active"] else "")
-            + f'<div class="cols"><article>{about}{sim}</article><aside class="side card">{paybar}{thline}{apply_btn}{save_btn.split("</div>", 1)[0] + "</div>" if '<div class="sideact">' in save_btn else ""}<dl class="meta">{meta}</dl>{save_btn.split("</div>", 1)[1] if '<div class="sideact">' in save_btn else save_btn}</aside></div>'
+            + f'<div class="cols"><article><div class="jpost">{about}</div>{sim}</article><aside class="side jside"><div class="jcard jdec">{paybar}{thline}{apply_btn}{two_}{sideact}'
+            + ('<p class="note" id="apply-hint" hidden>Applied? Press “Mark as applied” to keep track of it in My jobs.</p>' if j["active"] else "") + f'</div>{help_box}'
+            + f'<div class="jcard jfacts"><p class="jcard-h">At a glance</p><dl class="meta">{meta}</dl></div><div class="jfoot">{side_rest}</div>{stick}</aside></div>'
             + (f'<div class="mbar off"><a class="btn primary" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">{"Open the post in Telegram" if j.get("tg") else "Apply on company site"}</a></div>' if j["active"] else ""))
     where = j["location"] or ("Remote" if j["remote"] else "")
     title = job_title(j["title"], j["company"], " (closed)" if not j["active"] else "")
