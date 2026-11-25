@@ -983,6 +983,16 @@ SOFT_RX = re.compile("|".join(f"(?P<s{i}>{rx})" for i, (_, rx) in enumerate(SOFT
 SOFT_RESUME = {nm for nm, _ in SOFT_SKILLS} - {"Project management", "Customer service"}
 
 
+def open_for(days):
+    """How long an open posting has been up, for "Open for": "New today", "1 day", "12 days". Until 26 Nov 2026 a job posted that day
+    read "Open for: Posted today"; the facts row under the title now says "Posted: Today" and leaves "Open for" out (job_page)."""
+    days = max(0, int(days or 0))
+    return "New today" if days == 0 else f"{days} day{'s' if days != 1 else ''}"
+
+
+assert open_for(0) == open_for(None) == open_for(-2) == "New today" and open_for(1) == "1 day" and open_for(12) == "12 days"
+
+
 def fdate(iso, year=True):
     try:
         y, m, d = (int(x) for x in iso[:10].split("-"))
@@ -3152,9 +3162,11 @@ def job_page(j, active_by_cat):
         # fills in: "35 minutes ago". It is empty in the file on purpose: a page built an hour ago must not state an age.
         rows.append(("Posted", (f'<time datetime="{j["posted_at"]}">{fdate(j["posted"])}</time>' if t else fdate(j["posted"]))
                      + (f'<br><time {when(j)} data-long></time>' if t and j["active"] and NOW - t < 86400 else "")))
+    days_known = False                               # the posting's date could be read: only then does the facts row say how long it is open
     if j["active"] and j["posted"]:
         try:
             days_open = max(0, (datetime.date.today() - datetime.date.fromisoformat(j["posted"][:10])).days)
+            days_known = True
             hint = (f'<br><span class="note">Similar {e(CAT[j["cat"]])} roles stayed open for a median of {CLOSE_DAYS[j["cat"]]} days</span>' if j["cat"] in CLOSE_DAYS else "")
             if j["company"] in CO_CLOSE:
                 n_c, d_c = CO_CLOSE[j["company"]]
@@ -3163,7 +3175,7 @@ def job_page(j, active_by_cat):
             if days_open >= LONG_OPEN:
                 hint = ('<br><span class="note">Open much longer than most roles. Some employers keep a posting up all year to collect applications: '
                         "it is fair to ask the recruiter whether this seat is being filled now.</span>")
-            rows.append(("Open for", ("Posted today" if days_open == 0 else f"{days_open} day{'s' if days_open != 1 else ''}") + hint))
+            rows.append(("Open for", open_for(days_open) + hint))
         except Exception:
             days_open = 0
     else:
@@ -3327,14 +3339,17 @@ def job_page(j, active_by_cat):
     # the posting is a white sheet; the side column is cards; once those have scrolled away a small card with Apply stays in view.
     # the facts row (v4, the owner's backlog): pay, workplace, level, type, date posted and how long it has been open, under the title
     wp_ = ("Remote, anywhere" if j.get("anywhere") else "Remote") if j["remote"] else "Hybrid" if j.get("hybrid") else "On-site" if j["location"] else "Not stated"
-    open_ = (("Posted today" if days_open == 0 else f"{days_open} day{'s' if days_open != 1 else ''}") if j["active"] and j["posted"]
+    # posted today: "Posted: Today" and no "Open for" (26 Nov 2026: "Open for: Posted today" read oddly); then "Open for: 1 day", "12 days"
+    posted_ = fdate(j["posted"]) if j["posted"] else ""
+    today_ = bool(j["active"] and posted_ and days_known and days_open == 0)
+    open_ = ((open_for(days_open) if days_known and not today_ else "") if j["active"] and j["posted"]
              else (f"Closed {fdate(j['closed'])}" if j.get("closed") else "Closed") if not j["active"] else "")
     # only the facts the posting gives (the owner's helper, 26 Nov 2026: "Not stated" under Level and Type on half the jobs read as an
     # unfinished row): a missing workplace, level or type leaves its cell out and the others widen; with no level word in the title the
     # years of experience the posting asks for stand in its place. Pay stays: "Not listed" is itself the answer to the first question.
     facts_ = ([("Pay", e(pay_shown(j["salary"])) if j["salary"] else "Not listed")] + ([("Workplace", wp_)] if wp_ != "Not stated" else [])
               + ([("Level", e(LVL_NAME[j["level"]]))] if j["level"] else [("Experience", f'{j["years"]}+ years')] if j.get("years") else [])
-              + ([("Type", e(j["etype"]))] if j.get("etype") else []) + ([("Posted", fdate(j["posted"]))] if j["posted"] else [])
+              + ([("Type", e(j["etype"]))] if j.get("etype") else []) + ([("Posted", "Today" if today_ else posted_)] if posted_ else [])
               + ([("Open for" if j["active"] else "Status", open_)] if open_ else []))
     facts_row = '<dl class="jfrow">' + "".join(f'<div><dt>{k}</dt><dd{" class=" + chr(34) + "nd" + chr(34) if v == "Not listed" else ""}>{v}</dd></div>' for k, v in facts_) + "</dl>"
     two_ = (f'<div class="jtwo"><a class="btn ghost" href="{P}/resume/?job={j["slug"]}">Tailor my resume</a>'
@@ -3910,7 +3925,7 @@ def main():
         rows_a = [("Salary", e(aj["salary"]) + f'<small>Median for {e(CAT[aj["cat"]])} roles: {money(CATMED[aj["cat"]])}</small>'),
                   ("Workplace", "Remote" + (f", {e(scope_a)}" if scope_a else "")),
                   ("Experience asked", f'{aj["years"]}+ years'),
-                  ("Open for", "Posted today" if open_a == 0 else f"{open_a} day{'s' if open_a != 1 else ''}"),
+                  ("Open for", open_for(open_a)),
                   ("Last checked", fdate(aj.get("last_seen") or TODAY)),
                   ("Source", f'{e(aj["company"])}’s own posting on {SOURCE_NAME[aj["id"].split("-", 1)[0]]}')]
         notes_a = [("Pay, when the employer states it.", "When it does not, you see what similar roles advertise."),
