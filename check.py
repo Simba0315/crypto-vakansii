@@ -84,6 +84,12 @@ if shutil.which("node"):
     for js in sorted(SITE.glob("*.js")):
         counts["scripts"] += 1
         if subprocess.run(["node", "--check", str(js)], capture_output=True).returncode: fails["scripts"][f"{js.name} does not parse"] += 1
+# the XML feed for job search engines (job_feed.py, 26 Nov 2026): every file read back with a streaming parser, the fields of every
+# job, no control characters, and the .gz copy unpacked and compared with the file
+if (SITE / "feeds" / "index.xml").is_file():
+    import job_feed
+    counts["job feed"] = len(list((SITE / "feeds").glob("jobs-*.xml")))
+    for p_ in job_feed.check(SITE / "feeds", FULL)[:20]: fails["job feed"][p_] += 1
 print(f"checked {len(sample)} pages ({len(others)} non-job pages, {len(sample) - len(others)} job pages sampled" + (", built from records" if STORE else "") + ")")
 for t in sorted(counts):
     bad = fails[t]

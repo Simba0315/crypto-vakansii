@@ -411,6 +411,11 @@ left out as companies already read under another board or name).
   No hiring system's feed gives a street or ZIP, so those two warnings stay on most pages; never fill them from a map or a company's head office.
 - No section heading is just "Questions": write what the questions are about (the owner's standard: every H2 carries a key or a
   real question).
+- The XML feed for job search engines (`job_feed.py`, 26 Nov 2026, documented on /feeds/#xml) takes its description, places and kind
+  of work from the same functions as the job page (`page_desc()`, `job_addresses()`, `etype_ld()`): change those and both change. Files
+  of 50,000 jobs (`feeds/jobs-N.xml` and `.xml.gz`), `feeds/index.xml`, and `feeds/jobs.xml` = part 1. On the full record it is several
+  GB and a few minutes of the build: keep the per-job work cheap (word tests before patterns) and never build a part in memory.
+  `python3 job_feed.py --test` must pass; check.py reads every file back.
 
 
 

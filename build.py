@@ -660,6 +660,8 @@ DESC_TAGS = re.compile(r"</?(?:p|ul|ol|li|h3|strong|em)>")       # the only mark
 # has no place to break and widened job pages on phones (23 Nov 2026)
 DESC_RULE = re.compile(r"<p>(?:\s|</?(?:strong|em)>)*[-_=*~.:•·─━—–]{5,}(?:[-_=*~.:•·─━—–\s]|</?(?:strong|em)>)*</p>")
 DESC_RUN = re.compile(r"[-_=*~─━—]{12,}")      # the same kind of line run into a sentence ("...below._______"): dropped
+DESC_PAIR = re.compile(r"[-_=*~─━—][-_=*~─━—]")       # written out twice: sre scans this two and a half times faster than {2}
+DESC_OTHER_TAG = re.compile(r"<(?!/?(?:p|ul|ol|li|h3|strong|em)>)")      # a "<" that does not open one of DESC_TAGS: the same test as "<" in DESC_TAGS.sub("", text)
 POOL_RX = re.compile(r"talent (pool|community|network|pipeline)|general (application|interest|submission|consideration)|future (opportunit|opening|role|position|consideration)|expression of interest|"
                      r"open application|speculative application|evergreen|don.?t see (a|your|the) (role|fit|position|job)|register your interest|join our talent|(^|\W)pipeline( role| req|:| -| –)|"
                      r"always (hiring|looking)|spontaneous application|unsolicited application|open call", re.I)     # titles that are a standing invitation, not one specific opening
@@ -688,14 +690,44 @@ def etype_ld(j, full):
     text ("Employment type: Part-time"), or "full-time" in the first part of a text that names no other kind of work. None when it says nothing."""
     if j.get("etype") in ETYPE_LD: return ETYPE_LD[j["etype"]]
     if not full: return None
-    m = ET_LABEL.search(re.sub(r"<[^>]+>", " ", full))
-    if m: return next(v for k, v in ET_LABEL_LD if m.group(1).lower().startswith(k))
-    if FT_RX.search(full[:4000]) and not OTHER_TYPE_RX.search(j["title"] + " " + full[:4000]): return "FULL_TIME"
+    # Each pattern runs only when the words it needs are in the text (in lower case): the same answers on every posting of the local
+    # record, a fraction of the time (26 Nov 2026: 416 µs a job before; the XML feed asks this of every open job). A tag cannot make
+    # "type" or "full", so the test on the raw text is safe.
+    low, plain_ = full.lower(), None
+    if "type" in low:
+        plain_ = re.sub(r"<[^>]+>", " ", full)
+        m = ET_LABEL.search(plain_) if label_near(plain_.lower()) else None
+        if m: return next(v for k, v in ET_LABEL_LD if m.group(1).lower().startswith(k))
+    if "full" not in low or "time" not in low: return None
+    if ("full-time" in low or "full time" in low) and FT_RX.search(full[:4000]) and not other_type(j["title"] + " " + full[:4000]): return "FULL_TIME"
     # further down, only a sentence about this job itself ("The salary range for this full-time position", "This is a full-time,
     # exempt role"), never "benefits for full-time employees", and only when the whole text names no other kind of work
     # (owner, 25 Nov 2026: Search Console still listed employmentType as missing on 9 pages; about 1% more jobs get it this way)
-    if FT_POS_RX.search(re.sub(r"<[^>]+>", " ", full)) and not OTHER_TYPE_RX.search(j["title"] + " " + full): return "FULL_TIME"
+    plain_ = plain_ if plain_ is not None else re.sub(r"<[^>]+>", " ", full)
+    low_ = plain_.lower()
+    if ("full-time" in low_ or "full time" in low_) and FT_POS_RX.search(plain_) and not other_type(j["title"] + " " + full): return "FULL_TIME"
     return None
+
+
+ET_WORDS = tuple(w_ + s_ for w_ in ("employment", "job", "position", "work", "role", "worker", "time", "contract", "engagement") for s_ in ("", " ", "_", "-"))
+
+
+def label_near(low):
+    """Whether "type" follows one of ET_LABEL's words anywhere in the lower-case text: ET_LABEL cannot match without it."""
+    i = low.find("type")
+    while i >= 0:
+        if low[max(0, i - 12):i].endswith(ET_WORDS): return True
+        i = low.find("type", i + 1)
+    return False
+
+
+OTHER_TYPE_WORDS = ("part-time", "part time", "contract", "fixed-term", "fixed term", "temporary", "freelance", "seasonal", "internship")
+
+
+def other_type(text):
+    """OTHER_TYPE_RX.search(text), run only when a word it needs is in the text."""
+    low = text.lower()
+    return any(w in low for w in OTHER_TYPE_WORDS) and OTHER_TYPE_RX.search(text)
 
 
 # baseSalary only from pay the posting states (never an estimate), as collect.tidy_pay writes it
@@ -3016,15 +3048,34 @@ def job_indexable(j):
     return not j.get("tg")
 
 
+def page_desc(j):
+    """The full description an open job's page shows, as HTML, or "" when it shows only the opening lines. The collector reduces a
+    description to a few plain tags (DESC_TAGS); one with any other markup is not shown. The job page and the XML feed for job search
+    engines (job_feed.py) both take it from here, so the feed carries exactly the text of the page it links to."""
+    full = j.get("desc") or ""
+    if not full or not j["active"] or DESC_OTHER_TAG.search(full): return ""
+    full = DESC_RULE.sub("<hr>", full)
+    return DESC_RUN.sub(" ", full) if DESC_PAIR.search(full) else full      # a run of 12 has a pair: the cheap test first (37 µs, not 90)
+
+
+def job_addresses(loc):
+    """The PostalAddress of each place a posting lists, at most six, the way the JobPosting markup gives them (the job page) and the
+    XML feed (job_feed.py: the first one with a country). "Remote", "EMEA" and the like are no address and are left out."""
+    out = []
+    for part in [x.strip(" ,-–") for x in re.split(r";|\||•", loc or "") if x.strip(" ,-–")][:6]:
+        here = countries_of(part)
+        if not here and NOT_A_PLACE.match(part): continue
+        out.append(postal(part, here))
+    return out
+
+
 def job_page(j, active_by_cat):
     canonical = f"{FULL}/job/{j['slug']}/"
     j["salary"] = sane_pay(j.get("salary"))         # a record written before 25 Nov 2026, or a job live.py found, may hold an impossible range
     # the full description comes from the collector already reduced to a few plain tags; anything else falls back to the excerpt
-    full = j.get("desc") or ""
+    full = page_desc(j)
     # a US-dollar estimate only makes sense for US roles, and intern pay is not comparable with salaried roles
     est_ok = j["level"] != "Intern" and j["cat"] != OTHER[0] and (not j["location"] or any(c == "US" for c, _ in countries_of(j["location"])))
-    if full and ("<" in DESC_TAGS.sub("", full) or not j["active"]): full = ""
-    if full: full = DESC_RUN.sub(" ", DESC_RULE.sub("<hr>", full))
     est_ok_h = not j["location"] or any(c == "US" for c, _ in countries_of(j["location"]))     # a plain "$" hourly rate is only compared for US roles
     comp_url = f'{P}/companies/{slugify(j["company"])}/'
     rows = [("Company", f'<a href="{comp_url}">{e(j["company"])}</a>')]
@@ -3106,11 +3157,8 @@ def job_page(j, active_by_cat):
         pay_ = pay_ld(j)
         if pay_: ld["baseSalary"] = pay_
         if j["location"]:
-            spots = []                                        # one Place per location the posting lists, each with its own country
-            for part in [x.strip(" ,-–") for x in re.split(r";|\||•", j["location"]) if x.strip(" ,-–")][:6]:
-                here = countries_of(part)
-                if not here and NOT_A_PLACE.match(part): continue       # "Remote", "EMEA": not an address
-                spots.append({"@type": "Place", "address": {"@type": "PostalAddress", **postal(part, here)}})
+            # one Place per location the posting lists, each with its own country
+            spots = [{"@type": "Place", "address": {"@type": "PostalAddress", **a_}} for a_ in job_addresses(j["location"])]
             if spots: ld["jobLocation"] = spots[0] if len(spots) == 1 else spots
         if j["remote"]:
             ld["jobLocationType"] = "TELECOMMUTE"
@@ -7389,6 +7437,56 @@ def main():
          + (section("Who is hiring, [[field by field]]", fam_bars, sid="fields", label="By field",
                     sub="Each bar opens the list of employers with the most open jobs in that field, with their remote roles and advertised pay.") if fam_bars else ""), cls="hub")
 
+    lap('The XML feed for job search engines (job_feed.py): every ope')
+    # The XML feed for job search engines (job_feed.py): every open job with its full description and a country, in Indeed's shape, in
+    # files of 50,000 with gzipped copies and an index (owner, 26 Nov 2026, for Careerjet, Jobisjob, Adzuna, Jobrapido, Talent.com and
+    # Trovit). Until then one file held the 10,000 newest jobs with only their opening lines. Written job by job, see job_feed.py.
+    import job_feed, sys as sys_
+    try:
+        JFEED = job_feed.write(OUT / "feeds", order(active), sys_.modules[__name__])
+    except OSError as ex_:                   # a full disk: the rest of the site is still built and uploaded, without the feed files
+        for f_ in (OUT / "feeds").glob("jobs*.xml*"): f_.unlink(missing_ok=True)      # no half-written file on the site
+        JFEED = {"jobs": 0, "parts": [], "left": {}, "stopped": f"not written: {ex_}"}
+    JF_PARTS = JFEED["parts"]
+    print(f"job feed: {JFEED['jobs']:,} jobs in {len(JF_PARTS)} files, {sum(p_[2] for p_ in JF_PARTS) / 2**20:,.0f} MiB, "
+          f"{sum(p_[3] for p_ in JF_PARTS) / 2**20:,.0f} MiB gzipped; left out: " + ", ".join(f"{k_} {v_:,}" for k_, v_ in JFEED["left"].items())
+          + (f"; {JFEED['stopped']}" if JFEED["stopped"] else "") + f"; {shutil.disk_usage(OUT).free / 2**30:,.1f} GiB left on the disk")
+    mb_ = lambda b_: f"{max(1, round(b_ / 1e3)):,} KB" if b_ < 1e6 else f"{b_ / 1e6:,.1f} MB" if b_ < 1e9 else f"{b_ / 1e9:,.2f} GB"
+    def jf_file(nm_):
+        rel_ = "" if nm_ == "index.xml" else ' rel="nofollow"'       # files of hundreds of MB: not for search engines' crawlers
+        return f'<a href="{P}/feeds/{nm_}"{rel_}><code>{nm_}</code></a>'
+    jf_files = ttable(["File", "What it holds", "Jobs", "Size", "Gzipped (.gz)"],
+                      [trow([jf_file("index.xml"), "The list of the files below, with the number of jobs and the size of each", f"{JFEED['jobs']:,}",
+                             mb_((OUT / "feeds" / "index.xml").stat().st_size), "No copy"]),
+                       trow([jf_file("jobs.xml"), f"The newest {min(job_feed.PART, JFEED['jobs']):,} jobs: the same file as jobs-1.xml", f"{JF_PARTS[0][1]:,}", mb_(JF_PARTS[0][2]), mb_(JF_PARTS[0][3])])]
+                      + [trow([jf_file(nm_), "All the jobs" if len(JF_PARTS) == 1 else "The newest jobs" if i_ == 0 else "The oldest jobs" if i_ == len(JF_PARTS) - 1 else "Older jobs", f"{k_:,}", mb_(sz_), mb_(gz_)])
+                         for i_, (nm_, k_, sz_, gz_) in enumerate(JF_PARTS)], cls="rkt") if JF_PARTS else ""
+    jf_fields = [("title", "The job title, as the employer writes it."),
+                 ("date", "When the employer published the job, in ISO 8601 and UTC: 2026-11-26T09:05:52Z, or the day at 00:00 when its hiring system gives no time."),
+                 ("referencenumber", "Our number of the job. It does not change."),
+                 ("url", "The job’s page on this site, where the Apply button leads to the employer’s own application page."),
+                 ("company", "The employer."),
+                 ("city, state, country", "The place, read the same way as for the JobPosting markup of the job page: the state as its two-letter code in the United States "
+                                          "and Canada, elsewhere the region as the posting writes it; the country as its two-letter ISO code. A job with several places "
+                                          "gives the first one that names its country."),
+                 ("postalcode, streetaddress", "Only when the posting gives them."),
+                 ("description", "The full description in HTML (p, ul, ol, li, h3, strong and em only), the same text as on the job page."),
+                 ("salary", "The pay as the posting states it: $120K - $150K, $38 - $55 an hour."),
+                 ("jobtype", "fulltime, parttime, contract, internship or temporary, when the posting says which."),
+                 ("experience", "The years of experience the posting asks for: 3+ years."),
+                 ("category", "The field of work."),
+                 ("remotetype", "Fully remote or Hybrid remote."),
+                 ("expirationdate", "YYYY-MM-DD, the same date as validThrough in the job page’s markup. A job that closes leaves the feed with the next update."),
+                 ("updated", "YYYY-MM-DD, the day we last found the job on the employer’s careers page.")]
+    jf_html = (f'<p>Every open job that shows its full description and names a country: {JFEED["jobs"]:,} today. The files follow the XML format Indeed describes: '
+               '<code>&lt;source&gt;</code> with <code>&lt;publisher&gt;</code>, <code>&lt;publisherurl&gt;</code> and <code>&lt;lastBuildDate&gt;</code>, then one '
+               f'<code>&lt;job&gt;</code> per posting with every value in CDATA. The jobs are split into files of at most {job_feed.PART:,}, the newest first, and each '
+               f'file is also there gzipped, at the same address with <code>.gz</code> at the end. All of them are at <code>{FULL}/feeds/</code> and are rebuilt with '
+               'every update of the site.</p>' + jf_files
+               + '<h3>The fields of a job</h3><dl class="qa one">' + "".join(f"<div><dt><code>{e(k_)}</code></dt><dd>{e(v_)}</dd></div>" for k_, v_ in jf_fields) + "</dl>"
+               + '<p class="note">A field the posting does not give is left out, never guessed. Not in the files: posts read from Telegram channels, talent pools, and jobs '
+               'without their full description or a country. Job search engines may read the files once an hour and must link each job to its page on this site.</p>')
+
     lap('Feeds: every list as an address a bot can read. Channel owne')
     # Feeds: every list as an address a bot can read. Channel owners in Telegram, Slack and Discord plug these into their own bots,
     # and every item links back to the job page here (the owner asked for "Telegram feeds like @nodejsjobsfeed" and for more channels).
@@ -7424,9 +7522,7 @@ def main():
                f'<input id="feedurl" type="text" readonly value="{FULL}/feed.xml" aria-label="Feed address"><button class="btn" id="feedcopy" type="button">Copy the address</button></div>',
                after='<p class="plain"><b>In plain words:</b> a feed is an address that always returns the newest jobs of one kind. A bot or an app reads it and posts each new job where you want it.</p>')
          + section("Where a feed [[can go]]", '<div class="tgrid">' + "".join(f'<div class="tcard"><span class="tprev" aria-hidden="true">{scr}</span><span class="tbody"><b>{e(t_)}</b><span>{e(d_)}</span></span></div>' for t_, d_, scr in feed_cards) + "</div>", label="Four places")
-         + section("For [[job search engines]]", f'<p>One XML file with the jobs posted in the last 30 days, the newest first: <a href="{P}/feeds/jobs.xml"><code>{FULL}/feeds/jobs.xml</code></a>. '
-                   'Each job carries its number, title, employer, place, country, date, pay where stated, the opening lines and the address of its page here. It is rebuilt every hour. '
-                   'Job search engines may read it once an hour and must link each job to its page on this site.</p>', label="One XML file")
+         + kpanel(section("For [[job search engines]]", jf_html, sid="xml", label="XML feed"), "soft")
          + section("Every feed", kmore(f"All {n_feeds} feeds as a list", feed_dir), sid="all", label="Directory")
          + section("Questions about [[job feeds]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in feed_qa) + "</dl>", label="Questions")
          + f'<p class="note">For programs: the <a href="{P}/api/">free API</a>. For web pages: the <a href="{P}/widgets/">job widget</a>.</p>', head=feed_ld, cls="kp sp feeds")
@@ -10128,23 +10224,6 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                    "<div><dt>Costs</dt><dd>Hosting and collection run on free tiers; the site is built and maintained by automation, with nobody on the payroll.</dd></div></dl>", label="Today")
          + f'<p class="note">Data and method: <a href="{P}/methodology/">how the numbers are made</a>, <a href="{P}/status/">what the last update did</a>, <a href="{P}/insights/">charts</a>. ' + (f"To talk: {contact}." if contact else "") + "</p>", cls="kp sp investors")
 
-    lap('One XML file for job search engines (Careerjet, Adzuna, Trov')
-    # One XML file for job search engines (Careerjet, Adzuna, Trovit and others take a feed of this shape: source/job with
-    # referencenumber, title, url, company, city, country, date, description). It holds the jobs posted in the last 30 days, the
-    # newest first, 10,000 at most: we keep only the opening lines of a posting, and the link leads to our page of the job.
-    # Who takes such a feed and on what terms: AGGREGATORS_RESEARCH.md.
-    cd_ = lambda v: "<![CDATA[" + str(v).replace("]]>", "]]]]><![CDATA[>") + "]]>"
-    month_ago = (datetime.date.today() - datetime.timedelta(days=30)).isoformat()
-    feed_jobs = [j for j in order(active) if (j["posted"] or "") >= month_ago and j["excerpt"] and not j.get("pool")][:10000]
-    JT = {"Full-time": "fulltime", "Part-time": "parttime", "Contract": "contract", "Internship": "internship"}
-    feed_items = "".join(
-        "<job>" + f"<title>{cd_(j['title'])}</title><date>{cd_((j['posted'] or TODAY)[:10] + 'T00:00:00Z')}</date><referencenumber>{cd_(j['id'])}</referencenumber>"
-        f"<url>{cd_(FULL + '/job/' + j['slug'] + '/')}</url><company>{cd_(j['company'])}</company><city>{cd_(j['location'] or '')}</city><country>{cd_((country_of(j['location'] or '') or ('',))[0])}</country>"
-        f"<remotetype>{cd_('Fully remote' if j['remote'] else '')}</remotetype><description>{cd_(e(j['excerpt']) + ' … The full posting and the link to apply are on the page of the job.')}</description>"
-        f"<salary>{cd_(j['salary'] or '')}</salary><jobtype>{cd_(JT.get(j.get('etype') or '', ''))}</jobtype><category>{cd_(CAT.get(j['cat'], ''))}</category></job>" for j in feed_jobs)
-    write("feeds/jobs.xml", f'<?xml version="1.0" encoding="UTF-8"?><source><publisher>{e(SITE)}</publisher><publisherurl>{FULL}/</publisherurl>'
-                            f"<lastBuildDate>{format_datetime(datetime.datetime.now(datetime.timezone.utc))}</lastBuildDate>{feed_items}</source>", sitemap=False)
-
     lap('Data status: what the last run really did. "Updated daily" i')
     # Data status: what the last run really did. "Updated daily" is easy to write and hard to check; this page lets anyone check.
     stats_file = ROOT / "data" / "stats.json"
@@ -11780,7 +11859,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          + '<div class="sp2 api2">' + section("Response", f'<pre><code>{e(sample)}</code></pre><p class="note">Skill, category, location, latest and remote feeds hold the 30 newest matching jobs and the total count; a company feed holds all of that company’s open jobs. The slugs are the same as in the page addresses.</p>')
          + "<div>" + section("Example", f"<pre><code>{e(js_example)}</code></pre>")
          + section("Fair use", '<p>Free for personal and commercial projects. Two requests: link back to the job page or to this site wherever you show the data, and fetch each feed no more than once an hour (it changes once an hour).</p>'
-                   f'<p>Also available: <a href="{P}/feed.xml">RSS feeds</a>, CSV downloads on the <a href="{P}/trends/">trends page</a>, and a ready-made <a href="{P}/widgets/">widget</a>.</p>') + "</div></div>" + api_faq, head=api_ld, cls="kp sp api")
+                   f'<p>Also available: <a href="{P}/feed.xml">RSS feeds</a>, CSV downloads on the <a href="{P}/trends/">trends page</a>, a ready-made <a href="{P}/widgets/">widget</a>, '
+                   f'and <a href="{P}/feeds/#xml">XML files for job search engines</a> with every open job and its full description.</p>') + "</div></div>" + api_faq, head=api_ld, cls="kp sp api")
 
     lap('---- Prices: /plus/, /post-a-job/ and /pricing/. The product')
     # ---- Prices: /plus/, /post-a-job/ and /pricing/. The product line is the owner's of 15 Nov 2026. Every price is read from config.json
@@ -13520,6 +13600,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
   checked against the employer's careers page. A job that has closed says so at the top of its page.
 - Please link to the job page when you mention a job: applications always go to the employer's own site from there, free of charge.
 - The feeds list every address that exists: {FULL}/api/v1/index.json
+- Every open job with its full description, in Indeed's XML format for job search engines: {FULL}/feeds/index.xml lists the files (fields: {FULL}/feeds/#xml)
 - "How do I become a <person>?" {FULL}/how-to-become/<role>/ : the training, licenses and exams the work needs, checked for US rules, with today's beginner jobs and pay.
 - "Interview questions for <role>" {FULL}/interview-questions/<role>/ : about 20 questions of that trade with what each checks, what a good answer shows and a sample answer, plus the skill questions today's postings point to.
 - "<role> resume example" {FULL}/resume/examples/<role>/ (also /cv-examples/<role>/ and /cover-letter-examples/<role>/): an invented example with beginner and senior lines, next to the skills postings ask for.
