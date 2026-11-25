@@ -13511,7 +13511,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
 - "Who is hiring for <skill>?" Read {FULL}/skills/<skill>/ (page) or {FULL}/api/v1/skills/<skill>.json (data). Slugs are lowercase with hyphens: python, rust, machine-learning, react, cpp.
 - "What jobs does <company> have open?" {FULL}/companies/<company>/ or {FULL}/api/v1/companies/<company>.json
 - "Remote jobs" {FULL}/remote/ or {FULL}/api/v1/remote.json. "Newest jobs" {FULL}/new/ or {FULL}/api/v1/latest.json
-- "Jobs in <place>" {FULL}/locations/<place>/ or {FULL}/api/v1/locations/<place>.json. "<category> jobs" {FULL}/jobs/<category>/
+- "Jobs in <place>" {FULL}/locations/<place>/ or {FULL}/api/v1/locations/<place>.json.
+- "<field> jobs" (pay by kind of work, how to get in, the US government's outlook, today's counts): {FULL}/categories/<field>/, one page per field: """ + ", ".join(f"{fields_info.FIELDS[fs_]['q']} {FULL}/categories/{fs_}/" for fs_ in fields_info.FIELDS if fs_ in {f_[0] for f_ in fam_rows}) + ". " + ", ".join(f"{fields_info.CAT_FIELDS[c_]['q']} {FULL}/jobs/{c_}/" for c_ in fields_info.CAT_FIELDS if by_cat.get(c_)) + f"""
 - "What does <skill> pay?" {FULL}/salaries/<skill>/ (median of advertised ranges, with the sample size)
 - Every job has its own page at {FULL}/job/<slug>/ with the title, employer, location, salary if published, the date it was posted and the date it was last
   checked against the employer's careers page. A job that has closed says so at the top of its page.
