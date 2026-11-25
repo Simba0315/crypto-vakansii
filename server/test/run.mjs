@@ -11,7 +11,7 @@
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import worker, { md5, phpJson, gatewaySign, webhookSignatureOk, PRODUCTS, companyKey, sendMail, reconcileOrders, siteDomain, freeMail, throwawayMail, hiringSystem, lookalike, brandIn, domainAge, screenPosting,
+import worker, { notWords, md5, phpJson, gatewaySign, webhookSignatureOk, PRODUCTS, companyKey, sendMail, reconcileOrders, siteDomain, freeMail, throwawayMail, hiringSystem, lookalike, brandIn, domainAge, screenPosting,
   recheckLinks, AI_MONTHLY, AI_BOUNDS, aiWorstMonthUsd, sourceOf, deviceOf, pageName, COUPONS, priceAfter } from '../src/worker.js';
 import { D1 } from './d1.mjs';
 
@@ -1021,6 +1021,11 @@ const exportedJobs = async (env) => (await call(env, 'GET', '/api/public/export.
       description: 'Design the sharing flows of Dropbox, used by 700 million people. See how we work at https://www.dropbox.com/about and bring a portfolio with shipped consumer work. Hybrid, Dublin or remote in the EU.' },
   };
   for (const [what, posting] of Object.entries(CLEAN)) { const v = screen(posting); eq([v.verdict, v.score], ['ok', 0], 'C: clean posting passes: ' + what); }
+  // a text that is mostly not words waits for a person (the owner's test job of 18 Nov 2026 went live as an open job)
+  const nw = screen({ title: 'hypestkey', company: 'hypestkey', description: '312 л3л 12л3 13 123 1312 3 e 12e 12e 12e 12e 12le 1l2e mkl21em 21lke kl21le k12mkl e2 1e' });
+  ok(nw.verdict === 'review' && /not words/.test(nw.reasons.join(' ')), 'C: a text that is mostly not words goes to review', JSON.stringify(nw));
+  eq([notWords('We need SQL, CRM and B2B skills for this analyst role in our Berlin office.'), notWords('Мы ищем бариста: смены по выходным.'), notWords(''), notWords('12e 1l2e mkl21em')], [false, false, false, true],
+    'C: notWords: prose with acronyms or in another script is words; digits run into letters are not');
 
   // scam postings: each hard reject, then signals that add up
   const SCAMS = [

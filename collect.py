@@ -2026,6 +2026,27 @@ def rename_records(db, files=None):
     return n
 
 
+NOT_WORD_EDGE = "\"'.,;:!?()[]{}*•·–—-/“”‘’«»"
+
+
+def not_words(text):
+    """True when the text of a job posted in the account is mostly not words, so it is held back from the site (owner's test job of
+    18 Nov 2026, "312 л3л 12л3 13 123 1312 3 e 12e 12e ...", was live as an open job a week later because the server still listed it).
+    A word is letters only, two or more, with a vowel unless it is in capitals (SQL, CRM) or not in Latin letters; fewer than half
+    of the text's pieces being words means a person should look at it first. The server's own check (screenPosting) says the same."""
+    toks = [t.strip(NOT_WORD_EDGE) for t in str(text or "").split()]
+    toks = [t for t in toks if t]
+    if not toks: return False
+    word = lambda t: (len(t) >= 2 and re.fullmatch(r"[^\W\d_]+(?:['’-][^\W\d_]+)*", t) is not None
+                      and (re.search(r"[aeiouyAEIOUYà-ÿÀ-ß]", t) is not None or t.isupper() or re.search(r"[^\x00-\x7f]", t) is not None))
+    return sum(1 for t in toks if word(t)) < len(toks) / 2
+
+
+assert not_words("312 л3л 12л3 13 123 1312 3 e 12e 12e 12e 12e 12le 1l2e mkl21em 21lke kl21le k12mkl e2 1e") and not not_words("")
+assert not not_words("We are hiring a barista for our café. You will make coffee, serve guests and keep the bar clean. SQL, CRM and B2B are a plus.")
+assert not not_words("Мы ищем бариста в кофейню: смены по выходным, обучение за наш счёт.")
+
+
 def direct_and_paid(db, used_slugs, indexed, stats):
     """Jobs employers posted in their account, and paid placements, from our own API ("api_url" in config.json).
     A failed call changes nothing: posted jobs stay as they were and the previous placements file is kept."""
@@ -2038,9 +2059,11 @@ def direct_and_paid(db, used_slugs, indexed, stats):
         exp = None
     if exp is None:
         print("placements: API did not answer, keeping what we have"); return
-    seen = set()
+    seen, junk = set(), set()
     for d in exp["jobs"]:
         if not isinstance(d, dict) or str(d.get("company", "")).strip().lower() in indexed: continue   # a posting may not pass itself off as an indexed company
+        if not_words(d.get("text")):                 # held back, and its page taken down below like a deleted one (25 Nov 2026)
+            junk.add(str(d.get("id", ""))); continue
         j = norm(str(d.get("company", "")).strip(), "direct", d.get("id", ""), d.get("title"), d.get("url"), d.get("location"), bool(d.get("remote")), "",
                  d.get("posted"), str(d.get("text") or ""), str(d.get("salary") or ""), str(d.get("etype") or ""))
         j["desc"] = direct_desc(d.get("text"))      # the employer's own words, whole and escaped: short texts are kept too (clean_html drops anything under 200 characters)
@@ -2071,7 +2094,8 @@ def direct_and_paid(db, used_slugs, indexed, stats):
             old.update(active=False, closed=TODAY); stats["closed"] += 1
     # A job its owner deleted for good, or a moderator took down, leaves the site altogether: no page marked "closed" is kept for
     # it (the owner deleted his own test job on 18 Nov 2026 and expected it gone). The API names such jobs in "gone" for 45 days.
-    gone = {str(x) for x in exp.get("gone") or [] if isinstance(x, str) and x}
+    gone = {str(x) for x in exp.get("gone") or [] if isinstance(x, str) and x} | {x for x in junk if x}
+    if junk: print(f"posted jobs: {len(junk)} held back, their text is mostly not words")
     for jid in [k for k, old in db.items() if old.get("direct") and any(k.endswith("-" + g) for g in gone)]:
         used_slugs.discard(db[jid].get("slug")); del db[jid]
     keep = lambda rows, keys: [{k: str(r.get(k, "")) for k in keys} for r in rows if isinstance(r, dict)]

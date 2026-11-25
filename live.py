@@ -381,6 +381,7 @@ class Live:
             if not isinstance(d, dict): continue
             company = str(d.get("company", "")).strip()
             if not company or company.lower() in indexed: continue      # as in collect.direct_and_paid: a posting may not pass itself off as an indexed company
+            if collect.not_words(d.get("text")): continue               # as there: a text that is mostly not words is held back (25 Nov 2026)
             j = collect.norm(company, "direct", d.get("id", ""), d.get("title"), d.get("url"), d.get("location"), bool(d.get("remote")), "", d.get("posted"),
                              str(d.get("text") or ""), str(d.get("salary") or ""), str(d.get("etype") or ""))
             if not j["title"] or not str(j["url"]).startswith("https://"): continue

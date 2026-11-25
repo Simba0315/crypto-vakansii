@@ -1374,6 +1374,16 @@ function otherCompany(text, company) {
   }
   return '';
 }
+/* A text that is mostly not words (the owner's test job of 18 Nov 2026, "312 л3л 12л3 13 123 1312 3 e 12e 12e ...", went live as an
+   open job): fewer than half of its pieces are words of two letters or more, with a vowel unless in capitals (SQL, CRM) or not in
+   Latin letters. Such a job waits for a person. The site's build holds the same texts back (collect.not_words). */
+const WORD_EDGE = /^["'.,;:!?()[\]{}*•·–—\-/“”‘’«»]+|["'.,;:!?()[\]{}*•·–—\-/“”‘’«»]+$/gu;
+export function notWords(text) {
+  const toks = String(text || '').split(/\s+/).map((t) => t.replace(WORD_EDGE, '')).filter(Boolean);
+  if (!toks.length) return false;
+  const word = (t) => t.length >= 2 && /^\p{L}+(?:['’-]\p{L}+)*$/u.test(t) && (/[aeiouyà-ÿ]/i.test(t) || t === t.toUpperCase() || /[^\x00-\x7f]/.test(t));
+  return toks.filter(word).length < toks.length / 2;
+}
 export function screenPosting({ title, description, company, applyUrl, accountDomain, salary }) {
   const head = String(title || ''), pay = String(salary || ''), text = [head, String(description || ''), pay].join('\n'), own = String(accountDomain || '').toLowerCase();
   let apply = null; try { apply = new URL(String(applyUrl || '')); } catch {}
@@ -1395,6 +1405,7 @@ export function screenPosting({ title, description, company, applyUrl, accountDo
   if (EARN.test(text)) add(30, 'It promises a sum of money per day or week.');
   if (HURRY.test(text)) add(30, 'It promises a job without an interview, an immediate start or a guaranteed income.');
   if (INSTALL.test(text)) add(40, 'It asks people to download, install or run software.');
+  if (notWords(description)) add(25, 'Most of the text is not words: a person should read it before it is shown.');
   if (JUNIOR.test(head) && (payOutlier(String(description || ''), false) || payOutlier(pay, true))) add(30, 'The pay is far above anything such a role is paid.');
   const other = otherCompany(description, company);
   if (other) add(30, 'The text speaks of another company (' + other + ') than the one the job is posted for.');
