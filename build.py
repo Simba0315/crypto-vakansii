@@ -30,6 +30,8 @@ import resignation_pages                # a resignation letter per situation (/r
 import resume_words                     # stronger words for an overused resume verb (/resume-words/)
 import compare_sites                    # sourced facts for "Jobs Every Hour vs <job site>" (/vs/)
 import builders_check                   # what a free user of each resume builder can download (/free-resume-builders/)
+import compare_tools                    # AI interview practice tools and cover letter generators, read on their own pages
+import trade_training                   # training routes into $25-an-hour work without a degree (BLS Occupational Outlook Handbook)
 import quiz_pages                        # skill self-tests (/skill-tests/)
 import glossary_terms                   # the glossary, one page per term (/glossary/)
 # training, licences and exams of each kind of work for /how-to-become/<role>/: drafted by Claude and read for wrong facts by a second
@@ -915,6 +917,18 @@ LOGO, LOGO_DARK = LOGO.replace("WMV", LOGO_V), LOGO_DARK.replace("WMV", LOGO_V)
 ICON_THEME = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor" stroke="none"/></svg>'
 ICON_MENU = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>'
 ICON_SEARCH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>'
+
+
+# Workplace ("soft") skills and the usual words for each in a posting's text: counted across all postings on /guides/skills-in-demand/
+# and, since 26 Nov 2026, per kind of work for the "Soft skills" line of each resume example (SOFT_RESUME: project management and
+# customer service are skills of a trade there, not soft skills).
+SOFT_SKILLS = (("Communication", r"communication skills|written and verbal|verbal and written|communicat(?:e|es|ing) (?:clearly|effectively)"), ("Collaboration and teamwork", r"collaborat|teamwork|team player"),
+               ("Leadership", r"leadership"), ("Problem solving", r"problem[- ]solv"), ("Attention to detail", r"attention to detail|detail[- ]oriented"),
+               ("Project management", r"project management"), ("Analytical thinking", r"analytical (?:skills|thinking|mindset)|critical thinking"), ("Customer service", r"customer service"),
+               ("Time management and prioritizing", r"time management|prioriti[sz]"), ("Adaptability", r"adaptab|fast[- ]paced"), ("Initiative", r"self[- ]starter|proactive|takes? initiative"),
+               ("Interpersonal skills", r"interpersonal"))
+SOFT_RX = re.compile("|".join(f"(?P<s{i}>{rx})" for i, (_, rx) in enumerate(SOFT_SKILLS)), re.I)
+SOFT_RESUME = {nm for nm, _ in SOFT_SKILLS} - {"Project management", "Customer service"}
 
 
 def fdate(iso, year=True):
@@ -4742,8 +4756,15 @@ def main():
         rows_.sort(reverse=True)
         out_ = ""
         if len(rows_) >= 3:
-            out_ += section(f"Jobs you can get with {t}", '<div class="tablewrap"><table><tr><th>Kind of work</th><th>Open jobs asking for ' + e(t) + '</th><th>Median advertised pay</th></tr>'
-                            + "".join(f'<tr><td><a href="{P}/roles/{s_}/">{e(nm_)}</a></td><td>{k_:,}</td><td>{money(m_) if m_ else "–"}</td></tr>' for k_, s_, nm_, m_ in rows_[:8]) + "</table></div>")
+            # the government's median beside the advertised one (ChatGPT, temporary chat, 26 Nov 2026, "sql jobs": the answer quotes the BLS
+            # medians of database administrators and architects; bls_wages had no database administrators)
+            gov_ = {s_: bls_wages.OCC[bls_wages.ROLE[s_]] for _, s_, _, _ in rows_[:8] if s_ in bls_wages.ROLE}
+            out_ += section(f"Jobs you can get with {t}", '<div class="tablewrap"><table><tr><th>Kind of work</th><th>Open jobs asking for ' + e(t) + '</th><th>Median advertised pay</th>'
+                            + ("<th>US median, all employers</th>" if gov_ else "") + "</tr>"
+                            + "".join(f'<tr><td><a href="{P}/roles/{s_}/">{e(nm_)}</a></td><td>{k_:,}</td><td>{money(m_) if m_ else "–"}</td>'
+                                      + ((f'<td title="{e(gov_[s_][0])}">${gov_[s_][3]:,}</td>' if s_ in gov_ else "<td>–</td>") if gov_ else "") + "</tr>" for k_, s_, nm_, m_ in rows_[:8]) + "</table></div>"
+                            + (f'<p class="note">US median: the closest government occupation, all employers, <a href="{bls_wages.SOURCE}" rel="noopener">Bureau of Labor Statistics</a>, {bls_wages.PERIOD}; '
+                               "the salary page of each kind of work names the occupation. Advertised pay: the median of the yearly ranges in today’s postings.</p>" if gov_ else ""))
         co_ = Counter(x for j in js for x in j["tags"] if x != t).most_common(8)
         if len(co_) >= 4:
             # the share stands on each chip (sections review, batch 4): it was one sentence of eight names and eight percentages
@@ -7490,7 +7511,9 @@ def main():
 
     def paper(d):
         return ('<div class="paper"><p class="pp-name">' + e(d["name"]) + '</p><p class="pp-title">' + e(d["title"]) + '</p><p class="pp-contact">' + e(d["place"]) + " · " + e(d["email"]) + "</p>"
-                '<p class="pp-h">Summary</p><p>' + e(d["summary"]) + '</p><p class="pp-h">Skills</p><p>' + e(d["skills"]) + '</p><p class="pp-h">Experience</p>'
+                '<p class="pp-h">Summary</p><p>' + e(d["summary"]) + '</p><p class="pp-h">Skills</p>'
+                + ("".join(f'<p class="pp-sk"><b>{e(g_)}:</b> {e(", ".join(xs_))}</p>' for g_, xs_ in d["groups"]) if d.get("groups") else '<p>' + e(d["skills"]) + '</p>')
+                + '<p class="pp-h">Experience</p>'
                 + "".join(f'<p class="pp-job"><b>{e(x["role"])}</b>, {e(x["org"])} <span>{e(x["dates"])}</span></p><ul>' + "".join(f"<li>{e(ln)}</li>" for ln in x["text"].split("\n")) + "</ul>" for x in d["exp"])
                 + '<p class="pp-h">Education</p>' + "".join(f'<p class="pp-job"><b>{e(x["what"])}</b>, {e(x["org"])} <span>{e(x["dates"])}</span></p>' for x in d["edu"]) + "</div>")
     rex_lv = {}                 # role -> {"entry": example, "senior": example}: the other levels, shown on the resume page and, in UK form, on the CV page
@@ -7520,7 +7543,11 @@ def main():
         head("Summary")
         for ln in wrap(d["summary"], 12.5)[:5]: text(ln, 12.5)
         head("Skills")
-        for ln in wrap(d["skills"], 12.5)[:3]: text(ln, 12.5)
+        if d.get("groups"):
+            for g_, xs_ in d["groups"]:
+                for ln in wrap(f'{g_}: {", ".join(xs_)}', 12.5)[:2]: text(ln, 12.5)
+        else:
+            for ln in wrap(d["skills"], 12.5)[:3]: text(ln, 12.5)
         head("Experience")
         for x in d["exp"]:
             if y[0] > 700: break
@@ -7543,7 +7570,8 @@ def main():
                 '<figcaption>The whole example on one page.</figcaption></figure>')
     def paper_text(d):
         """The example as plain text, for the "Copy as text" button: the same lines as the paper, a dash before each result."""
-        out_ = [d["name"], d["title"], f'{d["place"]} · {d["email"]}', "", "SUMMARY", d["summary"], "", "SKILLS", d["skills"], "", "EXPERIENCE"]
+        out_ = ([d["name"], d["title"], f'{d["place"]} · {d["email"]}', "", "SUMMARY", d["summary"], "", "SKILLS"]
+                + ([f'{g_}: {", ".join(xs_)}' for g_, xs_ in d["groups"]] if d.get("groups") else [d["skills"]]) + ["", "EXPERIENCE"])
         for x in d["exp"]:
             out_ += [f'{x["role"]}, {x["org"]} ({x["dates"]})'] + ["- " + ln for ln in x["text"].split("\n")] + [""]
         out_ += ["EDUCATION"] + [f'{x["what"]}, {x["org"]} ({x["dates"]})' for x in d["edu"]]
@@ -7563,6 +7591,8 @@ def main():
         if lines_ and num_ * 2 >= len(lines_): pts.append(f"<b>{num_} of its {len(lines_)} lines carry a number.</b> A reader can check a number; “improved reporting” they cannot.")
         if lines_ and verb_ * 5 >= len(lines_) * 4: pts.append("<b>Every line opens with what was done.</b> A verb first, then the tool, then the result.")
         if tech_ and len(named) >= 3: pts.append(f"<b>It names {len(named)} of the {len(top_[:6])} skills today’s postings ask for most:</b> {e(', '.join(named))}. Screening software looks for the word itself.")
+        if len(d.get("groups") or []) >= 2 and d["groups"][-1][0] == "Soft skills": pts.append(f"<b>Its skills stand in {len(d['groups'])} groups:</b> " + ("what the work consists of, the tools, and " if len(d["groups"]) >= 3 else "what the work consists of, and ")
+                                                                                                     + "the soft skills today’s postings for this work name most. A reader finds each kind at a glance.")
         pts.append(f"<b>About {round(words_, -1)} words.</b> One page with room to spare: the first third decides whether the rest is read.")
         return ('<div class="rexwhy"><p class="flabel">Why this example works</p><ul class="ticks">' + "".join(f"<li>{x}</li>" for x in pts) + "</ul></div>") if len(pts) >= 3 else ""
     for slug_r, (rname, rj) in by_role.items():
@@ -7574,6 +7604,18 @@ def main():
         tech_ = slug_r in resume_examples.TECH
         d = resume_examples.example(slug_r, roles_info.person(slug_r, rname), fs, top_, rlow(fn))      # without an example of its own, the title on the paper is the person
         skills_ = d["skills"].split(", ")
+        # Skills in groups (ChatGPT, temporary chat, 26 Nov 2026, "data analyst resume example": the examples it cites group the skills by
+        # kind; ours was one comma list). Technical: what the work consists of; tools: the ones today's postings name; soft: the workplace
+        # skills named most in this work's posting texts (a sample of 250), each by 10% of them at least. The builder keeps the one line.
+        named_s = {t for t, _ in top_}
+        soft_txt = [j["desc"] for j in rj if j.get("desc")][:250]
+        soft_c = Counter()
+        for t_ in soft_txt:
+            for g_ in {m_.lastgroup for m_ in SOFT_RX.finditer(t_)}: soft_c[SOFT_SKILLS[int(g_[1:])][0]] += 1
+        soft_ = [(nm_, k_) for nm_, k_ in soft_c.most_common() if nm_ in SOFT_RESUME and k_ >= 0.1 * len(soft_txt)][:3] if len(soft_txt) >= 20 else []
+        groups_ = ([["Technical skills" if tech_ else "Hard skills", [x for x in skills_ if x not in named_s]]] + ([["Tools and technologies" if tech_ else "Tools", [x for x in skills_ if x in named_s]]] if named_s & set(skills_) else [])
+                   + ([["Soft skills", [nm_.lower() for nm_, _ in soft_]]] if soft_ else []))
+        if len(groups_) >= 2 and groups_[0][1]: d["groups"] = groups_
         if slug_r not in resume_examples.ROLE: print(f"  resume example: no entry of its own for {slug_r}, the lines of its field are used")
         rex_data[slug_r] = d
         rex_dir[fs].append((slug_r, rname, len(rj)))
@@ -7638,6 +7680,9 @@ def main():
                        f'<p class="note">Check it before you send: the <a href="{P}/tools/resume-review/">resume checker</a> and the <a href="{P}/tools/resume-match/">match against a posting</a>.</p>')
         if top_:
             qa_.insert(0, (f"What are the top 3 skills for {art(psn)} {psn}?", "By today’s postings for this work: " + ", ".join(f"{t} ({pc_(k, len(rj))}%)" for t, k in top_[:3]) + "."))
+        if soft_:
+            qa_.insert(1 if top_ else 0, (f"What soft skills should {art(low)} {low} resume list?", f"The ones today’s postings for this work name most: " + ", ".join(f"{nm_.lower()} ({pc_(k_, len(soft_txt))}%)" for nm_, k_ in soft_)
+                       + f" of the {len(soft_txt):,} postings read. Put them in the skills section, and show each in a line of your experience with what it achieved."))
         qa_.append((f"How do I write {art(low)} {low} resume with no experience?", "Put projects, an internship, volunteer or part-time work where the jobs would go, each with what you did and one number; "
                     "put the skills the postings ask for near the top. The entry-level example on this page is written that way." if len(ent_l) >= 3 else
                     "Put projects, an internship, volunteer or part-time work where the jobs would go, each with what you did and one number, and the skills the postings ask for near the top."))
@@ -7663,7 +7708,7 @@ def main():
              + section(f"Questions about {art(low)} {low} resume", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa_) + "</dl>")
              + role_kit(slug_r, low, "resume")
              + f'<p class="note cmpl">Next: <a href="{P}/roles/{slug_r}/">{len(rj):,} open {e(low)} jobs</a> · <a href="{P}/resume/examples/">all resume examples</a> · <a href="{P}/resume/">the resume builder</a></p>', head=ld_, cls="kw")
-    write("data/resume-examples.json", json.dumps(rex_data, ensure_ascii=False, separators=(",", ":")), sitemap=False)
+    write("data/resume-examples.json", json.dumps({k_: {f_: v_ for f_, v_ in d_.items() if f_ != "groups"} for k_, d_ in rex_data.items()}, ensure_ascii=False, separators=(",", ":")), sitemap=False)
     cv_dir = defaultdict(list)
 
     def uk_d(x_):
@@ -8442,13 +8487,30 @@ def main():
               "Interviewers for senior roles often ask for one."),
              ("What are the 5 P’s of interviewing?", "A saying, not a fixed method: “prior preparation prevents poor performance”. In practice: read the posting, research the company, prepare your stories, practise them out loud and prepare your own questions."),
              ("How long should an interview answer be?", "Most answers work best in 60 to 90 seconds; “tell me about yourself” in about a minute. Longer answers lose the listener; the practice mode times each one.")]
+    # AI interview practice tools compared (ChatGPT, temporary chat, 26 Nov 2026: "free AI interview practice tool to practice job interview
+    # questions out loud" answers with a table of Huru, Yoodli, MockIF and others by free limit, voice and AI feedback; ours was not in it
+    # and the page had no such table). Their facts are read on their own pages (compare_tools.py); ours are what assets/site.js does.
+    ip_fill = dict(n_q=f"{iq_q:,}", n_work=f"{iq_n:,}")
+    ip_us = {"name": "This page", "sub": f"{SITE}, free",
+             "free": "Free, no limit, no account", "paid": "None",
+             "asks": f"The page reads each question aloud in the browser’s voice: {iq_q:,} questions for {iq_n:,} kinds of work",
+             "answer": "Out loud in Chrome and Edge (the browser turns speech into text), typed in other browsers; this site keeps nothing",
+             "feedback": "Fixed rules, not AI: the length in seconds, a number, “I” or “we”, the word count, the pace and filler words",
+             "follow": "No: fixed questions, one at a time", "more": "US English; nothing to install"}
+    ip_cmp = section("[[AI interview practice tools]] compared with this page",
+                     compare_tools.table("interview", ip_us, e, fdate) + compare_tools.lists("interview", e, **ip_fill)
+                     + f'<p class="note">Each product’s cells were read on its own pages on {fdate(compare_tools.READ)} (the addresses are under its name); “Not stated” means its pages did not say. '
+                       + "".join(f'{e(n_)}: <a href="{e(u_)}" rel="nofollow noopener">{e(compare_tools.site(u_))}</a> {e(w_)}. ' for n_, u_, w_ in compare_tools.NO_ROW["interview"])
+                       + "Prices change, and some sites show other prices in other countries.</p>",
+                     sid="compared", label="Compared", sub="Free limits, voice, feedback and follow-up questions, from each tool’s own pages.").replace('class="sec hsec"', 'class="sec hsec cpanel"', 1)
+    ip_qa = ip_qa[:1] + compare_tools.faq("interview", fdate, **ip_fill) + ip_qa[1:]
     ip_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in ip_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-    page("interview-practice/", f"Free Interview Practice: Questions Read Aloud and Timed | {SITE}",
-         f"Practise a job interview out loud for {iq_n} kinds of work: the page reads each question, listens to your answer in the browser and checks it. Free, no sign-up, nothing recorded.",
+    page("interview-practice/", f"Free Interview Practice Out Loud: {iq_n} Jobs | {SITE}",
+         f"Practise a job interview out loud for {iq_n} kinds of work: each question read aloud, your answer timed and checked. Free, no sign-up; {len(compare_tools.rows('interview'))} AI tools compared.",
          crumbs(("Interview questions", "interview-questions/"), ("Practice", "")) + '<h1>Free interview practice: <span class="hl">questions read aloud, answers timed</span></h1>'
          f'<p class="lead">Pick your job. The page reads each likely question aloud, listens to your answer in the browser and checks three things: the length, a number, and whether you said what you did. '
-         'No sign-up, and nothing you say is recorded or sent anywhere.</p>'
+         'No sign-up, and this site keeps nothing you say: in Chrome and Edge the browser’s own speech service turns your words into text.</p>'
          # Sections review, batch 5: the page says "pick your job", so the figures and the box that finds a job stand first and
          # the directory under them, as on the hub of interview questions; the advice on structuring an answer follows the box
          # (its id is "top": the hub's styles put it away while a word is typed, so the jobs found stand under the box).
@@ -8479,6 +8541,7 @@ def main():
                    ("Do you have any questions for us?", "Interest, and whether you think about the work itself.", "Two or three questions about the work, the team and how success is measured; never “no”.", "questions-to-ask-in-an-interview"))) + "</dl>"
                + f'<p class="note">Practise them out loud on the page for your job above, and write the stories first with the <a href="{P}/tools/interview-answer-builder/">interview answer builder</a>.</p>',
                sid="common", label="Common questions")
+         + ip_cmp
          + section("Questions about [[interview practice]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in ip_qa) + "</dl>", label="Questions"), head=ip_ld, cls="hub sp ipp")
 
     lap('"How to hire a <work>" for employers (Indeed and Workable ra')
@@ -9555,12 +9618,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         mids_t = [(j["usd"][0] + j["usd"][1]) / 2 for j in js_t if j.get("usd")]
         sk_tbl.append(trow([f'<a href="{P}/skills/{tslug(t)}/">{e(TAG_LONG.get(t, t))}</a>', f"<strong>{k:,}</strong>", f"{pc_(k, n)}%", money(median(mids_t)) if len(mids_t) >= 15 else "–",
                             f"{pc_(sum(1 for j in js_t if j['remote']), len(js_t))}%", f"{sum(1 for j in js_t if (j['posted'] or '') >= week):,}"]))
-    SOFT = (("Communication", r"communication skills|written and verbal|verbal and written|communicat(?:e|es|ing) (?:clearly|effectively)"), ("Collaboration and teamwork", r"collaborat|teamwork|team player"),
-            ("Leadership", r"leadership"), ("Problem solving", r"problem[- ]solv"), ("Attention to detail", r"attention to detail|detail[- ]oriented"),
-            ("Project management", r"project management"), ("Analytical thinking", r"analytical (?:skills|thinking|mindset)|critical thinking"), ("Customer service", r"customer service"),
-            ("Time management and prioritizing", r"time management|prioriti[sz]"), ("Adaptability", r"adaptab|fast[- ]paced"), ("Initiative", r"self[- ]starter|proactive|takes? initiative"),
-            ("Interpersonal skills", r"interpersonal"))
-    soft_rx = re.compile("|".join(f"(?P<s{i}>{rx})" for i, (_, rx) in enumerate(SOFT)), re.I)
+    SOFT, soft_rx = SOFT_SKILLS, SOFT_RX
     # A share needs a sample, not every text: on the full record (225,000 postings with their text) reading all of them took
     # 115 s of the build on GitHub (18 Nov 2026). Every k-th posting, 15,000 at most, gives the same shares to within a point.
     soft_all = [j for j in active if j.get("desc")]
@@ -12776,6 +12834,49 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         if len(nd_) >= 3: hr_blk += section(f"Jobs that pay {hr_label(lo_, hi_)} without a degree", f"<p>{len(nd_):,} of the {len(js_):,} postings say no degree is required. The newest:</p>" + job_links(nd_))
         if len(rm_) >= 3: hr_blk += section(f"Remote jobs that pay {hr_label(lo_, hi_)}", f"<p>{len(rm_):,} of them can be done from home. The newest:</p>" + job_links(rm_) + f'<p class="note">All remote work: <a href="{P}/remote/">remote jobs</a>.</p>')
         if len(en_) >= 3: hr_blk += section(f"Entry-level jobs that pay {hr_label(lo_, hi_)}", f"<p>{len(en_):,} junior roles and internships. The newest:</p>" + job_links(en_))
+        # Training routes (ChatGPT, temporary chat, 26 Nov 2026, "jobs that pay $25 an hour without a degree": the answer gives each job with
+        # the training it needs: an apprenticeship, a CDL, a license). The route, the typical education and the median pay of each come from
+        # the BLS Occupational Outlook Handbook (trade_training.py); the open postings and the pay they state are counted here on every build.
+        tr_qa = []
+        if lo_ == 25:
+            tr_big = re.compile("|".join(f"(?:{r_['rx']})" for r_ in trade_training.ROUTES), re.I)
+            tr_cand = [j for j in active if tr_big.search(j["title"] or "")]
+            tr_rows = []
+            for r_ in trade_training.ROUTES:
+                m_ = trade_training.matcher(r_)
+                js_r = [j for j in tr_cand if m_(j["title"])]
+                hp_ = [hr_of[j["id"]][0] for j in js_r if j["id"] in hr_of]
+                tr_rows.append((r_, js_r, median(hp_) if len(hp_) >= 5 else None, len(hp_), sum(1 for j in js_r if "No degree required" in j.get("perks", []))))
+            tr_open = sum(len(js_r) for _, js_r, _, _, _ in tr_rows)
+            tr_name = lambda r_: (f'<a href="{P}/roles/{r_["role"]}/">{e(r_["name"])}</a>' if r_["role"] in by_role else e(r_["name"]))
+            tr_html = ('<div class="cmpwrap"><table class="cmpt cmpk cmpt-tr"><thead><tr><th scope="col">Work</th><th scope="col">Way in</th><th scope="col">Training</th>'
+                       '<th scope="col">License or certificate</th><th scope="col">US median pay</th><th scope="col">Open here today</th><th scope="col">Pay they state</th></tr></thead><tbody>'
+                       + "".join(f'<tr><th scope="row"><b>{tr_name(r_)}</b><span><a href="{e(r_["ooh"])}" rel="noopener" title="How to become one, US Bureau of Labor Statistics">BLS Handbook</a></span></th>'
+                                 f'<td data-l="Way in">{e(r_["edu"])}</td><td data-l="Training">{e(r_["route"])}</td>'
+                                 f'<td data-l="License or certificate"' + ("" if r_["license"] else ' class="ns"') + f'>{e(r_["license"] or "None named")}</td>'
+                                 f'<td data-l="US median pay">${r_["hour"]:,.2f} an hour<br>${r_["year"]:,} a year</td>'
+                                 f'<td data-l="Open here today">{len(js_r):,}' + (f" ({nd_r:,} {'says' if nd_r == 1 else 'say'} no degree)" if nd_r else "") + "</td>"
+                                 f'<td data-l="Pay they state">' + (f"${hm_:,.2f} an hour, median start ({k_:,} state pay)" if hm_ else ("–" if not k_ else f"{k_:,} state pay, too few for a median")) + "</td></tr>"
+                                 for r_, js_r, hm_, k_, nd_r in tr_rows)
+                       + "</tbody></table></div>")
+            hr_blk += section("Training routes to [[$25 an hour without a degree]]",
+                              f'<p>Each of these jobs pays a median of $25 an hour or more in the US, and none needs a college degree to start: an apprenticeship, a school certificate of a few months to two years, or a license such as a CDL is the way in. '
+                              f'{tr_open:,} postings for them are open on {SITE} today.</p>' + tr_html
+                              + f'<p class="note">Way in, training, license and median pay: US Bureau of Labor Statistics, Occupational Outlook Handbook (“How to Become One” and the quick facts of each occupation, 2025 median pay), '
+                                f'read on {fdate(trade_training.READ)}; each name links its page. Open here today: postings on this site whose title names the work; the pay is the median of the lowest hourly pay each states, '
+                                f'shown when at least five state one. Apprentices are paid while they train.</p>',
+                              sid="training", label="Without a degree", sub="Apprenticeships, certificates and licenses, with today’s openings and pay.").replace('class="sec hsec"', 'class="sec hsec cpanel"', 1)
+            r_by = {r_["name"]: (r_, len(js_r)) for r_, js_r, _, _, _ in tr_rows}
+            fmt_r = lambda nm_, say_, how_: f"{say_} (median ${r_by[nm_][0]['hour']:,.2f} an hour) {how_}"
+            tr_qa = [("What jobs pay $25 an hour without a degree with short training?",
+                      "By the US Bureau of Labor Statistics’ Occupational Outlook Handbook: " + "; ".join([
+                          fmt_r("Heavy truck driver", "heavy truck drivers", "after a truck-driving school of 3 to 6 months and a commercial driver’s license"),
+                          fmt_r("Licensed practical nurse (LPN)", "licensed practical nurses", "after a state-approved program of about a year and a license"),
+                          fmt_r("HVAC technician", "HVAC technicians", "after a program of 6 months to 2 years")]) + ". "
+                      + f"{sum(n_ for _, n_ in r_by.values()):,} postings for these and the other trades in the table are open on {SITE} today."),
+                     ("Can I get paid while I train for a trade?",
+                      "Yes, in an apprenticeship. The Bureau of Labor Statistics says most electricians, plumbers and pipefitters train in apprenticeships of 4 or 5 years with about 2,000 hours of paid "
+                      "training on the job each year, plus classes; millwrights and power-line installers also train in apprenticeships or employer programs.")]
         qa_[1:1] = [(f"Is ${lo_} an hour good pay?", f"${lo_} an hour is {'above' if lo_ > bj_['median'] else 'below'} the median for all US jobs, ${bj_['median']:,.2f} an hour in the "
                      f"Bureau of Labor Statistics figures for {bls_wages.PERIOD}: {bls_wages.all_jobs_place(lo_)}. Among the {len(all_h):,} open jobs on {SITE} that state pay in US dollars, "
                      f"{100 * below_ / max(1, len(all_h)):.0f}% start below ${lo_} an hour. "
@@ -12791,12 +12892,15 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                     (f"What jobs pay ${lo_} an hour without a degree?", (f"{len(nd_):,} open postings at this pay say no degree is required, for example " + ", ".join(f"{t_} ({k_})" for t_, k_ in nd_t) + "." if nd_ and nd_t else
                      f"None of the {len(js_):,} postings at this pay says outright that no degree is required. Many do not ask for one either, so check the requirements line of each job.")),
                     (f"Are there remote jobs that pay ${lo_} an hour?", f"Yes: {len(rm_):,} of the {len(js_):,} open jobs at this pay are listed as remote." if rm_ else f"None of the {len(js_):,} open jobs at this pay is listed as remote today.")]
+        qa_ += tr_qa
         qa_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa_]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         conv = nums([(f"${lo_}", f"an hour, {'up to $' + str(hi_) if hi_ else 'or more'}"), (dollars(lo_ * 40), "a week of 40 hours"),
                      (dollars(yr_lo / 12), "a month, a twelfth of the year"), (dollars(yr_lo), "a year of 2,080 hours")], src=False)
         listing(f"jobs-that-pay/{lo_}-an-hour/", f"Jobs that pay {hr_label(lo_, hi_)}", f"Jobs That Pay ${lo_} an Hour ({len(js_):,} open) | {SITE}",
-                f"{len(js_):,} open jobs whose stated pay starts at {hr_label(lo_, hi_)} ({span_}), from employers’ own careers pages. What ${lo_} an hour is a week, a month, a year.",
+                # 140 to 160 characters (the old line ran to 190 and was cut at its first sentence, 132)
+                (f"{len(js_):,} open jobs paying {hr_label(lo_, hi_)} ({dollars(yr_lo)}" + (f" to {dollars(yr_hi)} a year)" if hi_ else "+ a year)")
+                 + (" on employers’ own pages, and training routes into trades that pay it without a degree." if tr_qa else f" on employers’ own careers pages, and what ${lo_} an hour is after tax, a month, a week.")),
                 js_, intro=lead_, trail=(("Jobs by hourly pay", "jobs-that-pay/"),), more=False,
                 extra=conv + act_row("#list", f"See the {len(js_):,} jobs", [("tools/salary-converter/", "Pay converter"), ("salaries/", "What each job pays")]) + hr_chips(lo_)
                 + f'<p class="note">Work out any other rate with the <a href="{P}/tools/salary-converter/">pay converter</a>, or see <a href="{P}/salaries/">what each job pays</a>.</p>',

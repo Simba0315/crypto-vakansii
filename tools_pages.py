@@ -8,6 +8,7 @@ Two tools read a data file instead: the salary checker loads data/salary-groups.
 import datetime, json
 import state_tax                        # state income tax on wages: figures, sources and the sum (take-home pay pages)
 import bls_wages                        # US government wage figures (the median hourly wage of all US jobs)
+import compare_tools                    # other cover letter generators, read on their own pages (the comparison on /tools/cover-letter/)
 from collections import defaultdict
 from html import escape as _e
 
@@ -682,6 +683,14 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          ["remote-work-savings", "compare-offers", "salary-converter"], ["remote/"])
 
     # ------------------------------------------------------------ 8. cover letter
+    fd_ = lambda iso: f"{MONTHS[int(iso[5:7]) - 1]} {int(iso[8:10])}, {iso[:4]}"
+    cover_cmp = (compare_tools.table("cover", {"name": "This builder", "sub": f"{SITE}, free",
+                                                "how": "A fill-in template, not AI: every sentence built from your fields, in one of three tones",
+                                                "needs": "A few facts about you and the job; a pasted posting fills in the title and company and shows its skills",
+                                                "account": "No", "free": "Free, no limit", "download": "Copy, .txt, Word, PDF or print", "paid": "None"}, _e, fd_)
+                 + compare_tools.lists("cover", _e)
+                 + f'<p class="note">Each generator’s cells were read on its own pages on {fd_(compare_tools.READ)} (the addresses are under its name); “Not stated” means its pages did not say. '
+                   "Where two of a generator’s own pages disagree, the cell says so. Prices change, and some sites show other prices in other countries.</p>")
     paper = lambda name, extra="": (
         '<div class="tl-side"><div class="tl-actions tl-noprint"><button class="btn" type="button" data-copy="tl-paper">Copy</button>'
         f'<button class="btn ghost" type="button" data-dl="tl-paper" data-name="{name}">Download .txt</button>{extra}</div>'
@@ -689,7 +698,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
     tool("cover-letter", "seekers", "Cover letter builder",
          "Fill in a few facts, pick a tone, get a clean letter to edit. Copy, download or print. A template, not AI.",
          "Cover Letter Generator — Free, No Sign-Up",
-         "Build a short, clear cover letter from a few facts about you and the job. Three tones; copy, download or print. Template-based, private, no sign-up.",
+         f"Build a short cover letter from a few facts about you and the job, in three tones; copy it or save Word or PDF. No sign-up, no AI; {len(compare_tools.rows('cover'))} AI generators compared.",
          "Cover letter generator: write one without staring at a blank page",
          "The empty page is the slowest part of applying. Fill in a few facts about the job and about you, pick a tone, and you have a short, clean letter to edit. "
          "Paste the job posting and the page fills in the title and company and shows the skills it names. "
@@ -731,13 +740,17 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
           ('Can I use ChatGPT to write a cover letter?', 'Yes, as a first draft. Then make it yours: replace general claims with your own results and numbers, use the posting’s words and cut it to under 250 words. A letter that could go to any company reads as generated. This generator builds every sentence from the facts you type, so nothing is invented.'),
           ("Is this cover letter written by AI?",
            "No. It is a fill-in template: every sentence is assembled from the fields you complete, in the tone you choose. Nothing is generated, guessed or sent to a server, so the letter contains only facts you typed."),
+          *compare_tools.faq("cover", lambda iso: f"{MONTHS[int(iso[5:7]) - 1]} {int(iso[8:10])}, {iso[:4]}"),
           ("How long should a cover letter be?",
            "Short: three to five brief paragraphs that fit on one page. The builder shows a word count under the letter and tells you when your answers make it run long."),
           ("What should a cover letter say that a resume does not?",
            "Why this job and this company, and one concrete result that shows you can do the work. The resume lists what you did; the letter connects it to what this employer needs."),
           ("Do I need a different cover letter for every job?",
            "Yes, at least the opening and the reason for choosing the company. Your details stay saved in this browser, so for the next application you change only the job title, the company and the “why” sentence.")],
-         ["application-email", "resume-match", "thank-you-email"], ["resume/"])
+         ["application-email", "resume-match", "thank-you-email"], ["resume/"],
+         # free cover letter generators compared (ChatGPT, temporary chat, 26 Nov 2026: "best free AI cover letter generator" answers with
+         # Enhancv, Teal, Rezi, Kickresume, FlowCV and Resume.io by free limit, sign-up and PDF or Word); facts from their own pages
+         ex=("[[Free cover letter generators]] compared with this one", cover_cmp, None, "compared", "Sign-up, free limits, AI and downloads, from each generator’s own pages.", "Compared"))
 
     # ------------------------------------------------------------ 9. negotiation email
     both = ' data-for="counter raise"'
@@ -2413,6 +2426,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
                       "applicationCategory": "BusinessApplication", "operatingSystem": "Any", "browserRequirements": "Requires JavaScript", "isAccessibleForFree": True, "inLanguage": "en",
                       "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "publisher": org})
         extra = section("Advertised salaries by category and level", sal_table) if t["slug"] == "salary-checker" else section(*t["ex"]) if t["ex"] else ""
+        if t["ex"] and t["ex"][5:6] == ("Compared",): extra = extra.replace('class="sec hsec"', 'class="sec hsec cpanel"', 1)     # other products: the light framed panel
         sub = (f'<nav class="tsub" aria-label="{"Tools for people hiring" if t["group"] == "employers" else "Tools for job seekers"}"><a class="all" href="{P}/tools/">All tools</a>'
                + "".join(f'<a href="{P}/tools/{o["slug"]}/"' + (' aria-current="page"' if o is t else "") + f'>{e(o["name"])}</a>' for o in TOOLS if o["group"] == t["group"]) + "</nav>")
         body = (crumbs(("Tools", "tools/"), (t["name"], "")) + sub + f'<h1>{e(t["h1"])}</h1><p class="lead">{e(t["lead"])}</p>' + (f'<p class="plain"><b>In plain words:</b> {e(PLAIN[t["slug"]])}</p>' if t["slug"] in PLAIN else "") + t["html"]

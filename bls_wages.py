@@ -34,6 +34,7 @@ OCC = {
     "15-1212": ("Information Security Analysts", 190650, 75090, 129180, 199850),
     "15-1232": ("Computer User Support Specialists", 717190, 40980, 61860, 100540),
     "15-1241": ("Computer Network Architects", 179740, 79900, 134050, 202680),
+    "15-1242": ("Database Administrators", 69990, 60230, 104620, 163320),             # read 26 Nov 2026 (ChatGPT, "sql jobs": BLS for database administrators)
     "15-1243": ("Database Architects", 67140, 86240, 139500, 204000),
     "15-1244": ("Network and Computer Systems Administrators", 314340, 62640, 99130, 155050),
     "15-1251": ("Computer Programmers", 92230, 57710, 100390, 160460),
@@ -56,12 +57,25 @@ OCC = {
     "27-3091": ("Interpreters and Translators", 52060, 37070, 60170, 103660),       # read 24 Nov 2026 (Google: "Does a translator make good money?")
     "41-3091": ("Sales Representatives of Services", 1256010, 37980, 69990, 148840),
     "41-9031": ("Sales Engineers", 51790, 73870, 124900, 195270),
+    "29-2061": ("Licensed Practical and Licensed Vocational Nurses", 648410, 49740, 64400, 83440),       # read 26 Nov 2026, with the trades below
     "43-3031": ("Bookkeeping, Accounting, and Auditing Clerks", 1373680, 36000, 50670, 74550),
     "43-3051": ("Payroll and Timekeeping Clerks", 153140, 39500, 58260, 81350),
     "43-4051": ("Customer Service Representatives", 2595750, 31750, 44770, 63590),
     "43-5061": ("Production, Planning, and Expediting Clerks", 390160, 40080, 59650, 86000),
     "43-6011": ("Executive Secretaries and Executive Administrative Assistants", 459910, 50560, 76590, 109850),
+    "47-2111": ("Electricians", 757220, 42640, 63190, 108510),
+    "47-2152": ("Plumbers, Pipefitters, and Steamfitters", 465840, 44150, 63800, 108420),
+    "49-3023": ("Automotive Service Technicians and Mechanics", 704640, 34660, 50620, 81790),
+    "49-3031": ("Bus and Truck Mechanics and Diesel Engine Specialists", 289960, 44530, 61770, 88740),
+    "49-9021": ("Heating, Air Conditioning, and Refrigeration Mechanics and Installers", 409670, 40050, 61010, 95210),
+    "49-9041": ("Industrial Machinery Mechanics", 439640, 46120, 64520, 95170),
+    "49-9051": ("Electrical Power-Line Installers and Repairers", 131070, 51470, 95320, 128690),
+    "49-9052": ("Telecommunications Line Installers and Repairers", 97720, 45310, 74330, 103680),
+    "49-9071": ("Maintenance and Repair Workers, General", 1529700, 35350, 49590, 77180),
     "51-1011": ("First-Line Supervisors of Production and Operating Workers", 673430, 47130, 74450, 108750),
+    "51-4041": ("Machinists", 287050, 39200, 58750, 80010),
+    "51-4121": ("Welders, Cutters, Solderers, and Brazers", 416210, 39240, 53750, 77530),
+    "53-3032": ("Heavy and Tractor-Trailer Truck Drivers", 2062040, 40140, 58640, 79380),
 }
 
 ROLE = {
@@ -149,6 +163,10 @@ ROLE = {
     "bookkeeper": "43-3031", "cost-accountant": "13-2011", "fund-accountant": "13-2011",
     "benefits-specialist": "13-1141", "employee-relations": "13-1071",
     "vulnerability-management": "15-1212", "ciso": "11-3021", "coo": "11-1021",
+    # 26 Nov 2026 (ChatGPT, "sql jobs" and "jobs that pay $25 an hour without a degree"): database administrators and the trades a
+    # high-school diploma and an apprenticeship, a school certificate or a CDL lead to; each read from the same service that day
+    "database-administrator": "15-1242", "electrician": "47-2111", "plumber-pipefitter": "47-2152", "hvac-technician": "49-9021",
+    "welder": "51-4121", "machinist": "51-4041", "maintenance-technician": "49-9071", "fiber-technician": "49-9052",
 }
 
 # what a reader must know about the match
@@ -163,6 +181,9 @@ NOTE = {
     "sql-developer": "The government counts database developers with database architects.",
     "ciso": "Chief information security officers are counted among computer and information systems managers.",
     "coo": "Chief operating officers are counted among general and operations managers; chief executives are a separate category.",
+    "database-administrator": f"The government counts database architects (median ${OCC['15-1243'][3]:,}) apart from administrators; this site's database jobs include both, and database engineers.",
+    "maintenance-technician": f"The closest category is general maintenance and repair workers; industrial machinery mechanics, who keep factory machines running, have their own (median ${OCC['49-9041'][3]:,}).",
+    "fiber-technician": "The closest category is telecommunications line installers and repairers; technicians who work inside buildings are counted elsewhere.",
     "localization": "The government counts translators and interpreters together; localization engineers and managers at software companies fall in other categories, so the advertised pay on this page also covers them.",
 }
 

@@ -472,6 +472,12 @@ plain HTML, so the page is readable without the map.
   site; never paste text from a posting into them.
 - `/vs/` reads `compare_sites.py`: every fact about another site carries a tagged source `(fact, url, date read)`; a site with fewer
   than 4 sourced rows gets no page. Re-check the facts (prices change) before relying on them; `NOT_SOURCED` lists the gaps.
+- `compare_tools.py` (26 Nov 2026) holds the other products beside two of our tools: AI interview practice tools on `/interview-practice/`
+  and cover letter generators on `/tools/cover-letter/`. Every cell was read on the product's own pages on `READ` (the page shows the
+  date and the addresses under each name); a product with fewer than 4 stated cells gets no row; where a product's own pages
+  disagree the cell says both. Our row is written in build.py / tools_pages.py from what our code does. Re-read before relying on it.
+- `trade_training.py` (26 Nov 2026): the training route, typical education, license and 2025 median pay of ten trades, from the BLS
+  Occupational Outlook Handbook, for the table on `/jobs-that-pay/25-an-hour/`; the open postings and their pay are counted at build.
 
 ## Glossary and the checker (14 Nov 2026)
 

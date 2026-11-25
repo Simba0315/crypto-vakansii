@@ -5169,3 +5169,29 @@ main.lp .h1bp{margin-top:64px}
 .h1bt{font:600 11px var(--mono);letter-spacing:.02em;color:var(--muted);border:1px solid var(--line2);border-radius:3px;padding:0 4px;white-space:nowrap}
 .cbar #ch1b{min-height:48px;padding:0 18px;border-radius:999px}
 @media(max-width:560px){.h1bp .tablewrap th,.h1bp .tablewrap td{padding:10px 12px}.h1bp th:nth-child(n+2){white-space:normal}}
+/* ---- other products beside one of ours (26 Nov 2026): AI interview practice tools on /interview-practice/, cover letter generators on
+   /tools/cover-letter/, training routes on /jobs-that-pay/25-an-hour/. A light framed panel, like the field pages' outlook; the table is
+   the compare table (.cmpt) with more columns, each cell labelled on a phone; this site's row is tinted ---- */
+.sec.cpanel{margin:64px 0;padding:34px 40px 30px;border-radius:28px;background:var(--bg2)}
+.sec.cpanel .sec-head{margin-top:0}
+.sec.cpanel .cmpwrap{background:var(--card)}
+.sec.cpanel>.note{max-width:900px}
+.cmpt.cmpk{min-width:1120px}
+.cmpt.cmpk thead th{width:auto}
+.cmpt.cmpk thead th:nth-child(1){width:150px}
+.cmpt.cmpk tbody tr.us th,.cmpt.cmpk tbody tr.us td{background:var(--accent-soft)}
+.cmpt.cmpk td.ns{color:var(--faint)}
+.cmpt.cmpk tbody th[scope=row] span a{color:inherit;text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:2px;overflow-wrap:anywhere}
+.cmpt.cmpt-tr{min-width:1000px}
+.cmpbw{display:grid;grid-template-columns:1fr 1fr;gap:18px 28px;max-width:1080px;margin:22px 0 6px}
+.cmpbw ul{margin:0;padding-left:18px}
+.cmpbw li{margin:0 0 8px;font-size:15px;line-height:1.5}
+@media(max-width:760px){
+  .cmpt.cmpk{min-width:0}
+  .cmpt.cmpk td::before{content:attr(data-l);display:block;margin-bottom:2px;font-size:12px;font-weight:650;color:var(--faint)}
+  .cmpbw{grid-template-columns:1fr}
+}
+@media(max-width:700px){.sec.cpanel{margin-left:-10px;margin-right:-10px;padding:26px 18px 24px;border-radius:22px}}
+/* resume examples: the skills in groups, each on its own line (26 Nov 2026) */
+.paper .pp-sk{margin:0 0 4px}
+.paper .pp-sk b{font:600 13px "Inter",system-ui,sans-serif}
