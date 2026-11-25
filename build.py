@@ -10080,6 +10080,12 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
 
     lap('Partners')
     # Partners
+    partner_qa = [("Is it free to show jobs from this site on my website?", "Yes. The widget, the RSS feeds and the API are free, and nobody has to sign up to use them."),
+                  ("Do I need to write code?", "No. You choose what to show in the builder and copy a short piece of code into any place on your site that accepts HTML. For Notion and similar tools that block scripts, the builder offers a different kind of code."),
+                  ("How often does the list change?", "The jobs behind the widget are re-read every hour, so a job that closed is gone from your list within the hour and a new one appears as soon as it is read."),
+                  ("Do the widget and the feeds link to this site?", f"Yes. The list ends with a link to the full list on {SITE}. Every job opens the employer’s own page, where the person applies."),
+                  ("Can I show my own company’s jobs instead?", "Yes, if your company uses Greenhouse, Lever, Ashby, Recruitee, SmartRecruiters or Teamtailor. The widget reads your board from that system, so nobody types jobs in twice.")]
+    partner_faq, partner_ld = qa_block(partner_qa)
     page("partners/", f"Partner With Us — communities, bootcamps, career services | {SITE}",
          "Ways to work with us: live job widgets and feeds for communities and newsletters, job pages for bootcamps and universities, and offers for career services.",
          # Sections review, batch 5: the page was a heading, six ruled items and one line. Now a framed first screen with the one
@@ -10092,19 +10098,20 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                + '<p class="plain"><b>In plain words:</b> a widget is a small box with a list of jobs that sits on your own web page. A feed is an address that a chat or an app reads to post each new job by itself, and the API is the same list in a form that programmers can use. All three are free, and you do not need to write any code to use the widget.</p>')
          + section("What we can [[set up]]", krows([
              ("Communities and newsletters", "A live jobs widget, feed or weekly list for your niche",
-              f'<p>A live jobs widget, feed or weekly list for your niche: one skill, one city, remote only. Free, with a link back.</p><p class="kact">{go("widgets/", "Build a widget", "ghost")}<a href="{P}/feeds/">Pick a feed</a></p>'),
+              f'<p>Pick one skill, one city, one field or remote jobs only in the widget builder, choose how it looks (a list, cards, a narrow sidebar box, a ticker or a carousel) and paste two lines of code where the list should appear. For a chat, a feed does the same job without any code: one address for each field, kind of work or skill, and a bot posts each new job in your channel. The widget shows a link to the full list on this site and is free.</p><p class="kact">{go("widgets/", "Build a widget", "ghost")}<a href="{P}/feeds/">Pick a feed</a></p>'),
              ("Bootcamps and universities", "A board of entry-level roles and internships for your students",
-              f'<p>A board of entry-level roles and internships for your students, embedded on your careers page and updated every hour.</p><p class="kact">{go("widgets/", "Build the board", "ghost")}<a href="{P}/entry-level/">See the entry-level jobs</a></p>'),
+              f'<p>The careers-page layout of the widget is a whole list of jobs with a search box and a “Show more” button, so it can fill a page of your site. Choose the field your students are training for and it keeps itself current, with nobody on your side typing jobs in. The entry-level and internship lists on this site are open to everyone, so students can also go to them directly.</p><p class="kact">{go("widgets/", "Build the board", "ghost")}<a href="{P}/entry-level/">See the entry-level jobs</a><a href="{P}/internships/">Internships</a></p>'),
              ("Developers and bots", "A free JSON API and RSS",
-              f'<p>A free JSON API and RSS for Slack, Discord and Telegram bots or your own project.</p><p class="kact">{go("api/", "Open the API", "ghost")}<a href="{P}/feeds/">RSS feeds</a></p>'),
+              f'<p>The same jobs that fill the pages of this site are available as data a program can read, and as RSS feeds for Slack, Discord and Telegram bots. Both are free to use in your own project; the API page lists the addresses and shows an example of what comes back.</p><p class="kact">{go("api/", "Open the API", "ghost")}<a href="{P}/feeds/">RSS feeds</a></p>'),
              ("Employers and recruiters", "Featured jobs, a company spotlight, sponsorship",
-              f'<p>Featured jobs, a company spotlight, or sponsorship of one skill or category page.</p><p class="kact">{go("post-a-job/", "For employers", "ghost")}<a href="{P}/pricing/#employers">Prices</a></p>'),
+              f'<p>A job can have a highlighted row above the free jobs in its lists, a company can have a spotlight, and a skill or category page can be sponsored. The pricing page says what each option costs and what it changes; the employer page shows how posting works.</p><p class="kact">{go("post-a-job/", "For employers", "ghost")}<a href="{P}/pricing/#employers">Prices</a></p>'),
              ("Writers and researchers", "Hiring and salary data you can quote",
-              f'<p>Hiring and salary data you can quote, with CSV downloads and ready citations.</p><p class="kact">{go("trends/", "Open the hiring trends", "ghost")}<a href="{P}/media-kit/">Media kit</a></p>'),
+              f'<p>Counts of open jobs, pay by role and how the market moves are recounted from the postings and dated, so a figure can be quoted with its date. Tables come with CSV downloads and a ready citation line, and the media kit holds the description of the site, today’s numbers, the logo and screenshots.</p><p class="kact">{go("trends/", "Open the hiring trends", "ghost")}<a href="{P}/media-kit/">Media kit</a></p>'),
              ("Career services", "Resume review, interview coaching, courses",
-              '<p>Resume review, interview coaching, courses. We plan a page that recommends services visitors find useful; write to us if you run one.</p>')], "partner"), label="Six kinds of partner")
+              '<p>If you run a service for job seekers, such as resume reviews, interview coaching or courses, there is no page for it yet. We plan one that lists services visitors find useful, and you can write to us to be considered when it opens.</p>')], "partner"), label="Six kinds of partner")
+         + section("Questions [[partners ask]]", partner_faq, label="Questions")
          + (kpanel(section("Get [[in touch]]", "<p>Write to " + mail_a("partners") + ".</p>", sid="contact", label="Contact"), "soft") if MAIL.get("partners") or contact else
-            '<div class="banner" id="contact" style="margin-top:24px">Contact details will be published here shortly. The widgets, feeds and data above already work without asking anyone.</div>'), cls="kp sp partners")
+            '<div class="banner" id="contact" style="margin-top:24px">Contact details will be published here shortly. The widgets, feeds and data above already work without asking anyone.</div>'), cls="kp sp partners", head=partner_ld)
 
     lap('Bare page for iframe embeds: /embed/?jobs=skill:python&limit')
     # Bare page for iframe embeds: /embed/?jobs=skill:python&limit=6&layout=cards&theme=dark&accent=%23ff5500
