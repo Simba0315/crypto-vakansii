@@ -3252,7 +3252,9 @@ def job_page(j, active_by_cat):
     title = job_title(j["title"], j["company"], " (closed)" if not j["active"] else "")
     place_ = re.split(r";|\||•", j["location"])[0].strip(" ,-–") if j["location"] else ""
     place_ = re.sub(r"\s*\([^)]*\)", "", place_).strip(" ,-–")       # "… at LiveKit (United Kingdom (Remote))" had a bracket in a bracket
-    if place_ and place_.lower() not in title.lower() and len(title) + len(place_) + 3 <= 65: title += f" ({place_})"
+    # the place only when " (closed)" still fits after it: page() cuts a title past 70 characters, and a closed job whose title and place
+    # filled 62 to 65 characters lost its "(closed)" (QA 25 Nov 2026: "Sales Executive - Mining at dmg events (Cape Town, South Africa)")
+    if place_ and place_.lower() not in title.lower() and len(title) + len(place_) + 3 <= (65 if j["active"] else 56): title += f" ({place_})"
     if not j["active"]: title += " (closed)"
     # the search line of a job: what a searcher compares first, the pay, then the place of work and the skills (24 Nov 2026: it read
     # "… — London. Engineering role. Apply on the company site." on every job); fit_desc drops whole sentences from the end when it is long
