@@ -262,7 +262,12 @@ class Handler(SimpleHTTPRequestHandler):
 
     def send_list(self, qs):
         """/api/search?list=1&<the search page's own address>: one page of 50 rows for /jobs/ (search_engine.listing). The answer for a
-        search, written one way (search_engine.params), is kept LIST_TTL seconds, here and in nginx (2 minutes, by address)."""
+        search, written one way (search_engine.params), is kept LIST_TTL seconds, here and in nginx (2 minutes, by address).
+        Rows past the engine's limit (search_engine.DEEPEST) are a 400 that says what to do; they were a 503 "search engine unavailable"
+        until 26 Nov 2026, which the page took for the search being down. assets/app.js no longer asks for them."""
+        if search_engine.too_deep(qs):
+            return self.send_json(400, {"error": f"only the first {search_engine.DEEPEST:,} matches can be listed; add a filter or a place to see the rest",
+                                        "deepest": search_engine.DEEPEST}, [("Cache-Control", "public, max-age=300")])
         p = search_engine.params(qs)
         key = json.dumps(p, sort_keys=True, ensure_ascii=False)
         now = time.monotonic()

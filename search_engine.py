@@ -269,12 +269,22 @@ def params(qs):
     p["skills"] = listed("skills", 10, 60)
     p["xc"], p["xw"] = repeated("xc", 50, 120), sorted({w.lower() for w in repeated("xw", 20, 60)})
     p["sort"] = one("sort") if one("sort") in SORTS else "new"
-    p["offset"], p["limit"] = min(num("offset"), DEEPEST - 1), max(1, min(num("limit") or PAGE, PAGE))
+    p["offset"] = min(num("offset"), DEEPEST - 1)
+    # from + size must stay within OpenSearch's max_result_window: rows 9,990 to 10,039 used to fail the whole request (503), now the
+    # last page ends at row 10,000 (26 Nov 2026)
+    p["limit"] = max(1, min(num("limit") or PAGE, PAGE, DEEPEST - p["offset"]))
     p["ids"] = [s for s in listed("ids", 60, 200) if SLUG.fullmatch(s)]
     p["sk"] = listed("sk", 30, 60)                                   # any of these skills (For you), where skills= needs all of them
     p["co"] = one("co")[:120]                                        # one company, by its name as written (companies followed)
     after = num("after"); p["after"] = after if 20000101 <= after <= 30001231 else 0     # posted after this day, yyyymmdd (saved searches)
     return p
+
+
+def too_deep(qs):
+    """Does the list ask for rows the engine cannot list (offset DEEPEST or beyond)? serve.py answers it 400 with what to do, where it
+    used to pass it on and answer 503 "search engine unavailable" for OpenSearch's refusal (26 Nov 2026: page 201 of a common search)."""
+    v = ((qs.get("offset") or [""])[0] or "").strip()
+    return v.isdigit() and int(v) >= DEEPEST
 
 
 def list_filters(p, today, drop="", said_remote=False):
@@ -433,6 +443,13 @@ def _test():
     assert a == b2 and a["q"] == "nurse rn" and a["remote"] and not a["hybrid"] and a["offset"] == 0 and a["limit"] == PAGE   # one search, one key
     assert P("remote=0")["remote"] is False and P("lvl=Boss")["lvl"] == "" and P("loc=../x")["loc"] == "" and P("sal=500")["sal"] == 0
     assert P("sal=1")["sal"] == 1 and P("sal=150000")["sal"] == 150000 and P("offset=99999")["offset"] == DEEPEST - 1 and P("limit=500")["limit"] == PAGE
+    # never past the engine's window (max_result_window = DEEPEST): the last page is cut short, rows from DEEPEST on are refused (400)
+    assert P("offset=9950")["limit"] == PAGE and P("offset=9990")["limit"] == 10 and P("offset=99999")["limit"] == 1 and P("offset=9990&limit=5")["limit"] == 5
+    for o in ("0", "50", "9950", "9951", "9990", "9999", "10000", "99999", "123456789"):
+        b_ = list_body(P("q=nurse&offset=" + o), datetime.date(2026, 11, 25))
+        assert b_["from"] + b_["size"] <= DEEPEST, o
+    assert not too_deep(parse_qs("offset=9950")) and not too_deep(parse_qs("offset=9999")) and not too_deep(parse_qs("q=nurse")) and not too_deep(parse_qs("offset=x"))
+    assert too_deep(parse_qs("offset=10000")) and too_deep(parse_qs("q=nurse&offset=12345")) and too_deep(parse_qs("offset=123456789"))
     assert P("xc=Acme%2C%20Inc.&xc=Zeta")["xc"] == ["Acme, Inc.", "Zeta"] and P("skills=Python,Go")["skills"] == ["Go", "Python"]
     assert P("ids=c,BAD!,a-b")["ids"] == ["a-b", "c"] and P("rc=us")["rc"] == "US" and P("xl=Senior,Nope")["xl"] == ["Senior"]
     day = datetime.date(2026, 11, 25)
