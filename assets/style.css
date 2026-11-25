@@ -5154,3 +5154,18 @@ main.lp .kpanel.soft{background:var(--bg2)}
 main.lp .kpanel .sec-head{margin-top:0}
 main.lp .kpanel .tablewrap{background:var(--card)}
 @media(max-width:700px){main.lp .kpanel{margin:40px -10px;padding:24px 20px 22px;border-radius:24px}}
+/* H-1B filings on a company page (26 Nov 2026): one light panel with the two-weight heading, the figures, the jobs filed for and the source */
+.h1bp{padding:34px 38px 30px;border-radius:24px;background:var(--bg2)}
+main.lp .h1bp{margin-top:64px}
+.h1bp>p{max-width:78ch}
+.h1bp>p:first-of-type{font-size:16px;line-height:1.55}
+.h1bp .nums{margin:18px 0 26px}
+.h1bp .flabel{margin:0 0 8px}
+.h1bp .tablewrap{margin:0 0 14px}
+.h1bp td:nth-child(n+2),.h1bp th:nth-child(n+2){text-align:right;white-space:nowrap}
+.h1bp .note{max-width:86ch;margin:10px 0 0}
+.h1bp .note a{color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+@media(max-width:700px){.h1bp{margin-left:-10px;margin-right:-10px;padding:24px 18px 22px;border-radius:20px}main.lp .h1bp{margin-top:48px}}
+.h1bt{font:600 11px var(--mono);letter-spacing:.02em;color:var(--muted);border:1px solid var(--line2);border-radius:3px;padding:0 4px;white-space:nowrap}
+.cbar #ch1b{min-height:48px;padding:0 18px;border-radius:999px}
+@media(max-width:560px){.h1bp .tablewrap th,.h1bp .tablewrap td{padding:10px 12px}.h1bp th:nth-child(n+2){white-space:normal}}

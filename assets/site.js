@@ -1036,7 +1036,7 @@
   /* ---------- companies page: quick filter ---------- */
   var cfilter = $('cfilter'), cfield = $('cfield'), clist = $('clist'), cmore = $('cmore'), cmorebtn = $('cmorebtn');
   /* The page carries the employers with the most open roles; the rest are data/company-directory.json, added to the list the first time
-     a visitor types, picks a field, sorts or presses the button. rows: [name, slug, open roles, posted in 7 days, field, has a logo]. */
+     a visitor types, picks a field, sorts or presses the button. rows: [name, slug, open roles, posted in 7 days, field, has a logo, ([H-1B filings, fiscal year] when it files H-1B)]. */
   var cstate = cmore ? 'idle' : 'done', cwaiting = [];
   var cload = function (then) {
     if (cstate === 'done') { if (then) then(); return; }
@@ -1055,6 +1055,7 @@
         if (r[5]) { var im = document.createElement('img'); im.src = P + '/logos/s/' + r[1] + '.png'; im.alt = im.title = r[0] + ' logo'; im.width = im.height = 72; im.loading = 'lazy'; av.appendChild(im); }
         nm.className = 'n'; nm.textContent = r[0];
         a.appendChild(av); a.appendChild(nm);
+        if (r[6]) { var hb = document.createElement('span'); hb.className = 'h1bt'; hb.title = 'Files H-1B: ' + r[6][0].toLocaleString('en-US') + ' certified H-1B ' + (r[6][0] === 1 ? 'filing' : 'filings') + ' (LCAs) in fiscal year ' + r[6][1]; hb.textContent = 'H-1B'; a.appendChild(hb); li.setAttribute('data-h', '1'); }
         if (r[3]) { var up = document.createElement('span'); up.className = 'up'; up.title = r[3] + ' posted in the last 7 days'; up.textContent = '+' + r[3]; a.appendChild(up); }
         c.className = 'c'; c.textContent = r[2].toLocaleString('en-US'); a.appendChild(c);
         li.appendChild(a); frag.appendChild(li);
@@ -1068,10 +1069,11 @@
     });
   };
   if (cmorebtn) { cmorebtn.hidden = false; cmorebtn.addEventListener('click', function () { cload(); }); }
-  var cfiltered = function () {                       // by name and by the field a company hires for most
-    var q = cfilter.value.trim().toLowerCase(), f = cfield ? cfield.value : '', shown = 0;
+  var ch1b = $('ch1b'), h1bOnly = function () { return !!ch1b && ch1b.getAttribute('aria-pressed') === 'true'; };
+  var cfiltered = function () {                       // by name, by the field a company hires for most, and "Files H-1B" (data-h)
+    var q = cfilter.value.trim().toLowerCase(), f = cfield ? cfield.value : '', h = h1bOnly(), shown = 0;
     document.querySelectorAll('#clist li').forEach(function (li) {
-      var hit = (!q || li.getAttribute('data-n').indexOf(q) >= 0) && (!f || li.getAttribute('data-f') === f);
+      var hit = (!q || li.getAttribute('data-n').indexOf(q) >= 0) && (!f || li.getAttribute('data-f') === f) && (!h || li.hasAttribute('data-h'));
       li.hidden = !hit; if (hit) shown++;
     });
     var none = $('cnone'); if (none) none.hidden = shown > 0;
@@ -1084,9 +1086,10 @@
     var nb = clist.nextElementSibling; if (nb && nb.classList.contains('tiles-more')) nb.remove();
     if (cmore && cstate !== 'done') cmore.hidden = false;
   };
-  var cfilterNow = function () { cuncut(); cfiltered(); if (cstate !== 'done' && (cfilter.value.trim() || (cfield && cfield.value))) cload(cfiltered); };
+  var cfilterNow = function () { cuncut(); cfiltered(); if (cstate !== 'done' && (cfilter.value.trim() || (cfield && cfield.value) || h1bOnly())) cload(cfiltered); };
   if (cfilter) cfilter.addEventListener('input', cfilterNow);
   if (cfilter && cfield) cfield.addEventListener('change', cfilterNow);
+  if (cfilter && ch1b) { ch1b.hidden = false; ch1b.addEventListener('click', function () { ch1b.setAttribute('aria-pressed', h1bOnly() ? 'false' : 'true'); cfilterNow(); }); }
   /* companies page: sort by open roles, roles posted in the last 7 days, or name (buttons are hidden until this script runs) */
   var csort = $('csort');
   if (csort && clist) {

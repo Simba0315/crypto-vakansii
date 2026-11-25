@@ -2,5 +2,6 @@ site/
 __pycache__/
 .claude/
 .DS_Store
-data/
+data/*
+!data/h1b.json
 pages_site/

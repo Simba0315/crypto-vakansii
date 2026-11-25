@@ -1382,6 +1382,7 @@ JobAssist, а как Rezi», «но не Rezi эталон, а все надо �
 - ⏳ Страница вакансии (19.11, «можно» 21.11): блок фактов наверху, кнопки «Tailor my resume» и «Cover letter for this job»,
   5 похожих открытых на закрытой вакансии — в работе в ночь на 26.11.
 - ⏳ Jobright (21.11): страницы под «AI resume tailor», «AI job match», «job application tracker» — в работе в ночь на 26.11.
+- ✅ Jobright: H-1B per company — done (26.11). Данные Минтруда США (LCA disclosure, FY2025 и FY2026, 8 квартальных файлов, прочитаны 26.11), 3 310 наших компаний; 229 крупнейших сверены вручную. Блок «H-1B visa filings» и вопрос «Does <company> sponsor H-1B visas?» на странице компании, метка «Files H-1B» на страницах компаний и вакансий, тег и фильтр в каталоге /companies/, рейтинг на /perks/visa-sponsorship/. Обновление раз в год: `h1b.py` (описание в начале файла), сырые файлы не коммитить.
 - ✅ Сравнения «X vs Y», альтернативы, сравнение нескольких сайтов с нашим (24.11; 65eca23); ⏳ новые: Jobscan, Google for Jobs, Ladders,
   Craigslist, Levels.fyi, GovernmentJobs — в работе в ночь на 26.11.
 - ✅ Перелинковка без каннибализации (21.11; 4eed1a5, f6f112c).

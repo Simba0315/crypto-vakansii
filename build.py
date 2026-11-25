@@ -939,6 +939,82 @@ LOGOS = {f.stem for f in (ROOT / "assets" / "logos").glob("*.png")} if (ROOT / "
 LOGOS |= {f.stem for f in (ROOT / "data" / "logos").glob("*.png")}      # logos companies uploaded for their own pages in the account (collect.direct_and_paid)
 LOGO_SITE = json.loads((ROOT / "logos.json").read_text()) if (ROOT / "logos.json").exists() else {}     # company -> its own site (checked by hand or by name)
 LOGO_SITE = {k: v for k, v in LOGO_SITE.items() if not v.startswith("board:")}      # "board:<ats>/<token>": the logo came from the job board, the site is unknown
+# H-1B filings per company (26 Nov 2026, the owner's list of features to take from Jobright): certified Labor Condition Applications in
+# the US Department of Labor's LCA disclosure data, FY2025 and FY2026, matched to our companies by h1b.py (its docstring has the rules).
+# slug -> {"fy": {"2026": [certified, certified then withdrawn]}, "rfy": the year of "roles" and "cities", "roles": [[title, LCAs,
+# median yearly wage or None]], "cities": [[city, state, LCAs]], "dol": the employer names as filed}. Nothing is shown without it.
+H1B_ALL = json.loads((ROOT / "data" / "h1b.json").read_text(encoding="utf-8")) if (ROOT / "data" / "h1b.json").exists() else {"source": {}, "companies": {}}
+H1B, H1B_SRC = H1B_ALL["companies"], H1B_ALL["source"]
+H1B_SPAN = {"2025": "October 2024 to September 2025", "2026": "October 2025 to September 2026"}
+
+
+def h1b_years(slug):
+    """[(fiscal year, certified H-1B LCAs, certified then withdrawn)], newest first, for a company with filings; [] otherwise."""
+    d = H1B.get(slug)
+    return sorted(((int(y), v[0], v[1]) for y, v in d["fy"].items() if v[0]), reverse=True) if d else []
+
+
+def h1b_source():
+    """The source line under every H-1B figure: who publishes the data, which files, when we read them."""
+    posted = sorted({f_["posted"] for f_ in H1B_SRC.get("files", [])})
+    return (f'Source: US Department of Labor, Office of Foreign Labor Certification, <a href="{e(H1B_SRC["page"])}" rel="noopener">LCA Programs (H-1B, H-1B1, E-3) '
+            f'disclosure data</a>, the quarterly files of fiscal years 2025 and 2026 (the latest posted {fdate(posted[-1])}), read on {fdate(H1B_SRC["read"])}.')
+
+
+H1B_WHAT = ("A Labor Condition Application (LCA) is a filing an employer makes with the Department of Labor before it can petition for an H-1B worker, "
+            "for a new hire or for someone already on staff whose visa is extended or transferred. It is not a visa approval, and it does not promise "
+            "that the company will sponsor a new hire.")
+
+
+def h1b_mark(slug):
+    """The "Files H-1B" trust mark: (name, the number behind it) or None."""
+    ys = h1b_years(slug)
+    return ("Files H-1B", f"{ys[0][1]:,} certified H-1B {'filing' if ys[0][1] == 1 else 'filings'} (LCAs) in fiscal year {ys[0][0]}") if ys else None
+
+
+def h1b_qa(c, slug):
+    """"Does <company> sponsor H-1B visas?" answered from the Department of Labor's records, or None when we hold none for it."""
+    ys, d = h1b_years(slug), H1B.get(slug)
+    if not ys: return None
+    top_ = [r_[0] for r_ in d["roles"][:3]]
+    return (f"Does {c} sponsor H-1B visas?",
+            f"US Department of Labor records hold {ys[0][1]:,} H-1B Labor Condition {'Application' if ys[0][1] == 1 else 'Applications'} from {c} certified in fiscal year {ys[0][0]}"
+            + (f" and {ys[1][1]:,} in fiscal year {ys[1][0]}" if len(ys) > 1 else "") + "; "
+            + (f"the job filed most often was {top_[0]}. " if len(top_) == 1 else f"the jobs filed most often were {', '.join(top_[:-1])} and {top_[-1]}. ")
+            + H1B_WHAT.replace("the company", c) + " Ask the recruiter whether the role you want can be sponsored.")
+
+
+def h1b_block(c, slug):
+    """The company page's "H-1B visa filings" panel, every figure read from data/h1b.json; "" for a company we hold no filings for."""
+    ys, d = h1b_years(slug), H1B.get(slug)
+    if not ys: return ""
+    y0, n0, w0 = ys[0]
+    lead = (f"{e(c)} filed <b>{n0:,}</b> {'Labor Condition Application' if n0 == 1 else 'Labor Condition Applications'} (LCAs) for H-1B workers that the US Department "
+            f"of Labor certified in fiscal year {y0} ({H1B_SPAN[str(y0)]})" + (f", and {ys[1][1]:,} in fiscal year {ys[1][0]}" if len(ys) > 1 else "") + "."
+            + (f" Another {w0:,} {'was' if w0 == 1 else 'were'} certified in fiscal year {y0} and later withdrawn by {e(c)}; {'it is' if w0 == 1 else 'they are'} not counted." if w0 else ""))
+    cells = [(f"{n:,}", f"certified H-1B LCAs, fiscal year {y}") for y, n, _ in ys]
+    rfy, rows_ = d["rfy"], d["roles"]
+    paid = [r_ for r_ in rows_ if r_[2]]
+    if paid: cells.append((money(paid[0][2]), f"median yearly wage listed for {e(paid[0][0])}"))
+    table = ""
+    if rows_:
+        table = ('<div class="tablewrap"><table><tr><th>Job title, as filed</th><th>LCAs</th><th>Median yearly wage</th></tr>'
+                 + "".join(f'<tr><td>{e(t_)}</td><td>{k_:,}</td><td>{money(w_) if w_ else "—"}</td></tr>' for t_, k_, w_ in rows_) + "</table></div>")
+    where = ""
+    if d.get("cities"):
+        where = (f'<p class="note">Where the fiscal year {rfy} filings put the work: '
+                 + " · ".join(f"{e(ct_)}, {e(st_)} ({k_:,})" for ct_, st_, k_ in d["cities"]) + ".</p>")
+    names_ = d.get("dol") or []
+    body = (f'<p>{lead}</p>' + nums(cells, src=False)
+            + (f'<p class="flabel">The jobs {e(c)} filed for most often in fiscal year {rfy}, with the median of the yearly wage each filing offers</p>' if rows_ else "")
+            + table + where
+            + f'<p class="note">{e(H1B_WHAT)} Counted: visa class H-1B with the status “Certified”, each case once. The wage is the lower end of the range '
+              f'each filing offers, made yearly, for full-time positions. Filed under {"the employer name" if len(names_) == 1 else "the employer names"} '
+            + ", ".join(f"“{e(n_)}”" for n_ in names_) + (", checked by hand against the company" if d.get("how") == "checked by hand" else
+                                                         ", matched to the company by name and place" if d.get("how") == "name" else ", matched by the trade name the employer filed under")
+            + f'.</p><p class="note">{h1b_source()}</p>')
+    sec_ = section(f"{c} [[H-1B visa filings]]", body, sid="h1b", label="H-1B")
+    return sec_.replace('<section class="sec hsec"', '<section class="sec hsec kpanel soft h1bp"', 1)
 
 
 LOGO_S = 72          # px: the copy of each logo the 28 to 42 px squares show (twice their size for sharp screens)
@@ -5432,8 +5508,10 @@ def main():
     def co_tile(c, js):
         n, w, f_ = co_parts(c, js)
         up = f'<span class="up" title="{w:,} posted in the last 7 days">+{w:,}</span>' if w else ""
-        return (f'<li data-n="{e(c.lower())}" data-o="{n}" data-w="{w}" data-f="{f_}"><a class="tile" href="{P}/companies/{slugify(c)}/">{ava(c, "sm")}'
-                f'<span class="n">{e(c)}</span>{up}<span class="c">{n:,}</span></a></li>')
+        hy_ = h1b_years(slugify(c))         # the "Files H-1B" mark (data/h1b.json); the tile's title says the year and the count
+        hb = f'<span class="h1bt" title="{e(h1b_mark(slugify(c))[0] + ": " + h1b_mark(slugify(c))[1])}">H-1B</span>' if hy_ else ""
+        return (f'<li data-n="{e(c.lower())}" data-o="{n}" data-w="{w}" data-f="{f_}"{" data-h=1" if hy_ else ""}><a class="tile" href="{P}/companies/{slugify(c)}/">{ava(c, "sm")}'
+                f'<span class="n">{e(c)}</span>{hb}{up}<span class="c">{n:,}</span></a></li>')
     # The directory holds every employer with an open role (the count above equals the tiles). The page itself carries the CO_FIRST with the most
     # open roles; the others are the file data/company-directory.json, which assets/site.js adds to the list when a visitor types, sorts,
     # picks a field or presses the button. Before, all 14,000 tiles sat in the page (3.7 MB on a one-in-sixteen sample), so a phone
@@ -5441,7 +5519,8 @@ def main():
     CO_FIRST = 500
     co_rows = [(c, js) for c, js in comp_items if any(j["active"] for j in js)]
     grid = "".join(co_tile(c, js) for c, js in co_rows[:CO_FIRST])
-    co_rest = [[c, slugify(c), *co_parts(c, js)[:2], co_parts(c, js)[2], 1 if slugify(c) in LOGOS else 0] for c, js in co_rows[CO_FIRST:]]
+    co_rest = [[c, slugify(c), *co_parts(c, js)[:2], co_parts(c, js)[2], 1 if slugify(c) in LOGOS else 0]
+               + ([[h1b_years(slugify(c))[0][1], h1b_years(slugify(c))[0][0]]] if h1b_years(slugify(c)) else []) for c, js in co_rows[CO_FIRST:]]       # [7]: [H-1B filings, fiscal year]
     write("data/company-directory.json", json.dumps(co_rest, ensure_ascii=False, separators=(",", ":")), sitemap=False)
     co_field_n = Counter((Counter(j["cat"] for j in js if j["active"]).most_common(1) or [("", 0)])[0][0] for _, js in comp_items)
     co_field_sel = ('<select id="cfield" aria-label="The field a company hires for most"><option value="">Every field</option>'
@@ -5462,7 +5541,10 @@ def main():
     mk_a, mk_p, mk_f = mk_counts()
     mk_rows = [("Actively hiring", "Posted at least 3 roles in the last 7 days.", mk_a),
                ("States the pay", "At least half of its open roles state the pay (employers with 5 open roles or more).", mk_p),
-               ("Few old postings", f"Fewer than a quarter of its open roles were posted {LONG_OPEN} days ago or more (employers with 5 open roles or more).", mk_f)]
+               ("Few old postings", f"Fewer than a quarter of its open roles were posted {LONG_OPEN} days ago or more (employers with 5 open roles or more).", mk_f),
+               ("Files H-1B", "The US Department of Labor certified at least one of its Labor Condition Applications for H-1B workers in fiscal year 2025 or 2026 "
+                "(employers matched to the filer by name and place, or checked by hand). A filing, not a promise to sponsor a new hire.",
+                sum(1 for c, js in comp_items if h1b_years(slugify(c)) and any(j["active"] for j in js)))]
     co_types = []
     co_open = {c: [j for j in js if j["active"]] for c, js in companies.items()}
     co_act = {c: v for c, v in co_open.items() if len(v) >= 10}
@@ -5641,8 +5723,9 @@ def main():
          + co_types_html
          + (section("Featured employers", spot_tiles(spot_cos)) if spot_cos else "")
          + section(f"All [[{m:,} employers]], most open roles first", sid="all", label="Directory",
-                   sub="The +N mark on a tile is the number of roles that company posted in the last 7 days.",
-                   inner='<div class="cbar"><input type="search" id="cfilter" placeholder="Filter companies by name" aria-label="Filter companies">' + co_field_sel +
+                   sub="The +N mark on a tile is the number of roles that company posted in the last 7 days; H-1B marks an employer with certified H-1B filings in fiscal year 2025 or 2026.",
+                   inner='<div class="cbar"><input type="search" id="cfilter" placeholder="Filter companies by name" aria-label="Filter companies">' + co_field_sel
+                   + '<button class="tab" type="button" id="ch1b" aria-pressed="false" title="Only employers with certified H-1B filings in fiscal year 2025 or 2026" hidden>Files H-1B</button>' +
                    '<div class="tabs csort" id="csort" role="group" aria-label="Sort companies" hidden>'
                    '<button class="tab" type="button" data-s="o" aria-pressed="true">Most open roles</button>'
                    '<button class="tab" type="button" data-s="w" aria-pressed="false">Most new this week</button>'
@@ -5652,7 +5735,9 @@ def main():
                    + (f'<p class="cmore" id="cmore" data-n="{len(co_rest):,}"><button class="tab" type="button" id="cmorebtn" hidden>Show the other {len(co_rest):,} employers</button>'
                       f'<noscript>The list shows the {CO_FIRST} employers with the most open roles. Turn on JavaScript to see the other {len(co_rest):,}, or look a company up in the <a href="{P}/jobs/">job search</a>.</noscript></p>' if co_rest else ""))
          + section("What the marks on company pages mean", '<dl class="qa">' + "".join(f"<div><dt>✓ {e(nm)}</dt><dd>{e(rule)} Today: {k_:,} employers.</dd></div>" for nm, rule, k_ in mk_rows) + "</dl>"
-                   '<p class="note">Counted on every update from the employer’s own open postings; a mark comes and goes with them. Nobody pays for a mark.</p>', sid="marks"), cls="hub")
+                   '<p class="note">Counted on every update from the employer’s own open postings; a mark comes and goes with them. Nobody pays for a mark. '
+                   'The H-1B mark is read from the US Department of Labor’s LCA disclosure data instead (fiscal years 2025 and 2026, read on '
+                   + fdate(H1B_SRC.get("read", ""), True) + ').</p>', sid="marks"), cls="hub")
     STACK = {c: [t for t, _ in Counter(t for j in js if j["active"] for t in j["tags"]).most_common(10)] for c, js in companies.items()}
     PLACE_NAME = {slug: name.removeprefix("the ") for name, slug, _ in PLACES}
     PLACE_NAME_THE = {slug: name for name, slug, _ in PLACES}          # "the United States" inside a sentence
@@ -5687,6 +5772,7 @@ def main():
             old5 = sum(1 for j in act if (j["posted"] or j["first_seen"])[:10] <= (datetime.date.today() - datetime.timedelta(days=LONG_OPEN)).isoformat())
             if pay_s >= len(act) / 2: tb_.append(("States the pay", f"{round(100 * pay_s / len(act))}% of its open roles state it"))
             if old5 < len(act) / 4: tb_.append(("Few old postings", f"{round(100 * old5 / len(act))}% open {LONG_OPEN} days or more"))
+        if (h1b_m := h1b_mark(slug)): tb_.append(h1b_m)        # certified H-1B filings (data/h1b.json), with the year and the count
         TB[c] = tb_
         tbadges = ('<p class="tbadges">' + "".join(f'<span class="tb" title="{e(why)}"><b>✓ {e(nm)}</b> {e(why)}</span>' for nm, why in tb_)
                    + f'<a href="{P}/companies/#marks">What the marks mean</a></p>') if tb_ else ""
@@ -5744,6 +5830,7 @@ def main():
                                 + "".join(f'<tr><td><a href="{P}/job/{j["slug"]}/">{e(j["title"])}</a></td><td>{e((j["location"] if len(j["location"]) <= 48 else j["location"][:45].rstrip(" ,;") + "…") if j.get("location") else "—")}</td><td>{e(j["salary"])}</td></tr>' for j in exs_)
                                 + f'</table></div><p class="note">{len(ex_pay):,} of {e(c)}’s {len(act):,} open postings state pay; shown: '
                                 + ("all of them, highest first." if len(ex_pay) <= 10 else "the five highest and the five lowest.") + " The range is the one the posting prints, usually base pay before equity and bonus.</p>")
+        overview += h1b_block(c, slug)          # H-1B filings from the Department of Labor's disclosure data, after the pay the postings state
         # Hiring week by week, as LinkedIn shows a company's growth beside its jobs (20 Nov 2026): the roles it opened each week (by the
         # employer's date) and closed (by the day its board stopped listing them). Counted only from the week after we first read the
         # company, when nothing it opened or closed can have passed unseen, and shown once there are 4 such weeks and 8 roles opened:
@@ -5808,7 +5895,7 @@ def main():
                      + (f'<dl class="nums">{"".join(chips)}</dl>' if act else "") + tbadges + "</div>"
                      # a <div>, not a <nav>: the phone menu's styles caught the <nav> and stood the links in a tall sticky column
                      + '<div class="anch" role="navigation" aria-label="On this page">' + (f'<a href="#jobs">Jobs <b>{len(act):,}</b></a>' if act else "")
-                     + ('<a href="#pay">Pay</a>' if pay_rows else "") + ('<a href="#stack">Tech stack</a>' if stack else "") + ('<a href="#where">Locations</a>' if where else "") + ('<a href="#similar">Similar companies</a>' if sim else "")
+                     + ('<a href="#pay">Pay</a>' if pay_rows else "") + ('<a href="#h1b">H-1B</a>' if h1b_years(slug) else "") + ('<a href="#stack">Tech stack</a>' if stack else "") + ('<a href="#where">Locations</a>' if where else "") + ('<a href="#similar">Similar companies</a>' if sim else "")
                      + (f'<a href="#closed">Closed <b>{len(arc):,}</b></a>' if arc else "") + '</div><div id="jobs"></div>')
         wk7 = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
         new7_ = sum(1 for j in act if (j["posted"] or "") >= wk7)
@@ -5828,6 +5915,7 @@ def main():
             if len(pay_c) >= 5:
                 co_qa.append((f"Does {c} pay well?", f"{len(pay_c):,} of its {len(act):,} open postings state a yearly US-dollar range, with a median of {money(median(pay_c))}; "
                               f"the middle half advertise {money(pay_c[len(pay_c) // 4])} to {money(pay_c[3 * len(pay_c) // 4])}." + (" Pay by field is in the table above." if pay_rows else "")))
+            if (h1b_q := h1b_qa(c, slug)): co_qa.append(h1b_q)
             if where:
                 # one country holding nearly all the jobs is said once, then its states and cities ("United States (2851), Texas (1143)" read as a mixed list)
                 ctry_ = [(p_, k) for p_, k in where if isinstance(PLACE_RULE.get(p_), str) and PLACE_RULE[p_] != "region"]
@@ -6698,6 +6786,15 @@ def main():
                ("EU Blue Card", re.compile(r"blue card", re.I)), ("Relocation help", re.compile(r"relocation (?:support|assistance|package)", re.I)),
                # 26 Nov 2026, Bing's AI answer to "jobs with visa sponsorship" names the seasonal H-2B (hotels, catering) and the farm H-2A visas
                ("H-2B (US, seasonal non-farm)", re.compile(r"\bH-?2B\b")), ("H-2A (US, farm)", re.compile(r"\bH-?2A\b"))]
+    def h1b_top(k):
+        """The employers with open jobs here that filed the most certified H-1B LCAs in the latest fiscal year: [(count, year, the year before, name)]."""
+        y_ = max((int(y) for d_ in H1B.values() for y in d_["fy"]), default=0)
+        rows_ = []
+        for c_, n_ in OPEN.items():
+            d_ = H1B.get(slugify(c_)) if n_ else None
+            if d_ and d_["fy"].get(str(y_), [0])[0]:
+                rows_.append((d_["fy"][str(y_)][0], y_, d_["fy"].get(str(y_ - 1), [0])[0], c_))
+        return sorted(rows_, key=lambda r_: (-r_[0], r_[3]))[:k]
     def visa_kinds(pj):
         """Which visas the postings name, from the posting text (People also ask: "Which companies will sponsor me?", "What visa…?")."""
         txt_ = [(j, (j.get("desc") or "") + " " + (j.get("excerpt") or "")) for j in pj]
@@ -6718,6 +6815,21 @@ def main():
                             + '</table></div><p class="note">A posting counts when its text mentions visa sponsorship; read it, as some say sponsorship is not available.</p>', sid="fields", label="By field")
         if cos_:
             out_ += section("Companies that mention sponsorship most", '<ul class="tiles">' + "".join(tile(f"companies/{slugify(c)}/", c, k, True) for c, k in cos_) + "</ul>")
+        # 26 Nov 2026 (Jobright shows "H-1B sponsor" per company): the employers listed here that file the most H-1Bs, from the Department of
+        # Labor's records (data/h1b.json), beside their open jobs. A posting may say nothing about visas at a company that files thousands.
+        top_h = h1b_top(25)
+        if top_h:
+            spon_ = Counter(j["company"] for j in pj)
+            out_ += section("Employers here that [[file the most H-1Bs]]", sid="h1b", label="H-1B",
+                            sub=f"Certified H-1B Labor Condition Applications, fiscal year {top_h[0][1]}, from the US Department of Labor.",
+                            inner='<div class="tablewrap"><table><tr><th>#</th><th>Employer</th><th>Certified LCAs, FY' + str(top_h[0][1]) + '</th><th>FY' + str(top_h[0][1] - 1)
+                            + '</th><th>Filed most for</th><th>Open jobs here</th></tr>' + "".join(
+                                f'<tr><td>{i + 1}</td><td class="conm">{ava(c_, "sm")}<a href="{P}/companies/{slugify(c_)}/#h1b">{e(c_)}</a></td><td>{n_:,}</td><td>{(f"{m_:,}" if m_ else "—")}</td>'
+                                f'<td>{e(H1B[slugify(c_)]["roles"][0][0]) if H1B[slugify(c_)]["roles"] else "—"}</td>'
+                                f'<td><a href="{P}/companies/{slugify(c_)}/">{OPEN[c_]:,}</a>' + (f' <span class="note">({spon_[c_]:,} mention sponsorship)</span>' if spon_.get(c_) else "") + "</td></tr>"
+                                for i, (n_, _y, m_, c_) in enumerate(top_h)) + "</table></div>"
+                            + f'<p class="note">Ranked among the employers with open jobs on {SITE} today, by the H-1B filings the Department of Labor certified for them. '
+                            + e(H1B_WHAT) + f" Each employer’s page has its own block with the jobs it filed for and the wages listed.</p><p class=\"note\">{h1b_source()}</p>")
         out_ += section("How do I find an employer that sponsors a visa?", '<ol class="steps">'
                         "<li><b>Start with postings that say it.</b> The list on this page holds jobs whose text mentions sponsorship. Read the wording: some offer it, and some say it is not available.</li>"
                         "<li><b>Check the employer in the official list for the country.</b> The table below links to the government’s own records.</li>"
@@ -6766,9 +6878,13 @@ def main():
                        + (f"Today {len(cap_x_):,} of the US postings here that mention sponsorship are at universities, colleges and research institutes, led by "
                           + ", ".join(f"{c_} ({k_:,})" for c_, k_ in Counter(j["company"] for j in cap_x_).most_common(3)) + ". " if len(cap_x_) >= 5 else "")
                        + "Other employers go through the registration, which usually opens in March for jobs starting on October 1 or later."),
+                      (("Which employers listed here file the most H-1B applications?", "Among the employers with open jobs on " + SITE + ", the US Department of Labor certified the most H-1B "
+                        f"Labor Condition Applications in fiscal year {top5_[0][1]} for " + ", ".join(f"{c_} ({n_:,})" for n_, _y, _m, c_ in top5_[:-1]) + f" and {top5_[-1][3]} ({top5_[-1][0]:,}), "
+                        f"from its LCA disclosure data read on {fdate(H1B_SRC['read'])}. " + H1B_WHAT) if len(top5_ := h1b_top(5)) >= 2 else None),
                       ("How does H-1B sponsorship work?", "The employer offers you a job in a specialty occupation (one that normally needs at least a bachelor’s degree in the field), files a "
                        "Labor Condition Application with the Department of Labor, registers you for the cap if the employer is not exempt and, once selected, files the H-1B petition with USCIS. "
                        "After approval you get the visa abroad or change status in the US. Check uscis.gov before you rely on any step: rules and fees changed in 2026.")]
+            pk_qa = [x_ for x_ in pk_qa if x_]
         listing(f"perks/{slug}/", f"Jobs with {name[0].lower() + name[1:]}", f"Jobs With {tcase(name)} ({len(pj):,} open) | {SITE}",
                 f"Jobs with {name[0].lower() + name[1:]}: {len(pj):,} open now at companies, each posting naming it in its own text."
                 + (f" {name}: {PERK_INFO[name][0][:1].lower() + PERK_INFO[name][0][1:]}" if name in PERK_INFO else ""), pj,       # like places and skills (24 Nov 2026)
@@ -13228,6 +13344,11 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          '<h2 class="h2s">How are salary medians calculated?</h2><p>From open roles that publish a yearly range in US dollars. For each role we take the midpoint of the range; the median is the middle value of those midpoints. '
          'A median is shown for a list or a company only when at least 15 of its roles publish a yearly range. Rankings and comparisons that set one group against another need 30. '
          'The salary tools, which also show the spread, need 20. These are advertised ranges, not what people are actually paid, and they lean towards companies and regions that publish pay.</p>'
+         + (f'<h2 class="h2s" id="h1b">Where do the H-1B figures on company pages come from?</h2><p>From the US Department of Labor’s LCA disclosure data, '
+            f'not from the postings. We count the Labor Condition Applications for the H-1B visa that the Department certified in fiscal years 2025 and 2026, each case once, '
+            f'and match the filing employer to a company here only when the names agree and the places agree, or after a check by hand; {len(H1B):,} employers matched. '
+            'A company without the block may still file under a name we could not match safely. An LCA is a step before an H-1B petition, not a visa approval and not a promise to sponsor. '
+            f'{h1b_source()}</p>' if H1B else "") +
          '<h2 class="h2s">Why is a job listed once when it is open in several cities?</h2><p>Lists show a role once and add “+N more locations”. Each posting still has its own page. Counts on the site are counts of postings.</p>'
          f'<h2 class="h2s">How to report a mistake</h2><p>' + (f"Write to us: {contact}." if contact else "A contact address will be published on the About page shortly.") + "</p>", cls="sp docp")
     tools_md = "; ".join(f"[{nm}]({FULL}/{u})" for u, nm, _ in TOOLS)
