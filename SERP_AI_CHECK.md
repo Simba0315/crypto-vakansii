@@ -1081,3 +1081,54 @@ has three sites: jobseveryhour.com, cryptobubbles.org, hypestkey.com.
   Fixed a wrong figure: the page said "Only 9 of the 726 internships state a figure" while its own filter row said "Pay stated 96": only yearly dollar ranges
   were counted and interns are paid by the hour. Now every stated pay counts, with the median hourly rate.
 - Search Console, 25 Nov (coordinator): hubs "Discovered, not indexed" or "URL unknown" (/part-time/, /hybrid/, /internships/, /salaries/, the near-me pages, 23 of 26 guides …) now get links in the content of indexed pages (/remote/, /entry-level/, /new/, /jobs-that-pay/, /tech/, /how-to-hire/, /with-salary/, /resume/, /cover-letter-examples/, /resume-words/, /free-resume-builders/), and the guides are in sitemaps/core.xml. Check the same addresses in URL inspection on about 2 Dec.
+
+### Contract, temporary, weekend, summer and night shift lists: "contract jobs", "is a contract job W-2 or 1099", "how long do contract jobs last", "temporary jobs", "seasonal jobs", "weekend jobs", "do you get paid more for working weekends", "summer jobs" (25 Nov 2026, afternoon)
+- Read in Claude's web search (US results) on 25 Nov. "contract jobs": Robert Half, ZipRecruiter, Indeed (US, UK, CA), Motion Recruitment, Dice, FlexJobs,
+  Randstad, Insight Global; the answer defines a contract job and gives "3 months to a full year" or "a few days or weeks to years", no count. "how long do
+  contract jobs last": KORE1, FoxHire, Upwork, Brightwater, Randstad; "6 to 12 months" for technical work, "6 to 18 months", one staffing firm's own median
+  of 193 days for lab work. "is a contract job W-2 or 1099": Indeed, QuickBooks, Chase, Square, NerdWallet, ADP, Gusto, Rippling; the answer: the working
+  relationship decides, not the label; Form SS-8; W-9 against W-4. "contract to hire W2 vs C2C": UpCounsel, KORE1, Blind threads, Upwork; "C2C pays $20-40
+  more" from a forum. Our page had the list and generic questions: no length, no W-2 or 1099, no tax.
+  Official pages read 25 Nov: irs.gov "Independent contractor (self-employed) or employee?" (behavioral, financial, type of relationship; Form SS-8 "at least
+  six months"; reviewed 19 May 2026), "Self-employment tax" (15.3% = 12.4% + 2.9%; from $400; $184,500 wage base in 2026; reviewed 30 Oct 2026), Topic 751
+  (6.2% and 1.45%), "Estimated taxes" ($1,000; four periods), Form 1099-NEC FAQ ($2,000 for payments made after December 31, 2025, $600 before; reviewed
+  16 Oct 2026); dol.gov "Misclassification" (economic reality; final rule published November 23, 2026, in force January 22, 2027, core factors control and
+  opportunity for profit or loss; wage-and-hour protections do not apply to properly classified independent contractors); bls.gov contingent and alternative
+  arrangements, July 2023 (USDL-24-2267: 11.9 million independent contractors, 7.4%; 945,000 through temporary help agencies; 862,000 contract firms).
+  Done on /contract/: the opening sentence defines a contract job (W-2 or 1099) and gives the median length; "How long contract jobs last" counted from the
+  postings' own words (local sample: 85 of 407 state one, median 11 months; 12 months 38, 6 months 32); "W-2, 1099 or C2C: what the postings say" (shown
+  once 10 postings name a form; "no C2C", "1099 not accepted" are not counted for that form; with contract-to-hire and possible extension); questions: What
+  is a contract job?, Is a contract job W-2 or 1099?, How long do contract jobs last?, Do contract jobs pay more? (hourly and yearly medians from the postings;
+  15.3% against 7.65%), How are 1099 contractors taxed?, Do contract workers get benefits?, What does contract-to-hire mean? (count), How many people work as
+  independent contractors? Links beside the main action: salaries, remote contract jobs.
+- "temporary jobs ... temp agency ... temp to hire": Gusto, Monster, HowStuffWorks, CareerOneStop, Upwork, Kelly, Zippia; one answer says a temp "legally works
+  as a contractor for the temp agency" (an agency temp is normally the agency's employee). "seasonal work ... how long": BambooHR, ADP, CoolWorks, HiBob,
+  Randstad, Indeed Flex; "a few weeks to several months", "6 months or less". "seasonal jobs hiring now holiday": Indeed, Monster, Money, AARP, PeopleReady,
+  with 2025 retailer counts. Official: IRS ACA employer Q&A 27 (seasonal employee: a position whose customary annual employment is six months or less;
+  retail workers employed exclusively during holiday seasons are seasonal workers), DOL Fact Sheet #18 (section 13(a)(3): seasonal amusement or recreational
+  establishments open no more than seven months, or the receipts test; some states do not recognise it), BLS July 2023 (6.9 million contingent workers,
+  4.3%; part-time 9.7% against full-time 3.2%; 16 to 24 four times as likely). Done on /temporary/: definition first; "Which seasons the postings name"
+  (from two seasons named 5+ times); length table (when 10+ postings at 5+ employers state one, no employer half of them); questions: What is a temporary
+  job?, How long?, temporary against seasonal, pay, benefits, overtime, Can a temporary job become permanent? (count), How many people work temporary jobs?
+- "weekend jobs part time weekend only jobs that pay well": The Interview Guys, Instawork, The Muse, UMass Lowell, ZipRecruiter ("$42.89 an hour" for weekends
+  only part time, while its postings pay far less), Monster, Hiration, Upwork, Zippia, Deputy; "time and a half on weekends" for trades. "do you get paid more
+  for working weekends federal law": dol.gov "Weekend work" leads; the answer: no federal requirement, only overtime over 40 hours. Official: dol.gov "Weekend
+  work" (a matter of agreement), BLS American Time Use Survey 2025 (released June 25, 2026: 81% of employed people work on an average weekday, 30% on an
+  average weekend day). Done on /weekend/: "no weekends", "weekends off", "3-day weekend", "long weekend", "weekend travel" no longer put a posting on the
+  list (local sample 88 → 84); "How the postings schedule weekends" (weekend shift in the title, weekends only, every other weekend or a rotation, evenings
+  and weekends, weekends and holidays, when needed); "The weekend differential postings name" (from 5 amounts); questions: Which jobs are weekend only?,
+  Do you get paid more for working weekends?, pay, How many people work on weekends?, How often will I work weekends?
+- "summer jobs 2026 when to apply, how old": city youth programs (Houston, Somerville, Boston, Travis County, Prince George's County, Chicago), Canada Summer
+  Jobs, New Jersey working papers; ages and deadlines vary by place. "summer jobs for college students and teens best paying": Entrepreneur, Fidelity, Yahoo,
+  Her Campus, Capital One, SheKnows (Resume Genius list from BLS). Official: DOL Fact Sheet #43 (16 basic minimum age; 14 and 15: 3 hours a school day, 18 a
+  school week, 8 a non-school day, 40 a non-school week, 7 a.m. to 7 p.m., to 9 p.m. from June 1 to Labor Day; 16 and 17 any non-hazardous job), BLS youth
+  employment July 2026 (released August 20, 2026: 21.3 million employed, 53.8%; +1.8 million from April; leisure and hospitality 25%, retail 18%). Done on
+  /summer/: the opening says how many postings already name next summer (local sample: 286 of 309 name summer 2027); "Summer jobs and internships side by
+  side" (postings, employers, median hourly pay; which summer each names); length table; questions: When do summer jobs start hiring?, How old do you have to
+  be?, How many hours can a 14 or 15 year old work in the summer?, pay (internships against other summer jobs), how long, Where do young people work in the
+  summer?, internships against summer jobs.
+- /night-shift/: "no nights" no longer counts; the opening defines the shifts; "Do night shifts pay more?" adds OPM: General Schedule staff get 10% for
+  regularly scheduled work between 6 p.m. and 6 a.m. "Are there remote night shift jobs?" stood twice (the page's own and the generic one): faq_for now
+  drops a repeated question on every list. Every list: "in demand in 2026? … here;  The median" when nothing was new in seven days now reads "here. The median".
+- Titles of the four lists in title case, as /part-time/ ("Temporary and Seasonal Jobs (…)"). Not done in this pass: Google's and Bing's first pages and AI
+  answers, ChatGPT and Perplexity for these queries (Claude's web search only); compare the live counts after the deploy.

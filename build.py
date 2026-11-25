@@ -1760,11 +1760,13 @@ def faq_for(label, jobs, first=None, extra=()):
                    ", ".join(f"{t} ({k})" for t, k in ti_) + f": the most common titles among the {n_:,} open roles, without the level and place notes in brackets."))
     if n_ >= 20 and ALL_OPEN[0] and n_co > 1:        # one company's jobs: "in demand ... at 1 company" said nothing (25 Nov 2026)
         qa.append((f"Are {label} in demand in {TODAY[:4]}?",
-                   f"{n_:,} {label} are open on {SITE} today at {n_co:,} {'company' if n_co == 1 else 'companies'}, {100 * n_ / ALL_OPEN[0]:.1f}% of all {ALL_OPEN[0]:,} open jobs here; "
-                   + (f"{new7:,} were posted in the last seven days." if new7 else "") + (f" The median advertised salary is {money(median(mids))}." if len(mids) >= 15 else "")
+                   f"{n_:,} {label} are open on {SITE} today at {n_co:,} {'company' if n_co == 1 else 'companies'}, {100 * n_ / ALL_OPEN[0]:.1f}% of all {ALL_OPEN[0]:,} open jobs here"
+                   + (f"; {new7:,} were posted in the last seven days." if new7 else ".") + (f" The median advertised salary is {money(median(mids))}." if len(mids) >= 15 else "")
                    + f" {r:,} ({100 * r / n_:.0f}%) can be done remotely."))
     qa.append((f"How do I apply for {label}?",
                f"Open a job and press “Apply on company site”. You go straight to the employer's own careers page and apply there. {SITE} needs no account and charges nothing for applying."))
+    seen_ = set()
+    qa = [x for x in qa if not (x[0] in seen_ or seen_.add(x[0]))]       # a page's own question first: "Are there remote night shift jobs?" stood twice (25 Nov 2026)
     html_ = '<dl class="qa">' + "".join(f"<div><dt>{e(q)}</dt><dd>{e(a_)}</dd></div>" for q, a_ in qa) + "</dl>"
     ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q, a_ in qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
@@ -2199,6 +2201,338 @@ def part_time_qa(ej):
                                                   "rate for every hour over 40 in a workweek, whether the job is called part-time or full-time. Federal law asks no extra pay for weekends, holidays or "
                                                   "nights as such; some states also count overtime by the day.")]
     return tuple(qa)
+
+
+# Contract, temporary, weekend and summer lists (25 Nov 2026, afternoon). Search check that day (Claude's web search, US results; the
+# record is SERP_AI_CHECK.md, last block): for "contract jobs", "how long do contract jobs last", "is a contract job W-2 or 1099",
+# "temporary jobs", "seasonal jobs", "weekend jobs", "do you get paid more for working weekends" and "summer jobs" the first results are
+# job boards, staffing blogs and calculators; they give "3 months to a year", "6 to 18 months" or "a few weeks to several months" with no
+# count, one calls a temp "a contractor of the agency", and a board quotes "$42.89 an hour" for weekend work without saying of what. Our
+# lists were a paragraph, the jobs and generic questions. Each now answers those questions from the postings' own words and from the US
+# government's pages, read on 25 Nov 2026: irs.gov "Independent contractor (self-employed) or employee?" (three kinds of evidence, Form
+# SS-8), "Self-employment tax" (15.3%: 12.4% Social Security on the first $184,500 in 2026, 2.9% Medicare; from $400 of net earnings),
+# Topic 751 (6.2% and 1.45% withheld from an employee), "Estimated taxes" ($1,000), the Form 1099-NEC FAQ ($2,000 for payments made
+# after December 31, 2025; $600 before), the ACA employer Q&A (a seasonal employee: a position whose customary annual employment is six
+# months or less; retail workers employed only in holiday seasons are seasonal workers); dol.gov "Misclassification of employees as
+# independent contractors" (economic reality; the final rule published on November 23, 2026, in force from January 22, 2027, puts control
+# and the chance of profit or loss first), "Weekend work" (extra pay is a matter of agreement), Fact Sheet #18 (seasonal amusement or
+# recreational establishments) and Fact Sheet #43 (14- and 15-year-olds: 8 hours a day and 40 a week when school is out, 7 a.m. to 9 p.m.
+# from June 1 to Labor Day); bls.gov: contingent and alternative arrangements, July 2023 (6.9 million contingent workers, 4.3%; 11.9
+# million independent contractors, 7.4%; 945,000 through temporary help agencies), American Time Use Survey 2025 (30% of employed people
+# work on an average weekend day, 81% on a weekday) and youth employment, July 2026 (21.3 million employed at 16 to 24, up 1.8 million
+# from April; leisure and hospitality 25%, retail 18%); opm.gov night pay for General Schedule employees (10%, 6 p.m. to 6 a.m.).
+TERM_NUM = r"(\d{1,2})(?:\s*(?:-|–|to)\s*(\d{1,2}))?"
+TERM_ADJ = (r"(?:(?:fixed[- ]term|initial|temporary|temp|seasonal|w-?2|1099|full[- ]time|part[- ]time|remote|hybrid|on[- ]?site|in[- ]person|paid|summer|"
+            r"contract|renewable|extendable|possible|potential)\s+)*")
+
+
+def job_text(j):
+    """A posting's title, opening lines and full text (where we hold it) as one plain string."""
+    return j["title"] + " . " + (j.get("excerpt") or "") + " " + re.sub(r"<[^>]+>", " ", j.get("desc") or "")
+
+
+def term_lengths(js, nouns, nouns_b=r"contract|assignment|engagement|internship|program|programme|placement|season|project"):
+    """How long the work lasts, in each posting's own words: "6-month contract", "12 week seasonal assignment", "contract length: 6
+    months", "10-week summer internship". The first length a posting names; a year counts as 12 months. (weeks, label, company) each.
+    `nouns_b`: the words that may come before the length ("assignment length: 12 weeks"); "role" and "position" may not, since "in a similar
+    role for 2 years" is experience, not a term."""
+    rx = re.compile(rf"\b{TERM_NUM}\+?[- ]?(weeks?|months?|mos?|years?)\b(?:[- ]long)?,?\s+{TERM_ADJ}(?:{nouns})\b"
+                    rf"|\b(?:{nouns_b}|duration|(?<!long[- ])(?<!short[- ])term)\s*(?:length|duration|term|period)?\s*(?:is|lasts|runs|of|will last|will run|for|:|-|–)\s*"
+                    rf"(?:approximately\s+|about\s+|around\s+|up to\s+|an initial\s+|initial\s+|a\s+)?{TERM_NUM}\+?\s*(weeks?|months?|mos?|years?)\b", re.I)
+    out = []
+    for j in js:
+        m_ = rx.search(job_text(j))
+        if not m_: continue
+        g_ = m_.groups()
+        lo_, hi_, u_ = (g_[0], g_[1], g_[2]) if g_[0] else (g_[3], g_[4], g_[5])
+        lo_, hi_, u_ = int(lo_), int(hi_ or lo_), u_[0].lower()
+        if u_ == "y": lo_, hi_, u_ = lo_ * 12, hi_ * 12, "m"
+        if not 0 < lo_ <= hi_ <= (104 if u_ == "w" else 36): continue
+        word_ = "week" if u_ == "w" else "month"
+        out.append(((lo_ + hi_) / 2 * (1 if u_ == "w" else 52 / 12), f"{lo_}{'–' + str(hi_) if hi_ != lo_ else ''} {word_}{'s' if hi_ > 1 else ''}", j["company"]))
+    return out
+
+
+def term_summary(durs, k, what, unit="month"):
+    """(sentence, median) on how long the postings say the work lasts; ("", "") when fewer than 10 say it, they come from fewer than
+    5 employers, or one employer says half of it (that is its own policy, not the market's)."""
+    if len(durs) < 10 or len({c_ for *_, c_ in durs}) < 5 or Counter(c_ for *_, c_ in durs).most_common(1)[0][1] > len(durs) / 2: return "", ""
+    wk = sorted(w_ for w_, _, _ in durs)
+    med = wk[len(wk) // 2]
+    med_ = f"{med:.0f} weeks" if unit == "week" or med < 13 else f"{round(med * 12 / 52)} months"
+    top = [f"{t_} ({c_:,})" for t_, c_ in Counter(t_ for _, t_, _ in durs).most_common(3) if c_ >= 2]
+    return (f"{len(durs):,} of the {k:,} open {what} here say how long the work lasts: the median is {med_}"
+            + ((", and the lengths named most are " + ", ".join(top[:-1]) + " and " + top[-1]) if len(top) >= 2 else (f", and the one named most is {top[0]}" if top else "")) + "."), med_
+
+
+def term_table(durs, title, what, ex="“6-month contract”, “assignment length: 12 weeks”"):
+    top = [(t_, c_) for t_, c_ in Counter(t_ for _, t_, _ in durs).most_common(8) if c_ >= 2]
+    return section(title, '<div class="tablewrap"><table><tr><th>Length named in the posting</th><th>Open postings</th><th>Share of those that name one</th></tr>'
+                   + "".join(f"<tr><td>{e(t_)}</td><td>{c_:,}</td><td>{100 * c_ / len(durs):.0f}%</td></tr>" for t_, c_ in top)
+                   + f'</table></div><p class="note">Read from the words of the {e(what)} themselves ({ex}): the first length each one names. A year counts as 12 months, '
+                     'and lengths named only once are left out of the table. The offer you sign is the one that counts.</p>', sid="length", label="How long")
+
+
+# W-2, 1099 or corp-to-corp, as the postings write it. "No C2C", "1099 not accepted" and "W2 only, no third parties" are taken out
+# first, so a posting that refuses a form is not counted for it. A German "W2 professorship" is a salary grade, not a tax form.
+TAX_NOT = re.compile(r"\b(?:no|not|without|cannot|can't|can not|unable to|won't|will not|do not|don't)\s+(?:do\s+|accept\s+|work\s+(?:with\s+)?|consider\s+|offer\s+|support\s+|sponsor\s+)?"
+                     r"(?:(?:C2C|corp[- ]to[- ]corp|1099|third[- ]part(?:y|ies))\s*(?:,|or|and|/)?\s*)+"
+                     r"|\b(?:(?:C2C|corp[- ]to[- ]corp|1099)\s*(?:,|or|and|/)?\s*)+(?:candidates\s+|arrangements?\s+|contractors?\s+)?(?:is\s+|are\s+)?"
+                     r"(?:not\s+(?:accepted|allowed|available|considered|possible|an option|eligible|supported)|need not apply)", re.I)
+TAX_FORMS = (("W-2", re.compile(r"\bW-?2\b(?!\s*[-/]?\s*(?:profess|Besoldung|grade))", re.I), "An employee of the agency or the client: income tax, Social Security and Medicare are withheld from each check"),
+             ("1099", re.compile(r"(?<![$\d,.])\b1099\b(?![\d,.])"), "Self-employed: no tax withheld; you pay your own, self-employment tax included"),
+             ("C2C", re.compile(r"\bC2C\b|\bcorp[- ]to[- ]corp\b", re.I), "Corp-to-corp: the client pays your own company, which pays you"))
+CTH_RX = re.compile(r"\bcontract[- ]to[- ](?:hire|perm(?:anent)?)\b|\btemp(?:orary)?[- ]to[- ](?:hire|perm(?:anent)?)\b|\bC2H\b|\bright[- ]to[- ]hire\b"
+                    r"|\bpossibility of (?:conversion|converting|becoming (?:a )?permanent|a permanent|permanent|full[- ]time (?:employment|hire|role|position))"
+                    r"|\bconver(?:t|ts|ted|sion)\s+(?:in)?to\s+(?:a\s+)?(?:full[- ]time|permanent|FTE)\b|\bpotential (?:to|for) (?:convert|conversion|become permanent|permanent|full[- ]time|hire)", re.I)
+EXT_RX = re.compile(r"\bpossib(?:le|ility of|ility for) (?:an )?extension\b|\bextension (?:is )?possible\b|\b(?:option|possibility) to extend\b|\blikely to (?:be )?extend|\bextendable\b|\brenewable\b", re.I)
+
+
+def pay_said(js, what):
+    """"N of the K open <what> here state an hourly rate: the median is $X an hour, and the middle half pay $A to $B." plus the yearly
+    median, from the postings; "" when fewer than 10 state either."""
+    k = len(js)
+    hl = sorted((h_[0] + h_[1]) / 2 for j in js if (h_ := usd_hourly(j.get("salary"))))
+    yl = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in js if j.get("usd") and not usd_hourly(j.get("salary")))
+    out = []
+    if len(hl) >= 10:
+        out.append(f"{len(hl):,} of the {k:,} open {what} here state an hourly rate in US dollars: the median is ${hl[len(hl) // 2]:,.2f} an hour, and the middle half pay "
+                   f"${hl[len(hl) // 4]:,.2f} to ${hl[3 * len(hl) // 4]:,.2f}.")
+    if len(yl) >= 15:
+        out.append((f"{len(yl):,} state a yearly range" if out else f"{len(yl):,} of the {k:,} open {what} here state a yearly range in US dollars") + f", with a median of {money(yl[len(yl) // 2])}.")
+    return " ".join(out) + (" These are the middles of the ranges each employer wrote, not verified pay." if out else "")
+
+
+def benefits_said(js, what):
+    full = [j for j in js if j.get("desc")]
+    if len(full) < 20: return ""
+    ben = sum(1 for j in full if PT_BENEFITS.search(job_text(j)))
+    return f" Of the {len(full):,} open {what} here whose full text we hold, {ben:,} ({100 * ben / len(full):.0f}%) mention health, dental or retirement benefits."
+
+
+def contract_parts(ej):
+    """The contract list: (opening sentence, sections after the list, first question, more questions)."""
+    k = len(ej)
+    forms, cth, ext = Counter(), 0, 0
+    for j in ej:
+        t_ = TAX_NOT.sub(" ", job_text(j))
+        for nm_, rx_, _ in TAX_FORMS:
+            if rx_.search(t_): forms[nm_] += 1
+        cth += bool(CTH_RX.search(t_)); ext += bool(EXT_RX.search(t_))
+    durs = term_lengths(ej, r"contract|assignment|engagement|project|position|role|fixed[- ]term (?:contract|position|role)")
+    len_s, len_m = term_summary(durs, k, "contract jobs")
+    plain = ("<strong>A contract job</strong> is paid work for a set term or one project: as an employee of the client or of a staffing agency, paid on a W-2, "
+             "or as a self-employed contractor, paid on a 1099." + (f" The postings that state a length run {len_m} at the median." if len_m else ""))
+    after = term_table(durs, "How long contract jobs [[last]]", "contract postings") if len_s else ""
+    said = sum(forms.values())
+    if said >= 10:
+        rows_ = [(nm_, forms[nm_], what_) for nm_, _, what_ in TAX_FORMS if forms[nm_]]
+        rows_ += ([("Contract-to-hire", cth, "The employer may make it a permanent job at the end")] if cth >= 3 else []) + ([("A possible extension", ext, "The term may be extended; nothing is promised")] if ext >= 3 else [])
+        after += section("W-2, 1099 or C2C: [[what the postings say]]", '<div class="tablewrap"><table><tr><th>The posting names</th><th>Open postings</th><th>What it means for you</th></tr>'
+                         + "".join(f"<tr><td><strong>{e(nm_)}</strong></td><td>{c_:,}</td><td>{e(w_)}</td></tr>" for nm_, c_, w_ in rows_)
+                         + f'</table></div><p class="note">Counted from the text of the {k:,} open contract postings; one can name two forms, and “no C2C” or “1099 not accepted” is not counted for that form. '
+                           'The label does not decide your status: how the work is done does (see the questions below).</p>', sid="forms", label="Tax form")
+    pay_ = pay_said(ej, "contract jobs")
+    forms_ = (f" Of the {k:,} open contract postings here, {forms['W-2']:,} name W-2, {forms['1099']:,} name 1099 and {forms['C2C']:,} corp-to-corp (C2C); the others do not say, so ask before you sign."
+              if said >= 10 else " Many postings do not say which, so ask before you sign.")
+    first = ("What is a contract job?", "A job for a set term or one project rather than an open-ended one. You are either an employee, of the client or of a staffing agency, paid on a W-2 with tax "
+             "withheld, or a self-employed independent contractor, paid on a 1099, who pays their own tax and benefits. "
+             f"{k:,} contract jobs are open here as of {fdate(TODAY)}" + (f"; the ones that state a length run {len_m} at the median." if len_m else "."))
+    qa = [("Is a contract job W-2 or 1099?", "It depends on how the work is done, not on what the contract calls it. The IRS weighs three kinds of evidence: behavioral control (who decides how "
+           "the work is done), financial control (who pays for tools and expenses, and how you are paid) and the type of relationship (written contracts, benefits, whether the work is a key "
+           "part of the business). An employee is paid on a W-2 with income tax, Social Security and Medicare withheld; an independent contractor gets a Form 1099-NEC and pays their own. "
+           "The Labor Department asks whether you are in business for yourself or economically dependent on the employer; its newest rule, published on November 23, 2026 and in force "
+           "from January 22, 2027, weighs control over the work and the chance of profit or loss first. Either side can ask the IRS to decide with Form SS-8, which may take six months or more." + forms_),
+          ("How long do contract jobs last?", (len_s + " " if len_s else "Few postings here state a length today. ") + "The contract you sign sets the term, and many can be extended or renewed."),
+          ("Do contract jobs pay more?", (pay_ + " " if pay_ else "")
+           + "Whether that is more than a salary depends on the form. On a 1099 you pay both halves of Social Security and Medicare (15.3% self-employment tax, against the 7.65% "
+             "withheld from an employee), buy your own health cover and get no paid leave, so a 1099 rate has to be higher than a W-2 wage to come out even. On a W-2 through an agency, "
+             "tax is withheld as for any employee. Compare a rate with what the same work pays on a salary: the salary pages give it for each kind of work."),
+          ("How are 1099 contractors taxed?", "A self-employed contractor pays self-employment tax of 15.3% once net earnings reach $400 in a year: 12.4% for Social Security on the first $184,500 "
+           "of combined earnings in 2026, and 2.9% for Medicare on all of it; the employer-equivalent portion can be deducted when working out income tax. Nothing is withheld, so anyone "
+           "who expects to owe $1,000 or more pays estimated tax in four periods a year. A client that pays you $2,000 or more for services in a year sends a Form 1099-NEC (the line was "
+           "$600 for payments made before 2026). A W-2 contractor is taxed like any employee: 6.2% for Social Security and 1.45% for Medicare are withheld from each check."),
+          ("Do contract workers get benefits?", "An independent contractor gets no employer benefits, and the Labor Department notes that minimum wage and overtime do not apply to properly "
+           "classified independent contractors. A W-2 contractor is an employee of whoever pays the W-2, often a staffing agency: overtime applies by the usual rule (at least time and a "
+           "half for hours over 40 in a workweek, in non-exempt work), and health cover, paid leave or a retirement plan depend on that employer, since no federal law requires paid "
+           "vacation." + benefits_said(ej, "contract jobs"))]
+    if cth >= 3:
+        qa.append(("What does contract-to-hire mean?", f"A contract that the employer may turn into a permanent job at the end. {cth:,} of the {k:,} open contract postings here say so "
+                   f"(contract-to-hire, temp-to-perm or a possible conversion)" + (f", and {ext:,} mention a possible extension" if ext >= 3 else "")
+                   + ". We have no count of how many contracts are converted, so ask how many contractors on the team were hired last year."))
+    qa.append(("How many people work as independent contractors?", "11.9 million in the United States, 7.4% of everyone employed, in the Bureau of Labor Statistics survey of July 2023 "
+               "(published in November 2024). Another 945,000 people (0.6%) worked through temporary help agencies and 862,000 (0.5%) for contract firms."))
+    return plain, after, first, tuple(qa)
+
+
+SEASON_T = (("Holiday season", r"\bholiday\s+(?:season|seasonal|hiring|help|rush|peak|associate|team)|\bpeak season\b|\bchristmas\b"), ("Summer", r"\bsummer\b"),
+            ("Winter", r"\bwinter\b|\bski\b|\bsnow\b"), ("Tax season", r"\btax season\b"), ("Spring", r"\bspring\s+(?:season|semester|term|20\d\d)\b"),
+            ("Fall", r"\bfall\s+(?:season|semester|term|20\d\d)\b|\bautumn\b|\bharvest\b"))
+
+
+def temp_parts(js):
+    """The temporary and seasonal list: (opening sentence, sections after the list, first question, more questions)."""
+    k = len(js)
+    seas_n = sum(1 for j in js if re.search(r"\bseasonal\b", j["title"] + " " + (j["excerpt"] or ""), re.I))
+    cnt = [(nm_, sum(1 for j in js if re.search(rx_, job_text(j), re.I))) for nm_, rx_ in SEASON_T]
+    cnt = sorted([(nm_, c_) for nm_, c_ in cnt if c_ >= 5], key=lambda x: -x[1])
+    durs = term_lengths(js, r"assignment|contract|position|role|job|engagement|project|season|placement|post")
+    len_s, len_m = term_summary(durs, k, "temporary and seasonal jobs")
+    cth = sum(1 for j in js if CTH_RX.search(job_text(j)))
+    plain = ("<strong>A temporary job</strong> ends on a date or with a season set in advance: a fixed-term post, seasonal work or a temp assignment."
+             + (f" The postings that state a length run {len_m} at the median." if len_m else ""))
+    after = ""
+    if len(cnt) >= 2:
+        after += section("Which seasons the [[postings name]]", '<div class="tablewrap"><table><tr><th>Season named in the posting</th><th>Open postings</th></tr>'
+                         + "".join(f"<tr><td><strong>{e(nm_)}</strong></td><td>{c_:,}</td></tr>" for nm_, c_ in cnt)
+                         + f'</table></div><p class="note">Counted from the words of the {k:,} open temporary and seasonal postings; one posting can name two seasons, and many name none.</p>',
+                         sid="seasons", label="Seasons")
+    if len_s: after += term_table(durs, "How long temporary jobs [[last]]", "temporary and seasonal postings", "“6-month temporary assignment”, “seasonal position for 3 months”")
+    first = ("What is a temporary job?", "A job with an end set in advance: a fixed term, a season, or an assignment through a staffing agency that pays you while you work for its client. "
+             f"{k:,} are open here as of {fdate(TODAY)}" + (f"; {seas_n:,} of them are called seasonal." if seas_n else "."))
+    qa = [("How long do temporary jobs last?", (len_s + " " if len_s else "Few postings here state a length today. ") + "Seasonal work follows its season; the dates in the posting and in the offer are the ones that count."),
+          ("What is the difference between temporary and seasonal work?", "Seasonal work is temporary work that comes back at the same time each year. For the health coverage rules, the IRS "
+           "calls a seasonal employee one hired into a position whose customary annual employment is six months or less, and counts retail workers employed only during holiday seasons as "
+           "seasonal workers. A temporary job can come at any time of year: to cover a leave, a project or a busy month."
+           + (" The seasons the postings here name most: " + ", ".join(f"{nm_.lower()} ({c_:,})" for nm_, c_ in cnt[:3]) + "." if cnt else "")),
+          ("What do temporary jobs pay?", pay_said(js, "temporary and seasonal jobs") or "Few of these postings state pay today, so ask for the rate in the first call."),
+          ("Do temporary workers get benefits?", "No federal law requires paid vacation, sick days or holidays for any worker; the Labor Department calls them a matter of agreement. Health "
+           "coverage depends on hours: a large employer must offer it to employees who average 30 hours a week or more, and for seasonal employees the IRS lets the employer measure hours "
+           "over a period before it decides. An agency that places temps may have a plan of its own, so ask." + benefits_said(js, "temporary and seasonal jobs")),
+          ("Do temporary workers get overtime?", "Yes, in non-exempt work: the minimum wage and overtime of the Fair Labor Standards Act (at least time and a half for hours over 40 in a workweek) "
+           "do not depend on whether a job is temporary. One exception touches seasonal work: employees of an amusement or recreational establishment that operates no more than seven months "
+           "a year, or meets a receipts test, can be exempt from both under section 13(a)(3) of the Act; some states do not recognise that exemption.")]
+    if cth >= 3:
+        qa.append(("Can a temporary job become permanent?", f"Sometimes, and some postings say so: {cth:,} of the {k:,} here name temp-to-hire, temp-to-perm or a possible conversion to a "
+                   "permanent job. We have no count of how many temps are kept on, so ask the employer or the agency how often it happens."))
+    qa.append(("How many people work temporary jobs?", "In July 2023 the Bureau of Labor Statistics counted 6.9 million contingent workers in the United States, people whose jobs are temporary "
+               "or not expected to last: 4.3% of everyone employed. 945,000 (0.6%) worked through temporary help agencies. Part-time workers were three times as likely to hold a "
+               "contingent job as full-time workers (9.7% against 3.2%), and workers aged 16 to 24 four times as likely as those aged 25 and over."))
+    return plain, after, first, tuple(qa)
+
+
+# "weekend" in a posting that says the opposite: "Monday to Friday, no weekends", "weekends off", "enjoy a 3-day weekend". Until 25 Nov
+# 2026 these counted as weekend jobs.
+WEEKEND_NOT = re.compile(r"\bno\s+(?:(?:nights?|evenings?|holidays?)\s*(?:,|or|and|/)\s*)*weekends?\b|\bweekends?\s+(?:are\s+)?(?:off|free)\b|\bfree\s+weekends?\b"
+                         r"|\b(?:3|three)[- ]day\s+weekends?\b|\blong\s+weekends?\b|\bnever\s+(?:work\s+)?(?:on\s+)?weekends?\b|\bwithout\s+weekends?\b|\bweekend\s+travel\b", re.I)
+NIGHT_NOT = re.compile(r"\bno\s+(?:(?:evenings?|weekends?|holidays?)\s*(?:,|or|and|/)\s*)*(?:nights?|evenings?|overnights?)\b", re.I)
+WK_KINDS = (("Weekend shift in the job title", None), ("Weekends only", r"\bweekends?[- ]only\b|\bonly\s+(?:on\s+)?weekends\b|\bsaturdays?\s+(?:and|&)\s+sundays?\s+only\b"),
+            ("Every other weekend or a weekend rotation", r"\bevery other weekend\b|\balternat\w*\s+weekends?\b|\brotating weekends?\b|\bweekend rotations?\b"
+                                                          r"|\b(?:one|1|two|2)\s+weekends?\s+(?:a|per|every|each)\s+(?:month|\w+\s+weeks?)\b"),
+            ("Evenings, nights and weekends", r"\b(?:evenings?|nights?)\s*,?\s*(?:and|&|or|and/or)\s+weekends?\b"), ("Weekends and holidays", r"\bweekends?\s*,?\s*(?:and|&|or|and/or)\s+holidays?\b"),
+            ("Weekends when needed", r"\bweekends?\s+(?:as|when|if)\s+(?:needed|required)\b|\boccasional\s+weekends?\b|\bsome\s+weekends?\b"))
+WK_DIFF_D = re.compile(r"\$\s?(\d{1,2}(?:\.\d{1,2})?)\s*(?:/\s*h(?:ou)?r\b|per hour|an hour)?\s*weekend\s*(?:shift\s*)?(?:differential|premium|diff)\b"
+                       r"|\bweekend\s*(?:shift\s*)?(?:differential|premium|diff)\s*(?:of|is|:)?\s*(?:up to\s*)?\$\s?(\d{1,2}(?:\.\d{1,2})?)", re.I)
+WK_DIFF_P = re.compile(r"(\d{1,2})\s?%\s*weekend\s*(?:shift\s*)?(?:differential|premium|diff)\b|\bweekend\s*(?:shift\s*)?(?:differential|premium|diff)\s*(?:of|is|:)?\s*(?:up to\s*)?(\d{1,2})\s?%", re.I)
+WK_DIFF_ANY = re.compile(r"\bweekend\s*(?:shift\s*)?(?:differential|premium|diff)\b|\bdifferential for weekends?\b", re.I)
+
+
+def weekend_parts(js):
+    """The weekend list: (opening sentence, sections after the list, first question, more questions)."""
+    k = len(js)
+    txt = {j["id"]: WEEKEND_NOT.sub(" ", job_text(j)) for j in js}
+    kinds = [(nm_, sum(1 for j in js if (re.search(r"weekend", j["title"], re.I) if rx_ is None else re.search(rx_, txt[j["id"]], re.I)))) for nm_, rx_ in WK_KINDS]
+    only = [j for j in js if re.search(WK_KINDS[1][1], txt[j["id"]], re.I)]
+    dol_, pct_ = [], []
+    for j in js:
+        if (m_ := WK_DIFF_D.search(txt[j["id"]])) and 0.25 <= (v_ := float(m_.group(1) or m_.group(2))) <= 10: dol_.append(v_)
+        if (m_ := WK_DIFF_P.search(txt[j["id"]])) and 2 <= (v_ := int(m_.group(1) or m_.group(2))) <= 30: pct_.append(v_)
+    n_diff = sum(1 for j in js if WK_DIFF_ANY.search(txt[j["id"]]))
+    plain = ("<strong>Weekend jobs</strong> are the postings that name work on Saturdays and Sundays: weekend shifts, weekends-only schedules and rotations that include weekends.")
+    after = ""
+    kinds_ = [(nm_, c_) for nm_, c_ in kinds if c_ >= 5]
+    if len(kinds_) >= 3:
+        after += section("How the postings [[schedule weekends]]", '<div class="tablewrap"><table><tr><th>What the posting says</th><th>Open postings</th><th>Share</th></tr>'
+                         + "".join(f"<tr><td>{e(nm_)}</td><td>{c_:,}</td><td>{100 * c_ / k:.0f}%</td></tr>" for nm_, c_ in kinds_)
+                         + f'</table></div><p class="note">Counted from the words of the {k:,} open weekend postings; one can say two of these, and many only say that weekends are part of the job. '
+                           '“No weekends” and “weekends off” are not counted as weekend work.</p>', sid="schedules", label="Schedules")
+    dol_.sort(); pct_.sort()
+    cells_ = ([f"<tr><td>Dollars an hour on top</td><td>{len(dol_):,}</td><td>${dol_[len(dol_) // 2]:,.2f}</td><td>${dol_[0]:,.2f} to ${dol_[-1]:,.2f}</td></tr>"] if len(dol_) >= 3 else []) + \
+             ([f"<tr><td>A share of the base rate</td><td>{len(pct_):,}</td><td>{pct_[len(pct_) // 2]}%</td><td>{pct_[0]}% to {pct_[-1]}%</td></tr>"] if len(pct_) >= 3 else [])
+    if cells_ and len(dol_) + len(pct_) >= 5:
+        after += section("The weekend differential [[postings name]]", '<div class="tablewrap"><table><tr><th>How it is stated</th><th>Postings</th><th>Median</th><th>Range</th></tr>' + "".join(cells_)
+                         + f'</table></div><p class="note">Read from the text of the {k:,} open weekend postings: the amount next to “weekend differential” or “weekend premium”. '
+                           'Most postings name none; ask for the weekend rate before you accept.</p>', sid="differential", label="Differential")
+    ti_ = [(t_, c_) for t_, c_ in Counter(re.sub(r"\s+", " ", re.sub(r"\s*[\(\[,|–—-].*$", "", j["title"])).strip() for j in (only if len(only) >= 20 else js)).most_common(10)
+           if c_ >= 2 and 3 <= len(t_) <= 60][:5]
+    fld_ = [(CAT[c_], n_) for c_, n_ in Counter(j["cat"] for j in js if j["cat"] != OTHER[0]).most_common(4)]
+    only_ = (f"{len(only):,} of the {k:,} open weekend postings here say weekends only, or Saturday and Sunday only" if len(only) >= 5 else
+             (f"Few do: {len(only):,} of the {k:,} open weekend postings here say weekends only" if only else f"None of the {k:,} open weekend postings here says weekends only today")
+             + "; most weekend work comes as weekend shifts in a fuller week or a rotation")
+    ti_s = (("; the titles most common among " + ("them" if len(only) >= 20 else "all the weekend postings") + " are " + ", ".join(f"{t_} ({c_:,})" for t_, c_ in ti_)) if len(ti_) >= 3 else "")
+    fld_s = (" The fields with the most weekend postings: " + ", ".join(f"{nm_} ({n_:,})" for nm_, n_ in fld_) + ".") if len(fld_) >= 3 else ""
+    first = ("Which jobs are weekend only?", only_ + ti_s + "." + fld_s)
+    if n_diff:
+        diff_ = f"{n_diff:,} of the {k:,} open weekend postings here name one" + (f", most often ${dol_[len(dol_) // 2]:,.2f} an hour on top" if len(dol_) >= 3 else
+                                                                                   (f", most often {pct_[len(pct_) // 2]}% of the base rate" if len(pct_) >= 3 else "")) + "."
+    else: diff_ = "few postings here name one, so ask for the weekend rate."
+    qa = [("Do you get paid more for working weekends?", "Not by federal law. The Labor Department says extra pay for weekend work is a matter of agreement between employer and employee; "
+           "the Fair Labor Standards Act only asks at least time and a half for hours over 40 in a workweek, in non-exempt work, whichever days they fall on. Some employers pay a weekend "
+           "differential all the same: " + diff_ + " Some states and union contracts add rules of their own."),
+          ("What do weekend jobs pay?", pay_said(js, "weekend jobs") or "Few of these postings state pay today, so ask for the rate in the first call."),
+          ("How many people work on weekends?", "In 2025, 30% of employed people in the United States worked on an average weekend day, against 81% on an average weekday, by the American "
+           "Time Use Survey of the Bureau of Labor Statistics (published in June 2026)."),
+          ("How often will I work weekends?", (f"By what the {k:,} postings here say: " + "; ".join(f"{nm_[0].lower() + nm_[1:]}, {c_:,}" for nm_, c_ in kinds_) + ". " if kinds_ else "")
+           + "Ask how weekends are shared: a fixed weekend schedule, every other weekend or a rotation, and whether the weekend days replace two weekdays.")]
+    return plain, after, first, tuple(qa)
+
+
+SUMMER_YR = re.compile(r"\bsummer\s*(?:of\s+)?(20\d\d)\b|\b(20\d\d)\s+summer\b", re.I)
+
+
+def summer_parts(js):
+    """The summer list: (opening sentence, sections after the list, first question, more questions)."""
+    k = len(js)
+    nxt = int(TODAY[:4]) + (1 if TODAY[5:7] > "08" else 0)          # the summer people are hiring for: next year's from September
+    yrs = Counter()
+    for j in js:
+        if (m_ := SUMMER_YR.search(job_text(j))): yrs[int(m_.group(1) or m_.group(2))] += 1
+    month_ago = (datetime.date.fromisoformat(TODAY) - datetime.timedelta(days=30)).isoformat()
+    new30 = sum(1 for j in js if (j.get("posted") or "") >= month_ago)
+    is_in = lambda j: j["level"] == "Intern" or j.get("etype") == "Internship" or re.search(r"\bintern(?:ship)?s?\b|\bco-?op\b", j["title"], re.I)
+    ints = [j for j in js if is_in(j)]
+    rest = [j for j in js if not is_in(j)]
+    durs = term_lengths(js, r"internship|intern\b|program|programme|placement|position|role|job|assignment|season|session|camp|contract")
+    len_s, len_m = term_summary(durs, k, "summer jobs and internships", unit="week")
+    plain = ("<strong>Summer jobs</strong> are seasonal jobs and internships for the months when school is out."
+             + (f" {yrs[nxt]:,} of the postings here already name summer {nxt}." if yrs[nxt] >= 5 else ""))
+    after = ""
+    rows_ = [(f"Summer {y_}", c_) for y_, c_ in sorted(yrs.items()) if c_ >= 3]
+    hl_i = sorted((h_[0] + h_[1]) / 2 for j in ints if (h_ := usd_hourly(j.get("salary"))))
+    hl_r = sorted((h_[0] + h_[1]) / 2 for j in rest if (h_ := usd_hourly(j.get("salary"))))
+    kinds_ = [("Internships and co-ops", ints, hl_i), ("Other summer jobs", rest, hl_r)]
+    if len(ints) >= 5 and len(rest) >= 5:
+        after += section("Summer jobs and internships [[side by side]]", '<div class="tablewrap"><table><tr><th>Kind</th><th>Open postings</th><th>Employers</th><th>Median hourly pay</th></tr>'
+                         + "".join(f"<tr><td><strong>{e(nm_)}</strong></td><td>{len(js_):,}</td><td>{len({j['company'] for j in js_}):,}</td><td>{f'${hl_[len(hl_) // 2]:,.2f}' if len(hl_) >= 10 else '–'}</td></tr>"
+                                   for nm_, js_, hl_ in kinds_)
+                         + "</table></div>" + (('<div class="tablewrap"><table><tr><th>Summer named in the posting</th><th>Open postings</th></tr>'
+                                                + "".join(f"<tr><td>{e(t_)}</td><td>{c_:,}</td></tr>" for t_, c_ in rows_) + "</table></div>") if rows_ else "")
+                         + '<p class="note">An internship is a posting with intern, internship or co-op in its title or level. The median is of the middles of the hourly ranges the postings state, '
+                           'where ten or more state one. The summer is the year the posting names; many name none.</p>', sid="kinds", label="Side by side")
+    if len_s: after += term_table(durs, "How long summer jobs [[last]]", "summer postings", "“12-week internship”, “a 10 week summer program”")
+    first = ("When do summer jobs start hiring?", (f"Many already have: {yrs[nxt]:,} of the {k:,} open summer postings here name summer {nxt}, and {new30:,} summer postings were posted in "
+                                                   "the last 30 days. " if yrs[nxt] >= 5 else f"{new30:,} of the {k:,} open summer postings here were posted in the last 30 days. ")
+             + "Youth employment climbs from spring into the summer: the Bureau of Labor Statistics counted 1.8 million more employed 16- to 24-year-olds in July 2026 than in April, "
+               "21.3 million in all, so applying in the months before the break gives the most choice.")
+    qa = [("How old do you have to be to get a summer job?", "Under federal law, 16 is the basic minimum age for work outside farming, and 14- and 15-year-olds may work in certain jobs the rules list, such as "
+           "office, shop and food service work, for limited hours. At 16 and 17 any job the Labor Department has not declared hazardous is open, with no federal limit on hours; at 18, any job. Many states add rules or ask for a work permit, and where state and "
+           "federal law differ the stricter one applies."),
+          ("How many hours can a 14 or 15 year old work in the summer?", "Under the federal rules, up to 8 hours a day and 40 hours a week when school is out, between 7 a.m. and 9 p.m. "
+           "from June 1 to Labor Day (7 p.m. for the rest of the year). In a school week the limits are 3 hours a day and 18 a week. A state law with tighter limits applies instead."),
+          ("What do summer jobs pay?", pay_said(js, "summer jobs and internships")
+           + (f" Internships here pay ${hl_i[len(hl_i) // 2]:,.2f} an hour at the median, the other summer jobs ${hl_r[len(hl_r) // 2]:,.2f}." if len(hl_i) >= 10 and len(hl_r) >= 10 else "")
+           or "Few of these postings state pay today, so ask for the rate in the first call."),
+          ("How long is a summer job?", (len_s + " " if len_s else "") + "Most run through the summer break; the dates in the posting are the ones that count."),
+          ("Where do young people work in the summer?", "In July 2026, 21.3 million people aged 16 to 24 were employed in the United States, 53.8% of that age group. A quarter of them (25%) worked "
+           "in leisure and hospitality, such as restaurants, hotels and parks, and 18% in shops, by the Bureau of Labor Statistics count published in August 2026.")]
+    if len(ints) >= 5:
+        qa.append(("Are summer internships and summer jobs the same?", f"No. An internship is a short job for students and recent graduates to learn a trade; a summer job is any seasonal work. "
+                   f"Of the {k:,} open summer postings here, {len(ints):,} are internships or co-ops and {len(rest):,} other summer jobs. The internships page has the full list."))
+    return plain, after, first, tuple(qa)
+
+
+HOURS_PARTS = {"temporary/": temp_parts, "weekend/": weekend_parts, "summer/": summer_parts}
+NO_WORDS = re.compile(r"(?!x)x")          # matches nothing: the lists with no words to take out first
 
 
 def intern_hub(path, h1, yr, ej):
@@ -2860,12 +3194,13 @@ def main():
     # link from any other page but its own, /nonprofit-jobs/ and /job-posting-sites/ one, /temporary/ and /no-experience-jobs/ two.
     imm_jobs, noexp_jobs, fair_jobs = says_so(active, IMMEDIATE_RX), says_so(active, NO_EXPERIENCE_RX), says_so(active, FAIR_CHANCE_RX)
     noexp_jobs = [j for j in noexp_jobs if j["level"] not in ("Senior", "Lead") and (j.get("years") or 0) < 2]      # a senior title or "3+ years" is not "no experience"
+    HOURS_NOT = {"weekend/": WEEKEND_NOT, "night-shift/": NIGHT_NOT}      # "no weekends", "no nights" are not weekend or night work (25 Nov 2026)
     HOURS = [(p_, h_, w_, js_) for p_, h_, rx_, w_ in (
         ("night-shift/", "Night shift jobs", r"night shift|overnight|3rd shift|third shift|graveyard|\bnights\b|2nd shift|second shift|swing shift|evening shift", "evening or night shifts"),
         ("weekend/", "Weekend jobs", r"weekend", "weekend work"),
         ("summer/", "Summer jobs and internships", r"\bsummer\b", "the summer months"),
         ("temporary/", "Temporary and seasonal jobs", r"seasonal|temporary|\btemp\b|fixed[- ]term", "a fixed term or a season"))
-        if len(js_ := [j for j in active if re.search(rx_, j["title"] + " " + (j["excerpt"] or ""), re.I)]) >= 20]
+        if len(js_ := [j for j in active if re.search(rx_, HOURS_NOT.get(p_, NO_WORDS).sub(" ", j["title"] + " " + (j["excerpt"] or "")), re.I)]) >= 20]
     HOURS += [x for x in (("hiring-immediately/", "Jobs hiring immediately", "an immediate start", imm_jobs), ("no-experience-jobs/", "No experience jobs", "“no experience required”", noexp_jobs),
                                  ("fair-chance-jobs/", "Fair chance jobs", "a fair chance law or says it considers applicants with arrest or conviction records", fair_jobs)) if len(x[3]) >= 20]
     GOV_RX = re.compile(r"^(?:the )?(?:city|county|state|town|village|commonwealth|district|port|borough|township|parish) of\b|\b(?:county|city|state) government\b|"
@@ -4012,7 +4347,10 @@ def main():
         row_h, kw_h = list_parts(h_, js_)
         if p_ != "night-shift/" and (ht_ := hourly_tbl(js_, h_.replace(" jobs and internships", "").replace(" jobs", "").replace("Jobs ", ""))):
             kw_h = dict(kw_h); kw_h["after"] = ht_ + kw_h.get("after", "")
-        fq_first, fq_extra = None, ()
+        fq_first, fq_extra, plain_h = None, (), ""
+        if p_ in HOURS_PARTS:
+            plain_h, add_h, fq_first, fq_extra = HOURS_PARTS[p_](js_)
+            if add_h: kw_h = dict(kw_h); kw_h["after"] = add_h + kw_h.get("after", "")
         if p_ == "hiring-immediately/":
             fq_first = ("Which jobs are hiring immediately?", f"{len(js_):,} open postings here say so in their own words, such as “immediate start” or “hiring immediately”. They are listed newest first, and each links to the employer’s own page.")
             fq_extra = (("How do I get hired quickly?", "Apply on the day a posting appears, keep your resume to the skills the posting names, and say when you can start. Have your documents ready, and ask how soon the employer decides."),
@@ -4038,12 +4376,14 @@ def main():
             n_ti = [(t_, k_) for t_, k_ in n_ti.most_common(12) if k_ >= 2 and 3 <= len(t_) <= 60][:6]
             n_diff = sum(1 for j in js_ if re.search(r"shift differential|night differential|shift premium|night premium", (j["excerpt"] or "") + " " + (j.get("desc") or ""), re.I))
             n_rem = sum(1 for j in js_ if j["remote"])
+            plain_h = "<strong>Night shift jobs</strong> are the postings that name evening, overnight or rotating shifts: second, third, swing or graveyard shift."
             fq_first = ("What is a good night shift job?", ("By what is open today, the most common are " + ", ".join(f"{t_} ({k_:,})" for t_, k_ in n_ti) + ". " if len(n_ti) >= 3 else "")
                         + "The fields with the most night work here are " + ", ".join(f"{c_} ({k_:,})" for c_, k_ in n_cat) + ". A good one is the one whose hours you can keep: check whether the shift is fixed or rotates.")
             fq_extra = (("Do night shifts pay more?", "Often, through a shift differential: extra pay per hour for evening and night hours. "
                          + (f"{n_diff:,} of the {len(js_):,} night shift postings here name a differential or a premium in their text; the others may still pay one, so ask for the night rate in the first call. " if n_diff
                             else "Few postings state it, so ask for the night rate in the first call. ")
-                         + "In the United States no federal law requires extra pay for night work as such; it is the employer’s policy or a union contract."),
+                         + "In the United States no federal law requires extra pay for night work as such; it is the employer’s policy or a union contract. The federal government "
+                           "pays its own General Schedule staff a night differential of 10% for regularly scheduled work between 6 p.m. and 6 a.m."),
                         ("What hours is a night shift?", "Postings use the words differently. Second shift or swing shift usually runs from the afternoon to about midnight; third shift, overnight or graveyard from about 10 or 11 p.m. to 6 or 7 a.m. "
                          "The posting’s own schedule line is the only one that counts."),
                         ("Are there remote night shift jobs?", (f"{n_rem:,} of the {len(js_):,} night shift postings here are marked remote: mostly customer support, dispatch and monitoring work that has to be covered round the clock." if n_rem else
@@ -4079,9 +4419,10 @@ def main():
                                          'Most postings name none; ask for the night rate before you accept.</p>', sid="differential", label="Differential")
             if nt_html:
                 kw_h = dict(kw_h); kw_h["after"] = nt_html + kw_h.get("after", "")
-        title_h = f"Felon-Friendly Jobs ({len(js_):,} Fair Chance Jobs) | {SITE}" if p_ == "fair-chance-jobs/" else f"{h_} ({len(js_):,} open) | {SITE}"
+        title_h = (f"Felon-Friendly Jobs ({len(js_):,} Fair Chance Jobs) | {SITE}" if p_ == "fair-chance-jobs/" else
+                   f"{tcase(h_) if p_ in HOURS_PARTS or p_ == 'night-shift/' else h_} ({len(js_):,} open) | {SITE}")      # title case as on /part-time/ (25 Nov 2026)
         listing(p_, h_, title_h, f"{roles(len(js_), 'open job')} whose posting names {w_}, straight from employers’ careers pages. Updated hourly.", js_,
-                intro_for(js_, "", f" whose posting names {w_}", row=row_h), trail=(("All jobs", "jobs/"),), faq=h_[0].lower() + h_[1:], faq_first=fq_first, faq_extra=fq_extra,
+                (plain_h + " " if plain_h else "") + intro_for(js_, "", f" whose posting names {w_}", row=row_h), trail=(("All jobs", "jobs/"),), faq=h_[0].lower() + h_[1:], faq_first=fq_first, faq_extra=fq_extra,
                 links=(("jobs/", "Search every job"),), **kw_h)
     lap('Hybrid: some days at home, some in the office (FlexJobs show')
     # Hybrid: some days at home, some in the office (FlexJobs shows it as its own kind of work; the search has the same filter)
@@ -5694,8 +6035,13 @@ def main():
                                             + '</table></div><p class="note">The middle of each posting’s hourly range, for titles with three or more open part-time postings that state one.</p>') + kw_e.get("after", "")
                 kw_e = dict(kw_e); kw_e["faq_extra"] = part_time_qa(ej)
                 kw_e["links"] = (("part-time-jobs-near-me/", "Part-time jobs near me"),) + ((("remote/part-time/", "Remote part-time jobs"),) if sum(1 for j in remote if j.get("etype") == "Part-time") >= 20 else ())
+            plain_e = ""
+            if et == "Contract":
+                plain_e, add_e, first_e, more_e = contract_parts(ej)
+                kw_e = dict(kw_e); kw_e["after"] = add_e + kw_e.get("after", ""); kw_e["faq_first"] = first_e; kw_e["faq_extra"] = more_e
+                kw_e["links"] = (("salaries/", "What each job pays"),) + ((("remote/contract/", "Remote contract jobs"),) if sum(1 for j in remote if j.get("etype") == "Contract") >= 20 else ())
             listing(path, h1, f"{tcase(h1)}{yr} ({len(ej):,} open) | {SITE}", f"{roles(len(ej), 'open role')}: {h1.lower()}{yr} at companies, straight from their careers pages. Updated hourly.", ej,
-                    intro_for(ej, f"{et.lower()} ", row=row_e), trail=(("All jobs", "jobs/"),), faq=h1[0].lower() + h1[1:], **kw_e)
+                    (plain_e + " " if plain_e else "") + intro_for(ej, f"{et.lower()} ", row=row_e), trail=(("All jobs", "jobs/"),), faq=h1[0].lower() + h1[1:], **kw_e)
     for et, path, h1, what_ in (("Contract", "remote/contract/", "Remote contract jobs", "fixed-term and freelance work done from home"),
                                 ("Part-time", "remote/part-time/", "Remote part-time jobs", "work from home for fewer hours than a full week"),
                                 ("Full-time", "remote/full-time/", "Remote full-time jobs", "full-week jobs done from home")):
