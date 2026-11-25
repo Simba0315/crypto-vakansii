@@ -1060,18 +1060,25 @@ CAT_HOME = {}
 CAT_HOME_RX = [None]
 
 
-def set_cat_home(live_fields):
-    """Fills CAT_HOME for the fields whose page exists (a field with no open kind of work has none, and a link to it would be broken)."""
+def set_cat_home(fam_rows):
+    """Fills CAT_HOME for the fields whose page exists (a field with no open kind of work has none, and a link to it would be broken),
+    and for their remote lists where the field's own remote list exists (20 remote jobs, as the field loop writes it)."""
+    live = {f[0]: f[4] for f in fam_rows}
     CAT_HOME.clear()
-    CAT_HOME.update({cs: f"categories/{fs}/" for fs, f_ in fields_info.FIELDS.items() if fs in live_fields for cs in f_["cats"]})
-    CAT_HOME_RX[0] = (re.compile(r'(?<!canonical" href="' + re.escape(FULL) + r'/)(?<=/)jobs/(' + "|".join(map(re.escape, CAT_HOME)) + r')/(?=")')
-                      if CAT_HOME else None)
+    for fs, f_ in fields_info.FIELDS.items():
+        if fs not in live: continue
+        for cs in f_["cats"]:
+            CAT_HOME["jobs/" + cs] = f"categories/{fs}/"
+            if sum(1 for j in live[fs] if j["remote"]) >= 20: CAT_HOME["remote/" + cs] = f"categories/{fs}/remote/"
+    # only an address from the site's root (href="/jobs/sales-bd/" or the full address in markup), never a deeper one that ends the same way
+    CAT_HOME_RX[0] = (re.compile(r'(?<!canonical" href="' + re.escape(FULL) + r'/)(?:(?<=href="' + re.escape(P) + r'/)|(?<=' + re.escape(FULL) + r'/))('
+                                 + "|".join(map(re.escape, CAT_HOME)) + r')/(?=")') if CAT_HOME else None)
 
 
 def finish_html(content):
     """The last touches every HTML page gets, written to a file here or built on request by serve.py from a job record (records.py
     hands job_page()'s output here too; until 24 Nov 2026 those pages skipped both touches)."""
-    if CAT_HOME_RX[0] and "/jobs/" in content:
+    if CAT_HOME_RX[0] and ("/jobs/" in content or "/remote/" in content):
         content = CAT_HOME_RX[0].sub(lambda m: CAT_HOME[m.group(1)], content)
     if "<img" in content:
         # every image carries a title as well as its alt (owner, 24 Nov 2026: "title caption alt description" filled everywhere)
@@ -3514,7 +3521,7 @@ def main():
             for j in by_role[s_][1]:
                 if j["id"] not in seen_: seen_.add(j["id"]); js_.append(j)
         if live: fam_rows.append((fs, fn, fd, live, js_))
-    set_cat_home({f[0] for f in fam_rows})
+    set_cat_home(fam_rows)
     fam_show = sorted(fam_rows, key=lambda f: -len(f[4]))      # by open jobs, so the order follows the jobs as sources grow (owner, 15 Nov: "IT first")
     # The footer's four biggest fields link the page that answers their search (25 Nov 2026: "Sales & Business Development" went to
     # /jobs/sales-bd/, whose canonical is /categories/sales/, on every page). one_page_per_query() decides that only once every page is
@@ -5114,7 +5121,9 @@ def main():
         big_ = sorted(live, key=lambda x: -x[2])
         tops_ = big_[:3]
         # names that hold "and" themselves ("healthcare and clinical") are parted by semicolons, or the list cannot be read
-        and_ = lambda xs: xs[0] if len(xs) == 1 else (("; ".join(xs[:-1]) + "; and ") if any(" and " in x for x in xs) else (", ".join(xs[:-1]) + " and ")) + xs[-1]
+        # (two of them read "X, then Y": "manufacturing and quality; and technician" read as a slip, 25 Nov 2026)
+        and_ = lambda xs: xs[0] if len(xs) == 1 else (f"{xs[0]}, then {xs[1]}" if len(xs) == 2 and any(" and " in x for x in xs) else
+                                                      (("; ".join(xs[:-1]) + "; and ") if any(" and " in x for x in xs) else (", ".join(xs[:-1]) + " and ")) + xs[-1])
         # the opening answer (40-60 words), the line search engines and assistants quote
         # (the row of figures under it gives the remote share, the employers and the median pay: they are not repeated here)
         lead = (f"<strong>{n_:,} {e(q_)}</strong> are open today, each read from the employer’s own careers page and checked every hour. "
@@ -13457,7 +13466,7 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     lap('every narrow page linked up, down and across (crosslinks.py)')
     # every narrow page linked up, down and across (crosslinks.py): long-tail pages must not be orphans
     import crosslinks
-    n_x, n_l = crosslinks.run(OUT, [u for u in URLS if u and not u.startswith("job/")])
+    n_x, n_l = crosslinks.run(OUT, [u for u in URLS if u and not u.startswith("job/")], fix=lambda b_: CAT_HOME_RX[0].sub(lambda m: CAT_HOME[m.group(1)], b_) if CAT_HOME_RX[0] else b_)
     print(f"cross-links: {n_x:,} pages got links up, down or across ({n_l:,} narrow-to-broad pairs)")
     n_same = one_page_per_query()
     print(f"one page per query: {n_same:,} list pages name a fuller page with the same words as canonical")

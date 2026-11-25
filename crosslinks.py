@@ -88,7 +88,7 @@ def parents(u, have):
     return out
 
 
-def run(site, urls):
+def run(site, urls, fix=None):
     site = Path(site)
     have = set(urls)
     info = {}
@@ -143,6 +143,7 @@ def run(site, urls):
         if i < 0 or 'class="sec xlinks"' in t: continue
         j = t.rfind("</main>", 0, i)                     # inside the page's main content when there is a <main>
         at = j if j >= 0 else i
+        if fix: block = fix(block)                       # build.py's own link touches (a field's job list -> the field page)
         f.write_text(t[:at] + block + t[at:], encoding="utf-8")
         done += 1
     return done, sum(len(ps) for ps in up.values())
