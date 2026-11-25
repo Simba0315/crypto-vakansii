@@ -2577,6 +2577,26 @@ def calm_title(t):
         return w[0] + w[1:].lower()
     return re.sub(r"[A-Za-z]+(?:'[A-Za-z]+)?", fix, t)
 
+LOC_BLANK = {"blank", "/", "\\", "n/a", "na", "tbd", "null", "none", "unknown", "-", "–"}
+def tidy_location(loc):
+    """A place as a reader wants it (25 Nov 2026). Some hiring systems write "Cary,North Carolina,United States" with no space after the
+    commas (about 3 postings in 1,000), a form field left unfilled ("BLANK,BLANK,Multiple Locations", "Malta, /", "Nicosia, /, Cyprus") or
+    a stray comma or dash at an end ("Kansas City, Missouri,", "-REMOTE, USA-"). The words are not changed, only the spacing and the
+    empty parts; a place without such a flaw comes back as it was (the dashes in "US-GA-Atlanta" stay: they cannot be read safely)."""
+    if not loc or re.search(r"\d,\d", loc) or not re.search(r",\S|,\s*(?:,|$)|\s{2,}|^[\s,\-–]|[\s,\-–]$|(?:^|,)\s*(?:blank|/|\\)\s*(?:,|$)", loc, re.I): return loc
+    t = re.sub(r"(?<=[^\W\d_)]),(?=[^\W\d_(])", ", ", loc)               # a comma between two words
+    parts = [x.strip() for x in t.split(",")]
+    parts = [x for x in parts if x and x.lower() not in LOC_BLANK]
+    t = re.sub(r"\s{2,}", " ", ", ".join(parts)).strip(" ,-–")
+    return t if len(t) >= 2 else loc
+
+
+for _loc, _want in (("Cary,North Carolina,United States", "Cary, North Carolina, United States"), ("BLANK,BLANK,Multiple Locations", "Multiple Locations"), ("Nicosia, /, Cyprus", "Nicosia, Cyprus"),
+                    ("Kansas City, Missouri,", "Kansas City, Missouri"), ("-REMOTE, USA-", "REMOTE, USA"), ("Austin,TX; Gloucester,MA", "Austin, TX; Gloucester, MA"),
+                    ("New York, NY", "New York, NY"), ("US-GA-Atlanta", "US-GA-Atlanta"), ("1,000 employees", "1,000 employees"), ("Remote", "Remote"), ("", "")):
+    assert tidy_location(_loc) == _want, (_loc, tidy_location(_loc))
+
+
 ASSOC_SENIOR = re.compile(r"(?i)associate (?:rvp|avp|svp|evp|regional vice president|area vice president|managing director|general manager|head|dean|chief)\b")
 FOR_JUNIORS = re.compile(r"(?i)\b(?:early[- ]career|university|campus|graduate|new grad|intern(?:ship)?)s?\b[^,]*?\b(?:recruit\w*|sourcer|program manager|programs? lead|coordinator|talent partner)\b")
 REQ_CODE = [re.compile(r"\s*[\(\[]\s*(?:R|JR|REQ|Req|req|ID|Job ID|Requisition(?: ID)?)\s*[-#:_ ]?\s*\d{3,}\s*[\)\]]"),   # "(R6043)", "[REQ-12345]"
@@ -2647,7 +2667,7 @@ def main():
         j["cover"] = (j.get("cover") or (bought.get("premium") or {}).get("cover", "")) if j["premium"] else ""
         if j["location"].lower() in {"n/a", "na", "none", "tbd", "-", "null", "not specified"}: j["location"] = ""
         # "Remote- USA", "Dublin-Dublin, UNAVAILABLE, IE": a dash glued to the word before it and a hiring system's placeholder (24 Nov 2026)
-        j["location"] = re.sub(r",\s*UNAVAILABLE\b", "", re.sub(r"(?<=[A-Za-z])- (?=\w)", " - ", j["location"]))
+        j["location"] = tidy_location(re.sub(r",\s*UNAVAILABLE\b", "", re.sub(r"(?<=[A-Za-z])- (?=\w)", " - ", j["location"])))
         j["title"] = tidy_job_title(calm_title(j["title"]))
         # "Associate RVP, Provider Sales" was a junior role in the lists and on its page (24 Nov 2026): collect.level() knows
         # "Associate VP" and "Associate Director" but not the regional and managing variants. Mended here, not in collect.py, whose
