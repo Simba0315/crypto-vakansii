@@ -2582,7 +2582,11 @@ HOURS_PARTS = {"temporary/": temp_parts, "weekend/": weekend_parts, "summer/": s
 HOURS_DESC = {"temporary/": "How long they last, seasons and pay, from the postings.",
               "weekend/": "Weekend schedules, differentials and pay by field, from the postings.",
               "summer/": "Pay, lengths and federal hours rules for teens.",
-              "night-shift/": "Night differentials and pay by title, from the postings."}
+              "night-shift/": "Night differentials and pay by title, from the postings.",
+              # the three below began with a bare number and ended "straight from employers’ careers pages" like any list (25 Nov 2026)
+              "no-experience-jobs/": "Pay by job title, who hires and how to start.",
+              "hiring-immediately/": "Pay by job title and who hires, newest first, from the postings.",
+              "fair-chance-jobs/": "Fair chance laws, who hires and pay by job title, from the postings."}
 
 
 def lead_desc(h1, js, more):
@@ -4536,7 +4540,7 @@ def main():
                                         + f" and {dfl_[-1][0]} ({dfl_[-1][1]:,}) name one most often" + (f"; at the median of ${dmed_:,.2f} an hour, a 40-hour night week pays ${40 * dmed_:,.0f} more" if dmed_ else "")
                                         + ". Ask whether the hourly rate in the posting already includes the differential or comes on top of it."),)
         title_h = (f"Felon-Friendly Jobs ({len(js_):,} Fair Chance Jobs) | {SITE}" if p_ == "fair-chance-jobs/" else
-                   f"{tcase(h_) if p_ in HOURS_PARTS or p_ == 'night-shift/' else h_} ({len(js_):,} open) | {SITE}")      # title case as on /part-time/ (25 Nov 2026)
+                   f"{tcase(h_)} ({len(js_):,} open) | {SITE}")      # title case as on /part-time/ (25 Nov 2026; "No experience jobs" and "Jobs hiring immediately" were the last two in lower case)
         listing(p_, h_, title_h, lead_desc(h_, js_, HOURS_DESC[p_]) if p_ in HOURS_DESC else f"{roles(len(js_), 'open job')} whose posting names {w_}, straight from employers’ careers pages. Updated hourly.", js_,
                 (plain_h + " " if plain_h else "") + intro_for(js_, "", f" whose posting names {w_}", row=row_h), trail=(("All jobs", "jobs/"),), faq=h_[0].lower() + h_[1:], faq_first=fq_first, faq_extra=fq_extra,
                 links=(("jobs/", "Search every job"),), **kw_h)
@@ -6251,7 +6255,7 @@ def main():
                     if len(aw_grp) >= 3 else "") + aw_after
         aw_parts = list_parts("Work-from-anywhere jobs", aw)
         listing("work-from-anywhere/", "Work-from-anywhere jobs", f"Work From Anywhere Jobs ({len(aw):,} open) | {SITE}",
-                f"{roles(len(aw), 'remote job')} open to candidates worldwide, with no country restriction in the listing.", aw,
+                lead_desc("Work-from-anywhere jobs", aw, "Remote, open to any country: fields hiring, pay and what to check first."), aw,
                 intro_for(aw, "remote ", " listed as open worldwide", row=aw_parts[0]) + " No country is named in any of them.", trail=(("Remote", "remote/"),),
                 links=(("remote/", "All remote jobs"),), after=aw_after, faq="work-from-anywhere jobs",
                 faq_first=("What jobs can be done remotely from anywhere?",
