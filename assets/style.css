@@ -4594,3 +4594,7 @@ main.kp .tier.best .tsoon{border-color:var(--line2);color:var(--muted)}
 .klogos a:hover .ava img{filter:none;opacity:1}
 .klogos+.sec{margin-top:clamp(64px,7vw,96px)}
 @media (max-width:700px){.klogos .logorow{gap:12px 20px}.klogos .logorow a span{font-size:14px}}
+/* the companies directory (/companies/): names broke inside words ("Depart ment", "Teleperf ormance") in four narrow columns beside
+   the +N mark and the count; three columns, names wrap between words and keep two lines */
+main.hub #clist{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+main.hub #clist .tile .n{overflow-wrap:normal;word-break:normal;hyphens:none}

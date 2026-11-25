@@ -1542,7 +1542,9 @@ def section(title, inner, link=None, sid="", sub="", label=""):
     sb = f'<p class="sec-sub">{e(sub)}</p>' if sub else ""
     sid_ = f" id={chr(34)}{sid}{chr(34)}" if sid else ""
     if label:
-        return (f'<section class="sec hsec"{sid_}><div class="sec-head"><div class="sec-ttl"><p class="sec-label">{e(label)}</p><h2 class="tw">{tw(title)}</h2></div>'
+        # v4: a labelled title written without [[ ]] was set all light; it gets its two weights the way sec_labels() gives them
+        t_ = tw(title) if "[[" in title else (two_weight(e(title)) or f"<b>{e(title)}</b>")
+        return (f'<section class="sec hsec"{sid_}><div class="sec-head"><div class="sec-ttl"><p class="sec-label">{e(label)}</p><h2 class="tw">{t_}</h2></div>'
                 f'{sb}{more}</div>{inner}</section>')
     return f'<section class="sec"{sid_}><div class="sec-head{" has-sub" if sub else ""}"><h2>{e(title)}</h2>{sb}{more}</div>{inner}</section>'
 
@@ -12608,7 +12610,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
               "logo": FULL + "/brand/icon-512.png", "description": "An hourly-updated index of open jobs collected from companies' official careers pages."}) + "</script>")
     page("about/", f"About {SITE} — who we are and how the site works", f"What {SITE} is, where its {n:,} job listings come from, how often they are checked and what the site does not do.",
          khero(crumbs(("About", "")), "About", f"About {e(SITE)}",
-               f'{e(SITE)} is an index of open jobs. Every hour it reads the public hiring feeds of {N_FEEDS} companies, puts their {n:,} open roles into one searchable list and links each one back to the employer.',
+               f'{e(SITE)} is an index of open jobs. Every hour it reads the public hiring feeds of {N_FEEDS:,} companies, puts their {n:,} open roles into one searchable list and links each one back to the employer.',
                f'<p class="kact">{go("jobs/", "Search the jobs")}<a href="{P}/methodology/">How the jobs are collected</a></p>',
                after=nums([(f"{WEEKNEW:,}", "open jobs posted in the last 7 days"), (f"{len(archived):,}", f'closed jobs kept in the <a href="{P}/archive/">archive</a>'),
                            (f"{len(by_role)}", "kinds of work"), ("$0", "cost to job seekers")]))
@@ -12634,7 +12636,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          crumbs(("Methodology", "")) + f"<h1>How {e(SITE)} collects and checks jobs</h1>"
          f'<p class="plain"><b>In plain words:</b> where the jobs on this site come from, how we know a job is still open, and what each label and number means. Unfamiliar word? See the <a href="{P}/glossary/">glossary</a>.</p>'
          f'<p class="lead">Last updated {fdate(TODAY)}. This page explains where every number and label on the site comes from, so you can judge how far to trust it.</p>'
-         f'<h2 class="h2s">Where do the job listings come from?</h2><p>From the public hiring feeds that companies publish through their applicant tracking systems. We read {N_FEEDS} company feeds every hour. We do not copy listings from other job boards and we do not accept anonymous submissions.</p>'
+         f'<h2 class="h2s">Where do the job listings come from?</h2><p>From the public hiring feeds that companies publish through their applicant tracking systems. We read {N_FEEDS:,} company feeds every hour. We do not copy listings from other job boards and we do not accept anonymous submissions.</p>'
          '<h2 class="h2s">How do you know a job is still open?</h2><p>A job stays listed as open only while it is present in the employer\'s feed. When it disappears from the feed, it is marked as closed the same day and moved to the archive. '
          'If a company\'s feed cannot be read on a given day, its jobs are left unchanged rather than closed by mistake.</p>'
          '<h2 class="h2s">How are salary, skills, perks and remote status detected?</h2><p>Salary is shown only when the employer publishes a range. We read it from the pay field of the employer\'s hiring system or, failing that, from the posting text when a yearly range stands next to a word such as “salary” or “compensation”. '
