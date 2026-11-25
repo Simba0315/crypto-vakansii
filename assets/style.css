@@ -4831,3 +4831,65 @@ main.hub #clist .tile .n{overflow-wrap:normal;word-break:normal;hyphens:none}
   #acc .acc-pan .acc-ups li a{margin-left:20px}
 }
 @media print{#acc .acc-inv-act,#acc .acc-inv-f{display:none}#acc .acc-inv-c{box-shadow:none;border:0}}
+
+/* ================= v4, pass 2 (26 Nov 2026): the templates the first night did not reach, in the same language ================= */
+
+/* ---- the home page, style only (the owner: "на главную сайта ничего не надо добавлять"): the first screen becomes the framed light
+   panel every other page opens with, with the brand's ring; the headline in two weights; the four figures as one white card of cells
+   (dLocal's row of numbers); the jobs window, the field cards and the logo strip in the cards' hairline and corner ---- */
+.hero.v2{background:var(--bg)}
+.hero.v2>.wrap:first-child{position:relative;isolation:isolate;overflow:hidden;width:calc(100% - 40px);max-width:1140px;margin:18px auto 0;padding:56px 56px 48px;border-radius:32px;background:var(--bg2)}
+.hero.v2>.wrap:first-child::after{content:"";position:absolute;z-index:-1;right:-130px;top:-170px;width:460px;height:460px;border-radius:50%;border:50px solid color-mix(in srgb,var(--ac) 9%,transparent);pointer-events:none}
+.hero.v2>.wrap:first-child::before{content:"";position:absolute;z-index:-1;right:72px;top:46px;width:10px;height:10px;border-radius:50%;background:color-mix(in srgb,var(--ac) 30%,transparent);pointer-events:none}
+.hero.v2>.wrap+.wrap{padding-top:0}
+.hero.v2 .stamp{border-color:var(--line)}
+.hero.v2 h1{font-weight:400;letter-spacing:-.05em;max-width:16ch}
+.hero.v2 h1 .hl,:root[data-theme=dark] .hero.v2 h1 .hl{padding:0;background:none;font-weight:700}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .hero.v2 h1 .hl{background:none}}
+.hero.v2 .sub{color:var(--muted)}
+.hero.v2 .searchbar{border-color:var(--line);box-shadow:0 24px 48px -32px rgba(14,14,12,.32)}
+.hero.v2 .popular a{border-color:var(--line)}
+.hero.v2 .hstats{max-width:none;margin:44px 0 0;border:1px solid var(--line);border-radius:22px;background:var(--card);overflow:hidden;text-align:left}
+.hero.v2 .hstats div{margin:0 0 0 -1px;padding:22px 26px 20px;border-left:1px solid var(--line)}
+.hero.v2 .hstats b{font-size:clamp(28px,2.9vw,38px);letter-spacing:-.045em}
+.hero.v2 .hstats span{margin-top:4px;font-size:14px}
+.hero.v2 .shot{max-width:none;margin-top:40px;border-color:var(--line);border-radius:28px;box-shadow:0 30px 60px -44px rgba(14,14,12,.34)}
+.hero.v2 .shot-side{gap:10px}
+.hero.v2 .scard{border-radius:18px}
+.hero.v2 .scard em{color:var(--text)}
+.hero.v2 .scard em::after{content:"\2192";display:inline-grid;place-items:center;width:22px;height:22px;margin-left:8px;border-radius:50%;background:var(--text);color:var(--bg);font-size:12px;vertical-align:1px}
+.hero.v2 .shot-more .btn{gap:10px;padding:6px 6px 6px 18px;text-decoration:none;border-color:var(--btn);background:var(--btn);color:var(--btn-ink)}
+.hero.v2 .shot-more .btn::after{content:"\2192";display:grid;place-items:center;flex:none;width:30px;height:30px;border-radius:50%;background:var(--btn-ink);color:var(--btn);font-size:14px;line-height:1}
+.hero.v2 .hero-logos{padding-top:44px}
+.hero.v2 .hero-logos>p{font-size:14px;color:var(--faint)}
+.hero.v2 .logorow{gap:12px 30px}
+.hero.v2 .logorow a{padding:4px 0;border:0;border-radius:0;background:none;color:var(--muted);font-weight:600}
+.hero.v2 .logorow a:hover{color:var(--text)}
+.hero.v2 .logorow .ava img{filter:grayscale(1);opacity:.8;transition:filter .2s,opacity .2s}
+.hero.v2 .logorow a:hover .ava img{filter:none;opacity:1}
+.hero.v2 .logorow a.more{padding:4px 14px;border:1px solid var(--line);border-radius:999px;background:var(--card)}
+/* the field cards: the title in ink (it was a green underline, the 24 Nov link style the pass dropped elsewhere); a hairline card */
+main.home .dir.six .dirb{border:1px solid var(--line);border-radius:24px;background:var(--card)}
+main.home .dirb h3 u{text-decoration:none}
+main.home .dirb h3 a:hover u{background:none;color:var(--text);text-decoration:underline;text-decoration-color:var(--ac);text-decoration-thickness:2px;text-underline-offset:4px}
+main.home .dirb h3{border-bottom-color:var(--line)}
+main.home .ktabs .tabmore a{display:inline-flex;align-items:center;gap:10px;padding:6px 7px 6px 18px;border:1px solid var(--line2);border-radius:999px;background:var(--card);color:var(--text);text-decoration:none}
+main.home .ktabs .tabmore a::after{content:"\2192";display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:50%;background:var(--text);color:var(--bg);font-size:14px;line-height:1}
+main.home .ktabs .tabmore a:hover{border-color:var(--text)}
+@media(max-width:900px){
+  .hero.v2>.wrap:first-child{padding:40px 28px 32px}
+  .hero.v2 .hstats{grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin-top:32px}
+  .hero.v2 .hstats div{margin:-1px 0 0 -1px;border-top:1px solid var(--line)}
+}
+@media(max-width:640px){
+  .hero.v2>.wrap:first-child{width:calc(100% - 20px);margin-top:8px;padding:26px 18px 22px;border-radius:24px}
+  .hero.v2>.wrap:first-child::after{right:-200px;top:-210px;width:300px;height:300px;border-width:36px}
+  .hero.v2>.wrap:first-child::before{display:none}
+  .hero.v2 .popular{margin-left:-18px;margin-right:-18px;padding:0 18px 4px}
+  .hero.v2 .hstats div{padding:14px 16px 13px}
+  .hero.v2 .hstats b{font-size:24px}
+  .hero.v2 .hstats span{font-size:13px;line-height:1.35}
+  .hero.v2 .shot{margin:28px -10px 0;border-radius:22px}
+  .hero.v2 .stamp{padding:6px 12px;font-size:12.5px}
+  .hero.v2 .logorow{gap:10px 22px}
+}
