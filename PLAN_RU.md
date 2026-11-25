@@ -33,8 +33,8 @@
 | Wellfound | метка «удалённо отовсюду / удалённо / гибрид» у каждой вакансии; компании по странам (https://jobseveryhour.com/locations/germany/companies/); https://jobseveryhour.com/salaries/explorer/; https://jobseveryhour.com/vs/wellfound/ | «быстро растёт» и компании в тренде; группировка выдачи по компании | нужно ~2 месяца нашей истории (с 12 ноября); группировка в очереди |
 | jobswidget | виджет, который сам читает вакансии компании из Greenhouse, Lever, Ashby (https://jobseveryhour.com/widgets/); страницы по платформам и системам (https://jobseveryhour.com/widgets/wordpress/, https://jobseveryhour.com/widgets/greenhouse/, https://jobseveryhour.com/widgets/careers-page/) | плагин на wordpress.org; окно вакансии внутри виджета; статистика кликов | плагин — нужен ваш аккаунт wordpress.org; окно не начато; статистике нужен сервер |
 
-Сравнения с сайтами, которые называют ИИ-ответы (25 ноября): https://jobseveryhour.com/vs/ — 33 сайта, у каждого факты с его собственных страниц и датой; новые с этой
-выкладки: Google for Jobs, Ladders, Craigslist, Levels.fyi, GovernmentJobs.com, HiringCafe, Drivetube, Jobright, Jobscan. Нет страницы: Monster и
+Сравнения с сайтами, которые называют ИИ-ответы (25 ноября): https://jobseveryhour.com/vs/ — 34 сайта, у каждого факты с его собственных страниц и датой; новые с этой
+выкладки: Google for Jobs, Ladders, Craigslist, Levels.fyi, GovernmentJobs.com, HiringCafe, SecretJobs, Drivetube, Jobright, Jobscan. Нет страницы: Monster и
 CareerBuilder (сайт нас блокирует), Adzuna и LinkUp (проверка «вы человек?», её не обходим), Hired (закрыт, теперь LHH).
 
 ## Сейчас: 25 главных недоделок и кто их делает (сверка всех ваших сообщений, 25 ноября 2026, ночь)

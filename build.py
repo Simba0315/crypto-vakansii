@@ -8328,6 +8328,10 @@ def main():
          "There is no single best one: it depends on the job. Indeed and LinkedIn are the largest general job sites by their own figures; Glassdoor adds company reviews; "
          "Google for Jobs searches many sites at once. For government jobs use USAJOBS or GovernmentJobs.com, for students Handshake, for tech Dice, Wellfound or Built In, "
          f"for hourly work Snagajob. {us_} reads {len(active):,} open jobs from {bs_cos:,} companies’ own careers pages every hour, free and with no account."),
+        # Google's "People also ask" for "best job search sites" (gl=us, 25 Nov 2026)
+        ("What is the most reliable job search site?",
+         "The one whose jobs are still open when you apply. A listing copied from another board can stay up after the job is filled; a site that reads the employer’s own careers page drops it "
+         f"once the employer takes it down. {us_} reads {len(active):,} jobs that way every hour. On any site, check the job on the employer’s own careers page before you apply."),
         ("Which job site is best for each kind of job?",
          "By what each site says it is for: " + "; ".join(f"{cs_.KINDS[k_].lower()}: {names_(bs_kind(k_))}" for k_ in cs_.KINDS if bs_kind(k_)) + ". The table “Which site for which job” above lists them with links."),
         ("Which job search sites are free for job seekers?",
@@ -8421,7 +8425,7 @@ def main():
                  '<button class="btn ghost" type="button" id="cmp-copy">Copy link to this table</button><button class="btn ghost" type="button" id="cmp-clear">Clear</button></div></div>')
     cmp_presets = [("Indeed vs ZipRecruiter vs Glassdoor", "indeed,ziprecruiter,glassdoor"), ("Indeed vs LinkedIn vs ZipRecruiter", "indeed,linkedin-jobs,ziprecruiter"),
                    ("Remote job sites", "we-work-remotely,remote-ok,flexjobs,remotive,himalayas"), ("Tech and startup jobs", "dice,built-in,wellfound,linkedin-jobs"),
-                   ("Job search engines that read career pages", "hiringcafe,drivetube,google-for-jobs,simplyhired"),
+                   ("Job search engines that read career pages", "hiringcafe,secretjobs,drivetube,google-for-jobs"),
                    ("AI job search and resume tools", "jobright,jobscan,hiringcafe"), ("Job search engines", "simplyhired,jooble,talent-com"),
                    ("Students, hourly and government jobs", "handshake,snagajob,usajobs,governmentjobs,craigslist"),
                    ("Tech jobs and pay", "dice,built-in,levels-fyi,ladders")]
@@ -10267,7 +10271,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     # such list. Every figure is one the site's own page stated; what a page did not state is shown as "Not stated".
     import job_sites as JS
     js_rows = [x for x in JS.SITES if x["kind"] != "regional"]
-    js_when = fdate(JS.READ)
+    js_when = fdate(JS.READ) if JS.READ_LAST == JS.READ else f"{fdate(JS.READ)[:-6]} to {fdate(JS.READ_LAST)}"     # most read on 13 Nov, three on 24-25 Nov
     js_free = [x for x in js_rows if x["free"][0] in ("yes", "limited")]
     js_usd = lambda x: (lambda m_: int(m_.group(1).replace(",", "")) if m_ else None)(re.search(r"\$(\d[\d,]*)", x["price"])) if x["free"][0] == "no" else None
     js_priced = sorted((v_, x["name"]) for x in js_rows if (v_ := js_usd(x)))
@@ -10304,7 +10308,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
               (f"On {js_when}, {js_names(js_renew)} said a post renews after 30 days unless that is turned off; on one of them the box was ticked when the page loaded. " if js_renew else "")
               + "Read the checkout page before you pay: “one payment” and “renews every 30 days” are different products at the same price."),
              ("How was this checked?",
-              f"We opened each site’s own pricing page on {js_when} and wrote down only what it stated; a fact the page did not state is shown as “Not stated”, and a figure that reached us second-hand is left out. "
+              f"We opened each site’s own pricing page between {js_when} (the date of each is in the sources) and wrote down only what it stated; a fact the page did not state is shown as “Not stated”, and a figure that reached us second-hand is left out. "
               + (f"{', '.join(JS.NOT_READ[:-1])} and {JS.NOT_READ[-1]} are not in the table: their pricing pages showed a bot check or an error that day." if JS.NOT_READ else ""))]
     js_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in js_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
@@ -10312,10 +10316,10 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     js_t0 = f"Job Posting Sites for Employers ({TODAY[:4]})"
     js_t = next((c_ for c_ in (f"{js_t0}: Free Options and Prices, {len(js_rows)} Compared", f"{js_t0}: {len(js_rows)} Compared, Free & Paid", f"{js_t0}: {len(js_rows)} Compared") if len(c_) <= 65), js_t0)
     page("job-posting-sites/", f"{js_t} | {SITE}",
-         f"What it costs to post one job on {len(js_rows)} job sites, from their own pricing pages on {js_when}: which are free, the price of a post, how long it stays up, which renew by themselves.",
+         f"What one job post costs on {len(js_rows)} job sites, read on their own pricing pages {js_when}: which are free, the price of a post, how long it stays up, which renew.",
          crumbs(("For employers", "post-a-job/"), ("Job posting sites compared", ""))
          + f'<h1>Job posting sites for employers: free options and prices on <span class="hl">{len(js_rows)} sites</span></h1>'
-         + f'<p class="tldr"><strong>Checked on {js_when}:</strong> of {len(js_rows)} job sites, {len(js_free)} let an employer post a job free ({e(js_names(js_free))}, each with limits). '
+         + f'<p class="tldr"><strong>Checked {js_when}:</strong> of {len(js_rows)} job sites, {len(js_free)} let an employer post a job free ({e(js_names(js_free))}, each with limits). '
          + (f'Where a price for one post is printed it runs from ${js_lo[0]:,} to ${js_hi[0]:,}, mostly for 30 days. ' if js_priced else "")
          + f'{len(js_noprice)} print no price. On this site a standard listing is free for 30 days.</p>'
          + '<p class="lead">Every figure below is one the site’s own pricing page stated, with a link to that page. Nothing here is a ranking: the right board is the one your candidates read.</p>'
@@ -10364,7 +10368,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     ce_not = "; ".join(f"{nm_}: {why_}" for nm_, why_ in CE.NOT_READ)
     ce_qa = [("Is there a job search engine that reads company career pages?",
               f"Yes. {SITE} reads the public job lists of {m:,} companies on {ce_sys_txt} {EVERY} and lists {n:,} open jobs, free and with no account. "
-              + " ".join(f"{x['name']} says it reads {x['reads'].strip('“”').rstrip('.')}." for x in CE.ENGINES if x["kind"] == "site" and x["reads"].startswith("“"))),
+              + "Others that say they do: " + "; ".join(f"{x['name']}, {x['reads'].rstrip('.')}" for x in [y for y in CE.ENGINES if y["kind"] == "site" and y["reads"].startswith("“")][:5]) + "."),
              ("Do these sites remove closed jobs?",
               f"{SITE} marks a job closed in the hour its company takes it down: it leaves the lists and its page stays, marked as closed. "
               + " ".join(f"{x['name']}: {x['closed'].strip('“”').rstrip('.')}." for x in CE.ENGINES if x["closed"])
@@ -10398,7 +10402,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          + ce_qh
          + section("Sources", '<ul class="vs-src">' + "".join(f'<li><b>{e(x["name"])}:</b> ' + " · ".join(f'<a href="{e(u_)}" rel="nofollow noopener">{e(w_)}</a>' for u_, w_ in x["sources"]) + "</li>" for x in CE.ENGINES)
                    + f'</ul><p class="note">Each site read on the date under its name in the table, the latest {ce_when}. Sites change: if a fact here is out of date, tell us from the <a href="{P}/about/">About page</a> and it is corrected. '
-                     f'Side by side with the job sites: <a href="{P}/vs/compare/?sites=hiringcafe,drivetube,google-for-jobs,jobright,{CMP_US}">compare these engines in one table</a> · <a href="{P}/vs/">all comparisons</a>.</p>', sid="sources", label="Sources"),
+                     f'Side by side with the job sites: <a href="{P}/vs/compare/?sites=hiringcafe,secretjobs,drivetube,google-for-jobs,{CMP_US}">compare these engines in one table</a> · <a href="{P}/vs/">all comparisons</a>.</p>', sid="sources", label="Sources"),
          head=ce_ld, cls="hub sp frb")
 
     lap('Glossary: the words of a job search in plain English, one pa')

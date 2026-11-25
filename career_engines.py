@@ -81,12 +81,12 @@ ENGINES = [
      "sources": [("https://jobdork.org/", "home page")]},
     # Google (gl=us) for "job search engine that pulls jobs directly from company career pages", 25 Nov 2026: SecretJobs, Runway and
     # Career Hound in the first results; each read on its own home page that day.
-    {"name": "SecretJobs", "url": "https://www.secretjobs.ai/", "kind": "site", "read": "2026-11-25",
+    {"name": "SecretJobs", "url": "https://www.secretjobs.ai/", "kind": "site", "read": "2026-11-25", "vs": "secretjobs",
      "reads": "“Sourced straight from the career pages of 400,000+ companies”",
      "jobs": "“8M+ open jobs”",
      "refresh": "“Updated every hour”",
-     "closed": "“Ghost jobs filtered out”; how a closed job is handled is not stated",
-     "price": "“Free to search · no card needed”",
+     "closed": "“When a company takes a job down, it disappears from SecretJobs too”",
+     "price": "Free to search, save and track; a paid AI plan that renews until cancelled",
      "apply": "Its example shows the company’s own application page, filled in for you in one click",
      "also": "Fills in and sends applications for you, screening questions included.",
      "sources": [("https://www.secretjobs.ai/", "home page")]},

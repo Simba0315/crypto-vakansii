@@ -1167,7 +1167,7 @@ new chat, about 30 s each, links read from the answer. Google (gl=us) asked once
 | What is the best free alternative to Jobscan for checking a resume against a job description? | SkillSyncer, ATSPrep, LoopCV, Jobalytics, Teal, Resume Worded | no | free limits per tool (2 scans a week, no account, top 5 keywords) | /vs/jobscan/: "Free Jobscan alternatives" table (SkillSyncer, ATSPrep, Teal, Jobalytics, each from its own page 25 Nov), question "What is the best free alternative to Jobscan?" answered in 50 words |
 | Where can I find entry level jobs with no experience? | Indeed, Handshake, LinkedIn, ZipRecruiter, Snagajob, WayUp, USAJOBS, CareerOneStop; National Labor Exchange (dol.gov) | no | titles that take beginners, search words ("no experience required", "will train"), apply on the employer's site | /entry-level/: "Which sites are best for entry-level jobs?" first in its questions, a row of those sites' comparisons under the jobs |
 | What are the best websites to find remote jobs in 2026? | We Work Remotely, Himalayas, Remote OK, Jobspresso, FlexJobs, Remote.co, Working Nomads, Wellfound, Upwork, LinkedIn; also Dynamite Jobs, Remotive, Jobgether (cites hrstacks.com) | no | "remote does not always mean worldwide", a table goal → site | /remote/: "Which websites are best for remote jobs?" (with the any-country warning) and a row of the seven remote boards' comparisons |
-| Where can employers post a job for free? | Indeed, LinkedIn, Wellfound, Handshake, PostJobFree, CareerOneStop, Dover, Hacker News; "mistaken for free": ZipRecruiter, Monster, Craigslist, Glassdoor | no | free limit per site; Google's JobPosting markup is free | Craigslist page states its $10–$75 fee; not done: PostJobFree and CareerOneStop on /job-posting-sites/ |
+| Where can employers post a job for free? | Indeed, LinkedIn, Wellfound, Handshake, PostJobFree, CareerOneStop, Dover, Hacker News; "mistaken for free": ZipRecruiter, Monster, Craigslist, Glassdoor | no | free limit per site; Google's JobPosting markup is free | /job-posting-sites/: Craigslist ($10–$75 by area), Handshake (Basic free) and PostJobFree (“Post Jobs for Free”) added from their own pages, dates per site; CareerOneStop's employer page answered 403 to our reader |
 | Glassdoor vs Indeed: which is better for job seekers? | Indeed for finding jobs, Glassdoor for research (cites Indeed's newsroom, Money) | no | goal → site table; the November 2026 integration | /vs/indeed-vs-glassdoor/ already had the one-login fact; nothing new |
 
 - Google, "jobscan alternatives" (gl=us, 25 Nov): AI Overview names SkillSyncer, Resume Worded, Teal, Rezi, Kickresume, then Jobalytics, Earnbetter,
@@ -1177,9 +1177,13 @@ new chat, about 30 s each, links read from the answer. Google (gl=us) asked once
 - Google, "job search engine that pulls jobs directly from company career pages" (gl=us, 25 Nov; the AI answer was still "thinking" and was not
   read): SecretJobs ("career pages of 400,000+ companies", "8M+ open jobs", "Updated every hour"), Reddit r/jobsearchhacks, Runway (students, 200,000+
   career sites), Career Hound, Chief Jobs (on LinkUp), HiddenRoles, Simplify. We are not in the first page. Done: SecretJobs, Runway and Career Hound
-  added to /job-search-engines/ from their own home pages (10 engines in the table besides this site).
+  added to /job-search-engines/ from their own home pages (10 engines in the table besides this site); /vs/secretjobs/ new.
+- Google, "best job search sites" (gl=us, 25 Nov; the AI answer was still "thinking"): Big Interview "The 30 Best Job Search Sites" (Indeed, LinkedIn,
+  Glassdoor, ZipRecruiter, Monster, Job.com, CareerBuilder, The Muse), NYIT's list (Indeed, LinkUp), Indeed, Reddit r/jobsearch (top answer: find the
+  job on a board, then apply on the company's own site), ZipRecruiter, Monster, LinkedIn, the New York State job bank, Ladders. People also ask: "What is
+  the most reliable job search site?", "Which is the best website for job search?". Done: the first question answered on /best-job-search-sites/.
 - New /vs/ pages from this pass (all facts read on the sites' own pages 25 Nov): Google for Jobs, Ladders (help centre: theladders.com answers "available
   only in the United States and Canada"), Craigslist, Levels.fyi, GovernmentJobs.com, HiringCafe, Drivetube, Jobright, Jobscan (now with the job rows too).
   LinkUp showed a human check again: listed under "Not compared yet".
-- Next: Hire & Job, Hidden Roles and WayUp (named above, no page); PostJobFree and CareerOneStop on /job-posting-sites/; ask the same nine
+- Next: Hire & Job, Hidden Roles and WayUp (named above, no page); CareerOneStop on /job-posting-sites/ (403 on 25 Nov); ask the same nine
   questions again after the deploy is indexed.

@@ -1631,6 +1631,49 @@ SITES += [
              "employer's site\".", "https://hiringcafe.com/job/account-manager-hanoi-booking-com-hanoi-hanoi-ub93wlrsabpkd46d", R25),
         ],
     ),
+    # ------------------------------------------------------------------ SecretJobs (Google's first result for "job search engine that pulls
+    # jobs directly from company career pages", 25 Nov 2026; read on its home page and its questions that day)
+    dict(
+        slug="secretjobs",
+        name="SecretJobs",
+        url="https://www.secretjobs.ai/",
+        what="SecretJobs is a job search site that says it pulls jobs straight from the career pages of 400,000+ companies every hour, 8M+ "
+             "open jobs, and sells an AI plan that tailors resumes and applies for you.",
+        rows=_rows(
+            ("Who pays", "Job seekers, for the AI plan. \"Searching every job, saving and tracking are free.\""),
+            ("Price for job seekers", "Free to search, save and track. The AI plan is paid and renews until cancelled; its price is not on the home "
+                                      "page."),
+            ("Where the jobs come from", "\"directly from companies' own career pages and applicant-tracking systems\": 400,000+ companies."),
+            ("Where you apply", "On the company's application page; on the AI plan, \"Apply for me\" fills in the form and sends it."),
+            ("How fresh the listings are", "\"We re-scan 400,000+ company career pages every hour\"; when a company takes a job down, \"it disappears "
+                                           "from SecretJobs too\"."),
+            ("Kinds of jobs", "8M+ open jobs worldwide, deepest in the US, UK, Canada, Australia and Israel, plus remote roles."),
+        ),
+        them_better=[
+            "Far larger: 8M+ open jobs from 400,000+ employers, read every hour.",
+            "A paid AI plan tailors your resume to each job, applies for you when you press Apply for me, and preps you for each company's "
+            "interviews.",
+            "Private by design: employers never see who views or saves their jobs, and recruiters contact you only if you say yes.",
+        ],
+        us_better=[
+            "A closed job keeps its page here, marked closed, so a saved link still says what happened. On SecretJobs a job taken down "
+            "disappears.",
+            "Plus here is one payment that never renews (not on sale yet). SecretJobs' AI plan renews until it is cancelled.",
+        ],
+        pick="Use SecretJobs if you want the largest search of career-page jobs and will pay for AI that applies for you, use Jobs Every Hour if "
+             "you want closed jobs kept and marked, and nothing that renews.",
+        sources=[
+            ("[what|Who pays|Price for job seekers|Where the jobs come from|Where you apply|How fresh the listings are|Kinds of jobs|"
+             "them_better 1|them_better 2|them_better 3|us_better 1|us_better 2|pick] \"8M+ open jobs · 400,000+ employers\", \"Updated every "
+             "hour\". Questions: \"We pull openings directly from companies' own career pages and applicant-tracking systems\"; \"Searching "
+             "every job, saving and tracking are free. The AI plan, which tailors your résumé, applies for you and preps you for interviews, is "
+             "paid.\" \"We re-scan 400,000+ company career pages every hour\"; \"deepest coverage in the US, UK, Canada, Australia and "
+             "Israel, plus remote roles\"; \"It applies to a job when you press Apply for me on it\"; \"When a company takes a job down, it "
+             "disappears from SecretJobs too\"; \"Cancel in a click and you won't be charged again, and we remind you before every renewal.\" "
+             "\"Employers never see who's looking at their jobs\"; \"Recruiters can contact you only if you say yes.\"",
+             "https://www.secretjobs.ai/", R25),
+        ],
+    ),
     # ------------------------------------------------------------------ Drivetube
     dict(
         slug="drivetube",
@@ -1792,7 +1835,7 @@ KIND = {"indeed": "general", "linkedin-jobs": "general", "ziprecruiter": "genera
         "cryptojobslist": "crypto", "web3-career": "crypto",
         # 25 Nov 2026
         "google-for-jobs": "engine", "hiringcafe": "engine", "drivetube": "engine", "ladders": "general", "craigslist": "hourly",
-        "levels-fyi": "tech", "governmentjobs": "government", "jobright": "ai", "jobscan": "ai"}
+        "levels-fyi": "tech", "governmentjobs": "government", "jobright": "ai", "jobscan": "ai", "secretjobs": "engine"}
 OUR_KIND = "engine"          # we read employers' careers pages and drop closed jobs: a job search engine, shown with the others of that kind
 # The sites people compare most; a pair with one of them is built for every other site (see pairs()).
 BIG = ("indeed", "linkedin-jobs", "ziprecruiter", "glassdoor")
@@ -1875,6 +1918,7 @@ NOT_SOURCED = {
     "governmentjobs": ["How fresh the listings are", "Payment methods"],
     "hiringcafe": ["Payment methods"],
     "drivetube": ["Payment methods"],
+    "secretjobs": ["Price to post one job", "Account needed to apply", "Payment methods", "the AI plan's price is behind its sign-up"],
     "jobright": ["Payment methods", "jobright.ai/pricing was a 404; the Premium price is from its own blog post of June 2025"],
     "jobscan": ["Price to post one job", "How fresh the listings are", "Kinds of jobs"],
 }
@@ -1900,8 +1944,8 @@ def site(slug):
 def test():
     problems = []
     slugs = [s["slug"] for s in SITES]
-    if len(SITES) < 33 or len(set(slugs)) != len(slugs) or set(slugs) != set(KIND):      # 8 (14 Nov), +16 (24 Nov), +9 (25 Nov)
-        problems.append(f"expected 33+ unique sites, each with a kind, got {slugs}")
+    if len(SITES) < 34 or len(set(slugs)) != len(slugs) or set(slugs) != set(KIND):      # 8 (14 Nov), +16 (24 Nov), +10 (25 Nov)
+        problems.append(f"expected 34+ unique sites, each with a kind, got {slugs}")
     for s in SITES:
         p = s["slug"]
         for field in ("slug", "name", "url", "what", "rows", "them_better", "us_better", "pick", "sources"):
