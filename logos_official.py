@@ -700,13 +700,13 @@ ATS_HOSTS = re.compile(r"(greenhouse\.io|greenhouse\.com|lever\.co|ashbyhq\.com|
                        r"hubspot|hsforms|wix\.com|wixstatic|parastorage|wixapps|wix-code|squarespace|shopify|webflow|website-files|wordpress\.(?:com|org)|"
                        r"wp\.com|gravatar|typekit|fontawesome|adobe\.com|apple\.com|microsoft\.com|mozilla\.org|cloudinary\.com|imgix|b-cdn\.net|"
                        r"sharethis|addthis|zdassets|zendesk|intercom|drift|recaptcha|bing\.com|yahoo|vimeo|wistia|pinterest|enable-javascript)", re.I)
-DEFAULT_ICON = re.compile(r"(wp-includes/images/w-logo|wp\.com/i/webclip|wordpress-logo|/wp-admin/|wix\.com/favicon|/universal/default-favicon|"
+DEFAULT_ICON = re.compile(r"(wp-includes/images/w-logo|wp\.com/i/webclip|jupiterx/lib/favicon|domainmarket\.com|wordpress-logo|/wp-admin/|wix\.com/favicon|/universal/default-favicon|"
                           r"website-files\.com/img/(?:favicon|webclip)|webflow\.com/img/(?:favicon|webclip)|/img/webclip\.png|"
                           r"logo-default\.png|isteam/ip/static|weebly\.com/favicon|squarespace\.com/favicon|shopify\.com/favicon|"
                           r"hubspot.*favicon|godaddy|default[-_]?favicon|favicon[-_]default|placeholder|/img/v1\.1/favicons/)", re.I)   # the last: JazzHR's own
 CHALLENGE = re.compile(r"(cf-chl|challenge-platform|just a moment\.\.\.|attention required|px-captcha|_incapsula_resource|captcha-delivery|"
                        r"pardon our interruption|access denied|request unsuccessful|are you a robot|bot detection|ddos-guard|sgcaptcha)", re.I)
-PARKED = re.compile(r"(domain (?:name )?(?:is )?for sale|buy this domain|this domain may be for sale|hugedomains|sedoparking|parkingcrew|"
+PARKED = re.compile(r"(domain (?:name )?(?:is )?for sale|domainmarket\.com|[a-z0-9-]+\.(?:com|net|org|co|io) is for sale|buy this domain|this domain may be for sale|hugedomains|sedoparking|parkingcrew|"
                     r"bodis|afternic|dan\.com|domain parking|is parked free)", re.I)
 SUFFIX = re.compile(r"\b(inc|llc|l\.l\.c|ltd|limited|corp|corporation|company|co|plc|gmbh|ag|sa|s\.a|bv|nv|pty|pvt|private|lp|llp|pc|pllc|the)\b\.?", re.I)
 
@@ -811,15 +811,35 @@ def tenant_of(src):
     return norm(re.sub(r"-(inc|llc|ltd|careers|jobs|hr|us|usa)$", "", tok.lower()))
 
 
-BOARD_PAGE = {"greenhouse": "https://job-boards.greenhouse.io/{t}", "lever": "https://jobs.lever.co/{t}", "ashby": "https://jobs.ashbyhq.com/{t}",
+BOARD_PAGE = {"paylocity": "https://recruiting.paylocity.com/recruiting/jobs/All/{t}", "greenhouse": "https://job-boards.greenhouse.io/{t}", "lever": "https://jobs.lever.co/{t}", "ashby": "https://jobs.ashbyhq.com/{t}",
               "jazzhr": "https://{t}.applytojob.com/apply", "breezy": "https://{t}.breezy.hr/", "pinpoint": "https://{t}.pinpointhq.com/",
               "rippling": "https://ats.rippling.com/{t}/jobs", "icims": "https://{t}.icims.com/jobs", "gem": "https://jobs.gem.com/{t}",
               "recruitee": "https://{t}.recruitee.com/", "trakstar": "https://{t}.hire.trakstar.com/", "bamboohr": "https://{t}.bamboohr.com/careers"}
 
 
+def declared_site(ats, tok):
+    """(the website the company gives in its own job board's settings, the board's text) for the boards that keep one: Workable's
+    account record ("url") and Paylocity's board page ("LogoHref"). 26 Nov 2026: Fuku on Workable is fuku.ai, an AI recruiting firm,
+    not the chicken restaurant at eatfuku.com; these companies' names alone led nowhere or to a namesake."""
+    if ats == "workable":
+        st, _, _, text = curl(f"https://apply.workable.com/api/v1/accounts/{tok}", limit=300_000)
+        try: u = (json.loads(text).get("url") or "").strip() if st == 200 else ""
+        except ValueError: u = ""
+    elif ats == "paylocity":
+        st, _, _, text = curl(BOARD_PAGE["paylocity"].format(t=tok), limit=3_000_000)
+        m = re.search(r'"LogoHref":"([^"]+)"', text) if st == 200 else None
+        u = m.group(1).replace("\\/", "/") if m else ""
+    else:
+        return None, ""
+    h = host_of(u if "//" in u else "http://" + u) if u else ""
+    ok = h and "." in h and not ATS_HOSTS.search(h) and not re.search(r"(example\.com|localhost)", h)
+    return (h if ok else None), (text if st == 200 else "")
+
+
 def board_site(src, name):
     """The company's own site as its job board links to it (the board is the company's: it posts the jobs we list)."""
     ats, tok = (src.get("ats") or "").lower(), src.get("token") or ""
+    if ats in ("workable", "paylocity") and tok: return declared_site(ats, tok)
     if ats not in BOARD_PAGE or not tok or (ats == "teamtailor"): return None, ""
     st, final, _, text = curl(BOARD_PAGE[ats].format(t=tok))
     if st != 200 or not text: return None, ""
@@ -1057,6 +1077,12 @@ def board_logo(src, page_text):
     elif ats == "jazzhr": urls = ["https:" + u if u.startswith("//") else u for u in re.findall(r'<img[^>]+src="((?:https:)?//s3\.amazonaws\.com/resumator/[^"]+/logos/[^"]+)"', page_text)]
     elif ats == "pinpoint": urls = re.findall(r'"(https://[^"]+(?:cloudinary|pinpoint-production)[^"]+logo[^"]*\.(?:png|jpg|jpeg|webp))"', page_text, re.I)
     elif ats == "bamboohr": urls = [u.replace("\\/", "/") for u in re.findall(r'"(https:\\?/\\?/images\d*\.bamboohr\.com\\?/\d+\\?/logos\\?/[^"]+)"', page_text)]
+    elif ats == "workable":                                               # the logo in its Workable account record
+        try: urls = [json.loads(page_text).get("logo") or ""]
+        except ValueError: urls = []
+        urls = [u for u in urls if u.startswith("http")]
+    elif ats == "paylocity":
+        urls = ["https://recruiting.paylocity.com" + u for u in re.findall(r'"LogoUrl":"(/Recruiting/Jobs/GetLogoFileById[^"]+)"', page_text)]
     for u in urls[:2]:
         st, final, ctype, data = curl(H.unescape(u), binary=True, limit=3_000_000)
         if st != 200 or len(data) < 300: continue
@@ -1105,6 +1131,8 @@ def work(item):
             res.update(ok=True, site=d, how=how, icon=iu)
             return res
         tried.append(f"{d}: no usable icon ({'; '.join(why[:4])})")
+    if not btext and (src.get("ats") or "").lower() in ("workable", "paylocity") and src.get("token"):
+        btext = declared_site(src["ats"].lower(), src["token"])[1]
     if btext or (src.get("ats") or "").lower() == "workday":
         im, iu = board_logo(src, btext)
         if im is not None:
