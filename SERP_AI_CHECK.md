@@ -1187,3 +1187,76 @@ new chat, about 30 s each, links read from the answer. Google (gl=us) asked once
   LinkUp showed a human check again: listed under "Not compared yet".
 - Next: Hire & Job, Hidden Roles and WayUp (named above, no page); CareerOneStop on /job-posting-sites/ (403 on 25 Nov); ask the same nine
   questions again after the deploy is indexed.
+
+## Field pages: "<field> jobs" for all 25 fields (25 Nov 2026, evening)
+
+The owner raised the field pages four times ("ты тоже ничего не изменил", 19 Nov): each field must be its own page, made for the words people
+type, better than the first results and the AI answers. Read on 25 Nov 2026, 16:45-17:15 UTC: ChatGPT in a temporary chat with search on
+(`chatgpt.com/?temporary-chat=true&hints=search&q=…`; the browser is signed in to the owner's account, so answers may be personalised: 8 of
+25 came back in Russian and two named Da Nang) and Bing (`cc=us`). Google was not read (it blocked the IP after ~45 queries on 15 Nov).
+
+What the answers cover, nearly every time: the kinds of work in the field (8-12 titles), the titles open to beginners, where to search
+(job sites, niche boards), remote work and whether it is open outside the US, skills and tools, and a closing question (US or worldwide,
+level, remote). Pay appears in only six answers (BLS for HR and retail; Indeed's hourly averages for warehouse work; trade-site ranges;
+an AuditFriendly table for accounting). No answer gives the outlook, how many jobs are open or who is hiring most. Bing showed an AI answer
+for two queries only (skilled trades: "$20-$55 an hour", apprenticeships; software development: counts of other boards). Bing's first page
+is Indeed (twice) for every query, an ad for jobassist.com, then niche boards (EDJOIN, Health eCareers, web3.career, justia.jobs) and
+employers' own careers sites (Amazon, Publix, DHL, Liberty Mutual). People-also-ask lists were not exposed in Bing's page text.
+
+| Field page | Query | ChatGPT names us | Bing first sites (ads left out) | Copilot on Bing |
+|---|---|---|---|---|
+| /categories/hardware-engineering/ | hardware engineering jobs | yes, first ("start here") | indeed, amazon.jobs, builtin, linkedin | no |
+| /categories/retail-hospitality/ | retail jobs | no | indeed, jobs.publix.com, hiring.amazon.com, monster | no |
+| /categories/science-healthcare/ | healthcare jobs | no | indeed, healthecareers, monster, linkedin | no |
+| /categories/operations-administration/ | operations and administrative jobs | yes | indeed, workfornonprofits, ziprecruiter | no |
+| /categories/sales/ | sales jobs | no | flexjobs, Liberty Mutual careers, indeed | no |
+| /categories/skilled-trades/ | skilled trades jobs | no | indeed, skilledtrades.com, tradecareerpath | yes |
+| /categories/internships-entry-level/ | internships and entry level jobs | no | indeed, internships.com, seekablejobs | no |
+| /categories/software-development/ | software development jobs | no | indeed, softwarejobs.dev, ziprecruiter | yes |
+| /categories/accounting-finance/ | accounting and finance jobs | no | indeed, governmentjobs, simplyhired, linkedin | no |
+| /categories/product-project/ | product and project management jobs | yes (7,319 remote) | indeed, productjobs, linkedin | no |
+| /categories/leadership/ | leadership jobs | no | indeed, vacareers.va.gov, linkedin, execunet | no |
+| /categories/logistics-transport/ | logistics and warehouse jobs | yes (37,378 openings) | indeed, careers.dhl.com, prologistix | no |
+| /categories/customer-service/ | customer service jobs | no | indeed, flexjobs, hiring.amazon.com | no |
+| /categories/cloud-devops-it/ | IT jobs | no | flexjobs, indeed, itviec | no |
+| /categories/data-analytics/ | data analytics jobs | no | Liberty Mutual careers, indeed, ibm.com | no |
+| /categories/marketing-communications/ | marketing jobs | no | indeed, upwork, marketinghire, linkedin | no |
+| /categories/legal-compliance/ | legal jobs | no | indeed, justia.jobs, upwork, ihirelegal | no |
+| /categories/education-training/ | education jobs | no | indeed, edjoin, higheredjobs | no |
+| /categories/hr-recruiting/ | HR jobs | yes (3,499 US, 200 remote) | indeed, ziprecruiter, hrjobs, linkedin | no |
+| /categories/security/ | security jobs | yes (6,854, 11% remote) | indeed, jobs.aus.com, silentprofessionals | no |
+| /categories/ai-machine-learning/ | AI jobs | no | flexjobs, indeed, aijobs.ai | no |
+| /categories/languages/ | bilingual jobs | no | indeed, bilingualjobs.io, jobleads | no |
+| /categories/writing-translation/ | writing jobs | no | flexjobs, jobhire.ai, indeed | no |
+| /categories/crypto-web3/ | web3 jobs | yes | web3.career, chainjobs, web3jobs.io | no |
+| /categories/design-creative/ | design jobs | no | indeed, designjobs.careers, behance, upwork | no |
+
+Questions raised most (answers' closing questions and follow-ups): jobs with no experience in the field; are remote jobs open outside the US;
+the highest-paying roles; how to start a career in it; for AI, "can you get an AI job without programming?".
+
+Done on every field page (`fields_info.py`, `field_parts()` in build.py):
+- Title with the search's words first ("Sales Jobs (94,684 open, $90K-$188K) | Jobs Every Hour"); a description that names the three largest
+  employers and the work hiring most; an opening answer of about 50 words (how many are open, the three biggest kinds of work, how many take
+  beginners, what the field is).
+- "What <field> jobs pay, by kind of work": open jobs, median advertised salary (hourly rate too where the field is paid by the hour), remote
+  share, openings for beginners and the government's median for the closest occupation (bls_wages.py), best paid first.
+- "How to get a <field> job": what the field's postings ask for, counted from their own words (commission or OTE in sales, a license or
+  BLS/ACLS card in healthcare, apprenticeships in the trades, certifications in IT and security, SQL in data, a portfolio in design), four
+  steps written for that field only, and links to the how-to-become, interview and resume pages of its biggest kinds of work.
+- "<Field> jobs outlook": the Bureau of Labor Statistics' projection 2025-35, openings a year and median wage (May 2025) of the field's
+  occupation groups, and a table of its occupations with the schooling each asks for at the start (Occupational Outlook Handbook, read 25 Nov).
+- Questions: two written for the field from the BLS pages, then "Which <field> jobs pay the most?", "What <field> jobs can I get with no
+  experience?" and "Can I do <field> jobs remotely from outside the US?" answered from today's postings.
+- One page per search: /jobs/<category>/ lists that are the same field (healthcare, marketing, finance, data and research, design,
+  operations, supply chain, retail, product; sales, support, legal, HR, education and security already) name the field page as canonical,
+  and every link to them on the site leads to the field page (the footer, the job pages' category row and trail, the search page, rankings).
+- Google (gl=us, 25 Nov, six queries; results are set to New York by the IP, the AI answer was still "thinking" each time): the first page is Indeed's
+  local list, Built In, ZipRecruiter, LinkedIn, Glassdoor, SimplyHired, employers' own careers sites (NYC Health + Hospitals, Northwell, Burlington,
+  Capital One) and niche boards (Health eCareers, SalesJobs.com). People also ask: healthcare: "What are different types of healthcare jobs?", "What is
+  the best job in healthcare?", "What's the easiest healthcare job to get?"; sales: "What is the best paying sales job?", "Can you make $500,000 a year
+  in sales?"; retail: "What types of jobs are in retail?", "What exactly is a retail job?"; IT: "What jobs are there in IT?", "Which IT skill is most
+  in demand?"; marketing: "What careers are in marketing?", "What are 5 careers in marketing?"; customer service: "What jobs can I get with
+  customer service?", "What is the job for customer service?"; on four of them "What jobs pay $4000 a week without a
+  degree?". Done: every field page asks "What are the different types of <field> jobs?" and "What is the best paying <field> job?"; healthcare, retail,
+  marketing and customer service ask Google's own wording of their questions.
+- Next: ask the 25 queries again once Google and Bing have the new pages; Google's AI answer (it did not finish loading tonight).

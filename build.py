@@ -21,6 +21,7 @@ import bls_wages                        # US government wage figures beside adve
 import tools_pages                      # the free tools section: /tools/ and one page per tool
 import brand                            # the brand: three directions, the logo files, the colours (brand.py, /brand/)
 import roles_info
+import fields_info                      # what each field page answers besides its jobs (/categories/<field>/)
 import resume_examples
 import skills_info                      # what each skill is, in plain words, and its group
 import geo_cities                       # where the cities in postings are, for the jobs map
@@ -1027,9 +1028,26 @@ def ava(name, cls=""):
 IMG_NO_TITLE = re.compile(r'<img\b(?![^>]*\btitle=)[^>]*\balt="([^"]+)"[^>]*>')
 
 
+# A job list of a field that has its own page (fields_info.FIELDS "cats": /jobs/sales-bd/ is the field of /categories/sales/) names
+# that page as canonical (one_page_per_query), and every link to the list leads to that page instead (25 Nov 2026: the footer, the
+# job pages' category row and trail, the search page and the rankings linked the copy). The copy's own canonical tag is left alone.
+CAT_HOME = {}
+CAT_HOME_RX = [None]
+
+
+def set_cat_home(live_fields):
+    """Fills CAT_HOME for the fields whose page exists (a field with no open kind of work has none, and a link to it would be broken)."""
+    CAT_HOME.clear()
+    CAT_HOME.update({cs: f"categories/{fs}/" for fs, f_ in fields_info.FIELDS.items() if fs in live_fields for cs in f_["cats"]})
+    CAT_HOME_RX[0] = (re.compile(r'(?<!canonical" href="' + re.escape(FULL) + r'/)(?<=/)jobs/(' + "|".join(map(re.escape, CAT_HOME)) + r')/(?=")')
+                      if CAT_HOME else None)
+
+
 def finish_html(content):
     """The last touches every HTML page gets, written to a file here or built on request by serve.py from a job record (records.py
     hands job_page()'s output here too; until 24 Nov 2026 those pages skipped both touches)."""
+    if CAT_HOME_RX[0] and "/jobs/" in content:
+        content = CAT_HOME_RX[0].sub(lambda m: CAT_HOME[m.group(1)], content)
     if "<img" in content:
         # every image carries a title as well as its alt (owner, 24 Nov 2026: "title caption alt description" filled everywhere)
         content = IMG_NO_TITLE.sub(lambda m: m.group(0)[:-1].rstrip("/").rstrip() + f' title="{m.group(1)}">', content)
@@ -3456,6 +3474,7 @@ def main():
             for j in by_role[s_][1]:
                 if j["id"] not in seen_: seen_.add(j["id"]); js_.append(j)
         if live: fam_rows.append((fs, fn, fd, live, js_))
+    set_cat_home({f[0] for f in fam_rows})
     fam_show = sorted(fam_rows, key=lambda f: -len(f[4]))      # by open jobs, so the order follows the jobs as sources grow (owner, 15 Nov: "IT first")
     # The footer's four biggest fields link the page that answers their search (25 Nov 2026: "Sales & Business Development" went to
     # /jobs/sales-bd/, whose canonical is /categories/sales/, on every page). one_page_per_query() decides that only once every page is
@@ -4954,9 +4973,142 @@ def main():
          + section(f"All [[{len(by_role)} roles]], A to Z", '<ul class="tiles" id="rolelist">' + "".join(tile(f"roles/{s_}/", nm, len(js_)).replace("<li>", f'<li data-n="{e(nm.lower())}">', 1) for s_, (nm, js_) in sorted(by_role.items(), key=lambda kv: kv[1][0].lower())) + "</ul>",
                    ("categories/", "The same roles by field"), sid="all", sub="The number on each tile is how many jobs are open today.", label="A to Z")
          + roles_qa[0], head=roles_qa[1], cls="hub")
+    def field_parts(fs, fn, fd, live, js_):
+        """What only this field's page has (fields_info.py; the owner, 19-25 Nov 2026: every field its own page, made for the words people
+        search and better than the first results and the AI answers for them). The search check of 25 Nov 2026 (SERP_AI_CHECK.md) found
+        the answers give the kinds of work, pay, titles open to beginners, remote work outside the US, licences and skills, and how to
+        start. So: an opening answer, pay by kind of work beside the government's median, what the postings ask for, how to get in, the
+        government's outlook, links out, and the questions those answers raise. Every figure is counted here or quoted with its source."""
+        F_ = fields_info.FIELDS.get(fs) or {}
+        low_f = rlow(fn)
+        key_, q_ = F_.get("key") or tcase(fn), F_.get("q") or f"{low_f} jobs"
+        one_ = q_[:-5] + " job" if q_.endswith(" jobs") else q_
+        n_ = len(js_)
+        co_ = Counter(j["company"] for j in js_)
+        mids_ = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in js_ if j.get("usd"))
+        rem_, ent_ = sum(1 for j in js_ if j["remote"]), sum(1 for j in js_ if j.get("entry"))
+        big_ = sorted(live, key=lambda x: -x[2])
+        tops_ = big_[:3]
+        # names that hold "and" themselves ("healthcare and clinical") are parted by semicolons, or the list cannot be read
+        and_ = lambda xs: xs[0] if len(xs) == 1 else (("; ".join(xs[:-1]) + "; and ") if any(" and " in x for x in xs) else (", ".join(xs[:-1]) + " and ")) + xs[-1]
+        # the opening answer (40-60 words), the line search engines and assistants quote
+        # (the row of figures under it gives the remote share, the employers and the median pay: they are not repeated here)
+        lead = (f"<strong>{n_:,} {e(q_)}</strong> are open today, each read from the employer’s own careers page and checked every hour. "
+                + (f"The most openings are for {and_([f'{e(rlow(nm))} ({c:,})' for _, nm, c in tops_])}, and {ent_:,} of all {e(q_)} here are open to beginners. " if len(tops_) >= 2 else "")
+                + f"{e(fn)} is {e(fd)}.")
+        top_co = [c for c, _ in co_.most_common(3)]
+        desc = (f"{key_} jobs: {n_:,} open now at {and_(top_co)}. " if top_co else f"{key_} jobs: {n_:,} open now. ") \
+            + (f"Most hiring: {and_([rlow(nm) for _, nm, _ in tops_])}; {100 * rem_ / max(1, n_):.0f}% remote." if tops_ else "")
+        # pay by kind of work: the advertised median of each, the hourly rate where the field is paid by the hour, the government's median
+        hourly_ = sum(1 for j in js_ if usd_hourly(j.get("salary"))) >= 30
+        prow = []
+        for s_, nm, c in big_[:16]:
+            rj = by_role[s_][1]
+            m_ = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in rj if j.get("usd"))
+            h_ = sorted((a_ + b_) / 2 for j in rj if (ab_ := usd_hourly(j.get("salary"))) for a_, b_ in [ab_])
+            gc_ = bls_wages.ROLE.get(s_)
+            prow.append((s_, nm, c, median(m_) if len(m_) >= 10 else None, len(m_), median(h_) if len(h_) >= 10 else None,
+                         sum(1 for j in rj if j["remote"]), sum(1 for j in rj if j.get("entry")), bls_wages.OCC[gc_] if gc_ else None))
+        prow.sort(key=lambda r_: -(r_[3] or 0))
+        gov_any = any(r_[8] for r_ in prow)
+        pay_tab = ""
+        if sum(1 for r_ in prow if r_[3] or r_[5]) >= 3:
+            pay_tab = section(f"What {q_} pay, [[by kind of work]]",
+                              '<div class="tablewrap"><table><tr><th>Kind of work</th><th>Open jobs</th><th>Median advertised salary</th>' + ("<th>Median hourly rate</th>" if hourly_ else "")
+                              + "<th>Remote</th><th>Open to beginners</th>" + ("<th>US median, all employers</th>" if gov_any else "") + "</tr>"
+                              + "".join(f'<tr><td><a href="{P}/roles/{s_}/">{e(nm)}</a></td><td>{c:,}</td><td>'
+                                        + ((f'<a href="{P}/salaries/{s_}/">{money(m_)}</a>' if k_ >= 20 else money(m_)) if m_ else "–") + "</td>"
+                                        + (f"<td>{f'${h_:,.2f}' if h_ else '–'}</td>" if hourly_ else "")
+                                        + f"<td>{100 * r_ / max(1, c):.0f}%</td><td>{b_:,}</td>"
+                                        + (f"<td>{money(g_[3])}</td>" if gov_any and g_ else "<td>–</td>" if gov_any else "") + "</tr>"
+                                        for s_, nm, c, m_, k_, h_, r_, b_, g_ in prow)
+                              + f'</table></div><p class="note">Advertised pay is the median of the midpoints of the yearly US-dollar ranges in today’s postings for each kind of work (10 at least)'
+                              + ("; the hourly rate likewise, from postings that state one" if hourly_ else "") + ". "
+                              + (f'The last column is the closest US government occupation, all employers, <a href="{bls_wages.SOURCE}">Bureau of Labor Statistics</a>, {bls_wages.PERIOD}. ' if gov_any else "")
+                              + "Advertised, not verified pay.</p>", label="Pay", sub=f"The {len(prow)} kinds of work with the most openings, the best paid first.")
+        # what the postings ask for, from their own words (full texts only: the list is long and the texts are many)
+        full_ = [j for j in js_ if j.get("desc")][:4000]
+        cells_ = []
+        for lab_, rx_ in F_.get("ask", ()):
+            if rx_ is None:
+                k_ = sum(1 for j in js_ if usd_hourly(j.get("salary")))
+                if k_ >= 20: cells_.append((f"{100 * k_ / n_:.0f}%", f"{e(lab_)} ({k_:,} of {n_:,})"))
+            elif lab_.startswith("are "):         # what the job is: read from the title, so every posting counts
+                rc_ = re.compile(rx_, re.I)
+                k_ = sum(1 for j in js_ if rc_.search(j["title"]))
+                if k_: cells_.append((f"{100 * k_ / n_:.0f}%", f"{e(lab_)} by their title ({k_:,})"))
+            elif len(full_) >= 50:                # what the posting asks: read from its words, where we hold them in full
+                rc_ = re.compile(rx_, re.I)
+                k_ = sum(1 for j in full_ if rc_.search(job_text(j)))
+                if k_: cells_.append((f"{100 * k_ / len(full_):.0f}%", e(lab_)))        # "0%" says the words were not found, not that nobody asks
+        ask_ = (nums(cells_, src=False) + f'<p class="note">Counted on {fdate(TODAY, False)} from the postings’ own words: what a posting asks for, among the {len(full_):,} {q_} we hold in full text; '
+                f'what a job is, from the titles of all {n_:,}.</p>') if cells_ else ""
+        steps_ = F_.get("steps", ())
+        guide_ = [s_ for s_, _, _ in big_ if has_rex(s_)][:4]        # the career guides exist for these kinds of work only (not "Analyst", "Bilingual")
+        how_ = ""
+        if steps_:
+            how_ = section(F_.get("how") or f"How to get {art(one_)} [[{one_}]]",
+                           ask_ + '<ol class="steps">' + "".join(f"<li><b>{e(t_)}.</b> {e(x_)}</li>" for t_, x_ in steps_) + "</ol>"
+                           + labrow("How to become", [f'<a href="{P}/how-to-become/{s_}/">{e(by_role[s_][0])}</a>' for s_ in guide_])
+                           + labrow("Interview questions", [f'<a href="{P}/interview-questions/{s_}/">{e(by_role[s_][0])}</a>' for s_ in guide_])
+                           + labrow("Resume examples", [f'<a href="{P}/resume/examples/{s_}/">{e(by_role[s_][0])}</a>' for s_ in guide_], ("resume/", "Free resume builder"))
+                           + (f'<p class="kact">{go(f"categories/{fs}/entry-level/", f"See the {ent_:,} open to beginners")}</p>' if ent_ >= 20 else ""),      # the entry-level list exists from 20
+                           label="Getting in", sub="What today’s postings ask for, then the steps, then a guide for each of the biggest kinds of work.")
+        # the government's view: the outlook of the field's occupation groups and the schooling each occupation asks for at the start
+        gov_ = ""
+        if F_.get("ooh"):
+            ps_ = ""
+            for i_, g in enumerate(F_["ooh"]):
+                gn_, out_, opn_, gm_ = fields_info.OOH[g]
+                # one sentence that names the field: several fields share a government group, never a sentence
+                ps_ += (f"<li>{'Most' if i_ == 0 else 'Some'} {e(q_)} here fall under the government’s <b>{e(gn_)}</b>, which the Bureau of Labor Statistics expects to {e(out_)} "
+                        f"from 2025 to 2035, with about {e(opn_)} openings a year" + (" (mostly to replace people who leave)" if out_.startswith(("decline", "show little", "grow slower")) else "")
+                        + f" and a median annual wage of ${gm_:,} in May 2025, against ${fields_info.ALL_MEDIAN:,} for all occupations "
+                        f'(<a href="{fields_info.OOH_URL.format(g)}">Occupational Outlook Handbook</a>).</li>')
+            occ_ = [(o, *fields_info.OCC[o]) for o in F_.get("occ", ())]
+            tab_ = ('<div class="tablewrap"><table><tr><th>Occupation (BLS)</th><th>Usual education for a first job</th><th>Median pay, 2025</th></tr>'
+                    + "".join(f'<tr><td><a href="{fields_info.OOH_URL.format(g)}">{e(o)}</a></td><td>{e("Varies by route" if ed.startswith("See ") else ed)}</td><td>${pay:,}</td></tr>' for o, g, ed, pay in occ_)
+                    + "</table></div>") if occ_ else ""
+            gov_ = kpanel(section(f"{key_} jobs outlook: [[what the government projects]]", f'<ul class="feats">{ps_}</ul>' + tab_
+                                  + f'<p class="note">US Bureau of Labor Statistics, Occupational Outlook Handbook, projections 2025-35 and wages of May 2025, read {fdate(fields_info.OOH_READ)}.</p>', label="Official data",
+                                  sub="Every employer in the US, not only the ones hiring here."))
+        # links out: skills, places and salaries of the field
+        pname_ = {slug: name.removeprefix("the ") for name, slug, _ in PLACES}
+        sk_ = [(t, c) for t, c in Counter(t for j in js_ for t in j["tags"]).most_common(12) if c >= max(20, 0.02 * n_)][:10]
+        pl_ = [(p_, c) for p_, c in Counter(p_ for j in js_ for p_ in j["places"]).most_common(40) if p_ in HUB.get("live", ())][:10]
+        sal_ = [(s_, nm) for s_, nm, c, m_, k_, *_ in prow if k_ >= 20][:8]
+        links_ = (labrow("Skills", [f'<a href="{P}/skills/{TAG_SLUG.get(t, slugify(t))}/">{e(t)} <b>{c:,}</b></a>' for t, c in sk_], ("skills/", "All skills"))
+                  + labrow("Places", [f'<a href="{P}/locations/{p_}/">{e(pname_.get(p_, p_))} <b>{c:,}</b></a>' for p_, c in pl_], ("locations/", "All places"))
+                  + labrow("Salaries", [f'<a href="{P}/salaries/{s_}/">{e(nm)}</a>' for s_, nm in sal_], ("salaries/", "All salaries")))
+        links_sec = section(f"{key_} jobs by [[skill, place and salary]]", links_, label="Explore") if links_ else ""
+        # questions: the field's own (fields_info.py), then three that every AI answer of 25 Nov raised, answered from today's postings
+        qa_ = list(F_.get("faq", ()))
+        paid_ = sorted(((nm, m_) for s_, nm, c, m_, k_, *_ in prow if m_ and k_ >= 20), key=lambda x: -x[1])
+        if len(paid_) >= 3:
+            qa_.append((f"What is the best paying {one_}?" if q_.endswith(" jobs") else f"Which {q_} pay the most?", f"By the median advertised salary in today’s postings: {and_([f'{rlow(nm)} ({money(m_)})' for nm, m_ in paid_[:3]])}"
+                        + (f". Across all open {q_} here the median is {money(median(mids_))}" if len(mids_) >= 30 else "") + ". These are the ranges employers wrote, not verified pay."))
+        beg_ = sorted(((nm, b_) for s_, nm, c, m_, k_, h_, r_, b_, g_ in prow if b_), key=lambda x: -x[1])[:4]
+        if ent_ and beg_:
+            qa_.append((f"What {q_} can I get with no experience?", f"{ent_:,} of the {n_:,} open {q_} ({100 * ent_ / n_:.0f}%) are for beginners: junior roles, trainees and internships. "
+                        f"Most of them are in {and_([f'{rlow(nm)} ({b_:,})' for nm, b_ in beg_])}. The entry-level list of this field gathers them."))
+        rj_ = [j for j in js_ if j["remote"]]
+        if len(rj_) >= 20:
+            aw_ = sum(1 for j in rj_ if j.get("anywhere"))
+            ld_ = Counter(nm for j in rj_ for _, nm in countries_of(j["location"] or "")).most_common(3)
+            qa_.append((f"Can I do {q_} remotely from outside the US?", f"{len(rj_):,} of the {n_:,} open {q_} are remote, and {aw_:,} of those are open worldwide. "
+                        + (f"The rest name where you must live, most often {and_([f'{nm} ({k_:,})' for nm, k_ in ld_])}. " if ld_ else "")
+                        + "Many US remote jobs ask for US work authorization; the location line of each posting says where it can be done."))
+        return dict(key=key_, q=q_, h1=F_.get("h1") or f"{fn} jobs", lead=lead, desc=desc, hub=pay_tab, how=how_, gov=gov_, links=links_sec, qa=tuple(qa_), cats=F_.get("cats", ()))
+
+    first_fam, fam_name = {}, {fs: fn for fs, fn, _, _, _ in fam_rows}
+    for fs, fn, fd, live, js_ in fam_rows:
+        for s_, _, _ in live: first_fam.setdefault(s_, fs)
     for fs, fn, fd, live, js_ in fam_rows:
         low_f, names_ = rlow(fn), [nm for _, nm, _ in live]
-        role_list = '<ul class="gloss">' + "".join(f'<li><a href="{P}/roles/{s_}/"><b><u>{e(nm)}</u></b><span class="c">{c:,} jobs</span><span class="d">{e(roles_info.what(s_))}</span></a></li>' for s_, nm, c in live) + "</ul>"
+        # a kind of work in several fields ("Technician": hardware, trades, retail) is explained on the first of them only, and the others name
+        # that field: no two field pages carry the same sentence (owner, 25 Nov 2026: each field a page of its own)
+        role_list = '<ul class="gloss">' + "".join(f'<li><a href="{P}/roles/{s_}/"><b><u>{e(nm)}</u></b><span class="c">{c:,} jobs</span><span class="d">'
+                                                   + (e(roles_info.what(s_)) if first_fam.get(s_, fs) == fs else f"Explained under {e(rlow(fam_name[first_fam[s_]]))}.") + "</span></a></li>" for s_, nm, c in live) + "</ul>"
         rank_ = (labrow("Ranking", [f'<a href="{P}/insights/companies-hiring-{fs}/">Companies hiring for {e(low_f)} jobs, with remote roles and pay</a>'], ("insights/", "All rankings"))
                  if len({j["company"] for j in js_}) >= 8 else "")
         others = rank_ + labrow("Other categories", [f'<a href="{P}/categories/{o}/">{e(on)}</a>' for o, on, _, _, _ in fam_rows if o != fs], ("categories/", "All categories"))
@@ -4970,12 +5122,17 @@ def main():
                     vjs, f"<strong>{e(fn)}</strong> is {e(fd)}. " + intro_for(vjs, f"{vname.lower()} ", "", hub=True), trail=(("Categories", "categories/"), (fn, f"categories/{fs}/")), per=50, max_pages=2, more=False,
                     stats=True, list_title=f"Newest {vname.lower()} {low_f} jobs", faq=f"{vname.lower()} {low_f} jobs")
         vers_line = labrow("Narrower lists", vers)
-        listing(f"categories/{fs}/", f"{fn} jobs", f"{tcase(fn)} Jobs ({len(js_):,} open) | {SITE}",
-                f"{low_f[:1].upper() + low_f[1:]} jobs: {len(js_):,} open now at companies. The work: {', '.join(rlow(x) for x in names_[:4])} and more.",      # like places and kinds of work (24 Nov 2026)
-                js_, f"<strong>{e(fn)}</strong> is {e(fd)}. " + intro_for(js_, "", "", hub=True), trail=(("Categories", "categories/"),), per=50, max_pages=3, more=False, feed=True,
-                stats=True, extra=vers_line + pics_first(mini_pics(js_), section(f"Kinds of work in {low_f}", role_list)), list_title=f"Newest {low_f} jobs", faq=f"{low_f} jobs",
-                faq_first=(f"Which jobs count as {low_f}?", f"{fd[0].upper() + fd[1:]}. On {SITE} that is {len(live)} kinds of work: {', '.join(names_)}."),
-                hub=secs[1], after=others)
+        fp_ = field_parts(fs, fn, fd, live, js_)
+        listing(f"categories/{fs}/", fp_["h1"], f"{fp_['key']} Jobs ({len(js_):,} open) | {SITE}", fp_["desc"],
+                js_, fp_["lead"], trail=(("Categories", "categories/"),), per=50, max_pages=3, more=False, feed=True,
+                stats="rest", extra=vers_line + pics_first(mini_pics(js_), section(f"Types of {fp_['q']}", role_list)), list_title=f"Newest {fp_['q']}", faq=fp_["q"],
+                faq_first=(f"What are the different types of {fp_['q']}?", f"{fd[0].upper() + fd[1:]}. On {SITE} that is {len(live)} kinds of work: {', '.join(names_)}."),      # Google's "People also ask", 25 Nov 2026
+                faq_extra=fp_["qa"], hub=fp_["hub"] + secs[1] + fp_["how"] + fp_["gov"] + fp_["links"], after=others)
+        # the job lists of the same field (/jobs/<cat>/, and their remote lists) name this page as canonical: one page per search
+        for cs_ in fp_["cats"]:
+            if by_cat.get(cs_):
+                SAME_QUERY["field " + fs].extend([f"categories/{fs}/", f"jobs/{cs_}/"])
+                SAME_QUERY["field remote " + fs].extend([f"categories/{fs}/remote/", f"remote/{cs_}/"])
     lap('Companies hiring in each place (Wellfound\'s "startups hiring')
     # Companies hiring in each place (Wellfound's "startups hiring in <city>"): every employer with open jobs there, most jobs first.
     # Written for places with 20 employers or more; the place's own page links to it.
