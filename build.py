@@ -3284,7 +3284,6 @@ def main():
             lm = [(lo + hi) / 2 for j in by_cat[cs] if j["level"] == lv and j["usd"] for lo, hi in [j["usd"]]]
             if len(lm) >= 15: EST[(cs, lv)] = median(lm)
     top_cats = sorted((s for s in CAT if by_cat[s] and s != OTHER[0]), key=lambda s: -len(by_cat[s]))
-    FOOT["cats"] = "".join(f'<li><a href="{P}/jobs/{s}/">{e(CAT[s])}</a></li>' for s in top_cats[:4])
     pop_sk = [t for t, _ in Counter(t for j in active for t in j["tags"]).most_common(10)]
     FOOT["pop"] = ('<p class="pop"><span>Popular searches:</span>' + "".join(f'<a href="{P}/skills/{TAG_SLUG.get(t, slugify(t))}/">{e(t)} jobs</a>' for t in pop_sk)
                    + "".join(f'<a href="{P}/locations/{slug}/">{pfl(slug)}Jobs in {e(name.removeprefix("the "))}</a>' for name, slug, _ in sorted(places, key=lambda x: -len(x[2]))[:6]) + "</p>")
@@ -3368,6 +3367,12 @@ def main():
                 if j["id"] not in seen_: seen_.add(j["id"]); js_.append(j)
         if live: fam_rows.append((fs, fn, fd, live, js_))
     fam_show = sorted(fam_rows, key=lambda f: -len(f[4]))      # by open jobs, so the order follows the jobs as sources grow (owner, 15 Nov: "IT first")
+    # The footer's four biggest fields link the page that answers their search (25 Nov 2026: "Sales & Business Development" went to
+    # /jobs/sales-bd/, whose canonical is /categories/sales/, on every page). one_page_per_query() decides that only once every page is
+    # written, so the same test is made here, on the titles the two pages carry (listing() below); no page is written before this.
+    fam_key = {query_key(f"{tcase(fn)} Jobs"): fs for fs, fn, _, _, _ in fam_rows}
+    FOOT["cats"] = "".join(f'<li><a href="{P}/' + (f"categories/{fam_key[k_]}/" if (k_ := query_key(f"{CAT[s]} Jobs")) in fam_key else f"jobs/{s}/") + f'">{e(CAT[s])}</a></li>'
+                           for s in top_cats[:4])
     TECH_FAMS = ["software-development", "ai-machine-learning", "data-analytics", "cloud-devops-it", "security", "product-project", "hardware-engineering"]
     lap("the hero's shortcut chips: among the roles people search for")
     # the hero's shortcut chips: among the roles people search for most, the three tech ones with the most open jobs, then two others
