@@ -89,6 +89,7 @@
     }
     var taxable = S.base === 'fed' ? Math.max(0, g - k - T.TAX2026.std[st]) : Math.max(0, wages - std - ex - ded), tax = sched(taxable);
     if (S.ao && taxable > S.ao[0]) tax += S.ao[1];
+    if (S.sa && taxable > 0) S.sa[st].forEach(function (r) { if (wages > r[0]) tax += Math.min(r[3], r[2] * Math.ceil((wages - r[0]) / r[1])); });   // Connecticut: added by wage band
     if (S.rc && wages > S.rc.from_income) {                                                // New York takes back the lower rates above $107,650
       var first = S.rc[st], kk = first;
       for (var i = 0; i < b.length; i++) if (b[i][0] == null || taxable <= b[i][0]) { kk = Math.max(first, i); break; }
@@ -99,6 +100,7 @@
       }
     }
     tax = Math.max(0, tax - credit);
+    if (S.cs) tax *= 1 - upTo(S.cs[st]);                                                   // Connecticut's personal tax credit: a share of the tax
     var local = S.lr ? taxable * S.lr[0] : 0;
     var pay = (S.pay || []).map(function (p) { var a = p[1] * (p[2] == null ? g : Math.min(g, p[2])); return { name: p[0], amount: p[3] == null ? a : Math.min(a, p[3]) }; });
     var payTotal = pay.reduce(function (t, x) { return t + x.amount; }, 0);

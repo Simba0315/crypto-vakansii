@@ -432,7 +432,8 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
                               **({"sp": x["std_phase"]} if x.get("std_phase") else {}), **({"cp": x["credit_phase"]} if x.get("credit_phase") else {}), **({"ao": x["add_over"]} if x.get("add_over") else {}),
                               **({"xs": x["ex_steps"]} if x.get("ex_steps") else {}), **({"fd": x["fed_ded"]} if x.get("fed_ded") else {}),
                               **({"xb": x["ex_by"]} if x.get("ex_by") else {}), **({"ss": x["std_steps"]} if x.get("std_steps") else {}), **({"cm": x["credit_max"]} if x.get("credit_max") else {}),
-                              **({"rc": x["recapture"]} if x.get("recapture") else {}), **({"lr": x["local_rate"]} if x.get("local_rate") else {})} for c, x in ST.items()}, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+                              **({"rc": x["recapture"]} if x.get("recapture") else {}), **({"lr": x["local_rate"]} if x.get("local_rate") else {}),
+                              **({"sa": x["steps_add"]} if x.get("steps_add") else {}), **({"cs": x["credit_share"]} if x.get("credit_share") else {})} for c, x in ST.items()}, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
 
     def th_form(code=""):
         """The calculator; on a state's own page that state is chosen when the page opens (tools.js reads data-state)."""
@@ -2421,7 +2422,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
         how = (('<div class="st-tabs">' + "".join(f'<div><p class="tl-t">{lab} taxable income</p><div class="tablewrap"><table><tr><th>Taxable income</th><th>Rate</th></tr>{band(x[k_]["b"])}</table></div></div>' for k_, lab in (("single", "Single:"), ("joint", "Married filing jointly:"))) + "</div>") if has_tax else f"<p>{_e(name)} does not tax wages.</p>")
         how += ('<div class="tablewrap"><table class="kv">' + "".join(f"<tr><th>{_e(k_)}</th><td>{_e(v_)}</td></tr>" for k_, v_ in facts) + "</table></div>" if facts else "")
         how += ("<p>The state’s own site could not be opened for this check, so these figures come from excerpts of its official documents and from the Tax Foundation’s table of state tax rates. Compare them with the state’s pages before relying on them.</p>" if x.get("secondary") else "")
-        how += f'<p class="note">Tax year {x["year"]}, read {state_tax.READ}. Sources: ' + " · ".join(f'<a href="{_e(u_)}" rel="noopener">{_e(l_)}</a>' for l_, u_ in x["src"]) + ". An estimate, not tax advice.</p>"
+        how += f'<p class="note">Tax year {x["year"]}, read {x.get("read", state_tax.READ)}. Sources: ' + " · ".join(f'<a href="{_e(u_)}" rel="noopener">{_e(l_)}</a>' for l_, u_ in x["src"]) + ". An estimate, not tax advice.</p>"
         others = '<p class="rel">' + "".join(f'<a href="{P}/tools/take-home-pay/{o["slug"]}/">{_e(o["name"])}</a>' for c_, o in ST.items() if c_ != code) + "</p>"
         lead = (f"{name} has {says}. Enter your salary to see your paycheck after federal income tax, Social Security and Medicare" + (f", {name} income tax" if has_tax else "") + (f" and {pays}" if pays else "")
                 + f". On $75,000 a single filer keeps about ${a75[3]:,.0f} a year.")
