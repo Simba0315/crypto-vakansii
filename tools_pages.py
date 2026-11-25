@@ -223,7 +223,7 @@ def salary_groups(jobs):
 
 # ---------------------------------------------------------------- the section
 
-def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skills=(), skill_slug=None):
+def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skills=(), skill_slug=None, every="every hour"):
     """Writes the /tools/ hub and every tool page through page(); returns [(path, name, one_line_description), ...] for linking.
     role_skills: [(role slug, role name, postings, [(skill, postings that name it), …]), …], most postings first; skill_slug(skill) is its page under /skills/."""
     today = datetime.date.today()
@@ -238,7 +238,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
 
     # site pages a tool can point to: path -> (card title, card text)
     SITE_PAGES = {
-        "jobs/": ("Open jobs", f"{n_jobs:,} roles from company career pages, re-read every one to four hours."),
+        "jobs/": ("Open jobs", f"{n_jobs:,} roles from company career pages, re-read {every}."),
         "remote/": ("Remote jobs", "Open roles listed as remote, with the countries or time zones each one accepts."),
         "salaries/": ("Salaries by role, skill and company", "Median advertised pay from live postings, with the number of roles behind each figure."),
         "resume/": ("Resume builder", "A plain one-column resume that screening software reads cleanly. Saves as PDF, nothing uploaded."),
@@ -355,7 +355,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
               + '<p class="note tl-priv"><b>Private</b>Your salary is compared inside your browser and is never sent anywhere. Figures are advertised ranges, not verified pay; bonus and equity are not included.</p>'
               ),
          "Where the figures come from",
-         f"<p>Every figure is calculated from job postings collected from employers’ own careers pages and re-read every one to four hours. On {DATE} there were {n_jobs:,} open roles; "
+         f"<p>Every figure is calculated from job postings collected from employers’ own careers pages and re-read {every}. On {DATE} there were {n_jobs:,} open roles; "
          f"{n_paid:,} of them publish a yearly salary range in US dollars. Ranges in other currencies and hourly rates are left out so that all figures can be compared.</p>"
          "<p>Each posting counts once, by the midpoint of its range. The <strong>median</strong> is the middle posting; the <strong>middle half</strong> runs from the 25th to the 75th percentile; "
          "“the typical posting advertises” is the median lower end and the median upper end of the ranges. Your position is found by placing your number between 15 percentile points of the group.</p>"
