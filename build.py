@@ -1258,7 +1258,8 @@ FRAME_LABEL = {"resume": "Resume example", "cover-letter-examples": "Cover lette
                "help": "Help", "job-posting-sites": "For employers", "job-search-engines": "Compared", "free-resume-builders": "Compared",
                "how-long-job-postings-stay-open": "Insight", "internships": "Internships", "jobs-near-me": "Near you", "my-jobs": "Your tracker",
                # v4, pass 2 (26 Nov 2026): the matching page and the three pages that explain a tool open with the panel too
-               "for-you": "Jobs for you", "resume-tailor": "Explained", "ai-job-match": "Explained", "job-application-tracker": "Explained"}
+               "for-you": "Jobs for you", "resume-tailor": "Explained", "ai-job-match": "Explained", "job-application-tracker": "Explained",
+               "hiring-badge": "For websites"}
 FRAME_ARTICLE = re.compile(r'^(<div class="has-toc[^"]*"><div class="toc-main">)?(<div class="crumbs">.*?</div>)<article class="guide">(<h1[^>]*>.*?</h1>)((?:<p class="stamp">.*?</p>)?)'
                            r'((?:<div class="adv-short"><span>[^<]*</span><p>.*?</p></div>)?)(<p class="lead">.*?</p>)', re.S)
 FRAME_TOOL = re.compile(r'^(<div class="crumbs">.*?</div>)(<nav class="tsub".*?</nav>)(<h1[^>]*>.*?</h1>)(<p class="lead">.*?</p>)((?:<p class="plain">.*?</p>)?)', re.S)
@@ -1292,11 +1293,11 @@ def frame_first(path, body):
     m = FRAME_RX.match(body)
     if not m: return body
     pre, cr, h1, plain, lead, nums = (g or "" for g in m.groups())
-    if not plain and seg[0] == "for-you" and (m2 := FRAME_PLAIN_AFTER.match(body, m.end())):     # "In plain words" under the opening there
-        plain, end_ = m2.group(1), m2.end()
+    if not plain and seg[0] in ("for-you", "hiring-badge") and (m2 := FRAME_PLAIN_AFTER.match(body, m.end())):     # "In plain words" under the opening there
+        plain, end_ = m2.group(1) + m2.group(2), m2.end()
         return pre + f'<div class="khero phero"><div class="khero-t">{cr}{lab}{h1}{lead}{plain}</div>{nums}</div>' + body[end_:]
     return pre + f'<div class="khero phero"><div class="khero-t">{cr}{lab}{h1}{lead}{plain}</div>{nums}</div>' + body[m.end():]
-FRAME_PLAIN_AFTER = re.compile(r'(<p class="plain">.*?</p>)', re.S)
+FRAME_PLAIN_AFTER = re.compile(r'(<p class="plain">.*?</p>)((?:<p class="lact">.*?</p>)?)', re.S)
 
 
 # Design, step 5 (19 Nov 2026): every titled section of a page carries a small label above its heading, as the hub pages and dLocal's
@@ -1320,7 +1321,8 @@ SEC_LABELS = [(re.compile(r"^questions|questions about|people ask", re.I), "Ques
               (re.compile(r"^jobs you can get with", re.I), "Kinds of work"), (re.compile(r"^test your\b", re.I), "Test"),
               (re.compile(r"^more comparisons|\bin detail$", re.I), "Compared"), (re.compile(r"^closed jobs at", re.I), "Archive"),
               (re.compile(r"^internships and first jobs", re.I), "First jobs"), (re.compile(r"^what the marks", re.I), "Marks"),
-              (re.compile(r"^paycheck calculators", re.I), "Calculators"), (re.compile(r"^more ways to use|^other platforms", re.I), "More")]
+              (re.compile(r"^paycheck calculators", re.I), "Calculators"), (re.compile(r"^more ways to use|^other platforms", re.I), "More"),
+              (re.compile(r"^live badge", re.I), "Badge")]
 SEC_PLAIN = re.compile(r'<section class="sec"((?: id="[^"]*")?)><div class="sec-head( has-sub)?"><h2>(.*?)</h2>', re.S)
 
 

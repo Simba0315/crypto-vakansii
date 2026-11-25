@@ -4982,8 +4982,7 @@ main.kw .rexgrid>div>p:has(>a.btn.primary)>.btn.ghost{flex:1 1 0;justify-content
   .alertf-row .btn{flex:1 1 0;padding:0 16px}
 }
 /* the hiring guides open with five figures in a column beside the contents: smaller figures so "80 days" keeps to its cell */
-.has-toc .khero .nums dd{font-size:clamp(24px,2.3vw,30px)}
-.has-toc .khero .nums>div{padding:18px 18px 16px}
+@media(min-width:561px){.has-toc .khero .nums dd{font-size:clamp(24px,2.3vw,30px)}.has-toc .khero .nums>div{padding:18px 18px 16px}}
 
 /* ---- tools (/tools/ and each /tools/<tool>/): the cards take the 24 px corner and one hairline; "Open the tool" is a text link with
    its arrow in a circle (it was a green underline); the three wide cards lose the green bar between picture and text; the row of
@@ -5027,3 +5026,8 @@ main .phero+.tsub{margin:20px 0 14px}
    stretched it, so the resume box started 300 px down, under an empty gap (resume match, resume review…); the box without the row
    now spans both rows and the two start together */
 main .tl-grid>.tl-f>.tl-l+textarea:last-child{grid-row:span 2;height:100%}
+/* the 404 and offline pages: their panel carries the brand's ring like every other first panel */
+main.nfp .nf{position:relative;overflow:hidden;isolation:isolate}
+main.nfp .nf::after{content:"";position:absolute;z-index:-1;right:-120px;top:-150px;width:420px;height:420px;border-radius:50%;border:46px solid color-mix(in srgb,var(--ac) 9%,transparent);pointer-events:none}
+main.nfp .nf::before{content:"";position:absolute;z-index:-1;right:62px;top:42px;width:10px;height:10px;border-radius:50%;background:color-mix(in srgb,var(--ac) 30%,transparent);pointer-events:none}
+@media(max-width:700px){main.nfp .nf::after{right:-200px;top:-210px;width:300px;height:300px;border-width:36px}main.nfp .nf::before{display:none}}
