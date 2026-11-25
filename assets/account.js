@@ -283,7 +283,10 @@
     if (!token) return;
     forget(); flash('Your sign-in ran out. Sign in again to go on.', true); drawAuth('in'); window.scrollTo(0, 0);
   }
-  document.addEventListener('hrn:signout', function () { if (token) signOut(); });      // "Sign out" in the header menu, pressed on this page
+  document.addEventListener('hrn:signout', function () { if (token) signOut(); });
+  // a "More" menu of a job closes when the person clicks anywhere else or presses Escape
+  document.addEventListener('click', function (ev) { Array.prototype.forEach.call(root.querySelectorAll('.acc-menu[open]'), function (m) { if (!m.contains(ev.target)) m.open = false; }); });
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') Array.prototype.forEach.call(root.querySelectorAll('.acc-menu[open]'), function (m) { m.open = false; var s = m.querySelector('summary'); if (s) s.focus(); }); });      // "Sign out" in the header menu, pressed on this page
 
   /* ---------- signed in ---------- */
   function load() {
