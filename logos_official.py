@@ -688,6 +688,17 @@ SITES = {
     "Pediatrics Plus": "pediatricsplus.com",
     "Ensemble Hospitality": "ensemblehospitality.com",
     "Children's Home Healthcare": "childrenshomehealthcare.com",
+    "Cerebras": "cerebras.ai",
+    "Nuro": "nuro.ai",
+    "Ironclad": "ironcladapp.com",
+    "Katalyst Space Technologies": "katalystspace.com",
+    "Kodiak": "kodiak.ai",
+    "Lightspeed Commerce": "lightspeedhq.com",
+    "Peloton": "onepeloton.com",
+    "DataDome": "datadome.co",
+    "Chainguard": "chainguard.dev",
+    "Epirus": "epirusinc.com",
+    "True Anomaly": "trueanomaly.space",
 }
 
 ATS_HOSTS = re.compile(r"(greenhouse\.io|greenhouse\.com|lever\.co|ashbyhq\.com|ashbyprd\.com|myworkdayjobs\.com|myworkday\.com|workday\.com|"
@@ -704,6 +715,8 @@ DEFAULT_ICON = re.compile(r"(wp-includes/images/w-logo|wp\.com/i/webclip|jupiter
                           r"website-files\.com/img/(?:favicon|webclip)|webflow\.com/img/(?:favicon|webclip)|/img/webclip\.png|"
                           r"logo-default\.png|isteam/ip/static|weebly\.com/favicon|squarespace\.com/favicon|shopify\.com/favicon|"
                           r"hubspot.*favicon|godaddy|default[-_]?favicon|favicon[-_]default|placeholder|/img/v1\.1/favicons/)", re.I)   # the last: JazzHR's own
+# icons that unrelated sites serve byte for byte (26 Nov 2026: a gears favicon.ico on ccres.org, ccsww.org and compassconnections.org)
+DEFAULT_ICON_MD5 = {"1db747255c64a30f9236e9d929e986ca"}
 CHALLENGE = re.compile(r"(cf-chl|challenge-platform|just a moment\.\.\.|attention required|px-captcha|_incapsula_resource|captcha-delivery|"
                        r"pardon our interruption|access denied|request unsuccessful|are you a robot|bot detection|ddos-guard|sgcaptcha)", re.I)
 PARKED = re.compile(r"(domain (?:name )?(?:is )?for sale|domainmarket\.com|[a-z0-9-]+\.(?:com|net|org|co|io) is for sale|buy this domain|this domain may be for sale|hugedomains|sedoparking|parkingcrew|"
@@ -1057,7 +1070,7 @@ def site_icon(page_url, text):
     for u in icon_links(text, page_url)[:6]:
         st, final, ctype, data = curl(u, binary=True, limit=2_000_000)
         if st != 200 or len(data) < 200 or "html" in ctype: why.append(f"{st} {u}"); continue
-        if DEFAULT_ICON.search(final): why.append(f"default {final}"); continue
+        if DEFAULT_ICON.search(final) or hashlib.md5(data).hexdigest() in DEFAULT_ICON_MD5: why.append(f"default {final}"); continue
         try: im = load_image(data)
         except Exception: why.append(f"unreadable {u}"); continue
         bad = good_icon(im, 64 if data[:4] == b"\x00\x00\x01\x00" or u.lower().split("?")[0].endswith(".ico") else 48)
