@@ -1741,7 +1741,7 @@ def faq_for(label, jobs, first=None, extra=()):
         qa.append((f"Can I do {label} from any country?",
                    (f"Mostly not. {aw:,} of the {n_:,} open {label} are listed as open worldwide; the rest are limited to certain countries or time zones, so check the location line of each job." if aw else
                     f"Mostly not. None of the {n_:,} open {label} is listed as open worldwide today; each is limited to certain countries or time zones, named in its location line.")))
-    else:
+    elif r < n_ and not re.search(r"\bhybrid\b", label, re.I):      # every work-from-anywhere job is remote, no hybrid job is (25 Nov 2026)
         qa.append((f"Are there remote {label}?",
                    (f"{r:,} of the {n_:,} open {label} ({100 * r / n_:.0f}%) are listed as remote. Remote roles are often limited to certain countries or time zones, so check the location line of each job."
                     if r else f"None of the {n_:,} open {label} are listed as remote at the moment. Remote roles appear here as soon as employers post them.")))
@@ -4543,11 +4543,65 @@ def main():
     lap('Hybrid: some days at home, some in the office (FlexJobs show')
     # Hybrid: some days at home, some in the office (FlexJobs shows it as its own kind of work; the search has the same filter)
     hyb_ = [j for j in active if j.get("hybrid")]
+    # Office days a week, read from the full text of postings (a range "2 to 3 days" counts as its lower figure). Counted here, before
+    # /hybrid/, so the list can answer what people searching "hybrid jobs" ask first: what hybrid means and how many days in the office
+    # (25 Nov 2026: the page had only the generic questions, among them "Are there remote hybrid jobs?"). The guide "How many days in
+    # the office" further down uses the same count (od_, n_od) over every posting with a full text.
+    OD_W = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5}
+    OD_N = r"([1-5]|one|two|three|four|five)"
+    # Each rule is written as (what comes before, the part that starts with plain letters): the second part alone is tried first,
+    # because a search that can start from fixed letters ("days", "office") is some fifty times faster than one that starts with
+    # "a digit or one, two, three…", which the engine has to try at every character of a 7,000-character description.
+    OD_SRC = [(OD_N + r"(?:\s*(?:-|–|to|or)\s*(?:[1-5]|two|three|four|five))?\+?\s+(?:full\s+)?",
+               r"days?\s+(?:a|per|each|every|of the)\s+week\s+(?:in|at|from|on)[- ](?:the\s+|our\s+|an?\s+|one of our\s+)?(?:office|site|on-?site|hub|studio|headquarters|hq|location)"),
+              (r"(?:in|at)\s+(?:the|our)\s+(?:office|hub|studio)\s+(?:at least\s+|a minimum of\s+)?" + OD_N + r"\s+", r"days?\s+(?:a|per|each)\s+week"),
+              ("", r"office\s+" + OD_N + r"\s+days?\s+(?:a|per|each)\s+week"),
+              (OD_N + r"\s+", r"days?\s+(?:in|at)[- ](?:the\s+)?office"),
+              (r"(?:in[- ]office|on[- ]?site|in[- ]person)\s+" + OD_N + r"\s+", r"days?\s+(?:a|per|each)\s+week")]
+    OD_RX = [re.compile(a_ + b_, re.I) for a_, b_ in OD_SRC]
+    OD_GATE = [re.compile(b_, re.I) for _, b_ in OD_SRC]
+    od_, od_job = Counter(), {}
+    od_have, od_may = rx_skip(OD_RX)
+    for j in active:
+        if not j.get("desc"): continue
+        got_ = od_have(j["desc"])
+        for may_, gate_, rx_ in zip(od_may, OD_GATE, OD_RX):
+            m_ = may_(got_) and gate_.search(j["desc"]) and rx_.search(j["desc"])
+            if m_:
+                od_job[j["id"]] = d_ = int(OD_W.get(m_.group(1).lower(), m_.group(1)))
+                od_[d_] += 1
+                break
+    n_od = sum(od_.values())
     if len(hyb_) >= 20:
+        kw_hy = dict(list_parts("Hybrid jobs", hyb_)[1])
+        hy_od = Counter(od_job[j["id"]] for j in hyb_ if j["id"] in od_job)
+        n_hy_od, n_hy_txt = sum(hy_od.values()), sum(1 for j in hyb_ if j.get("desc"))
+        hy_pc = lambda k_: round(100 * k_ / max(1, n_hy_od))
+        dw_h = lambda d_: f"{d_} day{'s' if d_ > 1 else ''}"
+        hy_top = hy_od.most_common()
+        hy_first = ("What is a hybrid job?", f"A job that splits the working week between home and the employer’s office or site, usually on days the team sets. "
+                    f"{len(hyb_):,} of the {len(active):,} open jobs here are hybrid today, and {len(remote):,} are fully remote."
+                    + (f" The hybrid postings that name a number of office days most often ask for {dw_h(hy_top[0][0])} a week." if n_hy_od >= 20 else ""))
+        hy_extra = (("How many days a week are hybrid jobs in the office?",
+                     f"{n_hy_od:,} of the {n_hy_txt:,} hybrid postings whose full text we hold say how many: "
+                     + ", ".join(f"{dw_h(d_)} ({hy_pc(k_)}%)" for d_, k_ in hy_top[:3]) + ". "
+                     + (f"{hy_od.get(5, 0):,} {'asks' if hy_od.get(5) == 1 else 'ask'} for five days a week, which is an office job whatever the posting calls it. " if hy_od.get(5) else "")
+                     + "Where a posting gives a range, such as 2 to 3 days, the lower figure is counted."),
+                    ("What is the difference between hybrid and remote?",
+                     "A remote job is done from home, though most are limited to certain countries. A hybrid job also asks for days at the office or site, "
+                     "so you have to live within reach of it: the location line names the office.")) if n_hy_od >= 20 else ()
+        if n_hy_od >= 20:
+            kw_hy["after"] = section("How many days a week [[in the office]]", '<div class="tablewrap"><table><tr><th>Office days a week</th><th>Hybrid postings</th><th>Share</th></tr>'
+                                     + "".join(f"<tr><td>{dw_h(d_)}</td><td>{hy_od.get(d_, 0):,}</td><td>{hy_pc(hy_od.get(d_, 0))}%</td></tr>" for d_ in range(1, 6))
+                                     + f'</table></div><p class="note">Counted from the {n_hy_txt:,} hybrid postings whose full text we hold; {n_hy_od:,} of them name a number of days. '
+                                     "Where a posting gives a range, such as “2 to 3 days”, the lower figure is counted"
+                                     + (f'. Across every posting, not only those marked hybrid, see <a href="{P}/guides/office-days-in-hybrid-jobs/">how many days in the office postings ask for</a>.</p>' if n_od >= 50 else ".</p>"),
+                                     sid="office", label="Office days") + kw_hy.get("after", "")
         listing("hybrid/", "Hybrid jobs", f"Hybrid Jobs ({len(hyb_):,} open) | {SITE}",
-                f"{roles(len(hyb_), 'open job')} that mix days at home with days in the office, straight from employers’ careers pages. Updated hourly.", hyb_,
-                intro_for(hyb_, "", " that mix days at home with days in the office", row=list_parts("Hybrid jobs", hyb_)[0]), trail=(("All jobs", "jobs/"),), more="hybrid=1",
-                faq="hybrid jobs", links=(("remote/", "Remote jobs"),), **list_parts("Hybrid jobs", hyb_)[1])
+                lead_desc("Hybrid jobs", hyb_, "Office days a week and pay by level, from the postings." if n_hy_od >= 20 else "Pay by level and who hires, from the postings."), hyb_,
+                "<strong>A hybrid job</strong> splits the working week between home and the employer’s office or site. "
+                + intro_for(hyb_, "", " that mix days at home with days in the office", row=list_parts("Hybrid jobs", hyb_)[0]), trail=(("All jobs", "jobs/"),), more="hybrid=1",
+                faq="hybrid jobs", faq_first=hy_first, faq_extra=hy_extra, links=(("remote/", "Remote jobs"),), **kw_hy)
     lap('Government jobs: the federal agencies read from USAJOBS, the')
     # Government jobs: the federal agencies read from USAJOBS, then states, counties, cities, school districts and public authorities
     # that publish on their own hiring systems, told by the employer's name. LinkedIn has a "Government" collection (checked 20 Nov
@@ -8852,30 +8906,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
           (("my-jobs/", "Application tracker"), ("tools/job-search-calculator/", "How many applications one offer takes"), ("tools/", "All tools")))
 
     lap('10. office days in hybrid jobs: read from the full text of p')
-    # 10. office days in hybrid jobs: read from the full text of postings (a range "2 to 3 days" counts as its lower figure)
-    OD_W = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5}
-    OD_N = r"([1-5]|one|two|three|four|five)"
-    # Each rule is written as (what comes before, the part that starts with plain letters): the second part alone is tried first,
-    # because a search that can start from fixed letters ("days", "office") is some fifty times faster than one that starts with
-    # "a digit or one, two, three…", which the engine has to try at every character of a 7,000-character description.
-    OD_SRC = [(OD_N + r"(?:\s*(?:-|–|to|or)\s*(?:[1-5]|two|three|four|five))?\+?\s+(?:full\s+)?",
-               r"days?\s+(?:a|per|each|every|of the)\s+week\s+(?:in|at|from|on)[- ](?:the\s+|our\s+|an?\s+|one of our\s+)?(?:office|site|on-?site|hub|studio|headquarters|hq|location)"),
-              (r"(?:in|at)\s+(?:the|our)\s+(?:office|hub|studio)\s+(?:at least\s+|a minimum of\s+)?" + OD_N + r"\s+", r"days?\s+(?:a|per|each)\s+week"),
-              ("", r"office\s+" + OD_N + r"\s+days?\s+(?:a|per|each)\s+week"),
-              (OD_N + r"\s+", r"days?\s+(?:in|at)[- ](?:the\s+)?office"),
-              (r"(?:in[- ]office|on[- ]?site|in[- ]person)\s+" + OD_N + r"\s+", r"days?\s+(?:a|per|each)\s+week")]
-    OD_RX = [re.compile(a_ + b_, re.I) for a_, b_ in OD_SRC]
-    OD_GATE = [re.compile(b_, re.I) for _, b_ in OD_SRC]
-    od_ = Counter()
-    od_have, od_may = rx_skip(OD_RX)
-    for j in all_desc:
-        got_ = od_have(j["desc"])
-        for may_, gate_, rx_ in zip(od_may, OD_GATE, OD_RX):
-            m_ = may_(got_) and gate_.search(j["desc"]) and rx_.search(j["desc"])
-            if m_:
-                od_[int(OD_W.get(m_.group(1).lower(), m_.group(1)))] += 1
-                break
-    n_od = sum(od_.values())
+    # 10. office days in hybrid jobs: counted before /hybrid/ (od_, n_od; see "Office days a week" there)
     if n_od >= 50:
         top_d = od_.most_common(1)[0]
         hy_c = Counter(c for j in hyb_ for c in {x for x, _ in countries_of(j.get("location") or "")})
