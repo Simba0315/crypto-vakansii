@@ -62,9 +62,10 @@
     for (var s = lo; s < hi; s += 25) steps.push(s);
     var cnt = steps.map(function (s_) { return mids.filter(function (m) { return m >= s_ && m < s_ + 25; }).length; }), mx = Math.max.apply(null, cnt) || 1, mi = steps.indexOf(Math.floor(q(mids, 0.5) / 25) * 25);
     var hist = '<div class="exh" role="img" aria-label="Postings by pay band">' + steps.map(function (s_, i) {
-      return '<i class="' + (i === mi ? 'hi' : '') + '" style="height:' + Math.max(2, Math.round(100 * cnt[i] / mx)) + '%" title="' + k(s_) + ' to ' + k(s_ + 25) + ': ' + nf(cnt[i]) + ' postings"></i>';
-    }).join('') + '</div><div class="exhx"><span>' + k(lo) + '</span><span>' + k(hi) + '</span></div>';
-    var panels = pic('How the pay is spread', 'Postings by the middle of their range, in $25K steps. The dark column holds the median.', hist);
+      return '<i class="' + (i === mi ? 'hi' : '') + '" style="height:' + Math.max(2, Math.round(100 * cnt[i] / mx)) + '%" data-tip="' + k(s_) + ' to ' + k(s_ + 25) + (i === mi ? ' · ' + nf(cnt[i]) + ' postings · the median is here' : ' · ' + nf(cnt[i]) + ' postings') + '"></i>';
+    }).join('') + '</div><div class="exhx"><span>' + k(lo) + '</span><span>' + k(hi) + '</span></div>'
+      + '<table class="sr-only"><tr><th>Pay band</th><th>Postings</th></tr>' + steps.map(function (s_, i) { return '<tr><td>' + k(s_) + ' to ' + k(s_ + 25) + '</td><td>' + nf(cnt[i]) + '</td></tr>'; }).join('') + '</table>';      // the same counts as a table, for a screen reader
+    var panels = pic('How the pay is spread', 'Postings by the middle of their range, in $25K steps. The marked column holds the median.', hist);
     // pay by the years of experience the posting asks for
     var bands = [['Entry, 1–2 years', 1, 2], ['Mid, 3–5 years', 3, 5], ['Senior, 6–9 years', 6, 9], ['Expert, 10+ years', 10, 99]].map(function (b) {
       var g = yrs.filter(function (r) { return r[4] >= b[1] && r[4] <= b[2]; }); return [b[0], g.length >= MIN ? med(g.map(mid)) : 0, nf(g.length) + ' postings'];

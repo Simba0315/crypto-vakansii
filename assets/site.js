@@ -2429,3 +2429,65 @@
     ul.parentNode.insertBefore(b, ul.nextSibling);
   });
 })();
+
+/* ---------- chart tooltips (26 Nov 2026): one small card for every bar, column and tick, on hover, tap or keyboard focus.
+   A column or a tick carries data-tip "label · value · more"; a bar row (.hbars) gives its name and figure, a table bar
+   (td.salbar) its row's name and figure. The figure leads, the label follows; text only (textContent), never markup.
+   Every figure here is also on the page (labels, rows, a table), so the card adds nothing a reader cannot get without it. ---------- */
+(function () {
+  var tip, cur = null, root = document.documentElement;
+  root.classList.add('vt');                                   // style.css then hides the CSS-only fallback tooltip
+  function text(el) { return el ? (el.textContent || '').replace(/\s+/g, ' ').trim() : ''; }
+  function target(n) {
+    if (!n || !n.closest) return null;
+    var t = n.closest('[data-tip],.hbars>a,.hbars>div,td');
+    if (!t) return null;
+    if (t.matches('.hbars>a,.hbars>div') && !t.querySelector('.hb')) return null;
+    if (t.tagName === 'TD' && !t.querySelector(':scope>span.bar')) return null;
+    return t;
+  }
+  function parts(t) {                                          // [figure, label, notes]
+    if (t.hasAttribute('data-tip')) {
+      var p = t.getAttribute('data-tip').split(' · ');
+      return p.length > 1 ? [p[1], p[0], p.slice(2).join(' · ')] : [p[0], '', ''];
+    }
+    if (t.tagName === 'TD') {                                  // a bar in a table cell: the cell's figure, the row's name and the column's
+      var row = t.parentNode, th = t.closest('table') && t.closest('table').querySelector('tr th:nth-child(' + (t.cellIndex + 1) + ')'), name = '';
+      for (var i = 0; i < row.cells.length && !name; i++) if (!/^[#\d\s.]*$/.test(text(row.cells[i]))) name = text(row.cells[i]);      // the rank column is not the name
+      return [text(t), name + (th ? ' · ' + text(th).toLowerCase() : ''), ''];
+    }
+    return [text(t.querySelector('.hc')), text(t.querySelector('.hn')), ''];
+  }
+  function mark(t) { return t.matches('.vc-c,.va,.vb') ? t.querySelector('i') : t.matches('.hbars>a,.hbars>div') ? t.querySelector('.hb i') : t.tagName === 'TD' ? t.querySelector('span.bar i') : t; }
+  function show(t) {
+    var p = parts(t);
+    if (!p[0]) return hide();
+    if (!tip) {
+      tip = document.createElement('div'); tip.className = 'vtip'; tip.setAttribute('role', 'tooltip'); tip.id = 'vtip';
+      document.body.appendChild(tip);
+    }
+    tip.textContent = '';
+    var m = mark(t) || t, col = getComputedStyle(m).backgroundColor;
+    if (!m.getClientRects().length || !m.offsetParent) return hide();          // the bar is not drawn here (a phone hides bars in tables)
+    tip.style.setProperty('--k', col && col !== 'rgba(0, 0, 0, 0)' && col !== 'transparent' ? col : 'var(--viz-1)');
+    var b = document.createElement('b'); b.textContent = p[0]; tip.appendChild(b);
+    if (p[1]) { var s = document.createElement('span'); s.textContent = p[1]; tip.appendChild(s); }
+    if (p[2]) { var n = document.createElement('em'); n.textContent = p[2]; tip.appendChild(n); }
+    cur = t;
+    var r = m.getBoundingClientRect(), horiz = t.matches('.hbars>a,.hbars>div,td,.va,.vb'), w = tip.offsetWidth, h = tip.offsetHeight;
+    var lab = t.matches('.vc-c') && t.querySelector('b'), top0 = lab ? Math.min(r.top, lab.getBoundingClientRect().top) : r.top;      // above the column's own figure
+    var x = horiz ? (t.matches('.va') ? r.left : r.right) : r.left + r.width / 2, y = top0 - 8;
+    var left = Math.max(8, Math.min(innerWidth - w - 8, x - w / 2)), top = y - h;
+    if (top < 8) top = r.bottom + 10;                          // no room above the mark: under it
+    tip.style.left = Math.round(left) + 'px'; tip.style.top = Math.round(top) + 'px';
+    tip.classList.add('on');
+  }
+  function hide() { cur = null; if (tip) tip.classList.remove('on'); }
+  document.addEventListener('pointermove', function (ev) { var t = target(ev.target); if (t && t !== cur) show(t); else if (!t && cur) hide(); }, { passive: true });      // move, not over: after a scroll hid it, the next move shows it again
+  document.addEventListener('pointerleave', hide, { passive: true });
+  document.addEventListener('pointerdown', function (ev) { var t = target(ev.target); if (t) show(t); else hide(); }, { passive: true });
+  document.addEventListener('focusin', function (ev) { var t = target(ev.target); if (t) show(t); else hide(); });
+  document.addEventListener('focusout', function () { hide(); });
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') hide(); });
+  addEventListener('scroll', function () { if (cur) hide(); }, { passive: true });
+})();

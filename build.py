@@ -3052,6 +3052,7 @@ def job_page(j, active_by_cat):
         about += ('<p class="tbadges">' + "".join(f'<span class="tb" title="{e(why)}"><b>✓ {e(nm)}</b> {e(why)}</span>' for nm, why in TB[j["company"]])
                   + f'<a href="{P}/companies/#marks">What the marks mean</a></p>')
     # Pay at a glance: the range from the posting on a scale, with the median of its category marked
+    pb_edge = lambda x_: " l" if x_ < 12 else " r" if x_ > 88 else ""      # the word "median" under the tick: kept inside the card near either end
     paybar = ""
     if j["active"] and j.get("usd") and j["cat"] in CATMED and j["cat"] != OTHER[0] and j["usd"][1] >= j["usd"][0] > 0:
         lo_, hi_ = j["usd"]; med_ = CATMED[j["cat"]]
@@ -3060,7 +3061,8 @@ def job_page(j, active_by_cat):
         mid_ = (lo_ + hi_) / 2
         verdict = "above" if mid_ > med_ * 1.05 else "below" if mid_ < med_ * 0.95 else "close to"
         paybar = (f'<div class="paybar"><p class="pb-h"><b>{e(j["salary"])}</b><span>stated in the posting</span></p>'
-                  f'<div class="pb-t" aria-hidden="true"><i style="left:{pos_(lo_):.1f}%;width:{max(1.5, pos_(hi_) - pos_(lo_)):.1f}%"></i><u style="left:{pos_(med_):.1f}%"></u></div>'
+                  f'<div class="pb-t" aria-hidden="true"><i style="left:{pos_(lo_):.1f}%;width:{max(1.5, pos_(hi_) - pos_(lo_)):.1f}%" data-tip="Stated in the posting · {e(j["salary"])}"></i>'
+                  f'<u style="left:{pos_(med_):.1f}%" data-tip="Median for {e(CAT[j["cat"]])} roles · {money(med_)}"></u><em class="pb-m{pb_edge(pos_(med_))}" style="left:{pos_(med_):.1f}%">median</em></div>'
                   f'<p class="pb-s">The middle of this range is {verdict} the median for {e(CAT[j["cat"]])} roles, {money(med_)} (the mark on the line).</p></div>')
     # Pay stated by the hour (26 Nov 2026): the bar above only reads yearly ranges, so nursing, retail, warehouse and care postings,
     # which state an hourly rate, got no comparison at all. Same line, drawn on the hourly figures of the category; US dollars only.
@@ -3072,7 +3074,8 @@ def job_page(j, active_by_cat):
         verdict = "above" if mid_ > med_ * 1.05 else "below" if mid_ < med_ * 0.95 else "close to"
         year_ = f"${mid_ * 2080 / 1000:,.0f}K"
         paybar = (f'<div class="paybar"><p class="pb-h"><b>{e(j["salary"])}</b><span>stated in the posting</span></p>'
-                  f'<div class="pb-t" aria-hidden="true"><i style="left:{pos_(lo_):.1f}%;width:{max(1.5, pos_(hi_) - pos_(lo_)):.1f}%"></i><u style="left:{pos_(med_):.1f}%"></u></div>'
+                  f'<div class="pb-t" aria-hidden="true"><i style="left:{pos_(lo_):.1f}%;width:{max(1.5, pos_(hi_) - pos_(lo_)):.1f}%" data-tip="Stated in the posting · {e(j["salary"])}"></i>'
+                  f'<u style="left:{pos_(med_):.1f}%" data-tip="Median hourly rate for {e(CAT[j["cat"]])} roles · ${med_:,.2f}"></u><em class="pb-m{pb_edge(pos_(med_))}" style="left:{pos_(med_):.1f}%">median</em></div>'
                   f'<p class="pb-s">The middle of this range is {verdict} the median hourly rate for {e(CAT[j["cat"]])} roles that state one, ${med_:,.2f} (the mark on the line). '
                   f'At 40 hours a week all year, {"$%.2f" % mid_} an hour comes to about {year_} a year before tax.</p></div>')
     # What the range leaves after US federal tax, Social Security and Medicare, for postings in the United States only (the rules are the ones the take-home pay tool uses)
@@ -3513,12 +3516,12 @@ def main():
         now: index of a period still filling up (lighter). The tallest column and hi carry their value; every column a tooltip."""
         top = nice_top(max((v for _, v, _ in points), default=0))
         peak = max(range(len(points)), key=lambda i: points[i][1]) if points else None
-        grid = "".join(f'<span style="bottom:{100 * t / 2:.0f}%"><em>{fmt_n(top * t // 2)}</em></span>' for t in (1, 2))
+        grid = "".join(f'<span style="bottom:{100 * (top * t // 2) / top:.1f}%"><em>{fmt_n(top * t // 2)}</em></span>' for t in (1, 2))      # the line sits at its own figure ("7" of 15 is not halfway)
         bars = "".join(
             f'<div class="vc-c{" hi" if i == hi else ""}{" now" if i == now else ""}" role="img" tabindex="0" data-tip="{e(tip)}" aria-label="{e(tip)}">'
             f'<i style="height:{max(1.5, 100 * v / top):.1f}%">{f"<b>{fmt_n(v)}</b>" if i in (peak, hi) else ""}</i></div>'
             for i, (_, v, tip) in enumerate(points))
-        xs = "".join(f"<span>{e(lb)}</span>" for lb, _, _ in points)
+        xs = "".join(f'<span{" class=" + chr(34) + "hi" + chr(34) if i == hi else ""}>{e(lb)}</span>' for i, (lb, _, _) in enumerate(points))
         table = ('<table class="sr-only"><tr><th>Period</th><th>Count</th></tr>'
                  + "".join(f"<tr><td>{e(tip.split(' · ')[0])}</td><td>{v:,}</td></tr>" for _, v, tip in points) + "</table>")
         return (f'<div class="vc" role="group" aria-label="{e(aria)}"><div class="vc-plot"><div class="vc-grid">{grid}</div>'
@@ -3543,7 +3546,7 @@ def main():
         if len(mids_) >= 30:
             eg = [(0, 75), (75, 100), (100, 125), (125, 150), (150, 175), (175, 200), (200, 250), (250, 300), (300, 10 ** 6)]
             md_ = median(mids_)
-            pay = (f'<figure class="pic"><figcaption><b>What these jobs pay</b>{len(mids_):,} of them state a yearly range in US dollars (bands in thousands). The dark column holds the median, {money(md_)}.</figcaption>'
+            pay = (f'<figure class="pic"><figcaption><b>What these jobs pay</b>{len(mids_):,} of them state a yearly range in US dollars (bands in thousands). The marked column holds the median, {money(md_)}.</figcaption>'
                    + vcols([(("<75" if lo == 0 else f"{lo}+" if hi > 1000 else f"{lo}"), c_,
                               f"{'under $75K' if lo == 0 else f'${lo}K and more' if hi > 1000 else f'${lo}K to ${hi}K'} · {c_:,} postings")
                              for lo, hi in eg for c_ in [sum(1 for v in mids_ if lo * 1000 <= v < hi * 1000)]],
@@ -3588,7 +3591,7 @@ def main():
     market_pics = ('<div class="pics">'
                    f'<figure class="pic"><figcaption><b>Where the jobs are</b>Open jobs in the ten largest fields. A job can count in two fields.</figcaption>{pic_fields}</figure>'
                    f'<figure class="pic"><figcaption><b>What the postings pay</b>{len(mids_all):,} postings state a yearly range in US dollars: '
-                   f'how many sit in each band, by the middle of their range, in thousands of dollars. The dark column holds the median, {money(med_all)}.</figcaption>'
+                   f'how many sit in each band, by the middle of their range, in thousands of dollars. The marked column holds the median, {money(med_all)}.</figcaption>'
                    f'{vcols(pay_pts, hi=med_i, aria="Postings by yearly pay band")}'
                    + (f'<p class="vc-note"><span><b>{money(med_all)}</b>median</span><span><b>{money(q_lo)}–{money(q_hi)}</b>the middle half of postings</span>'
                       f'<span><b>{sum(1 for v in mids_all if v >= 200000):,}</b>pay $200K or more</span></p>' if mids_all else "") + '</figure>'
@@ -5528,8 +5531,8 @@ def main():
             def pay_row(k, v):
                 lo_, hi_ = min(lo for lo, _ in v), max(hi for _, hi in v)
                 mid_ = median([(a + b) / 2 for a, b in v]) if len(v) >= 15 else None
-                bar = (f'<span class="prange"><i style="left:{100 * (lo_ - lo_all) / span_:.1f}%;width:{max(2, 100 * (hi_ - lo_) / span_):.1f}%"></i>'
-                       + (f'<b style="left:{100 * (mid_ - lo_all) / span_:.1f}%"></b>' if mid_ else "") + "</span>")
+                bar = (f'<span class="prange"><i style="left:{100 * (lo_ - lo_all) / span_:.1f}%;width:{max(2, 100 * (hi_ - lo_) / span_):.1f}%" data-tip="{e(CAT[k])}, lowest to highest · {money(lo_)} to {money(hi_)}"></i>'
+                       + (f'<b style="left:{100 * (mid_ - lo_all) / span_:.1f}%" data-tip="{e(CAT[k])}, median · {money(mid_)}"></b>' if mid_ else "") + "</span>")
                 return (f'<tr><td><a href="{P}/jobs/{k}/">{e(CAT[k])}</a></td><td>{len(v)}</td><td>{money(lo_)} to {money(hi_)}</td>'
                         f'<td>{money(mid_) if mid_ else "—"}</td><td class="pcell">{bar}</td></tr>')
             overview += section(f"Pay by field at {c}", sid="pay", inner='<div class="tablewrap"><table><tr><th>Field</th><th>Postings with pay</th><th>Lowest to highest advertised</th><th>Median</th><th>Spread</th></tr>'
@@ -5789,7 +5792,7 @@ def main():
         pts = [(pay_lb(lo, hi), c_, f"{pay_tip(lo, hi)} · {c_:,} postings" + (" · the median is here" if i == hi_ else ""))
                for i, (lo, hi) in enumerate(edges) for c_ in [sum(1 for v in mids_ if lo * 1000 <= v < hi * 1000)]]
         return (f'<figure class="pic"><figcaption><b>{e(title)}</b>{len(mids_):,} postings by the middle of their yearly range, in thousands of US dollars. '
-                f'The dark column holds the median, {money(md_)}.</figcaption>' + vcols(pts, hi=hi_, aria="Postings by yearly pay band") + "</figure>")
+                f'The marked column holds the median, {money(md_)}.</figcaption>' + vcols(pts, hi=hi_, aria="Postings by yearly pay band") + "</figure>")
     def level_pic(group):
         """The same ladder as the table by level, drawn: one bar per level, the median of its postings."""
         rows_ = level_rows(group)
@@ -6181,8 +6184,8 @@ def main():
         out = ""
         for lab, a_, b_, ta, tb in rows_:
             mx_ = max(a_, b_, 1)
-            out += (f'<div class="vsr"><span class="vl">{e(lab)}</span><span class="va"><b>{e(ta)}</b><i style="width:{round(100 * a_ / mx_)}%"></i></span>'
-                    f'<span class="vb"><i style="width:{round(100 * b_ / mx_)}%"></i><b>{e(tb)}</b></span></div>')
+            out += (f'<div class="vsr"><span class="vl">{e(lab)}</span><span class="va" data-tip="{e(na)}: {e(lab[0].lower() + lab[1:])} · {e(ta)}"><b>{e(ta)}</b><i style="width:{round(100 * a_ / mx_)}%"></i></span>'
+                    f'<span class="vb" data-tip="{e(nb)}: {e(lab[0].lower() + lab[1:])} · {e(tb)}"><i style="width:{round(100 * b_ / mx_)}%"></i><b>{e(tb)}</b></span></div>')
         return (f'<div class="vsh"><a href="{P}/{ua}"><b>{e(na)}</b></a><span>vs</span><a href="{P}/{ub}"><b>{e(nb)}</b></a></div><div class="vs">{out}</div>')
     def skill_facts(t):
         js = by_tag[t]; mids = sorted((lo + hi) / 2 for j in js if j["usd"] for lo, hi in [j["usd"]])
@@ -6753,8 +6756,8 @@ def main():
         out = ""
         for lab, a_, b_, ta, tb in rows_:
             mx_ = max(a_, b_, 1)
-            out += (f'<div class="vsr"><span class="vl">{e(lab)}</span><span class="va"><b>{e(ta)}</b><i style="width:{round(100 * a_ / mx_)}%"></i></span>'
-                    f'<span class="vb"><i style="width:{round(100 * b_ / mx_)}%"></i><b>{e(tb)}</b></span></div>')
+            out += (f'<div class="vsr"><span class="vl">{e(lab)}</span><span class="va" data-tip="{e(A["name"])}: {e(lab[0].lower() + lab[1:])} · {e(ta)}"><b>{e(ta)}</b><i style="width:{round(100 * a_ / mx_)}%"></i></span>'
+                    f'<span class="vb" data-tip="{e(B["name"])}: {e(lab[0].lower() + lab[1:])} · {e(tb)}"><i style="width:{round(100 * b_ / mx_)}%"></i><b>{e(tb)}</b></span></div>')
         return out
     def vs_head(A, B, sa, sb):
         return (f'<div class="vsh"><a href="{P}/companies/{sa}/">{ava(A["name"])}<b>{e(A["name"])}</b></a><span>vs</span><a href="{P}/companies/{sb}/"><b>{e(B["name"])}</b>{ava(B["name"])}</a></div>')

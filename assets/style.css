@@ -5034,3 +5034,114 @@ main.nfp .nf::before{content:"";position:absolute;z-index:-1;right:62px;top:42px
 main.hbp .phero~.hbgrid{margin-top:28px}
 main.hbp .phero~.hbco{margin:28px 0 0}
 main.hbp .hbgrid>*{border-radius:24px}
+/* ================= Charts, v5 (26 Nov 2026, night). The owner, 13–14 Nov: "dumb charts, more modern; not necessarily green on black".
+   Method: form first, colour by its job, a palette validated by script, then marks and hover. One hue, the brand green, as a ramp validated in both modes with validate_palette.js: the one series
+   passes every check (light #1f9d55 on #fff, dark #3bab65 on #1b1917), the three steps "still filling < every mark < the marked one"
+   pass the ordinal checks (one hue, monotone lightness, light end above 2:1); two series (head to head) are green and blue, which
+   pass the categorical checks in both modes. Dark mode is its own set of steps, not an inversion. Marks are thin, data-ends rounded
+   4px and square at the baseline, grid and axes hairlines a step off the card, every figure in text colours, never in the series
+   colour. Every bar, column and tick has a tooltip (site.js, .vtip); the hovered mark stays and the rest step back. ================= */
+:root{--viz-1:#1f9d55;--viz-2:#0a6d38;--viz-now:#67c585;--viz-soft:#dcf1e2;--viz-b:#2a78d6;--viz-grid:#efece7;--viz-axis:#d6d1c9;--viz-tip:#ffffff;--viz-tip-line:#e6e2db}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--viz-1:#3bab65;--viz-2:#78d694;--viz-now:#126c39;--viz-soft:#173322;--viz-b:#3987e5;--viz-grid:#2a2723;--viz-axis:#3b3732;--viz-tip:#24221f;--viz-tip-line:#3b3732}}
+:root[data-theme="dark"]{--viz-1:#3bab65;--viz-2:#78d694;--viz-now:#126c39;--viz-soft:#173322;--viz-b:#3987e5;--viz-grid:#2a2723;--viz-axis:#3b3732;--viz-tip:#24221f;--viz-tip-line:#3b3732}
+.kpanel.ink,.inkband{--viz-1:#3bab65;--viz-2:#78d694;--viz-now:#126c39;--viz-soft:#173322;--viz-b:#3987e5;--viz-grid:#2a2723;--viz-axis:#3b3732}
+
+/* the card: a quiet title, the caption in secondary ink, room for the plot */
+.pic figcaption{font-size:13.5px;line-height:1.5;color:var(--muted)}
+.pic figcaption b{font-weight:650;letter-spacing:-.015em}
+
+/* columns (vcols in build.py) */
+.vc-plot{height:192px;margin-left:40px}
+.vc-grid{border-bottom:1px solid var(--viz-axis)}
+.vc-grid span{border-top:1px solid var(--viz-grid)}
+.vc-grid em{top:-7px;margin-right:10px;font:500 11px/1.2 var(--mono);font-style:normal;color:var(--faint);font-variant-numeric:tabular-nums}
+.vc-cols{gap:2px}
+.vc-c{border-radius:6px;-webkit-tap-highlight-color:transparent}
+.vc-c i{width:52%;max-width:16px;min-width:3px;background:var(--viz-1);border-radius:4px 4px 0 0;box-shadow:none;transition:opacity .16s ease,background-color .16s ease}
+.vc-cols:not(:has(>.vc-c:nth-child(9))) .vc-c i{width:40%;max-width:24px}      /* eight columns or fewer: up to 24px each, never the whole slot */
+.vc-c.hi i{background:var(--viz-2)}
+.vc-c.now i{background:var(--viz-now);box-shadow:none}
+.vc-c b{padding-bottom:6px;font:650 11.5px/1 var(--mono);color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.vc-c:hover i,.vc-c:focus-visible i{filter:none}
+.vc-c:focus-visible{outline:2px solid var(--viz-1);outline-offset:1px}
+.vc-cols:has(>.vc-c:hover)>.vc-c:not(:hover) i,.vc-cols:has(>.vc-c:focus-visible)>.vc-c:not(:focus-visible) i{opacity:.35}
+.vc-x{gap:2px;margin:8px 0 0 40px}
+.vc-x span{font:500 11px/1.3 var(--mono);color:var(--faint);font-variant-numeric:tabular-nums}
+.vc-x span.hi{color:var(--text);font-weight:700}
+.pics>.pic:has(>.vc){display:flex;flex-direction:column}
+.pics>.pic>.vc{flex:1 1 auto;display:flex;flex-direction:column;max-height:330px}
+.pics>.pic>.vc>.vc-plot{flex:1 1 auto}
+.vc-x span.hi::after{content:"";display:block;width:16px;height:2px;margin:3px auto 0;border-radius:1px;background:var(--viz-2)}
+.vt .vc-c::after,.vt .vc-c:hover::after,.vt .vc-c:focus-visible::after{content:none;display:none}
+@media(max-width:560px){.vc-plot{height:156px;margin-left:34px}.vc-x{margin-left:34px}.vc-x span{font-size:10.5px}}
+.vtabs>label{padding:5px 13px;border-color:var(--line);font-weight:600;color:var(--muted);background:var(--card)}
+.vtabs>input:checked+label{background:var(--text);border-color:var(--text);color:var(--bg)}
+
+/* horizontal bars (.hbars everywhere: cards, rankings, hubs, guides): 8px, square at the start, a 4px round end, no track;
+   the figure in secondary ink beside the name, the first row's in ink */
+.hbars .hb,.pic .hbars .hb,.pic .hbars>div .hb,.hubgrid .hbars .hb,main.kw .hbars.chart .hb,.guide .hbars.chart .hb{height:8px;background:none;border-radius:0;overflow:visible}
+.hbars .hb i,.pic .hbars .hb i,.pic .hbars>div .hb i,.hubgrid .hbars .hb i,main.kw .hbars.chart .hb i,.guide .hbars.chart .hb i,main.rbp #rb-demand .hbars .hb i{display:block;height:100%;min-width:3px;background:var(--viz-1);border-radius:0 4px 4px 0;transition:opacity .16s ease}
+.hbars .hc,.pic .hbars .hc,.hubgrid .hbars .hc,main.kw .hbars.chart .hc{color:var(--muted);font:500 13px/1.3 var(--mono);font-variant-numeric:tabular-nums}
+.hbars>:first-child .hc,.pic .hbars>:first-child .hc,.hubgrid .hbars>:first-child .hc{color:var(--text);font-weight:650}
+.pic .hbars{gap:6px}
+.pic .hbars a,.pic .hbars>div{gap:6px 12px;padding:6px 8px;margin:0 -8px;border-radius:10px}
+@media(hover:hover){.hbars:has(>:hover)>:not(:hover) .hb i{opacity:.35}}
+.hbars a:focus-visible{outline:2px solid var(--viz-1);outline-offset:1px;border-radius:10px}
+
+/* the three numbers (stat tiles with a meter): one list divided by hairlines instead of three grey boxes */
+.stats3:not(.st4){gap:0}
+.stats3:not(.st4) .st{padding:14px 0 15px;border:0;border-top:1px solid var(--line);border-radius:0;background:none;gap:6px 12px}
+.stats3:not(.st4) .st:first-child{border-top:0;padding-top:2px}
+.stats3:not(.st4) .st-v{font-weight:650;font-size:28px;letter-spacing:-.03em}
+.st-m{height:6px;border-radius:999px;background:var(--viz-soft)}
+.st-m i{border-radius:999px;background:var(--viz-1)}
+.stats3:not(.st4) .st-s{font-size:12px;color:var(--faint)}
+
+/* the vertical bars of the explorer and the sparkline: the same marks */
+.exh{gap:2px;border-bottom-color:var(--viz-axis)}
+.exh i{position:relative;border-radius:4px 4px 0 0;background:var(--viz-1);transition:opacity .16s ease}.exh i.hi{background:var(--viz-2)}
+.exh i::before{content:"";position:absolute;left:-1px;right:-1px;bottom:0;height:150px}      /* the whole column is the target, not only the bar */
+@media(hover:hover){.exh:has(>i:hover)>i:not(:hover){opacity:.35}}
+.spark i{border-radius:2px 2px 0 0;background:var(--viz-1)}
+.rep-skr i{height:8px;border-radius:0 4px 4px 0;background:var(--viz-1)}
+
+/* bars inside tables (median salary): thinner, from a square start; the figure stays the cell's text */
+span.bar,td.salbar .bar,main.sal td.salbar .bar{height:6px;border-radius:0;background:none;overflow:visible}
+span.bar i,td.salbar .bar i{min-width:3px;border-radius:0 4px 4px 0;background:var(--viz-1);transition:opacity .16s ease}
+@media(hover:hover){table:has(td:hover>span.bar) td:not(:hover)>span.bar i{opacity:.35}}
+
+/* a range on a scale (pay on the job page, pay by field on a company page): a hairline scale, the range in green,
+   the median as an ink tick with a bigger invisible target */
+.pb-t,.jdec .pb-t{height:8px;margin-bottom:27px;border-radius:999px;background:var(--bg2);box-shadow:inset 0 0 0 1px var(--viz-grid)}
+.pb-t i,.jdec .pb-t i{border-radius:999px;background:var(--viz-1)}
+.pb-t u{top:-6px;bottom:-6px;width:2px;margin-left:-1px;border-radius:1px;background:var(--text)}
+.pb-t i::before,.prange i::before{content:"";position:absolute;left:0;right:0;top:-9px;bottom:-9px}
+.pb-t u::before,.prange b::before{content:"";position:absolute;top:-6px;bottom:-6px;left:-11px;right:-11px}
+.pb-m{position:absolute;top:calc(100% + 7px);transform:translateX(-50%);font:500 11px/1 var(--mono);font-style:normal;color:var(--muted);white-space:nowrap;pointer-events:none}
+.pb-m.l{transform:translateX(-4px)}.pb-m.r{transform:translateX(calc(-100% + 4px))}
+.prange{height:8px;border-radius:999px;background:var(--bg2);box-shadow:inset 0 0 0 1px var(--viz-grid)}
+.prange i{border-radius:999px;background:var(--viz-1)}
+.prange b{top:-4px;height:16px;width:2px;margin-left:-1px;border-radius:1px;background:var(--text)}
+
+/* head to head (skills, jobs, companies): two series, green and blue (validated as a pair in both modes); each name in the
+   heading is underlined in its colour, so the colour is never the only sign; bars grow from the middle, rounded at the far end */
+.vsr .va i,main.hub .vsr .va i{background:var(--viz-1);border-radius:4px 0 0 4px}
+.vsr .vb i,main.hub .vsr .vb i{background:var(--viz-b);border-radius:0 4px 4px 0}
+.vsr i,main.hub .vsr i{height:10px}
+.vsr b{font-weight:600;font-variant-numeric:tabular-nums}
+.vsh a:first-child b,main.hub .vsh a:first-child b{text-decoration-color:var(--viz-1)}
+.vsh a:last-child b,main.hub .vsh a:last-child b{text-decoration-color:var(--viz-b)}
+@media(hover:hover){.vs:has(.va:hover,.vb:hover) :is(.va,.vb):not(:hover) i{opacity:.35}}
+.vsr .va,.vsr .vb{cursor:default}
+
+/* the tooltip: the figure first and strong, a short stroke in the mark's colour, the label under it in secondary ink */
+.vtip{position:fixed;z-index:90;left:0;top:0;max-width:min(280px,calc(100vw - 16px));padding:8px 12px 9px;border:1px solid var(--viz-tip-line);border-radius:10px;
+  background:var(--viz-tip);box-shadow:0 12px 28px -12px rgba(14,14,12,.30),0 2px 6px rgba(14,14,12,.06);font:500 12.5px/1.4 var(--mono);color:var(--muted);
+  pointer-events:none;opacity:0;transition:opacity .12s ease}
+.vtip.on{opacity:1}
+.vtip b{display:flex;align-items:center;gap:8px;font:650 14px/1.3 var(--mono);color:var(--text);font-variant-numeric:tabular-nums}
+.vtip b::before{content:"";flex:none;width:12px;height:3px;border-radius:2px;background:var(--k,var(--viz-1))}
+.vtip span,.vtip em{display:block;margin:2px 0 0 20px;font-style:normal}
+.vtip em{color:var(--faint)}
+@media (prefers-reduced-motion:reduce){.vtip,.vc-c i,.hbars .hb i,span.bar i{transition:none}}
+@media (forced-colors:active){.vc-c i,.hbars .hb i,span.bar i,.st-m i,.pb-t i,.prange i,.vsr i{background:CanvasText;forced-color-adjust:none}}
