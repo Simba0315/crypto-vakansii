@@ -8,7 +8,13 @@
      away ("Hiring?" / "Looking for a job?") and a link to one of its parts (#post, #resumes) switches by itself;
    - every part opens with a small label and a two-weight headline, has one main button, and says in one sentence what to do when it is empty;
    - a mistake is said next to the field it belongs to (check for what the browser can tell, ERR_FIELD for what the server answers);
-   - the header (site.js) is told whenever the sign-in or the side changes: the event "hrn:auth" on document. */
+   - the header (site.js) is told whenever the sign-in or the side changes: the event "hrn:auth" on document.
+   Pass of 25 Nov 2026 (PLAN_RU.md part 2, items 1, 2, 4, 9, 10, and the look of dlocal.com and ashbyhq.com): one framed panel per section
+   (part), icons in the menu, a pill with an arrow for the main action (go); a job seeker's status for employers, "Who sees you" (who can
+   find the resume, its own link, the companies it is hidden from, who opened it), a payment link for whoever pays (#invoice=), a shared
+   resume (#cv=), two-step sign-in and the password changed with the old one. Each new part is drawn only when the server's answer
+   carries its new field (pub.pay_links, me.seeking, me.two_step, me.has_password, profile.visibility, profile.viewers, order.can_share),
+   so the page keeps working unchanged with a server that does not have them yet. */
 (function () {
   var root = document.getElementById('acc');
   if (!root || !window.HRN) return;
@@ -16,7 +22,7 @@
   var D = JSON.parse(document.getElementById('acc-data').textContent);
   var hd = document.getElementById('acc-hd');                       // the page's own title and lead: read without JavaScript and while it loads
   var token = H.get('hrn_token', ''), me = null, pub = { products: [], payments: 'off' }, products = {}, S = {}, notice = '', noticeBad = false, saidAt = 0, fresh = false, usedLink = false;
-  var promo = null, paintPost = null;                               // a promo code that was applied: { code, percent, quotes: { product id: { amount_usd, full_usd } } }
+  var promo = null, paintPost = null, shareOpen = '';                // shareOpen: the order whose payment link is open in Billing (kept across reloads of S)                               // a promo code that was applied: { code, percent, quotes: { product id: { amount_usd, full_usd } } }
   var ROLE = (function () { var q = ''; try { q = new URLSearchParams(location.search).get('as') || ''; } catch (e) {} return q === 'employer' || q === 'seeker' ? q : H.get('hrn_role', 'seeker'); })();
   if (ROLE !== 'employer') ROLE = 'seeker';
   H.set('hrn_role', ROLE);
@@ -91,7 +97,7 @@
   // what the server names in its answer, and the field that answer is about
   var ERR_FIELD = { email: 'email', exists: 'email', throwaway_email: 'email', free_mail: 'email', credentials: 'password', password: 'password', company: 'company', company_taken: 'company', listed: 'company', not_listed: 'company',
     claimed: 'company', company_url: 'company_url', title: 'title', duplicate: 'title', already_listed: 'title', apply_url: 'apply_url', description: 'description', domain: 'domain', cat: 'cat', freq: 'freq', loc: 'loc',
-    confirm: 'confirm', consent: 'consent', message: 'message', name: 'name' };
+    confirm: 'confirm', consent: 'consent', message: 'message', name: 'name', current: 'current', code: 'code', code_gone: 'code', blocked: 'blocked', job_url: 'job_url' };
   function oops(fieldName, msg) { var e = new Error(msg); e.field = fieldName; return e; }
   // run an action from a form: check it, lock the button, and put the server's answer under the field it is about (or under the form)
   function submit(form, work) {
@@ -138,8 +144,23 @@
     return '<header class="acc-ph"><div><p class="acc-lbl">' + label + '</p><h1 class="acc-t">' + title + '</h1>' + (text ? '<p class="acc-sub">' + text + '</p>' : '') + '</div>' +
       (action ? '<div class="acc-pa">' + action + '</div>' : '') + '</header>';
   }
-  var part = function (title, inner, id) { return '<section class="acc-sec"' + (id ? ' id="acc-' + id + '"' : '') + '><h2 class="acc-h2">' + title + '</h2>' + inner + '</section>'; };
-  var empty = function (title, text, action) { return '<div class="acc-none"><p><b>' + title + '</b>' + text + '</p>' + (action || '') + '</div>'; };
+  // one framed panel per section (pass of 25 Nov 2026): a small label above a headline in two weights, then what the section holds
+  var part = function (title, inner, id, label, cls) {
+    return '<section class="acc-sec acc-pan' + (cls ? ' ' + cls : '') + '"' + (id ? ' id="acc-' + id + '"' : '') + '>' + (label ? '<p class="acc-lbl sm">' + label + '</p>' : '') + '<h2 class="acc-h2">' + title + '</h2>' + inner + '</section>';
+  };
+  /* small line icons for the menu and the empty states (24 px grid, drawn with the text colour) */
+  var IC = { overview: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z', saved: 'M6 3h12v18l-6-4-6 4z', resumes: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6',
+    alerts: 'M6 16v-5a6 6 0 0 1 12 0v5l2 2H4zM10 21h4', visibility: 'M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z',
+    settings: 'M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1M15 5v4M9 10v4M17 15v4', jobs: 'M3 8h18v12H3zM8 8V5h8v3M3 13h18', post: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 8v8M8 12h8',
+    promote: 'M3 17l6-6 4 4 8-8M15 7h6v6', credits: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM9.5 15c.5 1 1.5 1.5 2.5 1.5 1.7 0 2.8-.9 2.8-2.2 0-3-5.6-1.6-5.6-4.6C9.2 8.4 10.3 7.5 12 7.5c1 0 2 .5 2.5 1.5M12 6v1.5M12 16.5V18',
+    company: 'M4 21V5l8-2v18M12 9h8v12M3 21h18M8 8v.01M8 12v.01M8 16v.01M16 13v.01M16 17v.01', team: 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a7 7 0 0 1 14 0v1M16 3.6a4 4 0 0 1 0 7.8M22 21v-1a7 7 0 0 0-4-6.3',
+    find: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4', billing: 'M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h4', arrow: 'M5 12h14M13 6l6 6-6 6',
+    lock: 'M6 11h12v10H6zM8 11V8a4 4 0 0 1 8 0v3', link: 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1', mail: 'M3 6h18v12H3zM3 7l9 6 9-6',
+    check: 'M5 12l4 4 10-10', shield: 'M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z' };
+  var icon = function (k, cls) { return '<svg class="ic' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="' + (IC[k] || IC.overview) + '"/></svg>'; };
+  // the one main action of a block: a pill with an arrow in a circle (DESIGN_STUDY.md, "dLocal and Ashby", 6)
+  var go = function (href, label, ghost) { return '<a class="btn ' + (ghost ? 'ghost' : 'primary') + ' acc-go" href="' + href + '">' + label + '<span class="acc-arr">' + icon('arrow') + '</span></a>'; };
+  var empty = function (title, text, action, ic) { return '<div class="acc-none">' + (ic ? '<span class="acc-none-i">' + icon(ic) + '</span>' : '') + '<p><b>' + title + '</b>' + text + '</p>' + (action || '') + '</div>'; };
   var callout = function (text, action, cls) { return '<div class="acc-call' + (cls ? ' ' + cls : '') + '"><p>' + text + '</p>' + (action || '') + '</div>'; };
   var fileBtn = function (name, accept, label) {
     return '<span class="acc-file"><label class="btn ghost sm">' + label + '<input type="file" name="' + name + '" accept="' + accept + '"></label><span class="acc-file-n">No file chosen</span></span>';
@@ -188,7 +209,10 @@
         '<p class="acc-alt">' + (up ? 'Free. No card, no phone number. We send one link to confirm the address. <a href="' + esc(D.site) + '/privacy/">What we keep and why</a>' : (pub.email_link === 'on' ? '<a href="#" data-mode="link">Email me a sign-in link</a> · ' : '') + '<a href="#" data-mode="forgot">Forgot the password?</a>') + '</p></div>' +
         '<ul class="acc-why">' + why.map(function (x) { return '<li><b>' + x[0] + '</b><span>' + x[1] + '</span></li>'; }).join('') + '</ul></div>';
       submit(root.querySelector('form'), function (v) {
-        return api('POST', up ? '/api/auth/signup' : '/api/auth/login', v).then(function (r) { token = r.token; H.set('hrn_token', token); fresh = !up; flash(''); return load(); });
+        return api('POST', up ? '/api/auth/signup' : '/api/auth/login', v).then(function (r) {
+          if (r.step === 'code') return drawCode(v, r);            // two-step sign-in: the password was right, the code from the mail comes next
+          token = r.token; H.set('hrn_token', token); fresh = !up; flash(''); return load();
+        });
       });
       var li = document.getElementById('acc-li');
       if (li) li.addEventListener('click', function () {
@@ -203,6 +227,36 @@
     }
     Array.prototype.forEach.call(root.querySelectorAll('[data-mode]'), function (t) { t.addEventListener('click', function (ev) { ev.preventDefault(); drawAuth(t.getAttribute('data-mode')); }); });
     Array.prototype.forEach.call(root.querySelectorAll('[data-role]'), function (t) { t.addEventListener('click', function () { setRole(t.getAttribute('data-role')); drawAuth(mode === 'forgot' || mode === 'link' ? 'in' : mode); }); });
+  }
+  /* two-step sign-in, the second step: the six digits from the letter. The email and password stay in this function only, for
+     "Send a new code" (which signs in again), and are dropped as soon as the code is accepted. */
+  function drawCode(cred, r) {
+    if (hd) hd.hidden = true;
+    var ticket = r.ticket;
+    root.innerHTML = '<div class="acc-gate one"><div class="card acc-auth"><p class="acc-lbl"><i></i>Two-step sign-in</p><h1 class="acc-t sm">Type the <b>code from your email</b></h1>' +
+      '<p class="acc-sub" id="code-said">' + esc(r.message || 'We sent a code of six digits to your address.') + ' It works for ' + (r.minutes || 10) + ' minutes.</p><form novalidate>' +
+      field('Code', 'code', 'type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="7" required data-need="Type the six digits from the letter." placeholder="000000" class="acc-code"',
+        r.code ? 'Test mode, no mailbox on this machine: the code is ' + esc(r.code) + '.' : 'The newest letter has the code that works. Check the spam folder too.') +
+      err + '<button class="btn primary lg wide" type="submit">Sign in</button></form>' +
+      '<p class="acc-alt"><a href="#" id="code-again">Send a new code</a> · <a href="#" data-mode="in">Back to sign in</a></p></div></div>';
+    var form = root.querySelector('form');
+    try { form.elements.code.focus(); } catch (e) {}
+    submit(form, function (v) {
+      return api('POST', '/api/auth/login/code', { ticket: ticket, code: v.code }).then(function (x) { cred = null; token = x.token; H.set('hrn_token', token); fresh = true; flash(''); return load(); }, function (e) {
+        if (e.code === 'code_gone') { cred = null; flash(esc(e.message), true); drawAuth('in'); e.gone = true; }
+        throw e;
+      });
+    });
+    document.getElementById('code-again').addEventListener('click', function (ev) {
+      ev.preventDefault(); if (!cred) return drawAuth('in');
+      api('POST', '/api/auth/login', cred).then(function (x) {
+        if (x.step !== 'code') { token = x.token; H.set('hrn_token', token); fresh = true; return load(); }
+        ticket = x.ticket; document.getElementById('code-said').textContent = 'A new code is on its way to ' + x.sent_to + '. Only the newest one works.';
+        var h = form.querySelector('.hint'); if (h && x.code) h.textContent = 'Test mode, no mailbox on this machine: the code is ' + x.code + '.';
+      }, function (e) { authSay(e.message); });
+    });
+    Array.prototype.forEach.call(root.querySelectorAll('[data-mode]'), function (t) { t.addEventListener('click', function (ev) { ev.preventDefault(); cred = null; drawAuth('in'); }); });
+    window.scrollTo(0, 0);
   }
   function authSay(msg) { var box = root.querySelector('.acc-auth .acc-err'); if (box) { box.textContent = msg; box.hidden = false; } }
   function drawReset(resetToken) {
@@ -251,6 +305,7 @@
       told();
       autoSync();
       draw();
+      if (afterAuth) { var back = afterAuth; afterAuth = ''; location.hash = back; }
     });
   }
 
@@ -311,19 +366,33 @@
       else if (S.claims.some(function (c) { return c.status === 'verified' && c.page && !c.page.logo && !c.page.about; })) steps.push(['Add your logo and a few lines about the company', 'They show on your company page and next to your jobs.', '#company']);
     } else {
       var t = tally(), nres = S.resumes ? S.resumes.resumes.length : 0;
-      (S.incoming || []).forEach(function (q) { if (q.status === 'sent') up('warn', '<b>' + esc(q.company) + '</b> asked to contact you about a job.', '#talent', 'Answer'); });
+      (S.incoming || []).forEach(function (q) { if (q.status === 'sent') up('warn', '<b>' + esc(q.company) + '</b> asked to contact you about a job.', '#visibility', 'Answer'); });
+      var tp = S.talent && S.talent.profile;
+      if (tp && tp.views && tp.views.companies) up('ok', '<b>' + tp.views.companies + plural(tp.views.companies, ' company', ' companies') + '</b> opened your resume' + (tp.viewers && tp.viewers[0] ? ', the latest ' + esc(tp.viewers[0].company) + ' on ' + nice(tp.viewers[0].last) : '') + '.', '#visibility', 'See who');
       row = nums([[t.saved, plural(t.saved, 'saved job', 'saved jobs'), '#saved'], [t.applied, plural(t.applied, 'application', 'applications'), '#saved'], [nres, plural(nres, 'resume', 'resumes'), '#resumes'], [S.alerts.length, plural(S.alerts.length, 'job alert', 'job alerts'), '#alerts']]);
       if (!nres) steps.push(['Keep your resume here', 'Make it in the free builder, then press “Save to my account”.', '#resumes']);
       if (!S.alerts.length) steps.push(['Get new jobs by email', 'Choose the words and how often. One click stops it.', '#alerts']);
       if (!t.saved && !t.applied) steps.push(['Save the jobs you like', 'Press Save on a job: it is here and on your phone too.', esc(D.site) + '/jobs/']);
-      if (pub.talent === 'on' && S.talent && !S.talent.profile) steps.push(['Let employers find you', 'Only if you tick the box. Your name and contacts stay hidden until you accept a request.', '#talent']);
+      if (pub.talent === 'on' && S.talent && !S.talent.profile) steps.push(['Let employers find you', 'Only if you tick the box. Your name and contacts stay hidden until you accept a request.', '#visibility']);
       setTimeout(fillFit, 0);
     }
-    return head(emp ? 'Employer account' : 'Job seeker account', emp ? 'Your hiring <b>at a glance</b>' : 'Your job search <b>at a glance</b>', '',
-        emp ? '<a class="btn primary" href="#post">Post a job</a>' : '<a class="btn primary" href="' + esc(D.site) + '/jobs/">Search jobs</a>') +
-      (ups.length ? '<ul class="acc-ups">' + ups.slice(0, 12).join('') + '</ul>' : '') + row +
-      (steps.length ? part('Next steps', '<ul class="acc-steps">' + steps.map(function (x) { return '<li><a href="' + x[2] + '"><b>' + x[0] + '</b><span>' + x[1] + '</span></a></li>'; }).join('') + '</ul>') : '') +
+    // one framed panel on top: who, the headline, the main button, the person's own figures in a row (and a job seeker's status)
+    return '<div class="acc-hero">' + head(emp ? 'Employer account' : 'Job seeker account', emp ? 'Your hiring <b>at a glance</b>' : 'Your job search <b>at a glance</b>', '',
+        emp ? go('#post', 'Post a job') : go(esc(D.site) + '/jobs/', 'Search jobs')) + (emp ? '' : seekPick()) + row + '</div>' +
+      (ups.length ? part('What needs <b>you</b>', '<ul class="acc-ups">' + ups.slice(0, 12).join('') + '</ul>', 'ups', 'Now') : '') +
+      (steps.length ? part('Next <b>steps</b>', '<ul class="acc-steps">' + steps.map(function (x) { return '<li><a href="' + x[2] + '"><b>' + x[0] + '</b><span>' + x[1] + '</span><i class="acc-arr">' + icon('arrow') + '</i></a></li>'; }).join('') + '</ul>', '', 'To do') : '') +
       (emp ? '' : '<div id="acc-fit" hidden></div>');
+  }
+  /* the job seeker's status for employers (LinkedIn's "Open to work", hh.ru's "ищу работу"): only with a server that keeps it (me.seeking)
+     and the resume database on, because only employers who search the database see it */
+  var SEEK = [['active', 'Looking actively'], ['open', 'Open to offers'], ['not', 'Not looking']];
+  function seekPick(plain) {
+    if (me.seeking === undefined || pub.talent !== 'on') return '';
+    var on_ = S.talent && S.talent.profile;
+    return '<div class="acc-seek' + (plain ? ' inset' : '') + '">' + (plain ? '' : '<p class="acc-seek-l">' + icon('visibility') + '<span>Your status for employers</span></p>') + '<div class="acc-pills" role="group" aria-label="Your status for employers">' + SEEK.map(function (x) {
+      return '<button type="button" class="acc-pill" data-seek="' + x[0] + '" aria-pressed="' + (me.seeking === x[0]) + '">' + (me.seeking === x[0] ? icon('check') : '') + x[1] + '</button>'; }).join('') + '</div>' +
+      '<p class="acc-seek-n">' + (on_ ? (me.seeking ? 'Shown on your resume to employers who search the resume database' + (me.seeking_since ? ', since ' + nice(me.seeking_since) : '') + '. Press it again to hide it.' : 'Not said. Employers who search the resume database see it on your resume once you choose.')
+        : 'Employers see it once you <a href="#visibility">let them find your resume</a>.') + '</p></div>';
   }
   /* Jobs that fit you, in the job seeker's overview (plan, part 2 item 3, 20 Nov 2026: other sites show matches in the account; ours did
      not). From the answers given on For you, kept in this browser, matched against today's open jobs here: nothing is sent anywhere. */
@@ -331,15 +400,15 @@
     var box = document.getElementById('acc-fit'); if (!box) return;
     var p = H.get('hrn_profile', null) || {}, cats = p.cats || [], skills = p.skills || [], pay = Number(p.pay) || 0;
     if (!cats.length && !skills.length && !p.where && !pay) {
-      box.innerHTML = part('Jobs that fit you', '<p class="acc-sub">Answer five questions on <a href="' + esc(D.site) + '/for-you/">For you</a>: the newest jobs that fit your answers then show here.</p>');
+      box.innerHTML = part('Jobs that <b>fit you</b>', '<p class="acc-sub">Answer five questions on <a href="' + esc(D.site) + '/for-you/">For you</a>: the newest jobs that fit your answers then show here.</p>', '', 'For you');
       box.hidden = false; return;
     }
     H.listOf(H.fitQuery(p)).then(function (got) {      // asked of the server (the list of every job, 22 MB, was downloaded for this until 25 Nov 2026)
       var fit = got.rows.slice().sort(function (a, b) { return (b[16] || 0) - (a[16] || 0); });
-      box.innerHTML = part('Jobs that fit you', fit.length
+      box.innerHTML = part('Jobs that <b>fit you</b>', fit.length
         ? '<p class="acc-sub">' + got.total.toLocaleString('en-US') + ' open jobs fit your answers on For you. The newest:</p><ul class="jobs">' + fit.slice(0, 5).map(function (j) { return H.card(j); }).join('') + '</ul>' +
           '<p><a href="' + esc(D.site) + '/for-you/">See all of them, or change your answers</a></p>'
-        : '<p class="acc-sub">No open job fits all your answers today. <a href="' + esc(D.site) + '/for-you/">Loosen one of them on For you</a>.</p>');
+        : '<p class="acc-sub">No open job fits all your answers today. <a href="' + esc(D.site) + '/for-you/">Loosen one of them on For you</a>.</p>', '', 'For you');
       box.hidden = false;
       if (H.decorate) H.decorate(box);
     }).catch(function () {});
@@ -352,7 +421,7 @@
         any ? '<a class="btn primary" href="' + esc(D.site) + '/my-jobs/">Open My jobs</a>' : '') +
       (any ? nums([[t.saved, plural(t.saved, 'saved job', 'saved jobs'), esc(D.site) + '/my-jobs/'], [t.applied, plural(t.applied, 'application', 'applications'), esc(D.site) + '/my-jobs/'],
           [t.searches, plural(t.searches, 'saved search', 'saved searches'), esc(D.site) + '/my-jobs/'], [t.follows, plural(t.follows, 'company followed', 'companies followed'), esc(D.site) + '/my-jobs/']])
-        : empty('Nothing saved yet.', ' Press Save on any job, or mark it as applied: it shows here and in every browser where you sign in.', '<a class="btn primary" href="' + esc(D.site) + '/jobs/">Search jobs</a>')) +
+        : empty('Nothing saved yet.', ' Press Save on any job, or mark it as applied: it shows here and in every browser where you sign in.', go(esc(D.site) + '/jobs/', 'Search jobs'), 'saved')) +
       (me.confirmed ? '<p class="acc-synced"><b>Synced on all your devices.</b> ' + (synced ? 'Last change kept ' + nice(synced) + '.' : 'Nothing to keep yet.') + '</p>' +
         '<details class="acc-more"><summary>Sync by hand</summary><p class="note">The lists merge by themselves each time you open this page. These two buttons are for the rare case when one browser has the wrong copy.</p>' +
         '<p class="acc-btns"><button class="btn ghost sm" type="button" id="sync-up">Copy this browser’s lists to my account</button> <button class="btn ghost sm" type="button" id="sync-down">Replace this browser’s lists with my account’s</button></p></details>'
@@ -364,40 +433,84 @@
     var save = !me.confirmed ? '' : local ? '<form id="res-save" class="card acc-inline" novalidate><p class="acc-inline-t"><b>The resume in the builder on this device</b>' + (local.title || local.name ? ': ' + esc(local.title || local.name) : '') + '. ' + (n ? 'Save it as a new version whenever you change it.' : 'It is not in your account yet.') + '</p>' +
       field('Name for this version', 'name', 'type="text" maxlength="60" value="' + esc(String(local.title || 'Resume').slice(0, 40)) + ' · ' + new Date().toISOString().slice(0, 10) + '"') + err +
       '<button class="btn' + (n ? ' ghost' : ' primary') + '" type="submit">' + (n ? 'Save as a new version' : 'Save it to my account') + '</button></form>' : '';
-    var list = n ? '<div class="acc-list">' + R.resumes.map(function (r) {
+    var list = n ? part('Saved <b>versions</b>', '<div class="acc-list">' + R.resumes.map(function (r) {
       return '<div class="acc-row"><span class="rs-i" aria-hidden="true">CV</span><div class="main"><strong>' + esc(r.name) + '</strong><span class="js">' + (r.title ? esc(r.title) + ' · ' : '') + 'updated ' + nice(r.updated) + '</span></div>' +
         '<div class="ctl"><button class="btn ghost sm" type="button" data-res-open="' + esc(r.id) + '">Open in the builder</button><button class="btn ghost sm" type="button" data-res-del="' + esc(r.id) + '">Delete</button></div></div>';
-    }).join('') + '</div>' : '';
+    }).join('') + '</div>', 'versions', n + ' of ' + R.max) : '';
     var none = n ? '' : !me.confirmed ? confirmLine('Your resumes are kept here') : local ? '' :
-      empty('No resume yet.', ' Make one in the free builder, then press “Save to my account” there: it is kept here and opens on any device.', builder);
+      empty('No resume yet.', ' Make one in the free builder, then press “Save to my account” there: it is kept here and opens on any device.', builder, 'resumes');
+    var t = pub.talent === 'on' && S.talent ? S.talent.profile : undefined;
+    var forEmp = t === undefined ? '' : callout(t ? '<b>Employers ' + (t.paused ? 'cannot find your resume now' : t.visibility === 'link' ? 'see your resume only by its link' : 'can find your resume') + '.</b> Who sees it, who looked, and the companies it is hidden from: on Who sees you.'
+      : '<b>Employers cannot find you yet.</b> Let them find your resume without your name and contacts: you decide who sees it.', '<a class="btn ghost sm" href="#visibility">Who sees you</a>', 'soft');
     return head('Resumes', 'Your <b>resumes</b>', 'Up to ' + R.max + ' versions, one for each kind of job you apply for. Open any of them in the builder on any device.', n || local || !me.confirmed ? builder : '') +
-      save + list + none + talentPart();
+      save + list + none + forEmp;
   }
-  // the resume employers can find: off until the person ticks the box, and then without a name or contacts until they accept a request
-  function talentPart() {
+  /* ---------- job seeker: who sees the resume (PLAN_RU.md part 2, items 1, 2, 4; pass of 25 Nov 2026). The status for employers, who can
+     find it (everyone who searches, only by its link, nobody), the companies it is hidden from, who opened it, the requests, and the
+     resume as employers see it. Each part that needs the server of 25 Nov 2026 shows only when its answer carries the new field. ---------- */
+  var SEEKN = { active: 'Looking actively', open: 'Open to offers', not: 'Not looking' };
+  var ASKED = { sent: 'Waiting for their answer', accepted: 'Accepted', declined: 'Declined', expired: 'No answer in 14 days' };
+  var cap = function (x) { return String(x || '').charAt(0).toUpperCase() + String(x || '').slice(1); };
+  var placeName = function (p) { return p === 'remote' ? 'Remote' : String(p).split('-').map(function (w) { return w.length <= 2 ? w.toUpperCase() : cap(w); }).join(' '); };
+  function cvCard(c, full) {
+    var meta = [c.level ? cap(c.level) : '', c.years ? c.years + plural(c.years, ' year', ' years') : '', (c.places || []).map(placeName).join(', ')].filter(Boolean).join(' · ');
+    var ini = c.name ? c.name.split(/\s+/).map(function (w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase() : '';
+    return '<article class="acc-cv"><header class="acc-cv-h"><span class="acc-cv-av">' + (ini ? esc(ini) : icon('lock')) + '</span><div class="acc-cv-t"><h3>' + esc(c.name || c.headline || 'Candidate') + '</h3>' +
+      '<p>' + (c.name && c.headline ? esc(c.headline) + (meta ? ' · ' : '') : '') + esc(meta) + '</p></div>' + (c.seeking ? '<span class="acc-badge s-' + esc(c.seeking) + '">' + SEEKN[c.seeking] + '</span>' : '') + '</header>' +
+      ((c.skills || []).length ? '<ul class="acc-tags">' + c.skills.slice(0, 18).map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : '') +
+      (full ? (c.summary ? '<p class="acc-cv-sum">' + esc(c.summary) + '</p>' : '') +
+        ((c.experience || []).length ? '<h4>Experience</h4><ul class="acc-cv-x">' + c.experience.map(function (x) {
+          return '<li><b>' + esc(x.role || 'Role') + '</b>' + (x.org ? ' · ' + esc(x.org) : '') + (x.dates ? '<span>' + esc(x.dates) + '</span>' : '') + (x.text ? '<p>' + esc(x.text) + '</p>' : '') + '</li>'; }).join('') + '</ul>' : '') +
+        ((c.education || []).length ? '<h4>Education</h4><ul class="acc-cv-x">' + c.education.map(function (x) {
+          return '<li><b>' + esc(x.what || '') + '</b>' + (x.org ? ' · ' + esc(x.org) : '') + (x.dates ? '<span>' + esc(x.dates) + '</span>' : '') + '</li>'; }).join('') + '</ul>' : '') : '') + '</article>';
+  }
+  function visibilityPanel() {
     if (!(pub.talent === 'on' && S.talent)) return '';
-    var t = S.talent.profile, local = H.get('hrn_resume', null), inner;
-    if (!t) {
-      inner = !local ? '<p class="acc-quiet">Off. Make your resume in the builder first; then you can switch this on here.</p>' :
-        '<details class="acc-fold"><summary><b>Off.</b> Employers cannot see your resume. <span class="acc-fold-a">Set it up</span></summary>' +
-        '<form id="talent-on" novalidate><p>Your resume stays in this browser unless you tick the box below. Employers then see it without your name, email, phone or links, and get your name and contact details only if you accept their request.</p>' +
-        '<label class="check"><input type="checkbox" name="consent" required data-need="Tick the box first: nothing is stored without it."> <span>' + esc(S.talent.consent_text) + '</span></label>' + talentFields(null) + err +
-        '<p class="acc-btns"><button class="btn primary" type="submit">Let employers find my resume</button></p></form></details>';
-    } else {
-      inner = '<div class="acc-fold open"><p class="acc-fold-h"><b>' + (t.paused ? 'Paused: employers cannot find it.' : 'On: employers can find your resume.') + '</b> Since ' + nice(t.consented) + ', updated ' + nice(t.updated) + '.</p>' +
-        '<p class="note">Employers see: ' + esc(t.as_employers_see.headline || 'your headline') + ' · ' + esc(t.as_employers_see.skills.slice(0, 8).join(', ')) + (t.as_employers_see.name ? ' · ' + esc(t.as_employers_see.name) : ' · no name') + '.</p>' +
-        '<p class="acc-btns">' + (local ? '<button class="btn ghost sm" type="button" id="talent-update">Update it with my current resume</button>' : '') +
-        '<button class="btn ghost sm" type="button" id="talent-pause">' + (t.paused ? 'Show it again' : 'Pause') + '</button><button class="btn ghost sm" type="button" id="talent-del">Delete it for good</button></p>' +
-        '<details class="acc-more"><summary>Change who finds it and what they see</summary><form id="talent-set" novalidate>' + talentFields(t) + err +
-        '<p class="acc-btns"><button class="btn ghost" type="submit">Save these settings</button></p></form></details></div>';
-    }
-    if (S.incoming.length) inner += '<h3 class="acc-h3">Employers who asked to contact you</h3><div class="acc-list">' + S.incoming.map(function (q) {
+    var t = S.talent.profile, local = H.get('hrn_resume', null);
+    var top = head('Who sees you', 'Who <b>sees your resume</b>', 'Employers with a proved company account search the resume database. You decide if you are in it and who may see you, and you see who looked.');
+    var how = '<ol class="acc-how"><li><b>You switch it on.</b> Your resume is kept on our server only after you tick the box.</li><li><b>Employers find it without your name.</b> No email, phone or links; you can hide it from your own employer.</li>' +
+      '<li><b>You accept, or not.</b> An employer gets your name and contacts only when you accept its request.</li></ol>';
+    if (!t) return top + (!local ? part('Make your resume <b>first</b>', how + '<p class="acc-sub">Employers can find you only by a resume. Make it in the free builder, then come back here to switch this on.</p><p class="acc-btns">' + go(esc(D.site) + '/resume/', 'Open the resume builder') + '</p>', 'talent', 'Off now')
+      : part('Let employers <b>find you</b>', how + (!me.confirmed ? confirmLine('You can switch this on') :
+        '<form id="talent-on" novalidate><label class="check acc-consent"><input type="checkbox" name="consent" required data-need="Tick the box first: nothing is stored without it."> <span>' + esc(S.talent.consent_text) + '</span></label>' +
+        '<details class="acc-more"><summary>Choose the kinds of work, the places and who never sees it (optional)</summary>' + talentFields(null, true) + '</details>' + err +
+        '<p class="acc-btns"><button class="btn primary" type="submit">Let employers find my resume</button></p></form>'), 'talent', 'Off now'));
+    var fresh2 = t.visibility !== undefined, mode = t.paused ? 'none' : t.visibility === 'link' ? 'link' : 'all';
+    var opt = function (c, ic, name, text) {
+      return '<label class="acc-opt"><input type="radio" name="vis" value="' + c + '"' + (mode === c ? ' checked' : '') + '><span class="acc-opt-i">' + icon(ic) + '</span><span class="acc-opt-t"><b>' + name + '</b>' + text + '</span></label>'; };
+    var share = t.share_url ? '<div class="acc-share"><p class="fld-l">' + icon('link') + 'Your resume’s own link</p><div class="acc-share-r"><input type="text" readonly value="' + esc(t.share_url) + '" aria-label="Your resume’s own link">' +
+      '<button class="btn sm" type="button" data-copy="' + esc(t.share_url) + '">Copy</button><a class="btn ghost sm" href="' + esc(t.share_url) + '" target="_blank" rel="noopener">Open</a></div>' +
+      '<p class="hint">It shows your resume without your name or contacts, ' + (mode === 'none' ? 'once you show it again.' : 'to anyone you send it to.') + ' <button class="linkbtn" type="button" id="cv-new">Make a new link</button> and the old one stops at once.</p></div>' : '';
+    var who = fresh2 ? '<div class="acc-opts" role="radiogroup" aria-label="Who can find your resume">' + opt('all', 'find', 'Employers who search', 'Companies with a proved account find it, without your name or contacts.') +
+        opt('link', 'link', 'Only people with the link', 'Not in search. You send its link to the employers you choose.') + opt('none', 'lock', 'Nobody for now', 'Paused: hidden everywhere and kept. Switch it back any time.') + '</div>' + share
+      : '<p class="acc-fold-h"><b>' + (t.paused ? 'Paused: employers cannot find it.' : 'On: employers can find your resume.') + '</b> Since ' + nice(t.consented) + ', updated ' + nice(t.updated) + '.</p>' +
+        '<p class="acc-btns"><button class="btn ghost sm" type="button" id="talent-pause">' + (t.paused ? 'Show it again' : 'Pause') + '</button></p>';
+    var bl = t.blocked || [];
+    var hidden = '<p class="acc-sub">Your current employer, say. They see your resume neither in search nor by its link: every account on that web address is left out.</p>' +
+      (bl.length ? '<ul class="acc-chips">' + bl.map(function (d) { return '<li>' + icon('lock') + '<span>' + esc(d) + '</span><button type="button" data-unblock="' + esc(d) + '" aria-label="Show it to ' + esc(d) + ' again" title="Show it to them again">×</button></li>'; }).join('') + '</ul>' : '') +
+      '<form id="block-add" class="acc-inline flat" novalidate>' + field('Company’s web address', 'blocked', 'type="text" autocomplete="off" placeholder="yourcompany.com" required data-need="Enter the company’s web address, like initech.com."') +
+      '<button class="btn ghost" type="submit">Hide it from them</button>' + err + '</form>';
+    var V = t.views, list = t.viewers || [];
+    var viewed = !V ? '' : part('Who <b>viewed it</b>', '<div class="acc-nums three"><div><b>' + V.companies + '</b><span>' + plural(V.companies, 'company opened it', 'companies opened it') + '</span></div>' +
+        '<div><b>' + V.shown_7 + '</b><span>times in search results, last 7 days</span></div><div><b>' + V.shown_30 + '</b><span>times in search results, last 30 days</span></div></div>' +
+      (list.length ? '<div class="acc-list">' + list.map(function (v) {
+        return '<div class="acc-row"><span class="acc-co" aria-hidden="true">' + esc(String(v.company || v.domain).charAt(0).toUpperCase()) + '</span><div class="main"><strong>' + esc(v.company || v.domain) + '</strong><span class="js">' + esc(v.domain) + ' · ' +
+          (v.via === 'link' ? 'by your link' : 'from search') + ' · ' + (v.times > 1 ? 'opened ' + v.times + ' times, last on ' : 'opened on ') + nice(v.last) + '</span></div>' +
+          (v.asked ? '<div class="ctl">' + state(v.asked, v.asked === 'sent' ? 'Asked to contact you' : '') + '</div>' : '') + '</div>'; }).join('') + '</div>'
+        : '<p class="acc-quiet">No company has opened your resume yet.' + (V.shown_7 ? ' It was among search results ' + V.shown_7 + plural(V.shown_7, ' time', ' times') + ' this week.' : '') + '</p>') +
+      '<p class="note">Each company that opens your resume is listed here, as on hh.ru and LinkedIn. It still has no name or contacts of yours until you accept its request.</p>', 'views', 'Views');
+    var req = S.incoming.length ? part('Employers who <b>asked to contact you</b>', '<div class="acc-list">' + S.incoming.map(function (q) {
       return '<div class="acc-row"><div class="main">' + state(q.status) + ' <strong>' + esc(q.company) + '</strong> <span class="js">' + esc(q.domain) + ' · ' + nice(q.received) + '</span><p class="acc-msg">' + esc(q.message) + '</p>' +
         (q.job_url ? '<a class="tt" href="' + esc(q.job_url) + '" rel="noopener">The job</a>' : '') + '</div><div class="ctl">' + (q.status === 'sent' ? '<button class="btn sm" type="button" data-q="accept" data-id="' + esc(q.id) + '">Accept</button><button class="btn ghost sm" type="button" data-q="decline" data-id="' + esc(q.id) + '">Decline</button>' : '') + '</div></div>';
-    }).join('') + '</div><p class="note">Accepting gives that employer your name and contact details. Declining, or not answering in 14 days, tells it nothing about you.</p>';
-    return part('Let employers find you', inner, 'talent');
+    }).join('') + '</div><p class="note">Accepting gives that employer your name and contact details. Declining, or not answering in 14 days, tells it nothing about you.</p>', 'requests', 'Requests') : '';
+    var preview = part('What employers <b>see</b>', cvCard(t.as_employers_see, true) +
+      '<p class="acc-btns">' + (local ? '<button class="btn ghost sm" type="button" id="talent-update">Update it with my current resume</button>' : '') + '<button class="btn ghost sm acc-del" type="button" id="talent-del">Delete it for good</button></p>' +
+      '<details class="acc-more"><summary>Change the kinds of work, places and what they see</summary><form id="talent-set" novalidate>' + talentFields(t, false) + err +
+      '<p class="acc-btns"><button class="btn ghost" type="submit">Save these settings</button></p></form></details>', 'preview', 'Your resume, as they see it');
+    var status = me.seeking !== undefined ? part('Your <b>status</b>', seekPick(true), 'status', 'Status') : '';
+    return top + status + part('Who can <b>find it</b>', who, 'who', 'Visibility') + viewed + req + part('Hidden from <b>these companies</b>', hidden, 'blocked', 'Never shown to') + preview;
   }
-  function talentFields(t) {
+  function talentFields(t, withBlocked) {
     var has = function (list, v) { return (list || []).indexOf(v) >= 0; };
     return '<div class="acc-two"><label class="fld"><span class="fld-l">Level</span><select name="level"><option value="">Not said</option>' + ['entry', 'mid', 'senior', 'lead'].map(function (l) {
       return '<option' + (t && t.level === l ? ' selected' : '') + '>' + l + '</option>'; }).join('') + '</select></label>' +
@@ -405,12 +518,12 @@
       '<fieldset class="fld acc-roles"><legend>Kinds of work to be found for (up to 5)</legend>' + D.categories.map(function (c) {
         return '<label><input type="checkbox" data-many name="roles" value="' + esc(c[0]) + '"' + (t && has(t.roles, c[0]) ? ' checked' : '') + '> ' + esc(c[1]) + '</label>'; }).join('') + '</fieldset>' +
       field('Places, as on the site (comma separated)', 'places', 'type="text" value="' + esc(t ? t.places.join(', ') : 'remote') + '" placeholder="remote, germany, london"', 'Place names from the locations pages, and “remote”.') +
-      field('Companies that must never see it', 'blocked', 'type="text" value="' + esc(t ? t.blocked.join(', ') : '') + '" placeholder="yourcurrentemployer.com"', 'Their web addresses, comma separated: your current employer, say.') +
+      (withBlocked ? field('Companies that must never see it', 'blocked', 'type="text" value="' + esc(t ? t.blocked.join(', ') : '') + '" placeholder="yourcurrentemployer.com"', 'Their web addresses, comma separated: your current employer, say.') : '') +
       '<label class="check"><input type="checkbox" name="show_name"' + (t && t.show_name ? ' checked' : '') + '> <span>Show my name before I accept a request</span></label>' +
       '<label class="check"><input type="checkbox" name="show_employers"' + (t && t.show_employers ? ' checked' : '') + '> <span>Show the names of my employers</span></label>';
   }
   var talentValues = function (v) { return { level: v.level, years: Number(v.years) || 0, roles: v.roles || [], places: v.places.split(/[\s,]+/).filter(Boolean).map(function (x) { return x.toLowerCase(); }),
-    blocked: v.blocked.split(/[\s,]+/).filter(Boolean), show_name: !!v.show_name, show_employers: !!v.show_employers }; };
+    blocked: v.blocked === undefined ? undefined : v.blocked.split(/[\s,]+/).filter(Boolean), show_name: !!v.show_name, show_employers: !!v.show_employers }; };
   var FREQ = [['daily', 'Once a day'], ['weekly', 'Once a week'], ['instant', 'Within the hour']];
   function alertsPanel() {
     var freq = function (cur, attr) { return '<select ' + attr + '>' + FREQ.map(function (f) { return '<option value="' + f[0] + '"' + (cur === f[0] ? ' selected' : '') + '>' + f[1] + '</option>'; }).join('') + '</select>'; };
@@ -429,7 +542,7 @@
         '<button class="btn ghost sm" type="button" data-alert-del="' + esc(a.id) + '">Delete</button></div></div>';
     }).join('') + '</div>' : '';
     return head('Job alerts', 'New jobs <b>by email</b>', 'Each alert is a search we run for you. It comes as often as you choose, and every letter has a one-click unsubscribe.') +
-      (S.alerts.length ? part('Your alerts', list) + form : (me.confirmed ? '<p class="acc-quiet"><b>No alerts yet.</b> Make the first one here, or search on the site and press “Free job alerts” under the results.</p>' : '') + form);
+      (S.alerts.length ? part('Your <b>alerts</b>', list, 'list', S.alerts.length + plural(S.alerts.length, ' alert', ' alerts')) + form : (me.confirmed ? empty('No alerts yet.', ' Make the first one below, or search on the site and press “Free job alerts” under the results.', '', 'alerts') : '') + form);
   }
 
   /* ---------- employer: your jobs with their status and numbers, posting, promotion, the company page, the team, resume search, billing ---------- */
@@ -466,9 +579,11 @@
         off ? '<button class="btn sm" type="button" data-act="renew" data-id="' + esc(j.id) + '">Publish again</button>' : '';
       if ((live || rev) && products.featured) acts += '<button class="btn ghost sm" type="button" data-promote="' + esc(j.id) + '">Promote</button>';
       acts += '<button class="btn ' + (rej ? '' : 'ghost ') + 'sm" type="button" data-job-edit="' + esc(j.id) + '" aria-expanded="false">' + (rej ? 'Edit and send again' : 'Edit') + '</button>';
-      if (live || rev) acts += '<button class="btn ghost sm" type="button" data-act="close" data-id="' + esc(j.id) + '">Close</button>';
-      acts += '<button class="btn ghost sm" type="button" data-job-copy="' + esc(j.id) + '">Post a similar job</button>';
-      acts += '<button class="btn ghost sm" type="button" data-job-del="' + esc(j.id) + '">Delete</button>';
+      // the rarer actions in a small menu, so a card shows two or three buttons instead of six (on a phone they took three rows)
+      acts += '<details class="acc-menu"><summary class="btn ghost sm" aria-label="More actions for ' + esc(j.title) + '">More</summary><div class="acc-menu-l">' +
+        (live || rev ? '<button type="button" data-act="close" data-id="' + esc(j.id) + '">Close the job</button>' : '') +
+        '<button type="button" data-job-copy="' + esc(j.id) + '">Post a similar job</button>' + (live ? '<a href="' + esc(D.site + j.page) + '">Open its page</a>' : '') +
+        '<button type="button" class="acc-del" data-job-del="' + esc(j.id) + '">Delete</button></div></details>';
       return '<article class="acc-job' + (rej ? ' bad' : '') + '"><div class="acc-job-h"><div>' + state(ending ? 'pending' : j.status, ending ? 'Ends soon' : '') + '<h2 class="acc-job-t">' +
         (live ? '<a href="' + esc(D.site + j.page) + '">' + esc(j.title) + '</a>' : esc(j.title)) + '</h2><p class="js">' + esc(j.company) + (j.location ? ' · ' + esc(j.location) : '') + (j.remote ? ' · Remote' : '') + ' · posted ' + nice(j.posted) + '</p></div>' +
         (live || j.views || j.applies ? '<div class="acc-job-n"><span><b>' + (j.views || 0) + '</b>' + plural(j.views || 0, 'view', 'views') + '</span><span><b>' + (j.applies || 0) + '</b>' + plural(j.applies || 0, 'click on Apply', 'clicks on Apply') + '</span>' + spark + '</div>' : '') + '</div>' +
@@ -478,9 +593,9 @@
         '<p class="note">' + (rej ? 'It goes to a person again, with your changes.' : 'A changed title, link or text may send the job to a person again before it shows.') + '</p></form></article>';
     }).join('');
     return head('Your jobs', 'Jobs <b>you posted</b>', S.jobs.length ? 'The status of each job, and what it brought: views of its page and clicks on Apply, each visitor counted once a day.' : '',
-        S.jobs.length ? '<a class="btn primary" href="#post">Post a job</a>' : '') +
+        S.jobs.length ? go('#post', 'Post a job') : '') +
       (S.jobs.length ? cards + '<p class="note">A new or changed job shows on the site after its next update, within the hour. <button class="linkbtn" type="button" id="jobs-csv">Download these figures (CSV)</button></p>'
-        : empty('You have not posted a job yet.', ' Posting is free for 30 days. Its status, views and clicks on Apply show here.', '<a class="btn primary" href="#post">Post a job free</a>'));
+        : empty('You have not posted a job yet.', ' Posting is free for 30 days. Its status, views and clicks on Apply show here.', go('#post', 'Post a job free'), 'jobs'));
   }
   function postPanel() {
     if (me.confirmed && !me.can_post) return head('Post a job', 'Post a job, <b>free for 30 days</b>', '') + callout('This account cannot post jobs. If you think that is a mistake, write to the address on the contact page.', '');
@@ -553,7 +668,9 @@
       (pl ? '<ul class="pc-inc">' + pl[0].map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' + (pl[1] ? '<p class="pc-vs"><b>Elsewhere:</b> ' + esc(pl[1]) + '</p>' : '')
         : '<p class="what">' + esc(D.what[p.name] || '') + '</p>') + demo(id) + (fields || '') + err +
       '<div class="pc-act"><button class="btn ' + (best ? 'primary' : 'ghost') + '" type="submit"' + (pub.payments === 'off' ? ' disabled' : '') + '>' + (p.credits ? 'Buy credits' : 'Continue to payment') + '</button>' +
-      (me.credits && kind !== 'none' && pub.payments !== 'off' ? '<button class="btn ghost" type="submit" data-credit="1">Pay from my credits (' + money(me.credits) + ' left)</button>' : '') + '</div></form>';
+      (me.credits && kind !== 'none' && pub.payments !== 'off' ? '<button class="btn ghost" type="submit" data-credit="1">Pay from my credits (' + money(me.credits) + ' left)</button>' : '') +
+      // someone else pays (the accountant): the order is made with its own payment page to send on (needs the server of 25 Nov 2026)
+      (pub.pay_links === 'on' && pub.payments !== 'off' ? '<button class="linkbtn pc-for" type="submit" data-for="1">Someone else pays? Get a payment link</button>' : '') + '</div></form>';
   }
   function creditsNow() { var B = S.billing || {}; return me.credits || (B.wallet && B.wallet.balance) || 0; }
   /* ---------- credits: the balance, how they work, buying more, what was bought and what they were spent on ---------- */
@@ -615,9 +732,9 @@
       D.skills.map(function (s) { return '<option value="skill:' + esc(s[0]) + '">' + esc(s[1]) + ' jobs</option>'; }).join('') + '</optgroup></select></label>';
     return head('Promote', 'Get <b>more applicants</b>', 'Every price is one payment for a fixed time. Nothing renews, and no card is kept on file.') +
       (pub.payments === 'off' ? callout('Paid placements are not on sale yet. Everything else in your account is free.', '', 'soft') : '') + testNote() + promoBox(true) +
-      part('For one job', jobCards + coverForm) +
-      part('For your company', '<div class="card acc-pick">' + field('Company, as it is named on the site', 'company', 'type="text" id="pr-company" list="acc-companies" value="' + esc(me.company || '') + '" maxlength="80"') + '</div>' +
-        '<div class="acc-grid">' + productCard('spotlight', 'company') + productCard('pass', 'company') + productCard('sponsor', 'company', pages) + '</div>') +
+      part('For <b>one job</b>', jobCards + coverForm, 'one', 'A job') +
+      part('For your <b>company</b>', '<div class="card acc-pick">' + field('Company, as it is named on the site', 'company', 'type="text" id="pr-company" list="acc-companies" value="' + esc(me.company || '') + '" maxlength="80"') + '</div>' +
+        '<div class="acc-grid">' + productCard('spotlight', 'company') + productCard('pass', 'company') + productCard('sponsor', 'company', pages) + '</div>', 'co', 'Your company') +
       '<p class="acc-synced">' + (creditsNow() ? '<b>' + money(creditsNow()) + ' in credits.</b> Press “Pay from my credits” on any card above to spend them. ' : '<b>Credits:</b> pay once, spend on anything here within 12 months. ') +
         '<a href="#credits">' + (creditsNow() ? 'Top up or see what you spent' : 'See how credits work and buy some') + '</a></p>' +
       (pub.payments === 'off' ? '' : '<p class="note">You pay on a crypto checkout page. What you bought switches on by itself when the network confirms the payment.</p>') + data;
@@ -667,10 +784,21 @@
     return head('Find candidates', 'Find people in the <b>resume database</b>', 'People who chose to be found. You see no name or contacts until the person accepts your request, and you pay only for people who accept.') +
       '<form class="card acc-form" id="talent-search" novalidate><div class="acc-two">' + field('Words', 'q', 'type="text" placeholder="rust engineer"') + field('Skill', 'skill', 'type="text" placeholder="python"') +
       '<label class="fld"><span class="fld-l">Kind of work</span><select name="role"><option value="">Any</option>' + D.categories.map(function (c) { return '<option value="' + esc(c[0]) + '">' + esc(c[1]) + '</option>'; }).join('') + '</select></label>' +
-      field('Place', 'place', 'type="text" placeholder="remote, germany"') + '</div>' + err + '<p class="acc-btns"><button class="btn primary" type="submit">Search</button><span class="note">' + S.sent.credits + plural(S.sent.credits, ' contact request', ' contact requests') + ' left.</span></p></form><div id="talent-out"></div>' +
-      (S.sent.requests.length ? part('Your requests', '<div class="acc-list">' + S.sent.requests.map(function (q) {
-        var c = q.candidate; return '<div class="acc-row"><div class="main">' + state(q.status) + ' <strong>' + esc(c.headline || 'Candidate') + '</strong>' + (q.status === 'accepted' && c.contact ? '<span class="js"><strong>' + esc(c.contact.name) + '</strong>, <a href="mailto:' + esc(c.contact.email) + '">' + esc(c.contact.email) + '</a>' + (c.contact.phone ? ', ' + esc(c.contact.phone) : '') + '</span>' : '') + '<span class="js">sent ' + nice(q.sent) + '</span></div></div>';
-      }).join('') + '</div>') : '');
+      field('Place', 'place', 'type="text" placeholder="remote, germany"') + '</div>' +
+      (pub.pay_links === 'on' ? '<label class="check"><input type="checkbox" name="seeking" value="open"> <span>Only people looking for work or open to offers</span></label>' : '') + err +
+      '<p class="acc-btns"><button class="btn primary" type="submit">Search</button><span class="note">' + S.sent.credits + plural(S.sent.credits, ' contact request', ' contact requests') + ' left.</span></p></form><div id="talent-out"></div>' +
+      (S.sent.requests.length ? part('Your <b>requests</b>', '<div class="acc-list">' + S.sent.requests.map(function (q) {
+        var c = q.candidate; return '<div class="acc-row"><div class="main">' + state(q.status, ASKED[q.status]) + ' <strong>' + esc(c.headline || 'Candidate') + '</strong>' + (q.status === 'accepted' && c.contact ? '<span class="js"><strong>' + esc(c.contact.name) + '</strong>, <a href="mailto:' + esc(c.contact.email) + '">' + esc(c.contact.email) + '</a>' + (c.contact.phone ? ', ' + esc(c.contact.phone) : '') + '</span>' : '') + '<span class="js">sent ' + nice(q.sent) + '</span></div></div>';
+      }).join('') + '</div>', 'sent', 'Sent') : '');
+  }
+  /* the payment link of one order, for whoever pays (the accountant): made on the first press (POST /api/orders/<id>/share), then copied
+     or sent by email from here. The page behind it needs no account and shows the receipt once paid. */
+  function shareBoxOf(o) {
+    var url = o.share_key ? esc(D.site) + '/account/#invoice=' + esc(o.share_key) : '';
+    return '<p class="acc-payl-t">' + icon('mail') + '<span><b>For your accountant, or whoever pays.</b> The link opens a page with what this payment is for, the price and the button to pay. No account needed; the receipt shows there once it is paid. It works for 30 days.</span></p>' +
+      (url ? '<div class="acc-share-r"><input type="text" readonly value="' + url + '" aria-label="The payment link"><button class="btn sm" type="button" data-copy="' + url + '">Copy</button></div>' : '<p class="acc-btns"><button class="btn sm" type="button" data-share-make="' + esc(o.id) + '">Make the link</button></p>') +
+      '<form class="acc-inline flat" data-share-mail="' + esc(o.id) + '" novalidate>' + field('Or send it by email', 'email', 'type="email" autocomplete="off" placeholder="accounts@yourcompany.com" required data-need="Enter the address of the person who pays."') +
+      '<button class="btn ghost" type="submit">Send the link</button>' + err + '</form>';
   }
   function billingPanel() {
     var B = S.billing || {}, boosts = {}, credits = me.credits || (B.wallet && B.wallet.balance) || 0, passes = (B.passes || []).filter(function (p) { return p.live; });
@@ -678,45 +806,60 @@
     var top = head('Billing', 'Payments and <b>receipts</b>', 'Every payment is a single payment for a fixed time. Nothing renews.', S.orders.length || S.placements.length ? '<a class="btn ghost" href="#promote">See promotions</a>' : '');
     var have = (credits ? '<p class="acc-synced"><b>' + money(credits) + ' in credits.</b> ' + (B.wallet && B.wallet.next_expiry ? 'The first of them run out on ' + nice(B.wallet.next_expiry) + '. ' : '') + 'Use them on any promotion: “Pay from my credits”.</p>' : '') +
       passes.map(function (p) { return '<p class="acc-synced"><b>Hiring Pass for ' + esc(p.company) + '</b> until ' + nice(p.until) + ': ' + p.premium_left + plural(p.premium_left, ' Premium boost', ' Premium boosts') + ' left.</p>'; }).join('');
-    if (!S.orders.length && !S.placements.length) return top + have + empty('No payments yet.', ' Posting jobs is free. When you promote a job, the payment and its receipt show here.', '<a class="btn primary" href="#promote">See promotions</a>') + testNote();
+    if (!S.orders.length && !S.placements.length) return top + have + empty('No payments yet.', ' Posting jobs is free. When you promote a job, the payment and its receipt show here.', go('#promote', 'See promotions'), 'billing') + testNote();
     return top + have + testNote() +
       // rows, not tables: on a phone a table of seven columns is a strip to drag sideways
-      (S.placements.length ? part('What is running', '<div class="acc-list">' + S.placements.map(function (p) {
+      (S.placements.length ? part('What is <b>running</b>', '<div class="acc-list">' + S.placements.map(function (p) {
         var b = boosts[p.id];
         return '<div class="acc-row"><div class="main">' + state(p.state) + ' <strong>' + esc(KIND[p.kind] || p.kind) + '</strong><span class="js">' + esc(p.label) + '</span><span class="js">' +
           (p.from && p.until ? nice(p.from) + ' to ' + nice(p.until) : p.days ? p.days + ' days, from the day the job is approved' : '') +
           (b ? ' · ' + b.views + plural(b.views, ' view', ' views') + ' · ' + b.applies + plural(b.applies, ' click on Apply', ' clicks on Apply') : '') + '</span></div></div>';
-      }).join('') + '</div>', 'running') : '') +
-      (S.orders.length ? part('Payments', '<div class="acc-list">' + S.orders.map(function (o) {
+      }).join('') + '</div>', 'running', 'Promotions') : '') +
+      (S.orders.length ? part('Every <b>payment</b>', '<div class="acc-list">' + S.orders.map(function (o) {
         return '<div class="acc-row"><div class="main">' + state(o.status) + ' <strong>' + esc(o.name) + '</strong><span class="js">' + (o.label && o.label !== o.name ? esc(o.label) + ' · ' : '') +
           (o.amount_usd ? money(o.amount_usd) + (o.coupon ? ' with ' + esc(o.coupon.code) + ' (full price ' + money(o.coupon.full_usd) + ')' : '') : o.credits ? o.credits + ' credits' : 'Included') + ' · ' + nice(o.created) + '</span></div><div class="ctl">' +
-          (o.pay_url ? '<a class="btn sm" href="' + esc(o.pay_url) + '">Pay now</a><button class="btn ghost sm" type="button" data-pay-copy="' + esc(o.pay_url) + '">Copy the link for whoever pays</button>' : '') +
-          (o.status === 'paid' ? '<button class="btn ghost sm" type="button" data-receipt="' + esc(o.id) + '">Receipt</button>' : '') + '</div></div>';
-      }).join('') + '</div><div id="receipt-out"></div>', 'payments') : '');
+          (o.pay_url ? '<a class="btn sm" href="' + esc(o.pay_url) + '">Pay now</a>' + (o.can_share ? '<button class="btn ghost sm" type="button" data-share="' + esc(o.id) + '" aria-expanded="' + (shareOpen === o.id) + '">Send to whoever pays</button>'
+            : '<button class="btn ghost sm" type="button" data-pay-copy="' + esc(o.pay_url) + '">Copy the link for whoever pays</button>') : '') +
+          (o.status === 'paid' ? '<button class="btn ghost sm" type="button" data-receipt="' + esc(o.id) + '">Receipt</button>' : '') + '</div>' +
+          (o.can_share ? '<div class="acc-payl" data-share-box="' + esc(o.id) + '"' + (shareOpen === o.id ? '' : ' hidden') + '>' + shareBoxOf(o) + '</div>' : '') + '</div>';
+      }).join('') + '</div><div id="receipt-out"></div>', 'payments', 'History') : '');
   }
 
   /* ---------- settings: the address, the password, which side you use, your data, deleting the account ---------- */
   function settingsPanel() {
     var emp = ROLE === 'employer';
+    // the password: changed here with the current one (server of 25 Nov 2026: me.has_password); before it, and without a password, by a link
+    var pw = me.has_password ? '<div><dt>Password</dt><dd><span>Change it with your current one. Every other browser is then signed out, and we tell your address.</span>' +
+        '<button class="btn ghost sm" type="button" id="pw-open" aria-expanded="false">Change the password</button><form id="pw-form" class="acc-dd-f" novalidate hidden>' +
+        '<div class="acc-two">' + field('Current password', 'current', 'type="password" autocomplete="current-password" required data-need="Enter your current password."') +
+        field('New password', 'password', 'type="password" autocomplete="new-password" required minlength="8"', 'At least 8 characters.') + '</div>' + err +
+        '<p class="acc-btns"><button class="btn primary" type="submit">Save the new password</button><button class="linkbtn" type="button" id="acc-pass">Forgot it? Email me a link</button></p></form></dd></div>'
+      : '<div><dt>Password</dt><dd><span>' + (me.has_password === false ? 'None yet: you sign in with Google or LinkedIn. To set one, we send a link to your email.' :
+        'To change it, we send a link to your email. Opening it lets you choose a new password and signs out every browser.') + '</span><button class="btn ghost sm" type="button" id="acc-pass">Send me the link</button></dd></div>';
+    var two = me.two_step === undefined ? '' : '<div><dt>Two-step sign-in</dt><dd><span>' + (me.two_step ? state('live', 'On') + ' A sign-in with your password also asks for a code we email to you.' :
+        'Off. Switch it on, and a sign-in with your password also asks for a code we email to you: a stolen password alone is then not enough.') + '</span>' +
+      (me.two_step ? '<button class="btn ghost sm" type="button" id="two-off-open" aria-expanded="false">Switch it off</button><form id="two-off" class="acc-dd-f" novalidate hidden>' +
+        field('Your password, to switch it off', 'password', 'type="password" autocomplete="current-password" required data-need="Enter your current password."') + err +
+        '<p class="acc-btns"><button class="btn ghost" type="submit">Switch two-step sign-in off</button></p></form>'
+        : me.has_password && me.confirmed ? '<button class="btn sm" type="button" id="two-on">Switch it on</button>' : '') + '</dd></div>';
     return head('Settings', 'Your <b>account</b>', '') +
-      '<dl class="acc-dl"><div><dt>Email</dt><dd><span>' + esc(me.email) + ' ' + (me.confirmed ? state('live', 'Confirmed') : state('review', 'Not confirmed')) + '</span>' +
-        (me.confirmed ? '' : '<button class="btn ghost sm acc-confirm" type="button">Send the link again</button>') + '</dd></div>' +
-      '<div><dt>Password</dt><dd><span>To change it, we send a link to your email. Opening it lets you choose a new password and signs out every browser.</span><button class="btn ghost sm" type="button" id="acc-pass">Send me the link</button></dd></div>' +
-      '<div><dt>You use it as</dt><dd><span>' + (emp ? 'An employer: jobs, promotion, company page.' : 'A job seeker: resumes, saved jobs, alerts.') + '</span><button class="btn ghost sm" type="button" data-role-to="' + (emp ? 'seeker' : 'employer') + '">' + (emp ? 'Open the job seeker side' : 'Open the employer side') + '</button></dd></div>' +
-      (me.domain ? '<div><dt>Company domain</dt><dd><span>' + esc(me.domain) + (me.company ? ' · ' + esc(me.company) : '') + '</span></dd></div>' : '') +
-      (me.linkedin || pub.linkedin === 'on' ? '<div><dt>LinkedIn</dt><dd>' + (me.linkedin ? '<span>Connected' + (me.linkedin.name ? ' as ' + esc(me.linkedin.name) : '') + '</span>' : '<span>Not connected</span><button class="btn ghost sm li-start" type="button">Connect LinkedIn</button>') + '</dd></div>' : '') + '</dl>' +
-      part('Your data', '<p class="acc-sub">Download everything we keep about your account as one file. <a href="' + esc(D.site) + '/privacy/">What we keep and why</a></p>' +
-        '<p class="acc-btns"><button class="btn ghost" type="button" id="me-export">Download my data</button></p>', 'data') +
-      part('Delete the account', '<form class="acc-danger" id="me-delete" novalidate><p>This removes your alerts, your resumes, your synced lists and everything you posted, at once and for good. It cannot be undone.</p>' +
+      part('Sign-in and <b>security</b>', '<dl class="acc-dl"><div><dt>Email</dt><dd><span>' + esc(me.email) + ' ' + (me.confirmed ? state('live', 'Confirmed') : state('review', 'Not confirmed')) + '</span>' +
+        (me.confirmed ? '' : '<button class="btn ghost sm acc-confirm" type="button">Send the link again</button>') + '</dd></div>' + pw + two +
+      (me.linkedin || pub.linkedin === 'on' ? '<div><dt>LinkedIn</dt><dd>' + (me.linkedin ? '<span>Connected' + (me.linkedin.name ? ' as ' + esc(me.linkedin.name) : '') + '</span>' : '<span>Not connected</span><button class="btn ghost sm li-start" type="button">Connect LinkedIn</button>') + '</dd></div>' : '') + '</dl>', 'security', 'Security') +
+      part('How you <b>use it</b>', '<dl class="acc-dl"><div><dt>You use it as</dt><dd><span>' + (emp ? 'An employer: jobs, promotion, company page.' : 'A job seeker: resumes, saved jobs, alerts.') + '</span><button class="btn ghost sm" type="button" data-role-to="' + (emp ? 'seeker' : 'employer') + '">' + (emp ? 'Open the job seeker side' : 'Open the employer side') + '</button></dd></div>' +
+      (me.domain ? '<div><dt>Company domain</dt><dd><span>' + esc(me.domain) + (me.company ? ' · ' + esc(me.company) : '') + '</span></dd></div>' : '') + '</dl>', 'use', 'Account') +
+      part('Your <b>data</b>', '<p class="acc-sub">Download everything we keep about your account as one file. <a href="' + esc(D.site) + '/privacy/">What we keep and why</a></p>' +
+        '<p class="acc-btns"><button class="btn ghost" type="button" id="me-export">Download my data</button></p>', 'data', 'Privacy') +
+      part('Delete the <b>account</b>', '<form class="acc-danger" id="me-delete" novalidate><p>This removes your alerts, your resumes, your synced lists and everything you posted, at once and for good. It cannot be undone.</p>' +
         field('To go on, type: delete my account', 'confirm', 'type="text" autocomplete="off" required data-need="Type the words “delete my account” to go on."') + err +
-        '<p class="acc-btns"><button class="btn ghost" type="submit">Delete my account for good</button></p></form>', 'delete');
+        '<p class="acc-btns"><button class="btn ghost" type="submit">Delete my account for good</button></p></form>', 'delete', 'For good');
   }
 
-  var TABS = { seeker: [['overview', 'Overview'], ['saved', 'Saved jobs'], ['resumes', 'Resumes'], ['alerts', 'Job alerts'], ['settings', 'Settings']],
+  var TABS = { seeker: [['overview', 'Overview'], ['saved', 'Saved jobs'], ['resumes', 'Resumes'], ['visibility', 'Who sees you'], ['alerts', 'Job alerts'], ['settings', 'Settings']],
     employer: [['overview', 'Overview'], ['jobs', 'Your jobs'], ['post', 'Post a job'], ['promote', 'Promote'], ['credits', 'Credits'], ['company', 'Company page'], ['team', 'Team'], ['find', 'Find candidates'], ['billing', 'Billing'], ['settings', 'Settings']] };
-  var TAB_ROLE = { saved: 'seeker', resumes: 'seeker', alerts: 'seeker', jobs: 'employer', post: 'employer', promote: 'employer', credits: 'employer', company: 'employer', team: 'employer', find: 'employer', billing: 'employer' };
+  var TAB_ROLE = { saved: 'seeker', resumes: 'seeker', visibility: 'seeker', alerts: 'seeker', jobs: 'employer', post: 'employer', promote: 'employer', credits: 'employer', company: 'employer', team: 'employer', find: 'employer', billing: 'employer' };
   // older links and the links in our letters (#talent) name a block inside a part: open the part, then go to the block
-  var ALIAS = { talent: 'resumes', sync: 'saved', myresumes: 'resumes', hiring: 'post', payments: 'billing', running: 'billing', data: 'settings', account: 'settings' };
+  var ALIAS = { talent: 'visibility', views: 'visibility', sync: 'saved', myresumes: 'resumes', hiring: 'post', payments: 'billing', running: 'billing', data: 'settings', account: 'settings' };
   function toTop() { var r = root.getBoundingClientRect(); if (r.top < 0) window.scrollTo(0, Math.max(0, window.scrollY + r.top - 76)); }
   // a link to a part of the other side (#post while the job seeker side is open) opens that side
   function otherSide() { var raw = location.hash.slice(1), r = TAB_ROLE[ALIAS[raw] || raw]; return r && r !== ROLE ? r : ''; }
@@ -739,17 +882,19 @@
     if (otherSide()) setRole(otherSide());
     var emp = ROLE === 'employer', P = { overview: overview(), settings: settingsPanel() };
     if (emp) { P.jobs = jobsPanel(); P.post = postPanel(); P.promote = promotePanel(); P.credits = creditsPanel(); P.company = companyPanel(); P.team = teamPanel(); P.find = findPanel(); P.billing = billingPanel(); }
-    else { P.saved = savedPanel(); P.resumes = resumesPanel(); P.alerts = alertsPanel(); }
+    else { P.saved = savedPanel(); P.resumes = resumesPanel(); P.visibility = visibilityPanel(); P.alerts = alertsPanel(); }
     var nav = '', panels = '';
     TABS[ROLE].forEach(function (t) {
       if (!P[t[0]]) return;
-      var n = t[0] === 'jobs' ? S.jobs.length : t[0] === 'alerts' ? S.alerts.length : t[0] === 'resumes' && S.resumes ? S.resumes.resumes.length : 0;
+      var n = t[0] === 'jobs' ? S.jobs.length : t[0] === 'alerts' ? S.alerts.length : t[0] === 'resumes' && S.resumes ? S.resumes.resumes.length :
+        t[0] === 'visibility' ? (S.incoming || []).filter(function (q) { return q.status === 'sent'; }).length : 0;
       if (t[0] === 'credits' && creditsNow()) n = money(creditsNow());                    // the balance stands next to the word, so it is never a question where bought credits went
-      nav += '<a href="#' + t[0] + '">' + t[1] + (n ? '<i>' + n + '</i>' : '') + '</a>';
+      nav += '<a href="#' + t[0] + '">' + icon(t[0]) + '<span>' + t[1] + '</span>' + (n ? '<i>' + n + '</i>' : '') + '</a>';
       panels += '<section class="acc-panel" data-tab="' + t[0] + '" hidden>' + P[t[0]] + '</section>';
     });
-    root.innerHTML = '<div class="acc-shell"><aside class="acc-side"><div class="acc-me"><span class="acc-av" aria-hidden="true">' + esc(me.email.charAt(0).toUpperCase()) + '</span><div><b>' + esc(me.email) + '</b><span>' +
-      (emp ? esc(me.company || me.domain || 'Employer') : 'Job seeker') + '</span></div></div><div class="acc-nav" role="navigation" aria-label="Your account">' + nav + '</div>' +
+    var lit = !emp && pub.talent === 'on' && (me.seeking === 'active' || me.seeking === 'open');      // a green ring, as LinkedIn's "Open to work"
+    root.innerHTML = '<div class="acc-shell"><aside class="acc-side"><div class="acc-me"><span class="acc-av' + (lit ? ' lit' : '') + '" aria-hidden="true">' + esc(me.email.charAt(0).toUpperCase()) + '</span><div><b>' + esc(me.email) + '</b><span>' +
+      (emp ? esc(me.company || me.domain || 'Employer') : lit ? SEEKN[me.seeking] : 'Job seeker') + '</span></div></div><div class="acc-nav" role="navigation" aria-label="Your account">' + nav + '</div>' +
       '<div class="acc-foot"><button type="button" class="acc-sw" data-role-to="' + (emp ? 'seeker' : 'employer') + '">' + (emp ? '<b>I’m looking for a job</b> Open the job seeker side' : '<b>I’m hiring</b> Open the employer side') + '</button>' +
       (me.admin ? '<a class="acc-adm" href="' + esc(D.site) + '/admin/">Moderation</a>' : '') +
       '<button class="btn ghost sm acc-out" type="button" id="acc-out">Sign out</button></div></aside><div class="acc-main"><div id="acc-say" aria-live="polite">' +
@@ -981,7 +1126,12 @@
         }
         var data = { product: form.getAttribute('data-product'), target: t };
         if (btn && btn.getAttribute('data-credit')) data.pay = 'wallet';
+        if (btn && btn.getAttribute('data-for')) data.for_someone = true;
         return api('POST', '/api/orders', withPromo(data)).then(function (r) {
+          if (data.for_someone && r.order.status === 'pending') {                        // a bill for the accountant: to Billing, with its link open
+            shareOpen = r.order.id; flash('<b>The payment link for ' + esc(r.order.name) + ' is ready.</b> Copy it or send it by email below: whoever has it can pay, without an account.');
+            location.hash = '#billing'; return load();
+          }
           if (r.order.status === 'pending' && r.order.pay_url) { location.href = r.order.pay_url; return new Promise(function () {}); }   // on to the checkout
           flash('<b>' + esc(r.order.name) + '</b> is on' + (r.order.label && r.order.label !== r.order.name ? ' for ' + esc(r.order.label) : '') + '.'); location.hash = '#billing';
           return load();
@@ -1041,15 +1191,23 @@
     });
     on('.li-start', function () { api('POST', '/api/auth/linkedin/start').then(function (r) { location.href = r.url; }, fail); });
     submit(document.getElementById('talent-search'), function (v) {
-      var qs = Object.keys(v).filter(function (k) { return v[k]; }).map(function (k) { return k + '=' + encodeURIComponent(v[k]); }).join('&');
+      var qs = Object.keys(v).filter(function (k) { return v[k]; }).map(function (k) { return k + '=' + encodeURIComponent(v[k] === true ? 'open' : v[k]); }).join('&');
       return api('GET', '/api/talent/search?' + qs).then(function (r) {
-        document.getElementById('talent-out').innerHTML = (r.total ? '<p class="acc-quiet">' + r.total + ' found.</p>' : empty('Nobody found for this search.', ' Try fewer words, or leave the place empty.', '')) + r.results.map(function (c) {
-          return '<div class="card acc-form"><p><strong>' + esc(c.name || c.headline || 'Candidate') + '</strong>' + [c.name ? c.headline : '', c.level, c.years ? c.years + ' years' : '', c.places.join(', ')].filter(Boolean).map(function (x) { return ' · ' + esc(x); }).join('') + '</p><p class="note">' + esc(c.skills.join(', ')) + '</p>' +
-            (c.summary ? '<p>' + esc(c.summary) + '</p>' : '') + '<form class="talent-ask" data-id="' + esc(c.id) + '" novalidate><label class="fld"><span class="fld-l">Your message</span><textarea name="message" rows="3" maxlength="1000" required data-need="Write a few words: who you are, the job, and why them." placeholder="Who you are, the job, and why them."></textarea></label>' +
-            field('Link to the job (optional)', 'job_url', 'type="url" placeholder="https://"') + err + '<button class="btn sm" type="submit">Ask to contact</button></form></div>';
+        var out = document.getElementById('talent-out'), opens = r.views === 'on';
+        out.innerHTML = (r.total ? '<p class="acc-quiet"><b>' + r.total + ' found.</b>' + (opens ? ' Opening a resume tells the person that your company looked, as on hh.ru and LinkedIn; your name and contacts stay yours.' : '') + '</p>'
+          : empty('Nobody found for this search.', ' Try fewer words, or leave the place empty.', '', 'find')) + r.results.map(function (c) {
+          return '<div class="acc-pan acc-cand">' + cvCard(c, !opens) + (opens ? '<p class="acc-btns"><button class="btn ghost sm" type="button" data-open-cv="' + esc(c.id) + '">Open the resume</button></p>' : askForm(c.id)) + '</div>';
         }).join('');
-        Array.prototype.forEach.call(document.querySelectorAll('form.talent-ask'), function (f) {
-          submit(f, function (x) { return api('POST', '/api/talent/' + f.getAttribute('data-id') + '/contact', x).then(function () { f.innerHTML = '<p class="acc-quiet">Sent. You get their name and contacts if they accept.</p>'; }); });
+        wireAsk(out);
+        Array.prototype.forEach.call(out.querySelectorAll('[data-open-cv]'), function (b) {
+          b.addEventListener('click', function () {
+            b.disabled = true;
+            api('GET', '/api/talent/' + b.getAttribute('data-open-cv')).then(function (x) {
+              var box = b.closest('.acc-cand');
+              box.innerHTML = cvCard(x.candidate, true) + (x.asked ? '<p class="acc-quiet">You asked this person already: ' + state(x.asked, ASKED[x.asked]) + '</p>' : askForm(x.candidate.id));
+              wireAsk(box);
+            }, function (e) { b.disabled = false; fail(e); });
+          });
         });
       });
     });
@@ -1077,6 +1235,151 @@
     submit(document.getElementById('me-delete'), function (v) {
       if (v.confirm.toLowerCase() !== 'delete my account') throw oops('confirm', 'Type the words “delete my account” exactly, to show you mean it.');
       return api('DELETE', '/api/me', { confirm: v.confirm }).then(function (r) { forget(); H.set('hrn_known', 0); cleanUrl(); flash(esc(r.message)); drawAuth('up'); window.scrollTo(0, 0); });
+    });
+
+    /* pass of 25 Nov 2026: the status, who sees the resume, the companies it is hidden from, payment links, the password, two-step sign-in */
+    on('[data-seek]', function (b) {
+      var v = b.getAttribute('aria-pressed') === 'true' ? '' : b.getAttribute('data-seek');
+      Array.prototype.forEach.call(root.querySelectorAll('[data-seek]'), function (x) { x.disabled = true; });
+      api('PATCH', '/api/me', { seeking: v }).then(function (r) {
+        me = r.user; flash(v ? '<b>Your status: ' + SEEKN[v] + '.</b> ' + (S.talent && S.talent.profile ? 'Employers who search the resume database see it on your resume.' : 'Employers see it once you let them find your resume.') : 'Your status is hidden.'); draw();
+      }, function (e) { Array.prototype.forEach.call(root.querySelectorAll('[data-seek]'), function (x) { x.disabled = false; }); fail(e); });
+    });
+    Array.prototype.forEach.call(root.querySelectorAll('.acc-opts input[name=vis]'), function (r) {
+      r.addEventListener('change', function () {
+        var v = r.value, data = v === 'none' ? { paused: true } : { paused: false, visibility: v };
+        Array.prototype.forEach.call(root.querySelectorAll('.acc-opts input'), function (x) { x.disabled = true; });
+        api('PUT', '/api/talent/profile', data).then(function () {
+          flash(v === 'none' ? '<b>Paused.</b> Nobody finds your resume now; it is kept, and its link shows nothing.' : v === 'link' ? '<b>Only by its link now.</b> It left search; copy the link below and send it to the employers you choose.' : '<b>In search again.</b> Employers who search find your resume, without your name or contacts.');
+          return load();
+        }, fail);
+      });
+    });
+    on('[data-copy]', function (b) {
+      var text = b.getAttribute('data-copy'), was = b.textContent, done = function () { b.textContent = 'Copied'; setTimeout(function () { b.textContent = was; }, 1800); };
+      var inp = b.parentNode.querySelector('input'); if (inp) { try { inp.select(); } catch (e) {} }
+      if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, function () {}); else done();
+    });
+    on('#cv-new', function (b) {
+      H.sure(b, 'Make a new link? The old one stops working at once: whoever has it sees nothing.', 'Make a new link').then(function (ok) {
+        if (ok) api('PUT', '/api/talent/profile', { new_link: true }).then(function () { flash('<b>A new link is ready.</b> The old one shows nothing any more.'); return load(); }, fail);
+      });
+    });
+    var blockList = function () { return (S.talent && S.talent.profile && S.talent.profile.blocked) || []; };
+    submit(document.getElementById('block-add'), function (v) {
+      var d = String(v.blocked || '').trim().toLowerCase().replace(/^[a-z]+:\/\//, '').replace(/^[^@]*@/, '').replace(/[\/?#].*$/, '').replace(/^www\./, '');
+      if (!/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(d)) throw oops('blocked', 'Enter the company’s web address, like initech.com.');
+      if (blockList().indexOf(d) >= 0) throw oops('blocked', d + ' is on the list already.');
+      return api('PUT', '/api/talent/profile', { blocked: blockList().concat([d]) }).then(function (r) {
+        var got = r.profile && r.profile.blocked || [];
+        flash(got.indexOf(d) >= 0 || got.some(function (x) { return d.slice(-x.length - 1) === '.' + x; }) ? '<b>Hidden from ' + esc(d) + '.</b> No account on that address sees your resume, in search or by its link.' : 'Saved.');
+        return load();
+      });
+    });
+    on('[data-unblock]', function (b) {
+      var d = b.getAttribute('data-unblock'); b.disabled = true;
+      api('PUT', '/api/talent/profile', { blocked: blockList().filter(function (x) { return x !== d; }) }).then(function () { flash(esc(d) + ' can find your resume again.'); return load(); }, function (e) { b.disabled = false; fail(e); });
+    });
+    on('[data-share]', function (b) {
+      var box = root.querySelector('[data-share-box="' + b.getAttribute('data-share') + '"]'); if (!box) return;
+      box.hidden = !box.hidden; b.setAttribute('aria-expanded', String(!box.hidden)); shareOpen = box.hidden ? '' : b.getAttribute('data-share');
+      if (!box.hidden && !box.querySelector('input[readonly]')) { var mk = box.querySelector('[data-share-make]'); if (mk) mk.click(); }
+    });
+    on('[data-share-make]', function (b) {
+      b.disabled = true;
+      api('POST', '/api/orders/' + b.getAttribute('data-share-make') + '/share', {}).then(function () { shareOpen = b.getAttribute('data-share-make'); return load(); }, function (e) { b.disabled = false; fail(e); });
+    });
+    Array.prototype.forEach.call(root.querySelectorAll('form[data-share-mail]'), function (f) {
+      submit(f, function (v) {
+        return api('POST', '/api/orders/' + f.getAttribute('data-share-mail') + '/share', { email: v.email }).then(function (r) {
+          shareOpen = f.getAttribute('data-share-mail'); flash('<b>The payment link is on its way to ' + esc(r.sent_to) + '.</b> Whoever opens it can pay without an account; the payment shows here when it is confirmed.'); return load();
+        });
+      });
+    });
+    if (shareOpen && location.hash === '#billing') { var sb = root.querySelector('[data-share-box="' + shareOpen + '"]'); if (sb) setTimeout(function () { sb.scrollIntoView({ block: 'center' }); }, 60); }
+    on('#pw-open', function (b) { var f = document.getElementById('pw-form'); f.hidden = !f.hidden; b.setAttribute('aria-expanded', String(!f.hidden)); if (!f.hidden) { try { f.elements.current.focus(); } catch (e) {} } });
+    submit(document.getElementById('pw-form'), function (v) {
+      return api('POST', '/api/auth/password', { current: v.current, password: v.password }).then(function (r) {
+        var f = document.getElementById('pw-form'); f.reset(); f.hidden = true; say('<b>' + esc(r.message || 'Your new password is saved.') + '</b>');
+      });
+    });
+    on('#two-on', function (b) {
+      b.disabled = true;
+      api('PUT', '/api/me/security', { two_step: true }).then(function (r) { me = r.user; flash('<b>Two-step sign-in is on.</b> Next time you sign in with your password, we also email you a code.'); draw(); }, function (e) { b.disabled = false; fail(e); });
+    });
+    on('#two-off-open', function (b) { var f = document.getElementById('two-off'); f.hidden = !f.hidden; b.setAttribute('aria-expanded', String(!f.hidden)); if (!f.hidden) { try { f.elements.password.focus(); } catch (e) {} } });
+    submit(document.getElementById('two-off'), function (v) {
+      return api('PUT', '/api/me/security', { two_step: false, password: v.password }).then(function (r) { me = r.user; flash('Two-step sign-in is off: the password alone signs in. We told your address.'); draw(); });
+    });
+  }
+  // the form that asks a person in the resume database to get in touch (search results, an opened resume, a resume shared by its link)
+  function askForm(id) {
+    return '<form class="talent-ask" data-id="' + esc(id) + '" novalidate><label class="fld"><span class="fld-l">Your message</span><textarea name="message" rows="3" maxlength="1000" required data-need="Write a few words: who you are, the job, and why them." placeholder="Who you are, the job, and why them."></textarea></label>' +
+      field('Link to the job (optional)', 'job_url', 'type="url" placeholder="https://"') + err + '<p class="acc-btns"><button class="btn primary sm" type="submit">Ask to contact</button><span class="note">They get your company’s name and message; you get their contacts if they accept.</span></p></form>';
+  }
+  function wireAsk(box) {
+    Array.prototype.forEach.call(box.querySelectorAll('form.talent-ask'), function (f) {
+      submit(f, function (x) { return api('POST', '/api/talent/' + f.getAttribute('data-id') + '/contact', x).then(function () { f.innerHTML = '<p class="acc-quiet"><b>Sent.</b> You get their name and contacts if they accept.</p>'; }); });
+    });
+  }
+  // a page of its own, without the menu: a payment link or a shared resume that did not open, and the like
+  function gateMsg(label, title, text, action) {
+    return '<div class="acc-gate one"><div class="card acc-auth"><p class="acc-lbl"><i></i>' + label + '</p><h1 class="acc-t sm">' + title + '</h1><p class="acc-sub">' + esc(text) + '</p>' + (action ? '<p class="acc-btns">' + action + '</p>' : '') + '</div></div>';
+  }
+  /* A payment link for someone else (#invoice=<key>; PLAN_RU.md part 2, item 9): what it is for, the price, the button to the checkout,
+     a new checkout when the last one ran out, and the receipt once paid. No account and no sign-in: the key is the permission. */
+  var invTries = 0;
+  function drawInvoice(key, again) {
+    if (hd) hd.hidden = true;
+    if (!again) { root.innerHTML = waiting; invTries = 0; }
+    return api('GET', '/api/invoice/' + key).then(function (r) { paintInvoice(key, r.invoice); }, function (e) {
+      root.innerHTML = gateMsg('Payment', 'This link <b>does not work</b>', e.message, '<a class="btn ghost" href="' + esc(D.site) + '/">Go to the home page</a>');
+    });
+  }
+  function paintInvoice(key, x) {
+    var st = { pending: ['pending', 'Waiting for payment'], checking: ['review', 'Being checked'], expired: ['review', 'Payment page ran out'], underpaid: ['rejected', 'Underpaid'], paid: ['paid', 'Paid'] }[x.status] || ['review', x.status];
+    var plan = (D.plans || {})[x.item], paid = x.status === 'paid';
+    var rows = [['Item', esc(x.item) + (x.label ? '<span>' + esc(x.label) + '</span>' : '')], ['For', esc(x.company) + (x.domain && x.domain !== x.company ? ' · ' + esc(x.domain) : '')], ['Asked by', esc(x.asked_by)],
+      ['Period', x.days ? x.days + ' days. One payment; nothing renews' : x.credits ? x.credits + ' credits, valid for 12 months' : 'One payment'], [paid ? 'Receipt number' : 'Number', esc(x.number)],
+      [paid ? 'Paid' : 'Date', paid ? nice(x.paid) + ', with ' + esc(x.paid_with) : nice(x.created)]];
+    var act = x.status === 'pending' ? '<a class="btn primary lg acc-go" href="' + esc(x.pay_url) + '">Pay ' + money(x.amount_usd) + ' in crypto<span class="acc-arr">' + icon('arrow') + '</span></a><p class="note">The checkout is Cryptomus. It stays open for an hour; after that this page makes a new one at the same price.</p>'
+      : x.status === 'expired' && x.renewable ? '<button class="btn primary lg" type="button" id="inv-renew">Open a new payment page</button><p class="note">The last payment page was open for an hour and ran out unpaid. The price stays the same.</p>'
+      : x.status === 'expired' ? '<p class="acc-quiet">This payment link has run out. Ask ' + esc(x.asked_by || 'whoever sent it') + ' for a new one.</p>'
+      : x.status === 'checking' ? '<p class="acc-quiet"><b>We are asking the payment service about the last payment page.</b> If it was paid, this page says so within minutes; if not, a new one can be opened.</p><p class="acc-btns"><button class="btn ghost" type="button" id="inv-check">Check again</button></p>'
+      : x.status === 'underpaid' ? '<p class="acc-quiet">Less than the price arrived, so nothing was switched on. Write to us from the contact page with the number above.</p>'
+      : '<div class="acc-paid">' + icon('check') + '<p><b>Paid. Thank you.</b> ' + esc(x.note) + '</p></div><p class="acc-btns"><button class="btn ghost sm" type="button" id="inv-print">Print the receipt</button></p>';
+    root.innerHTML = '<div class="acc-inv"><div class="acc-inv-c"><p class="acc-lbl"><i></i>' + (paid ? 'Receipt' : 'Payment request') + '</p>' +
+      '<h1 class="acc-t sm">' + (paid ? 'Paid: <b>' + esc(x.item) + '</b>' : esc(x.company || 'An employer') + ' asks you to pay for <b>' + esc(x.item) + '</b>') + '</h1>' +
+      '<div class="acc-inv-amt"><b>' + money(x.amount_usd) + (x.coupon ? ' <s>' + money(x.coupon.full_usd) + '</s>' : '') + '</b>' + state(st[0], st[1]) + '</div>' +
+      '<dl class="acc-inv-dl">' + rows.filter(function (r) { return r[1]; }).map(function (r) { return '<div><dt>' + r[0] + '</dt><dd>' + r[1] + '</dd></div>'; }).join('') + '</dl>' +
+      (plan && !paid ? '<p class="fld-l">What it includes</p><ul class="pc-inc">' + plan[0].map(function (y) { return '<li>' + esc(y) + '</li>'; }).join('') + '</ul>' : '') +
+      '<div class="acc-inv-act">' + act + '</div><p class="acc-inv-f">' + icon('shield') + '<span>Sold by ' + esc(x.seller) + '. You need no account here, and no card or wallet is kept.</span></p></div></div>';
+    var rn = document.getElementById('inv-renew');
+    if (rn) rn.addEventListener('click', function () { rn.disabled = true; rn.textContent = 'One moment…'; api('POST', '/api/invoice/' + key + '/renew').then(function (r) { paintInvoice(key, r.invoice); }, function (e) { rn.disabled = false; rn.textContent = 'Open a new payment page'; say(esc(e.message), true); paintInvoice(key, x); }); });
+    var ck = document.getElementById('inv-check'); if (ck) ck.addEventListener('click', function () { ck.disabled = true; drawInvoice(key, true); });
+    var pr = document.getElementById('inv-print'); if (pr) pr.addEventListener('click', function () { window.print(); });
+    // back from the checkout, the confirmation can take a minute: the page looks again by itself for a while
+    if ((x.status === 'pending' || x.status === 'checking') && invTries++ < 40) setTimeout(function () { if (location.hash === '#invoice=' + key && !document.hidden) drawInvoice(key, true); }, 15000);
+  }
+  /* A resume shared "only by link" (#cv=<key>): as employers see it, without the name or contacts. A company account may ask the person
+     to get in touch from here; a visitor who is not signed in is offered the employer sign-in, and comes back here after it. */
+  var afterAuth = '';
+  function drawCv(key) {
+    if (hd) hd.hidden = true;
+    root.innerHTML = waiting;
+    return api('GET', '/api/cv/' + key).then(function (r) {
+      var c = r.candidate, act;
+      if (r.own) act = callout('<b>This is your resume as people with its link see it:</b> without your name, email, phone or links.', '<a class="btn ghost sm" href="#visibility">Who sees you</a>', 'soft');
+      else if (r.can_contact) act = r.asked ? '<p class="acc-quiet">You asked this person already: ' + state(r.asked, ASKED[r.asked]) + '</p>' : part('Ask them to <b>get in touch</b>', askForm(c.id), 'ask', r.credits + plural(r.credits, ' contact request left', ' contact requests left'));
+      else if (r.signed_in) act = callout('Only an employer whose account is tied to its company’s address can ask this person to get in touch.', '<a class="btn ghost sm" href="#hiring">Tie my account to my company</a>', 'soft');
+      else act = callout('<b>Hiring?</b> Sign in with your company account to ask this person to get in touch. They see your company and your message, and you get their contacts if they accept.', '<button class="btn sm" type="button" id="cv-signin">Sign in as an employer</button>', 'soft');
+      root.innerHTML = '<div class="acc-cvp">' + head('Shared resume', 'A resume: <b>' + esc(c.headline || 'candidate') + '</b>', 'Shared through Jobs Every Hour by the person it belongs to. Their name and contact details stay hidden until they accept a request.') +
+        '<div class="acc-pan">' + cvCard(c, true) + '</div>' + act + '</div>';
+      wireAsk(root);
+      var si = document.getElementById('cv-signin');
+      if (si) si.addEventListener('click', function () { afterAuth = '#cv=' + key; setRole('employer'); cleanUrl(); drawAuth('in'); window.scrollTo(0, 0); });
+    }, function (e) {
+      root.innerHTML = gateMsg('Shared resume', 'This resume is <b>not shared any more</b>', e.message, '<a class="btn ghost" href="' + esc(D.site) + '/jobs/">Search jobs</a>');
     });
   }
   // back from the checkout: wait for the confirmation and say plainly what happened
@@ -1108,6 +1411,8 @@
   /* ---------- start: links from letters (#confirm=, #reset=, #work=) and the way back from Google or LinkedIn (?code=&state=) ---------- */
   function start() {
     var hash = location.hash, q = new URLSearchParams(location.search), m;
+    if ((m = /^#invoice=([a-f0-9]{32})$/.exec(hash))) return drawInvoice(m[1]);
+    if ((m = /^#cv=([a-f0-9]{32})$/.exec(hash))) return drawCv(m[1]);
     if ((m = /^#confirm=([a-f0-9]{64})$/.exec(hash))) {
       cleanUrl();
       return api('POST', '/api/auth/confirm', { token: m[1] }).then(function () { flash('<b>Your email is confirmed.</b>'); }, function (e) { flash(esc(e.message), true); usedLink = true; }).then(begin);
@@ -1145,7 +1450,8 @@
     return drawAuth(notice || H.get('hrn_known', 0) ? 'in' : 'up');      // a browser that has been signed in before opens on "Sign in", a new one on "Create account"
   }
   window.addEventListener('hashchange', function () {
-    if (/^#(confirm|reset|work|signin)=/.test(location.hash)) return start();      // a link from a letter opened in a tab where the account is open already
+    if (/^#(confirm|reset|work|signin|invoice|cv)=/.test(location.hash)) return start();      // a link from a letter opened in a tab where the account is open already
+    if (root.querySelector('.acc-inv, .acc-cvp')) return start();                              // from a payment page or a shared resume to a part of the account
     if (!me || !root.querySelector('.acc-shell')) return;
     if (Date.now() - saidAt > 1500) { var box = document.getElementById('acc-say'); if (box) box.innerHTML = ''; }
     showTab(); if (!ALIAS[location.hash.slice(1)]) toTop();
