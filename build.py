@@ -3065,12 +3065,16 @@ def job_page(j, active_by_cat):
     wp_ = ("Remote, anywhere" if j.get("anywhere") else "Remote") if j["remote"] else "Hybrid" if j.get("hybrid") else "On-site" if j["location"] else "Not stated"
     open_ = (("Posted today" if days_open == 0 else f"{days_open} day{'s' if days_open != 1 else ''}") if j["active"] and j["posted"]
              else (f"Closed {fdate(j['closed'])}" if j.get("closed") else "Closed") if not j["active"] else "")
-    facts_ = [("Pay", e(pay_shown(j["salary"])) if j["salary"] else "Not stated"), ("Workplace", wp_),
-              ("Level", e(LVL_NAME[j["level"]]) if j["level"] else "Not stated"), ("Type", e(j["etype"]) if j.get("etype") else "Not stated"),
-              ("Posted", fdate(j["posted"]) if j["posted"] else "Not stated")] + ([("Open for" if j["active"] else "Status", open_)] if open_ else [])
-    facts_row = '<dl class="jfrow">' + "".join(f'<div><dt>{k}</dt><dd{" class=" + chr(34) + "nd" + chr(34) if v == "Not stated" else ""}>{v}</dd></div>' for k, v in facts_) + "</dl>"
+    # only the facts the posting gives (the owner's helper, 26 Nov 2026: "Not stated" under Level and Type on half the jobs read as an
+    # unfinished row): a missing workplace, level or type leaves its cell out and the others widen; with no level word in the title the
+    # years of experience the posting asks for stand in its place. Pay stays: "Not listed" is itself the answer to the first question.
+    facts_ = ([("Pay", e(pay_shown(j["salary"])) if j["salary"] else "Not listed")] + ([("Workplace", wp_)] if wp_ != "Not stated" else [])
+              + ([("Level", e(LVL_NAME[j["level"]]))] if j["level"] else [("Experience", f'{j["years"]}+ years')] if j.get("years") else [])
+              + ([("Type", e(j["etype"]))] if j.get("etype") else []) + ([("Posted", fdate(j["posted"]))] if j["posted"] else [])
+              + ([("Open for" if j["active"] else "Status", open_)] if open_ else []))
+    facts_row = '<dl class="jfrow">' + "".join(f'<div><dt>{k}</dt><dd{" class=" + chr(34) + "nd" + chr(34) if v == "Not listed" else ""}>{v}</dd></div>' for k, v in facts_) + "</dl>"
     two_ = (f'<div class="jtwo"><a class="btn ghost" href="{P}/resume/?job={j["slug"]}">Tailor my resume</a>'
-            f'<a class="btn ghost" href="{P}/tools/cover-letter/?job={j["slug"]}">Cover letter for this job</a></div>' if j["active"] and not j.get("tg") else "")
+            f'<a class="btn ghost" href="{P}/tools/cover-letter/?job={j["slug"]}" title="Write a cover letter for this job">Cover letter</a></div>' if j["active"] and not j.get("tg") else "")
     eyebrow = (f'<p class="sec-label">{"Hiring now" if j["active"] else "Closed"}'
                + (f' · {e(CAT[j["cat"]])}' if j["cat"] != OTHER[0] else "") + "</p>")
     sideact = save_btn.split("</div>", 1)[0] + "</div>" if '<div class="sideact">' in save_btn else ""

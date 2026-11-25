@@ -4340,7 +4340,7 @@ main.home #faq>.sec-head{z-index:2;background:var(--bg)}
 .pane{z-index:2}
 .toc{z-index:2;background:var(--bg)}
 .jstick{z-index:4}
-.pane .jfrow{grid-auto-flow:row;grid-template-columns:repeat(3,minmax(0,1fr))}
+.pane .jfrow>div{flex-basis:calc(33.34% - 1px)}
 
 /* ================= v4, design night 25–26 Nov 2026 (the owner: "не дизайн ничего"; references dlocal.com above all, ashbyhq.com) =================
    dLocal's way of building a page, in our colours and type: the first screen is one framed light panel with a large corner, a small
@@ -4503,18 +4503,18 @@ main.lp .sec-head.lst{margin-top:64px;margin-bottom:22px}
 
 /* ---- the job page's facts row (the owner's backlog, 25 Nov 2026): pay, workplace, level, type, posted, open for — under the title,
    one white card of cells like the figures of the hubs; on a phone a row of small cards that scrolls sideways ---- */
-.jfrow{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);margin:30px 0 0;border:1px solid var(--line);border-radius:22px;background:var(--card);overflow:hidden}
-.jfrow>div{min-width:0;margin:-1px 0 0 -1px;padding:16px 20px 15px;border:solid var(--line);border-width:1px 0 0 1px}
+.jfrow{display:flex;flex-wrap:wrap;margin:30px 0 0;border:1px solid var(--line);border-radius:22px;background:var(--card);overflow:hidden}
+.jfrow>div{flex:1 1 0;min-width:0;margin:-1px 0 0 -1px;padding:16px 20px 15px;border:solid var(--line);border-width:1px 0 0 1px}
 .jfrow dt{margin:0 0 5px;font-size:12.5px;font-weight:600;color:var(--faint)}
 .jfrow dd{margin:0;font:650 16.5px/1.25 var(--display);letter-spacing:-.01em;color:var(--text);overflow-wrap:anywhere}
 .jfrow dd.nd{font-weight:500;color:var(--faint)}
 .jdec .jtwo{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
-.jdec .jtwo .btn{margin:0;padding:10px 12px;border-color:var(--line2);font-size:13.5px;line-height:1.25;white-space:normal}
+.jdec .jtwo .btn{margin:0;padding:10px 12px;border-color:var(--line2);font-size:14px;line-height:1.25;white-space:nowrap}
 .jdec .jtwo+.sideact{margin-top:8px}
-@media (max-width:1100px){.jfrow{grid-auto-flow:row;grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:1100px){.jfrow>div{flex-basis:calc(33.34% - 1px)}}
 @media (max-width:860px){.jdec .jtwo{order:-1;margin-top:12px}.jdec .jtwo+.sideact{margin-top:8px}}
 @media (max-width:700px){
-  .jfrow{display:flex;gap:8px;margin:18px -20px 0;padding:0 20px 2px;border:0;border-radius:0;background:none;overflow-x:auto;scrollbar-width:none;
+  .jfrow{display:flex;flex-wrap:nowrap;gap:8px;margin:18px -20px 0;padding:0 20px 2px;border:0;border-radius:0;background:none;overflow-x:auto;scrollbar-width:none;
     -webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
   .jfrow::-webkit-scrollbar{display:none}
   .jfrow>div{flex:none;margin:0;padding:9px 14px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
