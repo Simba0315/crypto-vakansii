@@ -69,6 +69,9 @@ def save(path, jobs, b):
         "sim_comp": {key(k): [x["slug"] for x in xs] for k, xs in b.SIM["comp"].items()},
         "open": dict(b.OPEN), "fact": b.FACT, "tb": b.TB, "catmed": b.CATMED, "est": {key(k): v for k, v in b.EST.items()},
         "close_days": b.CLOSE_DAYS, "co_close": b.CO_CLOSE, "repost": {key(k): v for k, v in b.REPOST.items()}, "perk_ok": sorted(b.PERK_OK),
+        # 25 Nov 2026 (records_test found them): the count of open jobs the header's jobs menu shows (nav data-n) and the median
+        # hourly pay per field the hourly pay line compares with; pages built from records had neither
+        "all_open": b.ALL_OPEN[0], "hmed": b.HMED,
     }
     con.executemany("INSERT INTO ctx VALUES (?, ?)", ((k, dumps(v)) for k, v in ctx.items()))
     con.commit()
@@ -151,6 +154,8 @@ class Store:
         b.REPOST = {tup(k): v for k, v in ctx["repost"].items()}
         b.PERK_OK = set(ctx["perk_ok"])
         b.V = ctx["v"]                                           # the stylesheet and scripts the pages link to are the ones built with the records
+        b.ALL_OPEN[0] = ctx.get("all_open", 0)                   # absent in a store built before 25 Nov 2026
+        b.HMED = ctx.get("hmed", {})
         if self.con is not None: self.con.close()
         self.con, self.ctx, self.stamp = con, ctx, st
         self.count = con.execute("SELECT COUNT(*) FROM jobs").fetchone()[0]
