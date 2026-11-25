@@ -528,7 +528,7 @@
   function alertsPanel() {
     var freq = function (cur, attr) { return '<select ' + attr + '>' + FREQ.map(function (f) { return '<option value="' + f[0] + '"' + (cur === f[0] ? ' selected' : '') + '>' + f[1] + '</option>'; }).join('') + '</select>'; };
     var form = !me.confirmed ? confirmLine('You can make alerts here') :
-      '<form id="alert-new" class="card acc-form" novalidate><h2 class="acc-h2">' + (S.alerts.length ? 'New alert' : 'Your first alert') + '</h2><div class="acc-two">' + field('Words in the job', 'q', 'type="text" maxlength="80" placeholder="python, nurse, product manager"') +
+      '<form id="alert-new" class="acc-pan acc-form" novalidate><p class="acc-lbl sm">Make one</p><h2 class="acc-h2">' + (S.alerts.length ? 'A new <b>alert</b>' : 'Your first <b>alert</b>') + '</h2><div class="acc-two">' + field('Words in the job', 'q', 'type="text" maxlength="80" placeholder="python, nurse, product manager"') +
       '<label class="fld"><span class="fld-l">Kind of work</span><select name="cat"><option value="">Any</option>' + D.categories.map(function (c) { return '<option value="' + esc(c[0]) + '">' + esc(c[1]) + '</option>'; }).join('') + '</select></label>' +
       '<label class="fld"><span class="fld-l">Place</span><select name="loc"><option value="">Anywhere</option></select></label>' +
       '<label class="fld"><span class="fld-l">How often</span>' + freq('daily', 'name="freq"') + '</label></div>' +
@@ -608,11 +608,11 @@
     return head('Post a job', 'Post a job, <b>free for 30 days</b>', 'We check that the job is not on the site already and open your link to see that it is really there.') +
       (!me.confirmed ? '<p class="acc-quiet">You can fill the job in now: it is kept in this browser. Publishing opens once your email is confirmed.</p>' :
         !me.verified && !me.posts_as.length ? callout('<b>You can post now.</b> Jobs from a personal address (Gmail and the like) are read by a person before they go live, usually within a day. With your work email they go live without the wait.', '<a class="btn ghost sm" href="#hiring">Add my work email</a>', 'soft') : '') +
-      '<div class="card acc-paste"><label class="fld"><span class="fld-l">Have the posting as text? Paste it and the form fills itself</span>' +
+      '<div class="card acc-paste"><p class="acc-lbl sm">Quick start</p><h2 class="acc-h2">Paste the <b>posting</b></h2><label class="fld"><span class="fld-l">Have the posting as text? Paste it and the form fills itself</span>' +
       '<textarea id="job-paste" rows="4" placeholder="The whole posting, as it is on your site or in your message: the title on the first line, then the text."></textarea>' +
       '<span class="hint">The title, place, pay, employment type and the link are read from it right here in your browser; nothing is sent anywhere. Check each field after.</span></label>' +
       '<p class="acc-btns"><button class="btn ghost" type="button" id="job-paste-go">Fill the form from this text</button><span class="note" id="job-paste-out" role="status"></span></p></div>' +
-      '<form class="card acc-form" id="acc-job" novalidate>' + jobFields(draft, me.domain) + boosts + err +
+      '<form class="card acc-form" id="acc-job" novalidate><p class="acc-lbl sm">The job</p><h2 class="acc-h2">Check the <b>details</b></h2>' + jobFields(draft, me.domain) + boosts + err +
       '<p class="acc-btns"><button class="btn primary lg" type="submit" id="acc-publish">' + (me.confirmed ? 'Publish the job' : 'Check the job') + '</button></p>' +
       '<p class="note">Posting is free for 30 days' + (boosts ? '; a boost is one payment, and nothing renews' : '') + '. The first jobs of a new account are read by a person before they appear, usually within a day.' + (pub.payments === 'test' && boosts ? ' Test mode: payments are simulated on this machine, no money moves.' : '') + '</p></form>' +
       (!me.verified ? hiringPart() : '');
@@ -761,7 +761,7 @@
           field('Company site', 'website', 'type="url" value="' + esc((c.page && c.page.website) || '') + '" placeholder="https://' + esc(c.domain) + '"') + '</div>' + err +
           '<p class="acc-btns"><button class="btn primary" type="submit">Save the page</button><button class="btn ghost" type="button" data-stats="' + esc(c.id) + '">Views and clicks</button></p><div class="stats-out"></div></form>' : '') + '</article>';
     }).join('');
-    return top + list + '<form class="card acc-form" id="claim" novalidate><h2 class="acc-h2">' + (S.claims.length ? 'Claim another page' : 'Claim your page') + '</h2>' +
+    return top + list + '<form class="acc-pan acc-form" id="claim" novalidate><p class="acc-lbl sm">Claim</p><h2 class="acc-h2">' + (S.claims.length ? 'Claim <b>another page</b>' : 'Claim <b>your page</b>') + '</h2>' +
       '<p class="acc-sub">' + (S.claims.length ? 'Is your company also on the site under another name, read from its own hiring system? Claim that page too.' :
         'New here? <a href="#post">Post your first job</a>: your company page is made with it and appears on this tab at once, ready for your logo and text. ' +
         'Is your company already on the site (we read the jobs of thousands of companies from their own hiring systems)? Claim its page:') + '</p>' +
@@ -773,11 +773,12 @@
     if (me.posts_as.indexOf('employer') < 0) return '';
     var team = S.team || { members: [] };
     return head('Team', 'Your <b>team</b>', 'Colleagues on ' + esc(me.domain) + ' you add here post under your company’s name from their own accounts.') +
-      (team.members.length ? '<div class="acc-list">' + team.members.map(function (m) { return '<div class="acc-row"><div class="main"><strong>' + esc(m.email) + '</strong><span class="js">' +
+      (team.members.length ? part('People on <b>the team</b>', '<div class="acc-list">' + team.members.map(function (m) { return '<div class="acc-row"><span class="acc-co" aria-hidden="true">' + esc(m.email.charAt(0).toUpperCase()) + '</span><div class="main"><strong>' + esc(m.email) + '</strong><span class="js">' +
         (m.has_account ? (m.confirmed ? m.live_jobs + plural(m.live_jobs, ' live job', ' live jobs') : 'has an account, email not confirmed yet') : 'no account yet: they sign up with this address') + '</span></div>' +
-        '<div class="ctl"><button class="btn ghost sm" type="button" data-team-del="' + esc(m.email) + '">Remove</button></div></div>'; }).join('') + '</div>'
-        : '<p class="acc-quiet">Nobody added yet. You are the only one who posts for ' + esc(me.company || me.domain) + '.</p>') +
-      '<form class="card acc-inline" id="team-add" novalidate>' + field('Colleague’s work email', 'email', 'type="email" required placeholder="name@' + esc(me.domain) + '"') + err + '<button class="btn primary" type="submit">Add to the team</button></form>';
+        '<div class="ctl"><button class="btn ghost sm" type="button" data-team-del="' + esc(m.email) + '">Remove</button></div></div>'; }).join('') + '</div>', 'members', team.members.length + plural(team.members.length, ' colleague', ' colleagues'))
+        : empty('Nobody added yet.', ' You are the only one who posts for ' + esc(me.company || me.domain) + '. Add a colleague below: they post under the company’s name from their own account.', '', 'team')) +
+      part('Add a <b>colleague</b>', '<form class="acc-inline flat" id="team-add" novalidate>' + field('Colleague’s work email', 'email', 'type="email" required placeholder="name@' + esc(me.domain) + '"') + err + '<button class="btn primary" type="submit">Add to the team</button></form>' +
+        '<p class="note">They get a letter, sign up with that address and post from their own account. Their first jobs are read by a person, like anyone’s.</p>', 'add', 'Invite');
   }
   function findPanel() {
     if (!(pub.talent === 'on' && S.sent && me.posts_as.indexOf('employer') >= 0)) return '';

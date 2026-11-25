@@ -4643,9 +4643,9 @@ main.hub #clist .tile .n{overflow-wrap:normal;word-break:normal;hyphens:none}
 /* one framed panel per section */
 #acc .acc-pan{margin:0 0 18px;padding:var(--acc-pad);border:1px solid var(--line);border-radius:var(--acc-r);background:var(--card)}
 #acc .acc-sec.acc-pan{margin-top:0}
-#acc .acc-pan>.acc-lbl.sm{margin:0 0 12px}
-#acc .acc-pan>.acc-h2{margin:0 0 18px;font:400 25px/1.15 var(--display);letter-spacing:-.035em}
-#acc .acc-pan>.acc-h2 b{font-weight:750}
+#acc .acc-pan>.acc-lbl.sm,#acc .card>.acc-lbl.sm{margin:0 0 12px}
+#acc .acc-pan>.acc-h2,#acc .card>.acc-h2{margin:0 0 18px;font:400 25px/1.15 var(--display);letter-spacing:-.035em}
+#acc .acc-pan>.acc-h2 b,#acc .card>.acc-h2 b{font-weight:750}
 #acc .acc-pan>.acc-sub:first-of-type{margin-top:-6px}
 #acc .acc-pan .note{font-size:13.5px;color:var(--faint);line-height:1.5}
 #acc .acc-pan>.note:last-child,#acc .acc-pan>p:last-child,#acc .acc-pan>form:last-child .acc-btns{margin-bottom:0}
@@ -4792,6 +4792,7 @@ main.hub #clist .tile .n{overflow-wrap:normal;word-break:normal;hyphens:none}
 #acc .pc-for{justify-self:center;margin-top:2px;font-size:13.5px}
 #acc .acc-dd-f{flex:1 0 100%;margin-top:6px}
 #acc .acc-dd-f .acc-btns{margin-top:4px}
+#acc .acc-pan.acc-form{margin:0 0 18px}
 #acc .acc-pan .acc-danger,#acc .acc-pan .acc-pick{padding:0;border:0;background:none;box-shadow:none}
 #acc .acc-pan .acc-pick{margin-bottom:18px}
 #acc .acc-cvp .acc-pan{padding:var(--acc-pad)}
@@ -4808,7 +4809,7 @@ main.hub #clist .tile .n{overflow-wrap:normal;word-break:normal;hyphens:none}
 }
 @media(max-width:640px){
   #acc .acc-ph .acc-t{font-size:30px}
-  #acc .acc-pan>.acc-h2{font-size:22px}
+  #acc .acc-pan>.acc-h2,#acc .card>.acc-h2{font-size:22px}
   #acc .acc-hero .acc-nums a{padding:16px 20px}
   #acc .acc-nums b{font-size:32px}
   #acc .acc-nums.three{grid-template-columns:minmax(0,1fr)}
