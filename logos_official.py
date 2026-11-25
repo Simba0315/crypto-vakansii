@@ -717,7 +717,8 @@ DEFAULT_ICON = re.compile(r"(wp-includes/images/w-logo|wp\.com/i/webclip|jupiter
                           r"logo-default\.png|isteam/ip/static|weebly\.com/favicon|squarespace\.com/favicon|shopify\.com/favicon|"
                           r"hubspot.*favicon|godaddy|default[-_]?favicon|favicon[-_]default|placeholder|/img/v1\.1/favicons/)", re.I)   # the last: JazzHR's own
 # icons that unrelated sites serve byte for byte (26 Nov 2026: a gears favicon.ico on ccres.org, ccsww.org and compassconnections.org)
-DEFAULT_ICON_MD5 = {"1db747255c64a30f9236e9d929e986ca", "c30c7d42707a47a3f4591831641e50dc"}   # gears; the Next.js default favicon.ico
+DEFAULT_ICON_MD5 = {"1db747255c64a30f9236e9d929e986ca", "c30c7d42707a47a3f4591831641e50dc",  # gears; the Next.js default favicon.ico;
+                    "4d12cc739cd0c7f7d202980d91a09c97"}   # Deutsche Telekom's T as dwavequantum.com's touch icon
 CHALLENGE = re.compile(r"(cf-chl|challenge-platform|just a moment\.\.\.|attention required|px-captcha|_incapsula_resource|captcha-delivery|"
                        r"pardon our interruption|access denied|request unsuccessful|are you a robot|bot detection|ddos-guard|sgcaptcha)", re.I)
 PARKED = re.compile(r"(domain (?:name )?(?:is )?for sale|location\.href=.?/lander|domainmarket\.com|[a-z0-9-]+\.(?:com|net|org|co|io) is for sale|buy this domain|this domain may be for sale|hugedomains|sedoparking|parkingcrew|"
