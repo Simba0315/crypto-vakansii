@@ -3464,6 +3464,36 @@ for _loc, _want in (("Cary,North Carolina,United States", "Cary, North Carolina,
 
 
 ASSOC_SENIOR = re.compile(r"(?i)associate (?:rvp|avp|svp|evp|regional vice president|area vice president|managing director|general manager|head|dean|chief)\b")
+# Behaviour analysts and technicians (ABA therapy, mostly for autistic children: BCBA, BCaBA, RBT) are clinical work, but collect.CATS
+# files a title by its first generic word: "analyst" put "Board Certified Behavior Analyst (BCBA)" in Data & Research, "technician" put
+# "Registered Behavior Technician (RBT)" in Manufacturing & Trades, and a bare "BCBA" fell to Other (QA 25 Nov 2026; on the live site
+# that day 1,161, 2,733 and 264 open jobs). They go to Healthcare here, as the build reads the records, and in live.py's own entries:
+# not in collect.CATS, which is part of collect.RULES, whose change makes the hourly run read every posting again.
+# Only from those three fields: a title the rules already gave a field of its own ("School BCBA" in Education) keeps it.
+ABA_ROLE = re.compile(r"(?i)\bbcba(?:-d)?\b|\bbcaba\b|\brbt\b|\bboard[- ]certified (?:assistant )?behaviou?r(?:al)? analyst|\bregistered behaviou?r(?:al)? tech|"
+                      r"\bapplied behaviou?r analy|\bbehaviou?r(?:al)? (?:analyst|technician|tech\b|intervention(?:al)?ist|health tech)")
+NOT_ABA = re.compile(r"(?i)\b(?:user|customer|consumer|shopper|buyer|market(?:ing)?|fraud|threat|insider|network|cyber|security|player|trading|credit|data|digital|online|web|product|financial)\s+behaviou?r")
+ABA_FROM = ("data-research", "manufacturing", OTHER[0])
+
+
+def job_field(title, cat):
+    """The job's field (collect.CATS slug), with behaviour analysts and technicians moved to Healthcare (ABA_ROLE)."""
+    title, cat = title or "", cat or OTHER[0]
+    return "healthcare" if cat in ABA_FROM and ABA_ROLE.search(title) and not NOT_ABA.search(title) else cat
+
+
+for _t, _c, _want in (("Board Certified Behavior Analyst (BCBA)", "data-research", "healthcare"), ("BCBA - Clinic Supervisor", "other", "healthcare"),
+                      ("Board Certified Assistant Behavior Analyst (BCaBA)", "data-research", "healthcare"), ("Behaviour Analyst", "data-research", "healthcare"),
+                      ("Registered Behavior Technician (RBT)", "manufacturing", "healthcare"), ("Behavior Technician - Spanish speaking", "manufacturing", "healthcare"),
+                      ("Licensed Behavioral Analyst", "data-research", "healthcare"), ("Behavioral Interventionist", "other", "healthcare"), ("RBT", "other", "healthcare"),
+                      ("Applied Behavior Analysis Technician (ABAT)", "manufacturing", "healthcare"), ("Behavior Health Technician", "manufacturing", "healthcare"),
+                      ("Data Analyst", "data-research", "data-research"), ("Business Analyst", "data-research", "data-research"),
+                      ("Senior Data Analyst, Customer Behavior", "data-research", "data-research"), ("User Behavior Analyst", "data-research", "data-research"),
+                      ("Behavioral Data Analyst", "data-research", "data-research"), ("Behavioral Health Data Analyst", "data-research", "data-research"),
+                      ("Senior FEA Analyst – Nuclear Fuel Behavior & Operations", "data-research", "data-research"), ("Fraud Behavior Analyst", "data-research", "data-research"),
+                      ("Maintenance Technician", "manufacturing", "manufacturing"), ("School BCBA", "education", "education"), ("Behavior Analyst", "", "healthcare"),
+                      ("", "data-research", "data-research"), (None, None, "other")):
+    assert job_field(_t, _c) == _want, (_t, _c, job_field(_t, _c))
 FOR_JUNIORS = re.compile(r"(?i)\b(?:early[- ]career|university|campus|graduate|new grad|intern(?:ship)?)s?\b[^,]*?\b(?:recruit\w*|sourcer|program manager|programs? lead|coordinator|talent partner)\b")
 REQ_CODE = [re.compile(r"\s*[\(\[]\s*(?:R|JR|REQ|Req|req|ID|Job ID|Requisition(?: ID)?)\s*[-#:_ ]?\s*\d{3,}\s*[\)\]]"),   # "(R6043)", "[REQ-12345]"
             re.compile(r"\s*[\(\[]\s*\d{5,}\s*[\)\]]"),                                                    # "(123456)", never a year
@@ -3538,6 +3568,7 @@ def main():
         # "Associate RVP, Provider Sales" was a junior role in the lists and on its page (24 Nov 2026): collect.level() knows
         # "Associate VP" and "Associate Director" but not the regional and managing variants. Mended here, not in collect.py, whose
         # rules hash decides when every record is read again.
+        j["cat"] = job_field(j["title"], j.get("cat"))         # behaviour analysts and technicians: Healthcare, not Data or Manufacturing (ABA_ROLE)
         if j["level"] == "Junior" and ASSOC_SENIOR.match(j["title"]): j["level"] = "Lead"
         elif j["level"] in ("Junior", "Intern") and FOR_JUNIORS.search(j["title"]): j["level"] = ""      # "Early Career & University Recruiter", "Intern Program Coordinator" hire juniors, are not ones
         j["entry"] = j["level"] in ("Junior", "Intern")
