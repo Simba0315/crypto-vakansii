@@ -94,8 +94,8 @@
   // what the visitor keeps out of every list, in this browser: companies and title words go to the server with the search; jobs marked
   // "Not interested" and, when asked, jobs already applied to are taken out of the rows here
   var muted = function () { return Object.keys(H.mute.c).length > 0 || H.mute.w.length > 0; };
+  var hid = {}, done = null;          // read once per answer (show)
   var keep = function (j) {
-    var hid = H.get('hrn_hidden', {}), done = H.parse('').done;
     if (hid[j[0]] || (done && done[j[0]]) || H.mute.c[j[2]]) return false;
     var low = j[1].toLowerCase();
     for (var w = 0; w < H.mute.w.length; w++) if (low.indexOf(H.mute.w[w]) >= 0) return false;
@@ -133,6 +133,7 @@
   var show = function (d, append) {
     clearTimeout(slow);
     var rows = [], fresh = [];
+    hid = H.get('hrn_hidden', {}); done = H.parse('').done;
     if (!append) { found = []; got = 0; extra = new Map(); }
     d.jobs.forEach(function (a) { var j = H.fromApi(a); rows.push(j); if (keep(j)) { fresh.push(j); if (a[17]) extra.set(j[0], a[17]); } });
     found = found.concat(fresh); got += rows.length; total = d.total;
