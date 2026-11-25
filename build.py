@@ -12342,13 +12342,17 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     is_core = lambda u: (u == "" or (u.count("/") == 1 and "." not in u) or re.fullmatch(r"(jobs|roles|guides)/[a-z0-9-]+/", u) is not None
                          or (u.startswith("locations/") and u.count("/") == 2 and u.split("/")[1] in countryish))
     core_urls = [u for u in URLS if not u.startswith("job/") and is_core(u)]
-    parts = [("sitemaps/core.xml", core_urls), ("sitemaps/pages.xml", [u for u in URLS if not u.startswith("job/") and not is_core(u)])]
+    # A sitemap may hold at most 50,000 addresses (sitemaps.org; Google refuses a bigger file). pages.xml alone held 80,256 on 25 Nov
+    # 2026, so the other pages go in files of 40,000: pages.xml first (the address already known to search engines), then pages-2.xml ...
+    page_urls = [u for u in URLS if not u.startswith("job/") and not is_core(u)]
+    parts = [("sitemaps/core.xml", core_urls)]
+    parts += [("sitemaps/pages.xml" if i == 0 else f"sitemaps/pages-{i // 40000 + 1}.xml", page_urls[i:i + 40000]) for i in range(0, max(len(page_urls), 1), 40000)]
     parts += [(f"sitemaps/jobs-{i // 20000 + 1}.xml", job_urls[i:i + 20000]) for i in range(0, len(job_urls), 20000)]
     for name, urls in parts: write(name, urlset(urls), sitemap=False)
     write("sitemap.xml", '<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
           + "".join(f"<sitemap><loc>{FULL}/{name}</loc><lastmod>{max([job_mod.get(u, TODAY) for u in urls] or [TODAY])}</lastmod></sitemap>" for name, urls in parts if urls)
           + "</sitemapindex>", sitemap=False)
-    print(f"sitemaps: {len(core_urls):,} main pages, {sum(len(u) for n, u in parts[1:2]):,} other pages, {len(job_urls):,} job pages")
+    print(f"sitemaps: {len(core_urls):,} main pages, {len(page_urls):,} other pages, {len(job_urls):,} job pages")
     ai_bots = ["GPTBot", "OAI-SearchBot", "ChatGPT-User", "ClaudeBot", "Claude-SearchBot", "Claude-User", "PerplexityBot", "Perplexity-User", "Google-Extended",
                "Applebot-Extended", "Amazonbot", "meta-externalagent", "CCBot", "DuckAssistBot", "MistralAI-User", "cohere-ai"]
     if MAIL.get("security"):
