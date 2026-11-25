@@ -1321,7 +1321,7 @@ else {
     const faq = (html.match(/"@type": ?"Question"/g) || []).length, tool = html.slice(html.indexOf('<div class="tl" data-tool='), html.indexOf('<div class="tl-after">')), after = html.slice(html.indexOf('<div class="tl-after">'));
     ok('page ' + slug + ': built, with a title of at most 65 characters that keeps the brand and a description of 140 to 160', html.length > 5000 && title.length <= 65 && / \| /.test(title) && desc.length >= 140 && desc.length <= 160, [title.length, desc.length, title]);
     ok('page ' + slug + ': one h1, an answer-first lead, the tool, a worked example, how it works, at least five questions, related tools', (html.match(/<h1[\s>]/g) || []).length === 1 && /<p class="lead">[^<]{200,}<\/p>/.test(html) &&
-      tool.indexOf('data-tool="' + slug + '"') > 0 && (after.match(/<h2>/g) || []).length >= 4 && faq >= 5 && (after.match(/<div class="tl-faq">([\s\S]*?)<\/section>/)[1].match(/<h3>/g) || []).length === faq && /Related tools/.test(after), [faq]);
+      tool.indexOf('data-tool="' + slug + '"') > 0 && (after.match(/<h2[\s>]/g) || []).length >= 4 && faq >= 5 && (after.match(/<div class="tl-faq">([\s\S]*?)<\/section>/)[1].match(/<h3>/g) || []).length === faq && /Related tools/.test(after), [faq]);
     ok('page ' + slug + ': every field shown for one choice names a select of the form and values it has', Array.from(tool.matchAll(/data-on="([a-z]+):([^"]+)"/g)).every(function (m) {
       const sel = tool.match(new RegExp('<select id="tl-' + m[1] + '" data-k="' + m[1] + '"[^>]*>([\\s\\S]*?)</select>'));
       return sel && m[2].split(' ').every(function (val) { return sel[1].indexOf('<option value="' + val + '"') >= 0; });
