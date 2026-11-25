@@ -4550,3 +4550,22 @@ main.srch .shero .searchbar.wide{max-width:none}
   main.srch #fwrap:has(.morefilters[open])>.fx-chips{flex-basis:100%;margin:0 -20px;padding:0 20px}
   main.srch #fwrap .morefilters summary{height:40px;min-height:40px;padding:0 14px}
 }
+
+/* ---- advice guides (/guides/<advice>/): the first screen is the panel the other guides open with; the short answer is a white card
+   in it; the tool under the article is a light panel with the arrow pill (it was the last black block in the guides) ---- */
+.phero .adv-short{margin:26px 0 20px;padding:20px 24px 22px;border:1px solid var(--line);border-radius:20px;background:var(--card)}
+.phero .adv-short span{margin-bottom:10px}
+.phero .adv-short p{font-size:18px}
+.phero .stamp{margin:14px 0 0}
+.phero .adv-short+.lead{margin:0;font-size:17px;color:var(--muted)}
+.adv-tool{gap:18px 28px;margin:40px 0;padding:26px 28px;border-radius:24px;background:var(--bg2);color:var(--text)}
+.adv-tool b{font:650 20px/1.25 var(--display);letter-spacing:-.02em}
+.adv-tool p{color:var(--muted);opacity:1}
+.adv-tool .btn.primary{background:var(--btn);border-color:var(--btn);color:var(--btn-ink)}
+.adv-tool .btn.primary:hover{background:var(--btn-h);border-color:var(--btn-h);color:var(--btn-h-ink)}
+/* the verdict of a comparison (/vs/…): a white card right under the panel with its label, the length of the panel (it was a grey box half as wide) */
+.khero+.vs-pick{max-width:none;margin:16px 0 0;padding:20px 26px;border:1px solid var(--line);border-left:0;border-radius:22px;background:var(--card);font-size:16.5px;line-height:1.55}
+.khero+.vs-pick b:first-child{display:inline-flex;margin:0 10px 0 0;padding:3px 11px;border-radius:999px;background:var(--green-soft);color:var(--green);font-size:12.5px;font-weight:650;vertical-align:2px}
+/* glossary term (v4): the byline and the two cards stand inside the first panel (they were under it, on the page) */
+.phero .gl-card.gl-tip{border-color:var(--line);background:var(--card)}
+.phero .khero-t+.gl-top,.phero .stamp+.gl-top{margin-top:26px}

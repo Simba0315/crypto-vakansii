@@ -51,7 +51,7 @@ def render(a, ctx, e, P):
         h += '<h2>Mistakes to avoid</h2><ul class="crosses">' + "".join(f"<li>{e(m)}</li>" for m in a["mistakes"]) + "</ul>"
     if a.get("tool"):
         u, name, why = a["tool"]
-        h += f'<div class="adv-tool"><div><b>{e(name)}</b><p>{e(why)}</p></div><a class="btn primary" href="{P}/{u}">Open it, free</a></div>'
+        h += f'<div class="adv-tool"><div><b>{e(name)}</b><p>{e(why)}</p></div><a class="btn primary go" href="{P}/{u}">Open it, free<i aria-hidden="true"></i></a></div>'
     if a.get("faq"):
         # a heading with the article's own key, not a bare "Questions" (owner's page standard: every H2 carries a key or a question; 24 Nov 2026)
         faq_h = a.get("faq_h") or FAQ_H.get(a["slug"]) or "Questions about " + re.split(r"[:,]", a["title"])[0].strip().lower()

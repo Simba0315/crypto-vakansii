@@ -1257,9 +1257,10 @@ FRAME_LABEL = {"resume": "Resume example", "cover-letter-examples": "Cover lette
                "privacy": "Privacy", "terms": "Terms", "methodology": "Methodology", "safety": "Safety", "promise": "Our promise", "status": "Status",
                "help": "Help", "job-posting-sites": "For employers", "job-search-engines": "Compared", "free-resume-builders": "Compared",
                "how-long-job-postings-stay-open": "Insight", "internships": "Internships", "jobs-near-me": "Near you", "my-jobs": "Your tracker"}
-FRAME_ARTICLE = re.compile(r'^(<div class="has-toc[^"]*"><div class="toc-main">)?(<div class="crumbs">.*?</div>)<article class="guide">(<h1[^>]*>.*?</h1>)((?:<p class="stamp">.*?</p>)?)(<p class="lead">.*?</p>)', re.S)
+FRAME_ARTICLE = re.compile(r'^(<div class="has-toc[^"]*"><div class="toc-main">)?(<div class="crumbs">.*?</div>)<article class="guide">(<h1[^>]*>.*?</h1>)((?:<p class="stamp">.*?</p>)?)'
+                           r'((?:<div class="adv-short"><span>[^<]*</span><p>.*?</p></div>)?)(<p class="lead">.*?</p>)', re.S)
 FRAME_TOOL = re.compile(r'^(<div class="crumbs">.*?</div>)(<nav class="tsub".*?</nav>)(<h1[^>]*>.*?</h1>)(<p class="lead">.*?</p>)((?:<p class="plain">.*?</p>)?)', re.S)
-FRAME_TERM = re.compile(r'^(<div class="crumbs">.*?</div>)(<h1[^>]*>.*?</h1>)(?=<div class="gl-top">)', re.S)
+FRAME_TERM = re.compile(r'^((?:<div class="has-toc[^"]*"><div class="toc-main">)?)(<div class="crumbs">.*?</div>)(<h1[^>]*>.*?</h1>)((?:<p class="stamp">.*?</p>)?)(?=<div class="gl-top">)', re.S)
 
 
 def _div_end(s, at):
@@ -1276,13 +1277,15 @@ def frame_first(path, body):
     if len(seg) == 1 and seg[0] in ("locations",): return body
     lab = f'<p class="sec-label">{FRAME_LABEL[seg[0]]}</p>'
     if (m := FRAME_ARTICLE.match(body)):                 # guides and "jobs for": the panel opens the article
-        pre, cr, h1, stamp, lead = (g or "" for g in m.groups())
+        pre, cr, h1, stamp, short, lead = (g or "" for g in m.groups())
+        if short:          # an advice guide (v4, 25 Nov 2026): the byline under the title, then the short answer as a white card, then the opening
+            return pre + f'<article class="guide"><div class="khero phero"><div class="khero-t">{cr}{lab}{h1}{stamp}{short}{lead}</div></div>' + body[m.end():]
         return pre + f'<article class="guide"><div class="khero phero"><div class="khero-t">{cr}{lab}{h1}{lead}{stamp}</div></div>' + body[m.end():]
     if (m := FRAME_TOOL.match(body)):                    # a tool: the panel, then the row of the other tools
         cr, nav, h1, lead, plain = (g or "" for g in m.groups())
         return f'<div class="khero phero"><div class="khero-t">{cr}{lab}{h1}{lead}{plain}</div></div>{nav}' + body[m.end():]
     if (m := FRAME_TERM.match(body)) and (end := _div_end(body, m.end())) > 0:     # a glossary term: the definition goes into the panel
-        return f'<div class="khero phero"><div class="khero-t">{m.group(1)}{lab}{m.group(2)}</div>{body[m.end():end]}</div>' + body[end:]
+        return m.group(1) + f'<div class="khero phero"><div class="khero-t">{m.group(2)}{lab}{m.group(3)}{m.group(4)}</div>{body[m.end():end]}</div>' + body[end:]
     m = FRAME_RX.match(body)
     if not m: return body
     pre, cr, h1, plain, lead, nums = (g or "" for g in m.groups())
