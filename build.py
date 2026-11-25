@@ -5233,6 +5233,7 @@ def main():
             prow.append((s_, nm, c, median(m_) if len(m_) >= 10 else None, len(m_), median(h_) if len(h_) >= 10 else None,
                          sum(1 for j in rj if j["remote"]), sum(1 for j in rj if j.get("entry")), bls_wages.OCC[gc_] if gc_ else None))
         prow.sort(key=lambda r_: -(r_[3] or 0))
+        top_m = max([r_[3] for r_ in prow if r_[3]] or [1])
         gov_any = any(r_[8] for r_ in prow)
         pay_tab = ""
         if sum(1 for r_ in prow if r_[3] or r_[5]) >= 3:
@@ -5240,7 +5241,9 @@ def main():
                               '<div class="tablewrap"><table><tr><th>Kind of work</th><th>Open jobs</th><th>Median advertised salary</th>' + ("<th>Median hourly rate</th>" if hourly_ else "")
                               + "<th>Remote</th><th>Open to beginners</th>" + ("<th>US median, all employers</th>" if gov_any else "") + "</tr>"
                               + "".join(f'<tr><td><a href="{P}/roles/{s_}/">{e(nm)}</a></td><td>{c:,}</td><td>'
-                                        + ((f'<a href="{P}/salaries/{s_}/">{money(m_)}</a>' if k_ >= 20 else money(m_)) if m_ else "–") + "</td>"
+                                        # a bar beside each median, as long as the best paid is wide (pictures before words; .bar of the data pages)
+                                        + ((f'<span class="bar"><i style="width:{max(2, round(100 * m_ / top_m))}%"></i></span>'
+                                            + (f'<a href="{P}/salaries/{s_}/">{money(m_)}</a>' if k_ >= 20 else money(m_))) if m_ else "–") + "</td>"
                                         + (f"<td>{f'${h_:,.2f}' if h_ else '–'}</td>" if hourly_ else "")
                                         + f"<td>{100 * r_ / max(1, c):.0f}%</td><td>{b_:,}</td>"
                                         + (f"<td>{money(g_[3])}</td>" if gov_any and g_ else "<td>–</td>" if gov_any else "") + "</tr>"
@@ -5286,14 +5289,19 @@ def main():
                 gn_, out_, opn_, gm_ = fields_info.OOH[g]
                 # one sentence that names the field: several fields share a government group, never a sentence
                 ps_ += (f"<li>{'Most' if i_ == 0 else 'Some'} {e(q_)} here fall under the government’s <b>{e(gn_)}</b>, which the Bureau of Labor Statistics expects to {e(out_)} "
-                        f"from 2025 to 2035, with about {e(opn_)} openings a year" + (" (mostly to replace people who leave)" if out_.startswith(("decline", "show little", "grow slower")) else "")
-                        + f" and a median annual wage of ${gm_:,} in May 2025, against ${fields_info.ALL_MEDIAN:,} for all occupations "
-                        f'(<a href="{fields_info.OOH_URL.format(g)}">Occupational Outlook Handbook</a>).</li>')
+                        f"from 2025 to 2035, with about {e(opn_)} openings a year" + (", mostly to replace people who leave" if out_.startswith(("decline", "show little", "grow slower")) else "")
+                        + f' (<a href="{fields_info.OOH_URL.format(g)}">Occupational Outlook Handbook</a>).</li>')
+            # the groups' median wages beside all occupations, drawn (the sentences above give the outlook, the bars the pay)
+            wg_ = [(fields_info.OOH[g][0], fields_info.OOH[g][3], fields_info.OOH_URL.format(g)) for g in F_["ooh"]] + [("all occupations", fields_info.ALL_MEDIAN, "https://www.bls.gov/ooh/")]
+            mw_ = max(w_ for _, w_, _ in wg_)
+            bars_w = ('<p class="note">Median annual wage, May 2025</p><div class="hbars">' + "".join(
+                f'<a href="{u_}"><span class="hn">{e(n_[:1].upper() + n_[1:])}</span><span class="hb"><i style="width:{max(3, round(100 * w_ / mw_))}%"></i></span><span class="hc">${w_:,}</span></a>'
+                for n_, w_, u_ in wg_) + "</div>")
             occ_ = [(o, *fields_info.OCC[o]) for o in F_.get("occ", ())]
             tab_ = ('<div class="tablewrap"><table><tr><th>Occupation (BLS)</th><th>Usual education for a first job</th><th>Median pay, 2025</th></tr>'
                     + "".join(f'<tr><td><a href="{fields_info.OOH_URL.format(g)}">{e(o)}</a></td><td>{e("Varies by route" if ed.startswith("See ") else ed)}</td><td>${pay:,}</td></tr>' for o, g, ed, pay in occ_)
                     + "</table></div>") if occ_ else ""
-            gov_ = kpanel(section(f"{kj_} outlook: [[what the government projects]]", f'<ul class="feats">{ps_}</ul>' + tab_
+            gov_ = kpanel(section(f"{kj_} outlook: [[what the government projects]]", f'<ul class="feats">{ps_}</ul>' + bars_w + tab_
                                   + f'<p class="note">US Bureau of Labor Statistics, Occupational Outlook Handbook, projections 2025-35 and wages of May 2025, read {fdate(fields_info.OOH_READ)}.</p>', label="Official data",
                                   sub="Every employer in the US, not only the ones hiring here."))
         # links out: skills, places and salaries of the field
