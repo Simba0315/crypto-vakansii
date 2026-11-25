@@ -5251,7 +5251,9 @@ def main():
             m_ = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in rj if j.get("usd"))
             h_ = sorted((a_ + b_) / 2 for j in rj if (ab_ := usd_hourly(j.get("salary"))) for a_, b_ in [ab_])
             gc_ = bls_wages.ROLE.get(s_)
-            prow.append((s_, nm, c, median(m_) if len(m_) >= 10 else None, len(m_), median(h_) if len(h_) >= 10 else None,
+            # an hourly median only where hourly postings are a real part of the work (5%): "Research scientist $20.00 an hour" came from a few
+            # student assistant postings beside a $200K yearly median (live, 25 Nov 2026)
+            prow.append((s_, nm, c, median(m_) if len(m_) >= 10 else None, len(m_), median(h_) if len(h_) >= max(10, 0.05 * len(rj)) else None,
                          sum(1 for j in rj if j["remote"]), sum(1 for j in rj if j.get("entry")), bls_wages.OCC[gc_] if gc_ else None))
         prow.sort(key=lambda r_: -(r_[3] or 0))
         top_m = max([r_[3] for r_ in prow if r_[3]] or [1])
