@@ -2148,6 +2148,18 @@
       effective: hours > 0 ? total / hours : rate, premium: ot * rate * (mult - 1), year: total * 52 };
   };
 
+  /* ---------- paid time off: what unused hours are worth, and how much a year of earning them comes to. Plain arithmetic; whether unused time is paid out on leaving is a rule of the place and the employer ---------- */
+  T.pto = function (o) {
+    o = o || {};
+    var blank = function (v) { return clean(v) === ''; };
+    var rate = num(o.rate), unused = blank(o.unused) ? 0 : num(o.unused), per = blank(o.per) ? 0 : num(o.per), n = blank(o.periods) ? 26 : num(o.periods), day = blank(o.day) ? 8 : num(o.day);
+    if (blank(o.unused) && blank(o.per)) return null;
+    if (!(rate > 0) || rate > 1e6 || !(unused >= 0) || unused > 10000 || !(per >= 0) || per > 200 || !(n >= 1) || n > 366 || !(day > 0) || day > 24) return null;
+    var yearHours = per * n;
+    return { rate: rate, unused: unused, per: per, periods: n, day: day, payout: unused * rate, days: unused / day, weeks: unused / (day * 5),
+      yearHours: yearHours, yearDays: yearHours / day, yearWeeks: yearHours / (day * 5), yearValue: yearHours * rate, periodValue: per * rate };
+  };
+
   if (typeof module !== 'undefined' && module.exports) module.exports = T;
   if (typeof document === 'undefined') return;
   window.HRNT = T;                       // the resume builder scores the resume and matches it to a posting with the same code
@@ -3262,6 +3274,26 @@
           : 'All ' + esc(h(r.hours)) + ' are at or under the threshold of ' + esc(h(r.threshold)) + ', so every hour is paid at the plain rate. Some places also count overtime by the day, which this weekly sum does not.') +
         kv([['Regular pay', money(r.regPay, s, 2)], ['Overtime pay', money(r.otPay, s, 2)], ['Total for the week', money(r.total, s, 2)], ['Average per hour worked', money(r.effective, s, 2)],
           ['Overtime rate', money(r.otRate, s, 2) + ' an hour'], ['52 weeks like this one', money(r.year, s, 0)]]));
+    });
+  };
+
+  /* ---------- paid time off ---------- */
+  tools['pto-payout'] = function () {
+    var out = $('tl-out'), title = 'Your paid time off';
+    form(function (v) {
+      if (!clean(v.rate)) return idle(out, title, 'Enter your hourly rate, then the hours you have not used or the hours you earn in each pay period.');
+      if (!clean(v.unused) && !clean(v.per)) return idle(out, title, 'Enter the hours of paid time off you have not used, or the hours you earn in each pay period.');
+      var r = T.pto(v), s = v.cur;
+      if (!r) return idle(out, title, 'Check the figures: the rate must be above zero, the hours cannot be negative, a pay period needs at least 1 a year, and a working day is 1 to 24 hours.');
+      var h = function (x) { return fmt(x, 2) + (x === 1 ? ' hour' : ' hours'); }, d = function (x) { return fmt(x, 1) + (x === 1 ? ' day' : ' days'); };
+      var rows = [];
+      if (r.unused) rows.push(['Unused hours', h(r.unused)], ['In working days', d(r.days) + ' of ' + fmt(r.day, 2) + ' hours'], ['In working weeks of 5 days', fmt(r.weeks, 2)], ['What they are worth', money(r.payout, s, 2)]);
+      if (r.per) rows.push(['Earned in a year', h(r.yearHours) + ' (' + d(r.yearDays) + ')'], ['Weeks earned in a year', fmt(r.yearWeeks, 2)], ['Worth in a year', money(r.yearValue, s, 2)], ['Worth in each pay period', money(r.periodValue, s, 2)]);
+      var lead = r.unused ? big(money(r.payout, s, 2), 'before tax') : big(h(r.yearHours), 'earned in a year');
+      var note = r.unused
+        ? esc(h(r.unused)) + ' at ' + esc(money(r.rate, s, 2)) + ' an hour is ' + esc(money(r.payout, s, 2)) + ', which is ' + esc(d(r.days)) + ' of ' + esc(fmt(r.day, 2)) + ' hours. Whether unused time is paid out when you leave depends on where you work and on your employer\u2019s policy: this is arithmetic, not legal advice.'
+        : esc(h(r.per)) + ' in each of ' + esc(fmt(r.periods, 0)) + ' pay periods is ' + esc(h(r.yearHours)) + ' a year, which is ' + esc(d(r.yearDays)) + ' of ' + esc(fmt(r.day, 2)) + ' hours.';
+      board(out, title, r.unused ? d(r.days) + ' unused' : d(r.yearDays) + ' a year', lead + sub(note) + kv(rows));
     });
   };
 

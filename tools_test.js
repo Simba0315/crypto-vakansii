@@ -1253,6 +1253,22 @@ ok('recommendation: a named reader, no date, no second strength, no contact', /^
 eq('recommendation: empty form keeps reminders in brackets', [/\[their name\]/.test(T.recommendation({}).text), /\[first strength\]/.test(T.recommendation({}).text), /\[Add one example that shows it\.\]/.test(T.recommendation({}).text), /\[Your name\]$/.test(T.recommendation({}).text),
   T.recommendation({}).text.indexOf('To whom it may concern,'), T.recommendation({ writer: 'x', who: 'y', tone: 'z' }).text === T.recommendation({}).text], [true, true, true, true, 0, true]);
 
+/* paid time off: unused hours worth money, hours earned in a year */
+let pt = T.pto({ rate: '25', unused: '60', per: '4', periods: '26' });
+eq('pto: $25 an hour, 60 unused hours, 4 hours a biweekly period', [pt.payout, pt.days, pt.weeks, pt.yearHours, pt.yearDays, pt.yearWeeks, pt.yearValue, pt.periodValue], [1500, 7.5, 1.5, 104, 13, 2.6, 2600, 100]);
+pt = T.pto({ rate: '30', unused: '12' });
+eq('pto: only unused hours; the year is zero and a 26-period default stays unused', [pt.payout, pt.yearHours, pt.yearValue, pt.periods], [360, 0, 0, 26]);
+pt = T.pto({ rate: '30', per: '6.67', periods: '24' });
+near('pto: only the earning side, 6.67 hours twice a month', pt.yearHours, 160.08);
+eq('pto: nothing unused when only the earning side is typed', [pt.unused, pt.payout], [0, 0]);
+pt = T.pto({ rate: '40', unused: '10', day: '10' });
+eq('pto: a ten-hour working day', [pt.days, pt.weeks], [1, 0.2]);
+eq('pto: weekly, monthly and yearly periods', [T.pto({ rate: '20', per: '2', periods: '52' }).yearHours, T.pto({ rate: '20', per: '8', periods: '12' }).yearHours, T.pto({ rate: '20', per: '80', periods: '1' }).yearHours], [104, 96, 80]);
+eq('pto: nothing typed', [T.pto({}), T.pto({ rate: '25' }), T.pto({ rate: '25', unused: '', per: '' })], [null, null, null]);
+eq('pto: impossible figures', [T.pto({ rate: '0', unused: '5' }), T.pto({ rate: '25', unused: '-1' }), T.pto({ rate: '25', unused: '5', day: '0' }), T.pto({ rate: '25', unused: '5', day: '25' }), T.pto({ rate: '25', per: '4', periods: '0' }), T.pto({ rate: 'abc', unused: '5' })], [null, null, null, null, null, null]);
+eq('pto: zero unused hours is a valid answer worth nothing', T.pto({ rate: '25', unused: '0' }).payout, 0);
+eq('pto: the figures as the page prints them', [T.money(T.pto({ rate: '25', unused: '60' }).payout, '$', 2), T.money(T.pto({ rate: '25', per: '4', periods: '26' }).yearValue, '$', 2)], ['$1,500.00', '$2,600.00']);
+
 /* overtime pay: weekly arithmetic, with the boundary at the threshold */
 let ot = T.overtime({ rate: '20', hours: '46', threshold: '40', mult: '1.5' });
 eq('overtime: $20 an hour, 46 hours, time and a half', [ot.regHours, ot.otHours, ot.otRate, ot.regPay, ot.otPay, ot.total, T.roundTo(ot.effective, 2), ot.premium, ot.year], [40, 6, 30, 800, 180, 980, 21.3, 60, 50960]);

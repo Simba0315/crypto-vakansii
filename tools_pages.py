@@ -2370,6 +2370,58 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
              '<p class="note">Overtime starts after 40 hours, so 6 of the 46 hours are overtime, and time and a half of $20 is $30. At double time the same week pays 6 × $40.00 = $240.00 of overtime, $1,040.00 in total. '
              'A week of exactly 40 hours pays 40 × $20.00 = $800.00 and no overtime.</p>'))
 
+    # ------------------------------------------------------------ 41. paid time off
+    tool("pto-payout", "seekers", "Paid time off calculator",
+         "Unused vacation hours turned into days and money, and the hours you earn in a year at your pay period.",
+         "PTO Payout and Accrual Calculator",
+         "Turn unused paid time off into days and money, and see how many hours you earn in a year from the hours added each pay period. Free, in your browser.",
+         "What your unused paid time off is worth",
+         "Paid time off is listed in hours on a payslip, and the sum behind it is rarely shown. A balance of 60 hours does not say how many days it is or what it is worth, and the hours added each pay period do not say how many days a year that comes to. "
+         "Enter your hourly rate and either the hours you have not used or the hours you earn in each pay period, and the calculator gives days, weeks and money. "
+         "Whether unused time is paid out when you leave depends on where you work and on your employer\u2019s policy: this is arithmetic, not legal advice.",
+         wrap("pto-payout",
+              '<div class="card tl-form"><div class="tl-grid">'
+              + _f("rate", "Hourly rate", "25") + _cur()
+              + _f("unused", "Paid time off you have not used, hours", "60", hint="Leave empty to see only what you earn in a year.")
+              + _f("per", "Hours added in each pay period", "4", hint="On the payslip, next to the balance. Leave empty to see only the unused time.")
+              + _sel("periods", "Pay periods in a year", [("52", "52 (every week)"), ("26", "26 (every two weeks)", True), ("24", "24 (twice a month)"), ("12", "12 (every month)")])
+              + _f("day", "Hours in a working day", val="8", hint="8 for most full-time jobs. Used to turn hours into days.") + "</div>"
+              + '<div class="tl-actions">' + _clear() + "</div></div>"
+              + _board("Your paid time off", "Enter your hourly rate and the hours of paid time off.")
+              + '<p class="note tl-priv"><b>Not legal advice</b>Whether unused time is paid when you leave, and at what rate, depends on the law where you work, on your contract and on your employer\u2019s policy. '
+                'The page multiplies the numbers you type and does not know those rules. Nothing you type leaves your browser.</p>'),
+         "How paid time off is counted here",
+         "<ul><li><code>days = hours ÷ hours in a working day</code></li>"
+         "<li><code>weeks = hours ÷ (hours in a working day × 5)</code></li>"
+         "<li><code>value of unused time = unused hours × hourly rate</code></li>"
+         "<li><code>hours earned in a year = hours added each pay period × pay periods in a year</code></li>"
+         "<li><code>value of a year of earning = hours earned in a year × hourly rate</code></li></ul>"
+         "<p>The working day is 8 hours and a year has 26 pay periods unless you change them. All figures are before tax. "
+         "A salary is turned into an hourly rate by dividing it by the hours worked in a year, 2,080 for 40 hours a week: the <a href=\"" + P + "/tools/salary-converter/\">pay converter</a> does that.</p>"
+         "<p><strong>What the page does not know.</strong> Some employers pay out unused time when you leave and some do not; in some places the law treats it as wages that are owed, in others it follows the employer\u2019s written policy. "
+         "A policy can also cap how much time carries over from one year to the next. Read your handbook or ask in writing before you plan around a payout.</p>",
+         [("How do I calculate my PTO payout?",
+           "Multiply the unused hours by your hourly rate. 60 unused hours at $25 an hour is $1,500 before tax. A salary can be turned into an hourly rate by dividing it by 2,080 for a 40-hour week."),
+          ("How many days is 60 hours of PTO?",
+           "7.5 days when a working day is 8 hours: 60 ÷ 8. In weeks of five 8-hour days that is 1.5 weeks."),
+          ("How much PTO do I earn in a year?",
+           "The hours added in each pay period times the pay periods in a year. 4 hours every two weeks is 4 × 26 = 104 hours, which is 13 days of 8 hours or 2.6 weeks."),
+          ("Does my employer have to pay out unused PTO when I leave?",
+           "It depends on where you work and on the employer\u2019s policy. Some places treat accrued time as wages that must be paid, others leave it to the written policy, and some policies pay nothing. Ask for the rule in writing before you give notice."),
+          ("What is the difference between PTO and vacation days?",
+           "PTO, paid time off, is one balance that can be used for vacation, sick days or personal days. Vacation days are set aside only for holidays away from work, and a job can have both."),
+          ("Does the calculator include tax?",
+           "No. It shows the value before tax and deductions. Pay out of unused time is usually taxed like wages, so the amount that reaches you is smaller.")],
+         ["salary-converter", "last-working-day", "take-home-pay"], ["salaries/"],
+         ex=("Paid time off example: $25 an hour, 60 unused hours, 4 hours added every two weeks",
+             '<div class="tablewrap"><table><tr><th>What is counted</th><th>Sum</th><th>Result</th></tr>'
+             '<tr><td>Unused time in days</td><td>60 ÷ 8</td><td class="num">7.5 days</td></tr>'
+             '<tr class="tl-total"><td>Value of the unused time</td><td>60 × $25.00</td><td class="num">$1,500.00</td></tr>'
+             '<tr><td>Hours earned in a year</td><td>4 × 26 pay periods</td><td class="num">104 hours</td></tr>'
+             '<tr><td>Days earned in a year</td><td>104 ÷ 8</td><td class="num">13 days</td></tr>'
+             '<tr><td>Value of a year of earning</td><td>104 × $25.00</td><td class="num">$2,600.00</td></tr></table></div>'
+             '<p class="note">A balance of 60 hours is a week and a half of work. The 4 hours added every two weeks refill it in about 15 pay periods, which is just over half a year.</p>'))
+
     # ------------------------------------------------------------ write the pages
     by_slug = {t["slug"]: t for t in TOOLS}
     org = {"@type": "Organization", "name": SITE, "url": FULL + "/"}
@@ -2413,6 +2465,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
         "resume-review": "Skimming means looking at the top of the page, the first bullet points and the dates before reading anything closely. This page reads your text in that order and lists the lines a skimmer would pass over, with a fix for each.",
         "remote-work-savings": "Working from home saves the time and money you spend getting to an office, but that cost never shows on a payslip. Enter your own travel and office costs and this page adds them up for a year.",
         "raise-calculator": "A raise is a percent, an amount or a new salary, and people quote it in different ways. Give one of them and this page shows the other two, and what the raise is worth after prices have gone up.",
+        "pto-payout": "Paid time off, or PTO, is the pay you keep while you are away from work for a holiday, an illness or a personal day. It is counted in hours on a payslip. This page turns those hours into days and money, and shows how many hours you earn in a year.",
         "overtime-pay": "Overtime is the hours you work above a set number in a week, usually 40. Those hours are often paid at a higher rate, such as one and a half times your normal rate, and this page adds up the week for you.",
         "resume-skills": "A skill here means a tool, a programming language, a certificate or a spoken language that a job posting names. This page counts which of them today’s postings for one job title name most, so you know what to put first.",
         "elevator-pitch": "An elevator pitch is what you say when someone asks what you do and you have half a minute to answer. This page puts your answer in order and tells you how long it takes to say.",
@@ -2576,6 +2629,8 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
                                '<span class="ln">Cut month-end close <b>from 8 days to 5</b></span>',
         "recommendation-letter": ex + '<span class="ln"><b>To whom it may concern,</b></span><span class="sk" style="width:95%"></span>'
                                       '<span class="ln">“What stands out most is <b>how calm she stays</b>…”</span><span class="sk" style="width:60%"></span>',
+        "pto-payout": ex + '<span class="ln">$25 an hour · 60 unused hours</span><span class="big">$1,500<small>7.5 days</small></span>'
+                           '<span class="ln"><b>104 hours</b> earned in a year at 4 hours every two weeks</span>',
         "overtime-pay": ex + '<span class="ln">$20 an hour · 46 hours in the week</span><span class="big">$980<small>for the week</small></span>'
                              '<span class="ln"><b>$800</b> regular + <b>$180</b> overtime at time and a half</span>',
     })
@@ -2650,6 +2705,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
         "resume-summary": "Two wordings of two lines each",
         "recommendation-letter": "Two strengths, an example of each",
         "overtime-pay": "46 hours at $20 = $980 for the week",
+        "pto-payout": "60 hours at $25 = $1,500, 7.5 days",
     }
     if "resume-skills" in by_slug:
         RES["resume-skills"] = f"{top_nm}: {top_sk[0][0]} in {pct(top_sk[0][1], top_n)} of postings"
@@ -2677,7 +2733,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
            ("Applying and interviews", "applying", ["cover-letter", "application-email", "follow-up-email", "job-search-calculator", "interview-answer-builder", "thank-you-email", "reference-request-email", "recommendation-letter"]),
            ("Networking and introductions", "networking", ["referral-request", "linkedin-connection-message", "elevator-pitch", "professional-bio"]),
            ("Pay and offers", "pay", ["salary-checker", "offer-check", "compare-offers", "negotiation-email", "job-offer-response", "raise-calculator", "raise-request-email", "salary-converter", "overtime-pay", "equity-calculator", "401k-match", "contractor-rate"]),
-           ("Remote work and leaving a job", "remote-leaving", ["remote-work-savings", "time-zone-overlap", "resignation-letter", "last-working-day"])]
+           ("Remote work and leaving a job", "remote-leaving", ["remote-work-savings", "time-zone-overlap", "resignation-letter", "last-working-day", "pto-payout"])]
     named = {s_ for _, _, ss in HUB for s_ in ss}
     rest = [t["slug"] for t in TOOLS if t["group"] == "seekers" and t["slug"] not in named]
     grid = lambda slugs: '<div class="tgrid">' + "".join(found(s_) for s_ in slugs if s_ in by_slug) + "</div>"
