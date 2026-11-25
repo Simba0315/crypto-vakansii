@@ -213,6 +213,27 @@ PLACE_CODE = {slug: ("" if rule == "region" else rule if isinstance(rule, str) e
 REGION_FLAG = {"europe": "\U0001F1EA\U0001F1FA", "asia-pacific": "\U0001F30F", "latin-america": "\U0001F30E", "africa": "\U0001F30D"}
 PATH_PLACE = re.compile(r"^(?:locations|crypto/in)/([a-z0-9-]+)/")
 HOURLY_LISTS = {"part-time/", "night-shift/", "weekend/", "temporary/", "summer/", "remote/part-time/"}      # lists whose pay is quoted by the hour
+# The lists of a kind of work linked to one another in the page text, not only in the footer (owner, 25 Nov 2026: the hubs Google has
+# not indexed get links from related hubs). KIND_N is path -> (label, open jobs), filled in main() before the first list is written,
+# from the same filters the lists use; a list too small to have a page is not in it and is left out of every row. KIND_REL names, for
+# each list, the lists a reader of it most likely wants next (hours and season together, first jobs together, where the work is done).
+KIND_N = {}
+KIND_REL = {
+    "part-time/": ("part-time-jobs-near-me/", "weekend/", "night-shift/", "temporary/", "summer/", "no-experience-jobs/", "internships/"),
+    "weekend/": ("part-time/", "night-shift/", "temporary/", "summer/", "hiring-immediately/", "part-time-jobs-near-me/"),
+    "night-shift/": ("weekend/", "part-time/", "temporary/", "hiring-immediately/", "no-experience-jobs/", "jobs-near-me/"),
+    "temporary/": ("summer/", "contract/", "part-time/", "weekend/", "hiring-immediately/", "part-time-jobs-near-me/"),
+    "summer/": ("internships/", "temporary/", "part-time/", "weekend/", "no-experience-jobs/", "part-time-jobs-near-me/"),
+    "contract/": ("temporary/", "part-time/", "hybrid/", "work-from-anywhere/", "government-jobs/"),
+    "internships/": ("summer/", "entry-level/", "no-experience-jobs/", "part-time/", "temporary/"),
+    "no-experience-jobs/": ("entry-level/", "hiring-immediately/", "internships/", "part-time/", "fair-chance-jobs/", "jobs-near-me/"),
+    "hiring-immediately/": ("no-experience-jobs/", "temporary/", "part-time/", "night-shift/", "weekend/", "jobs-near-me/"),
+    "fair-chance-jobs/": ("no-experience-jobs/", "hiring-immediately/", "government-jobs/", "nonprofit-jobs/"),
+    "hybrid/": ("remote/", "work-from-anywhere/", "contract/", "full-time-jobs-near-me/"),
+    "work-from-anywhere/": ("hybrid/", "contract/", "part-time/"),
+    "government-jobs/": ("nonprofit-jobs/", "internships/", "contract/", "fair-chance-jobs/", "hybrid/"),
+    "nonprofit-jobs/": ("government-jobs/", "part-time/", "internships/", "fair-chance-jobs/"),
+}
 EURO_CC = {"DE", "FR", "NL", "ES", "PT", "IE", "IT", "AT", "BE", "FI", "GR", "LU", "EE", "LV", "LT", "SK", "SI", "MT", "CY", "HR"}      # countries paid in euros
 
 
@@ -1608,6 +1629,12 @@ def labrow(label, items, more=None):
     return f'<div class="lrow"><b>{e(label)}</b><div>{"".join(items)}{tail}</div></div>'
 
 
+def kind_row(path):
+    """The "Related lists" row of a list of a kind of work (KIND_REL), each link with its count of open jobs."""
+    xs = [(u_, *KIND_N[u_]) for u_ in KIND_REL.get(path, ()) if u_ in KIND_N and u_ != path]
+    return labrow("Related lists", [f'<a href="{P}/{u_}">{e(l_)} <b>{n_:,}</b></a>' for u_, l_, n_ in xs]) if len(xs) >= 2 else ""
+
+
 def every_list(title, entries, groups):
     """Every narrower list under one page, grouped, with no cap (internal links, owner 18 Nov: "a link that boosts every page"):
     rel() shows the 14 largest, so the small lists of a big city were reached from nowhere. entries: [(path, label, count)];
@@ -2130,7 +2157,7 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
                     + (f'<ul class="jobs"{live if n == 1 else ""}>{"".join(card(j, x) for j, x in chunk)}</ul>' if chunk else '<p class="lead">Nothing here today. The list is rebuilt every hour.</p>')
                     + pager_html(path, n, pages) + note)
         if pics and n == 1: the_list = f'<div class="lflow"><div class="lpics">{pics}</div><div class="llist">{the_list}</div></div>'
-        body = top + (extra if n == 1 else "") + the_list + ((hub + after + faq_html + tail) if n == 1 else "")      # questions after what the page shows
+        body = top + (extra if n == 1 else "") + the_list + ((hub + after + kind_row(path) + faq_html + tail) if n == 1 else "")      # questions after what the page shows
         if n == 1:
             # the month in the title, as Upwork and Indeed do on lists that really change: "Data Analyst Jobs (133 open, November 2026)"
             mids_l = sorted((lo + hi) / 2 for j in jobs if j.get("usd") for lo, hi in [j["usd"]])
@@ -2582,7 +2609,7 @@ def intern_hub(path, h1, yr, ej):
     named = sum(1 for j in ej if re.search(r"\bsummer\b|\bfall\b|\bautumn\b|\bwinter\b|\bspring\b|\bco-?op\b", blob(j), re.I))
     new7 = sum(1 for j in ej if (j["posted"] or "") >= HUB["week"])
     plain = (f"<strong>An internship</strong> is a short job, mostly a few months, where a student or a recent graduate works on real tasks at a company to learn the trade. "
-             f"{k:,} are open today. " + intro_for(ej, "internship ", "", hub=True))      # the other figures stand in the row under the paragraph
+             + intro_for(ej, "internship ", "", hub=True))      # the other figures stand in the row under the paragraph; intro_for opens with the count (it was said twice)
     seas = ""
     if cnt:
         seas = section("When the internships start", '<div class="tablewrap"><table><tr><th>Season named in the posting</th><th>Open roles</th><th>What it usually means</th></tr>'
@@ -2656,7 +2683,7 @@ def intern_hub(path, h1, yr, ej):
         # used to start on the third screen.
         # the same row of filters as the other lists (20 Nov 2026: the internship hub had none; its own builder skipped listing())
         if n == 1: body += (hub_stats(ej, True) + list_save(h1, "etype=Internship", path) + list_narrow("etype=Internship", ej) + links + '<div class="lflow"><div class="lpics">' + seas + glance + pay_note
-                            + '</div><div class="llist"><div class="sec-head lst" id="list"><h2>Newest internships</h2></div>' + the_list + "</div></div>" + tail + own)
+                            + '</div><div class="llist"><div class="sec-head lst" id="list"><h2>Newest internships</h2></div>' + the_list + "</div></div>" + tail + kind_row(path) + own)
         else: body += the_list
         title = f"{h1}{yr} ({k:,} open, {MONTH_YEAR}) | {SITE}"
         desc = (f"{k:,} open internships{yr}: when they start, whether they pay, which companies hire interns and where, straight from employers’ careers pages. Updated hourly.")
@@ -3264,6 +3291,17 @@ def main():
     TYPE_LINKS = ([("part-time/", "Part-time jobs"), ("contract/", "Contract jobs"), ("internships/", "Internships"), ("hybrid/", "Hybrid jobs"), ("work-from-anywhere/", "Work-from-anywhere jobs")]
                   + [(p_, TYPE_NAMES.get(p_, h_)) for p_, h_, _, _ in HOURS] + ([("government-jobs/", "Government jobs")] if GOV_PAGE else []) + ([("nonprofit-jobs/", "Nonprofit jobs")] if NP_PAGE else []))
     FOOT["types"] = '<p class="pop"><span>Jobs by type:</span>' + "".join(f'<a href="{P}/{u_}">{e(n_)}</a>' for u_, n_ in TYPE_LINKS) + "</p>"
+    # the open jobs of each list a "Related lists" row may name (kind_row), by the same filters and the same minimums as the lists below
+    KIND_N.clear()
+    KIND_N.update({p_: (TYPE_NAMES.get(p_, h_), len(js_)) for p_, h_, _, js_ in HOURS})
+    et_n = Counter(j.get("etype") for j in active)
+    KIND_N.update({p_: (l_, et_n[et_]) for et_, p_, l_ in (("Part-time", "part-time/", "Part-time jobs"), ("Contract", "contract/", "Contract jobs"), ("Internship", "internships/", "Internships")) if et_n[et_] >= 8})
+    for p_, l_, k_, min_ in (("hybrid/", "Hybrid jobs", sum(1 for j in active if j.get("hybrid")), 20), ("work-from-anywhere/", "Work-from-anywhere jobs", sum(1 for j in remote if j.get("anywhere")), 8),
+                             ("remote/", "Remote jobs", len(remote), 1), ("entry-level/", "Entry-level jobs", sum(1 for j in active if j["entry"]), 1),
+                             ("government-jobs/", "Government jobs", len(gov_) if GOV_PAGE else 0, 1), ("nonprofit-jobs/", "Nonprofit jobs", len(np_) if NP_PAGE else 0, 1),
+                             ("jobs-near-me/", "Jobs near me", len(active), 1), ("full-time-jobs-near-me/", "Full-time jobs near me", et_n["Full-time"], 20),
+                             ("part-time-jobs-near-me/", "Part-time jobs near me", et_n["Part-time"], 20)):
+        if k_ >= min_: KIND_N[p_] = (l_, k_)
     comp_items = sorted(companies.items(), key=lambda kv: -sum(j["active"] for j in kv[1]))
     SPONSORS = [sp for sp in CFG.get("sponsors", []) + PAID.get("sponsors", []) if sp.get("until", "") >= TODAY and sp.get("company") in companies]
     spot_cos = [sp["company"] for sp in SPONSORS if sp.get("slot") in ("home", "spotlight", "companies")]
@@ -11195,11 +11233,57 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         lands = "".join(ntile(*r) for r in rows_ if not is_city(r[1]))
         allj = nj(active)
         word = (et.lower() + " ") if et else ""
+        # What is open, in figures (search check 54 in SERP_AI_CHECK.md: SimplyHired's local page answers "jobs near me" with the work
+        # open most often, the kinds of job with their counts and the pay; ours had the pickers and four answers without a figure).
+        # Counted from today's open postings like the lists they link to (25 Nov 2026); the part-time pay is part_time_qa's figure.
+        n_all = len(allj)
+        us_n = next((len(js) for _, s_, js in rows_ if s_ == "united-states"), 0)
+        rc_all = Counter(r for j in allj for r in HUB["job_roles"].get(j["id"], ()) if r in HUB["roles"] and r not in BROAD and not r.endswith("-speaking"))      # job titles, not groupings
+        rc_n = rc_all.most_common(10)
+        rc_p = [(r, k) for r, k in rc_all.most_common(40) if " and " not in HUB["roles"][r][0]][:6]      # in a sentence: "retail and store, food and hospitality and cashier" read as one muddle
+        co_n = [(c, k) for c, k in Counter(j["company"] for j in allj).most_common(8) if OPEN.get(c)][:6]
+        hr_n = sorted((h_[0] + h_[1]) / 2 for j in allj if (h_ := usd_hourly(j.get("salary"))))
+        yr_n = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in allj if j.get("usd") and not usd_hourly(j.get("salary")))
+        rem_n = sum(1 for j in allj if j["remote"])
+        aw_n = sum(1 for j in allj if j["remote"] and j.get("anywhere"))
+        new_n = sum(1 for j in allj if (j["posted"] or "") >= HUB["week"])
+        kinds_n = {"": ("part-time/", "contract/", "temporary/", "internships/", "night-shift/", "weekend/", "hiring-immediately/", "no-experience-jobs/", "hybrid/", "government-jobs/"),
+                   "Part-time": ("part-time/", "weekend/", "night-shift/", "summer/", "temporary/", "no-experience-jobs/", "hiring-immediately/", "internships/"),
+                   "Full-time": ("hybrid/", "contract/", "hiring-immediately/", "night-shift/", "government-jobs/", "entry-level/")}[et]
+        roles_ = ", ".join(f"{rlow(HUB['roles'][r][0])} ({k:,})" for r, k in rc_p)
+        cos_ = ", ".join(f"{c} ({k:,})" for c, k in co_n[:4])
+        pay_ = ((f"{len(hr_n):,} of the {n_all:,} open {word}postings here state an hourly rate in US dollars: the median is ${hr_n[len(hr_n) // 2]:,.2f} an hour, "
+                 f"and the middle half pay ${hr_n[len(hr_n) // 4]:,.2f} to ${hr_n[3 * len(hr_n) // 4]:,.2f}. ") if len(hr_n) >= 10 else "") + \
+               ((f"{len(yr_n):,} state a yearly range in US dollars, with a median of {money(yr_n[len(yr_n) // 2])} a year. ") if len(yr_n) >= 10 else "")
+        glance_ = (labrow("Open most", [f'<a href="{P}/roles/{r}/">{e(HUB["roles"][r][0])} <b>{k:,}</b></a>' for r, k in rc_n])
+                   + labrow("Kind of work", [f'<a href="{P}/{u_}">{e(KIND_N[u_][0])} <b>{KIND_N[u_][1]:,}</b></a>' for u_ in kinds_n if u_ in KIND_N])
+                   + labrow("Hiring most", [f'<a href="{P}/companies/{slugify(c)}/">{e(c)} <b>{k:,}</b></a>' for c, k in co_n]))
+        if pay_: glance_ += f'<p class="note">{e(pay_)}The middle of each range the employer wrote, not verified pay. The links under “Kind of work” count every job on that list, wherever it is.</p>'
         qa = [(f"How does this page know which {word}jobs are near me?", "It reads the time zone your device is set to and takes the country from it. Nothing is sent anywhere and nothing is stored on a server. "
-               "For the nearest city, press “Use my location”: your browser asks first, and the distance is worked out on your device."),
-              ("What if my city is not in the list?", f"Cities get their own list when enough employers hire there. Until then your country’s list holds those jobs, and the search finds a city by name. There are {len(rows_)} places today."),
-              (f"Are there remote {word}jobs I can do from here?", "Yes. A remote job names the countries it can be done from, and those jobs are in your country’s list. Jobs open to any country are under “work from anywhere”."),
-              ("How fresh are the jobs?", "Every job is read from the employer’s own careers page every hour. When the employer closes it, it leaves the list within the hour.")]
+               "For the nearest city, press “Use my location”: your browser asks first, and the distance is worked out on your device.")]
+        if len(rc_p) >= 3:
+            qa.append((f"What {word}jobs are hiring near me?", f"Pick your city above for the jobs there. Across all {len(rows_)} places, the jobs open most often today are {roles_}; a posting can count under two of them."
+                       + (f" The employers with the most open {word}jobs are {cos_}." if len(co_n) >= 2 else "") + (f" {new_n:,} of the {n_all:,} were posted in the last seven days." if new_n else "")))
+        if pay_:
+            qa.append((f"How much do {word}jobs near me pay?", pay_ + "These are the middles of the ranges each employer wrote, not verified pay; pick your city to see each job with its pay."))
+        qa += [("What if my city is not in the list?", f"Cities get their own list when enough employers hire there. Until then your country’s list holds those jobs, and the search finds a city by name. There are {len(rows_)} places today."),
+               (f"Are there remote {word}jobs I can do from here?", (f"Yes: {rem_n:,} of the {n_all:,} open {word}jobs here are remote. " if rem_n else "")
+                + "A remote job names the countries it can be done from, and those jobs are in your country’s list. "
+                + (f"{aw_n:,} are open to any country, under “work from anywhere”." if aw_n else "Jobs open to any country are under “work from anywhere”."))]
+        if not et and "hiring-immediately/" in KIND_N:
+            qa.append(("How do I find jobs hiring immediately near me?", f"{KIND_N['hiring-immediately/'][1]:,} open postings say in their own words that they hire immediately or want someone to start at once; "
+                       "they are on the list of jobs hiring immediately, newest first. In the search, put your city in “where” and sort by date: the newest postings are the ones still filling."))
+        qa.append(("How fresh are the jobs?", "Every job is read from the employer’s own careers page every hour. When the employer closes it, it leaves the list within the hour."))
+        # the opening paragraph and the search line answer with today's figures: where most are, what they pay or what is open most
+        top3 = [rlow(HUB["roles"][r][0]) for r, _ in rc_p[:3]]
+        most_ = f"{top3[0]}, {top3[1]} and {top3[2]}" if len(top3) == 3 else ""
+        if et == "Part-time" and len(hr_n) >= 10: fig_ = (f"{us_n:,} are in the United States, and those that state an hourly rate pay ${hr_n[len(hr_n) // 2]:,.2f} at the median.",
+                                                          f"${hr_n[len(hr_n) // 2]:,.2f} an hour at the median where pay is stated.")
+        elif et == "Full-time" and len(yr_n) >= 10: fig_ = (f"{us_n:,} are in the United States, and those that state a yearly range pay {money(yr_n[len(yr_n) // 2])} a year at the median.",
+                                                            f"{money(yr_n[len(yr_n) // 2])} a year at the median where pay is stated.")
+        else: fig_ = ((f"{us_n:,} are in the United States. " if us_n else "") + (f"Open most often: {most_}." if most_ else ""), "")
+        lead = " ".join(x_ for x_ in (lead.rstrip(".") + ".", fig_[0], "Your country is found by itself; the nearest city if you allow it.") if x_)
+        desc = desc.rstrip(".") + (f"; {fig_[1]}" if fig_[1] else ".") + (f" Most open: {most_}." if most_ else "") + " Pick your city."
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         static_list = (section(f"Newest {word}jobs, everywhere", f'<ul class="jobs">{"".join(card(j) for j in diverse(order(allj), 30, 2))}</ul>',
@@ -11212,27 +11296,29 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              '<span class="note" id="nearme-note">The country is taken from your device’s time zone. Nothing is sent anywhere.</span></p></section>'
              + (section("Pick [[a city]]", f'<ul class="tiles">{cities}</ul>', sub="The number on a tile is how many of these jobs are open there today.", label="Cities") if cities else "")
              + section("Pick a country or [[a part of the world]]", f'<ul class="tiles">{lands}</ul>', ("locations/", "All places"), label="Countries")
+             + (section("What is hiring [[today]]", glance_, sub=f"Counted from the {n_all:,} open {word}jobs in every place; each link opens its list.", sid="today", label="Today’s figures") if len(rc_n) >= 3 else "")
              + section("Or work [[from home]]", '<div class="feats">'
                        f'<a class="feat" href="{P}/remote/"><h3>Remote jobs</h3><p>{sum(1 for j in active if j["remote"]):,} jobs done from home. Each one says which countries it is open to.</p></a>'
-                       f'<a class="feat" href="{P}/work-from-anywhere/"><h3>Work from anywhere</h3><p>{sum(1 for j in active if j.get("anywhere")):,} remote jobs open to any country.</p></a>'
+                       # the same count as the /work-from-anywhere/ list (remote and open to any country): it said 1,045 against the list's 419 (25 Nov 2026)
+                       f'<a class="feat" href="{P}/work-from-anywhere/"><h3>Work from anywhere</h3><p>{sum(1 for j in active if j["remote"] and j.get("anywhere")):,} remote jobs open to any country.</p></a>'
                        f'<a class="feat" href="{P}/part-time/"><h3>Part-time jobs</h3><p>{sum(1 for j in active if j.get("etype") == "Part-time"):,} jobs for fewer hours than a full week.</p></a>'
                        f'<a class="feat" href="{P}/map/"><h3>Jobs on a map</h3><p>Every city with open jobs as a dot on a world map. Search a skill and see where it is hiring.</p></a></div>', label="No commute")
              + static_list
              + '<p class="note cmpl">Near you: ' + " · ".join(f'<a href="{P}/{u_}">{l_}</a>' for u_, l_ in (("jobs-near-me/", "All jobs near me"), ("full-time-jobs-near-me/", "Full-time jobs near me"), ("part-time-jobs-near-me/", "Part-time jobs near me")) if u_ != path) + "</p>"
              + section(f"Questions about {word}jobs [[near you]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in qa) + "</dl>", label="Questions"), head=ld_, cls="hub sp nearp")
     near_page("jobs-near-me/", "", "Jobs near me", f"Jobs Near Me: {len(active):,} open jobs in {len(places)} cities and countries | {SITE}",
-              f"Jobs near you, hiring now: {len(active):,} open jobs in {len(places)} cities and countries, read from employers’ own pages every hour. Your country is found from the time zone; pick a city or allow location for the nearest one.",
-              f"{len(active):,} open jobs in {len(places)} cities and countries, each read from the employer’s own page within the last hour. Your country is found by itself; the nearest city if you allow it.")
+              f"Jobs near you, hiring now: {len(active):,} open in {len(places)} cities and countries",
+              f"{len(active):,} open jobs in {len(places)} cities and countries, each read from the employer’s own page within the last hour.")      # near_page adds today's figures and the line about the country
     ft_n = sum(1 for j in active if j.get("etype") == "Full-time")
     if ft_n >= 20:
         near_page("full-time-jobs-near-me/", "Full-time", "Full-time jobs near me", f"Full-Time Jobs Near Me: {ft_n:,} open today | {SITE}",
-                  f"Full-time jobs near you, hiring now: {ft_n:,} open full-week jobs by city and country, read from employers’ own pages every hour.",
-                  f"{ft_n:,} open jobs that the employer marks as full-time, each read from the employer’s own page within the last hour. Your country is found by itself; the nearest city if you allow it.")
+                  f"Full-time jobs near you, hiring now: {ft_n:,} open",
+                  f"{ft_n:,} open jobs that the employer marks as full-time, each read from the employer’s own page within the last hour.")
     pt_n = sum(1 for j in active if j.get("etype") == "Part-time")
     if pt_n >= 20:
         near_page("part-time-jobs-near-me/", "Part-time", "Part-time jobs near me", f"Part-Time Jobs Near Me: {pt_n:,} open today | {SITE}",
-                  f"Part-time jobs near you, hiring now: {pt_n:,} open jobs for fewer hours than a full week, by city and country, read from employers’ own pages every hour.",
-                  f"{pt_n:,} open part-time jobs, each read from the employer’s own page within the last hour. Your country is found by itself; the nearest city if you allow it.")
+                  f"Part-time jobs near you, hiring now: {pt_n:,} open",
+                  f"{pt_n:,} open part-time jobs, each read from the employer’s own page within the last hour.")
 
     lap('The jobs map (the owner asked for one like map.rezi.ai): a d')
     # The jobs map (the owner asked for one like map.rezi.ai): a dot per city, sized by its open jobs. The map draws in the browser from
