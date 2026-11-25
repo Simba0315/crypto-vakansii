@@ -4435,6 +4435,15 @@ def main():
                                          'Most postings name none; ask for the night rate before you accept.</p>', sid="differential", label="Differential")
             if nt_html:
                 kw_h = dict(kw_h); kw_h["after"] = nt_html + kw_h.get("after", "")
+            # ChatGPT's answer for "night shift jobs … shift differential" (25 Nov 2026) lists the kinds of work that pay one and "$1 to $3 an
+            # hour" as made-up examples; the postings here say which fields name a differential, and what the median one adds to a 40-hour week.
+            dfl_ = Counter(CAT[j["cat"]] for j in js_ if j["cat"] != OTHER[0] and re.search(r"shift differential|night differential|shift premium|night premium",
+                                                                                            (j["excerpt"] or "") + " " + (j.get("desc") or ""), re.I)).most_common(4)
+            if n_diff >= 10 and len(dfl_) >= 3:
+                dmed_ = sorted(dol_)[len(dol_) // 2] if len(dol_) >= 3 else 0
+                fq_extra = fq_extra + (("Which night shift jobs pay a differential?", "Among the postings here, those in " + ", ".join(f"{c_} ({k_:,})" for c_, k_ in dfl_[:-1])
+                                        + f" and {dfl_[-1][0]} ({dfl_[-1][1]:,}) name one most often" + (f"; at the median of ${dmed_:,.2f} an hour, a 40-hour night week pays ${40 * dmed_:,.0f} more" if dmed_ else "")
+                                        + ". Ask whether the hourly rate in the posting already includes the differential or comes on top of it."),)
         title_h = (f"Felon-Friendly Jobs ({len(js_):,} Fair Chance Jobs) | {SITE}" if p_ == "fair-chance-jobs/" else
                    f"{tcase(h_) if p_ in HOURS_PARTS or p_ == 'night-shift/' else h_} ({len(js_):,} open) | {SITE}")      # title case as on /part-time/ (25 Nov 2026)
         listing(p_, h_, title_h, f"{roles(len(js_), 'open job')} whose posting names {w_}, straight from employers’ careers pages. Updated hourly.", js_,

@@ -1140,7 +1140,10 @@ has three sites: jobseveryhour.com, cryptobubbles.org, hypestkey.com.
   field from 10 postings; the title table was already there) beside the differential the postings name. "summer jobs when to apply, how old, pay":
   dol.gov, Indeed, ZipRecruiter, SummerJobs.com, seasonaljobs.dol.gov; "apply February to April" without a count, the FLSA hours for 14 and 15 (as ours), the
   $7.25 federal minimum and the $4.25 youth minimum for the first 90 days; added to "What do summer jobs pay?" from DOL Fact Sheet #32 (read 25 Nov: under 20,
-  first 90 consecutive calendar days, no displacing other staff). jobseveryhour.com is cited in none of the four.
+  first 90 consecutive calendar days, no displacing other staff). "night shift jobs do night shifts pay more shift differential": cites dol.gov and opm.gov;
+  "$1, $2, $3 an hour, 5% or 10%" as made-up examples, the kinds of work that pay one, OPM night pay. Our /night-shift/ already had the differentials the
+  postings name; added OPM's 10% and "Which night shift jobs pay a differential?" (the fields whose postings name one most, and what the median differential
+  adds to a 40-hour week). jobseveryhour.com is cited in none of the five.
 - Bing (US, 25 Nov ~06:50 UTC), no Copilot answer shown, only the "AI Mode" button. "contract jobs": ads (JobAssist, JobHire.AI, FlexJobs, NurseRecruiter),
   then Indeed (138,958), Abbott, We Work Remotely, videos. "temporary jobs": Indeed (259,000; and "short term temporary" 107,000), Monster, Adecco,
   UW Jobs, Randstad, FlexJobs, LinkedIn. "weekend jobs": Indeed (119,000; "weekend only" 63,000), Snagajob, Monster, Amazon hiring, Randstad, Indeed Flex.
