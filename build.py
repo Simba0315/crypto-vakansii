@@ -4276,7 +4276,8 @@ def main():
               + f'<noscript><p>Search needs JavaScript. Browse by category instead:</p><ul class="tiles">{cats}</ul></noscript>'
               # the first screen comes with the page: the newest jobs, one row per role, in the rows the server answers searches with
               # (search_engine.row). Filters and words go to the server (/api/search?list=1); no list of every job is downloaded.
-              + '<script type="application/json" id="srch-first">' + json.dumps({"total": n, "jobs": first_rows}, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/") + '</script>'
+              # "deepest": the engine lists no further than this many rows, so app.js stops "Show more" there and says so (26 Nov 2026)
+              + '<script type="application/json" id="srch-first">' + json.dumps({"total": n, "deepest": search_engine.DEEPEST, "jobs": first_rows}, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/") + '</script>'
               + f'<script src="{P}/app.js?v={V}" defer></script><script src="{P}/fsel.js?v={V}" defer></script>')
     page("jobs/", f"All Jobs: {n:,} Open Roles, Filter by Title, Place and Pay | {SITE}",
          "Search jobs by title, skill or company. Filter by level, location, salary and remote, sort by pay, and save your searches.", search, cls="srch")

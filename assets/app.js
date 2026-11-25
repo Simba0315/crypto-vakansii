@@ -2,7 +2,10 @@
    The list comes from the server: the page sends its own address to /api/search?list=1 (Lucene on our server, search_engine.py) and
    gets 50 rows back, best or newest first, one row per role; "Show more" asks for the next 50. With no filter the first screen is in
    the page itself (#srch-first), so nothing is waited for. Until 25 Nov 2026 the page downloaded every open job (22 MB, 450 MB of a
-   browser's memory) and filtered here; a phone took seconds or closed the tab. */
+   browser's memory) and filtered here; a phone took seconds or closed the tab.
+   The search engine lists no deeper than its first 10,000 rows (search_engine.DEEPEST, sent with the page as #srch-first's "deepest"):
+   the page never asks past them, and where a list stops there it says so and points to the filters (26 Nov 2026: a request for rows
+   10,000 and on answered 503, "search engine unavailable"). A busy or dropped answer is asked once more, quietly, before the page says so. */
 (function () {
   var root = document.getElementById('search');
   if (!root || !window.HRN) return;
@@ -48,6 +51,7 @@
   // The first page with no filter came with the page: the newest roles, in the rows the server answers with (search_engine.row)
   var first = null;
   try { first = JSON.parse(($('srch-first') || {}).textContent || 'null'); } catch (e) {}
+  var PAGE = 50, DEEPEST = first && first.deepest > 0 ? Number(first.deepest) : 10000;      // rows in one answer; the deepest row the engine lists
   if (first && first.jobs) { first.more = first.jobs.length >= 50; first.without = {}; } else first = null;
   var found = [], extra = new Map(), total = 0, got = 0, asked = 0, ctl = null, slow;
   var query = function () {
@@ -111,6 +115,7 @@
     Object.keys(H.mute.c).sort().forEach(function (c) { out.append('xc', c); });
     H.mute.w.slice().sort().forEach(function (w) { out.append('xw', w); });
     if (offset) out.set('offset', String(offset));
+    if (offset + PAGE > DEEPEST) out.set('limit', String(Math.max(1, DEEPEST - offset)));     // the last page ends at the engine's limit
     return H.base + '/api/search?' + out.toString();
   };
   var ask = function (qs, offset) {
@@ -118,14 +123,45 @@
     ctl = window.AbortController ? new AbortController() : null;
     var my = ++asked;
     return fetch(apiUrl(qs, offset), ctl ? { signal: ctl.signal } : {}).then(function (r) {
-      if (!r.ok) throw new Error('search answered ' + r.status);
-      return r.json();
+      if (r.ok) return r.json();
+      var err = new Error('search answered ' + r.status); err.status = r.status;
+      return r.json().then(function (b) { err.body = b || {}; throw err; }, function () { err.body = {}; throw err; });
     }).then(function (d) {
       if (my !== asked) throw { stale: true };
       if (!d || !Array.isArray(d.jobs)) throw new Error('search answered without jobs');
       return d;
     }, function (err) { if (my !== asked) throw { stale: true }; throw err; });
   };
+  // A busy engine (503), a server error or a dropped connection: asked once more after a moment, so a short hiccup never shows.
+  // A 400 is an answer (a page past the engine's limit), not a hiccup.
+  var again = function (err) { return err && !err.stale && err.name !== 'AbortError' && (!err.status || err.status >= 500); };
+  var askTwice = function (qs, offset) {
+    return ask(qs, offset).then(null, function (err) {
+      if (!again(err)) throw err;
+      var mine = asked;
+      return new Promise(function (res) { setTimeout(res, 1500); }).then(function () {
+        if (mine !== asked) throw { stale: true };          // the visitor changed the search meanwhile
+        return ask(qs, offset);
+      });
+    });
+  };
+  // The end of what the engine lists: the list stops at DEEPEST rows, the count says how many jobs match, and one click opens the filters.
+  var cap = document.createElement('p'); cap.className = 'relax srch-cap'; cap.hidden = true; cap.setAttribute('role', 'status');
+  if (more.parentNode && more.parentNode.parentNode) more.parentNode.parentNode.insertBefore(cap, more.parentNode.nextSibling);
+  var paintCap = function (deepest) {
+    var n = deepest > 0 ? deepest : DEEPEST;
+    cap.innerHTML = '<span>Showing the first ' + n.toLocaleString('en-US') + ' of ' + (total || 0).toLocaleString('en-US') + ' jobs.</span>' +
+      '<button class="linkbtn" type="button" data-narrow="1">Add a filter or a place to see the rest</button>';
+    cap.hidden = false; more.hidden = true;
+  };
+  cap.addEventListener('click', function (ev) {
+    if (!(ev.target.closest && ev.target.closest('[data-narrow]'))) return;
+    if (ftoggle && fwrap && !fwrap.classList.contains('open') && ftoggle.offsetParent !== null) ftoggle.click();      // a phone: open the filters
+    var to = (fwrap && fwrap.querySelector('.fx-loc')) || (fwrap && fwrap.offsetParent !== null ? loc : null) || q;     // the Location control (fsel.js)
+    var box = fwrap && fwrap.offsetParent !== null ? fwrap : to;
+    try { box.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { box.scrollIntoView(); }
+    try { to.focus({ preventScroll: true }); } catch (e) { to.focus(); }
+  });
   var paintCount = function () {
     count.textContent = total ? total.toLocaleString('en-US') + (total === 1 ? ' job' : ' jobs') : 'No jobs match. Try removing a filter.';
   };
@@ -136,12 +172,14 @@
     hid = H.get('hrn_hidden', {}); done = H.parse('').done;
     if (!append) { found = []; got = 0; extra = new Map(); }
     d.jobs.forEach(function (a) { var j = H.fromApi(a); rows.push(j); if (keep(j)) { fresh.push(j); if (a[17]) extra.set(j[0], a[17]); } });
-    found = found.concat(fresh); got += rows.length; total = d.total;
+    found = found.concat(fresh); got += rows.length; total = d.total || 0;
     var html = fresh.map(function (j) { return H.card(j, extra.get(j[0]) || 0); }).join('');
     if (append) list.insertAdjacentHTML('beforeend', html); else list.innerHTML = html;
     list.removeAttribute('aria-busy'); if (down) down.hidden = true; more.disabled = false; more.textContent = 'Show more';
     paintCount();
-    more.hidden = !d.more; H.decorate(list);
+    more.hidden = !d.more || got >= DEEPEST; cap.hidden = true;
+    if (got >= DEEPEST && (d.more || total > got)) paintCap();          // the engine lists no further: say so instead of a dead end
+    H.decorate(list);
     if (append) return;
     if (pane && wide.matches) {                      // show the first result next to the list
       var firstRow = list.querySelector('.job > a');
@@ -155,8 +193,9 @@
   var fail = function (err) {
     if (err && (err.stale || err.name === 'AbortError')) return;
     clearTimeout(slow);
-    found = []; got = 0; list.innerHTML = ''; list.removeAttribute('aria-busy'); more.hidden = true; more.disabled = false; hint.hidden = true;
-    count.textContent = navigator.onLine === false ? 'You are offline.' : 'Search is not answering right now.';
+    found = []; got = 0; list.innerHTML = ''; list.removeAttribute('aria-busy'); more.hidden = true; more.disabled = false; hint.hidden = true; cap.hidden = true;
+    // one message: the panel below says it and offers "Try again"; the count line says it only where the panel is missing
+    count.textContent = down ? '' : navigator.onLine === false ? 'You are offline.' : 'Search is not answering right now.';
     if (down) {
       $('srch-down-t').innerHTML = (navigator.onLine === false ? 'No connection, so this search cannot be listed. ' : 'Our search is not answering for a moment, so this search cannot be listed. ') +
         '<button class="linkbtn" type="button" data-retry="1">Try again</button> or browse the lists below.';
@@ -185,9 +224,9 @@
       if (ctl) try { ctl.abort(); } catch (e) {}
       asked++; show(first, false); return;
     }
-    list.setAttribute('aria-busy', 'true'); more.hidden = true;
+    list.setAttribute('aria-busy', 'true'); more.hidden = true; cap.hidden = true;
     clearTimeout(slow); slow = setTimeout(function () { count.textContent = 'Searching…'; }, 400);
-    ask(qs, 0).then(function (d) { show(d, false); }, fail);
+    askTwice(qs, 0).then(function (d) { show(d, false); }, fail);
   };
   // Nothing found: say which single filter stands in the way and how many jobs appear without it, one click each (the server counts them).
   var hint = document.createElement('p'); hint.className = 'relax'; hint.hidden = true; list.parentNode.insertBefore(hint, list);
@@ -276,11 +315,14 @@
     if (i >= 0) skills.splice(i, 1); else skills.push(s);
     paintChips(); run();
   });
-  more.addEventListener('click', function () {                // the next 50 rows of the same search
+  more.addEventListener('click', function () {                // the next 50 rows of the same search, never past the engine's limit
+    if (got >= DEEPEST) { paintCap(); return; }
     more.disabled = true;
-    ask(query(), got).then(function (d) { show(d, true); }, function (err) {
+    askTwice(query(), got).then(function (d) { show(d, true); }, function (err) {
       if (err && (err.stale || err.name === 'AbortError')) return;
-      more.disabled = false; more.textContent = 'Could not load more. Try again';
+      more.disabled = false;
+      if (err && err.status === 400 && err.body && err.body.deepest > 0) { paintCap(Number(err.body.deepest)); return; }      // past the limit
+      more.textContent = 'Could not load more. Try again';
     });
   });
   var clearBtn = $('fclear');
