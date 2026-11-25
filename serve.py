@@ -43,6 +43,7 @@ def find(q, remote=False, limit=20, offset=0):
 
 
 DUP = {"idx": None, "stamp": None, "busy": False}
+LATEST_ANSWER = {}      # /api/latest: limit -> (when, answer)
 
 
 def dup_index():
@@ -195,7 +196,11 @@ class Handler(SimpleHTTPRequestHandler):
             qs = urllib.parse.parse_qs(self.path.partition("?")[2])
             try: limit = max(1, min(int((qs.get("limit") or ["30"])[0]), 100))
             except ValueError: limit = 30
-            return self.send_json(200, {"jobs": [brief_card(j) for j in STORE.latest(limit)]}, [("Cache-Control", "public, max-age=20"), ("Access-Control-Allow-Origin", "*")])
+            # every open home page asks once a minute: one answer serves them all for 15 seconds
+            hit = LATEST_ANSWER.get(limit)
+            if not hit or time.monotonic() - hit[0] > 15:
+                hit = LATEST_ANSWER[limit] = (time.monotonic(), [brief_card(j) for j in STORE.latest(limit)])
+            return self.send_json(200, {"jobs": hit[1]}, [("Cache-Control", "public, max-age=20"), ("Access-Control-Allow-Origin", "*")])
         if path == DUPE:
             qs = urllib.parse.parse_qs(self.path.partition("?")[2])
             one = lambda k: (qs.get(k) or [""])[0][:300]

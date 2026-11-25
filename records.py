@@ -17,6 +17,9 @@ CREATE TABLE jobs (slug TEXT PRIMARY KEY, id TEXT NOT NULL, active INTEGER NOT N
                    first_seen TEXT NOT NULL, rec TEXT NOT NULL, descr TEXT NOT NULL);
 CREATE INDEX jobs_company ON jobs (company);
 CREATE INDEX jobs_cat ON jobs (cat, active);
+-- the newest open jobs (Store.latest, /api/latest). Without it that query read and sorted the whole file, 3.7 GB on 25 Nov 2026: over
+-- 60 seconds with the store's lock held, so the home page's live list never arrived and job pages waited behind it.
+CREATE INDEX jobs_new ON jobs (active, first_seen);
 CREATE TABLE ctx (k TEXT PRIMARY KEY, v TEXT NOT NULL);
 CREATE VIRTUAL TABLE jobs_fts USING fts5 (title, company, place, tags, body, content='', tokenize='porter unicode61 remove_diacritics 2');
 """

@@ -115,6 +115,8 @@ CREATE TABLE IF NOT EXISTS live (id TEXT PRIMARY KEY, slug TEXT UNIQUE, company 
 -- one company's rows, asked for four times a board read (skip_known, apply). Without it every one of those read the whole table:
 -- 450 MB once the live rows carried full texts, 500 MB a second, and the loop handed out 60 to 250 boards in five minutes (20 Nov 2026).
 CREATE INDEX IF NOT EXISTS live_company ON live (company, closed);
+-- the newest open rows, for /api/latest (records.Store.latest): without it every call read the whole table (1.9 GB on 25 Nov 2026)
+CREATE INDEX IF NOT EXISTS live_new ON live (closed, seen_at);
 CREATE TABLE IF NOT EXISTS moved (slug TEXT PRIMARY KEY, to_slug TEXT);
 CREATE TABLE IF NOT EXISTS boards (key TEXT PRIMARY KEY, next_due REAL, last_change REAL DEFAULT 0, fails INTEGER DEFAULT 0);
 """
