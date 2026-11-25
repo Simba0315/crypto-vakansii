@@ -4893,3 +4893,69 @@ main.home .ktabs .tabmore a:hover{border-color:var(--text)}
   .hero.v2 .stamp{padding:6px 12px;font-size:12.5px}
   .hero.v2 .logorow{gap:10px 22px}
 }
+
+/* ---- the resume builder (/resume/): the heading and the action are the framed panel (two weights, the label pill), a little tighter
+   than a reading page's so the tool still starts on the first screen; the tool's parts take the cards' corner and hairline: the bar
+   of downloads, the resume picker, the import box (it had a dashed border and a bare browser field), the score card and the Plus line ---- */
+main.rbp .rbhero{padding:30px 48px 34px}
+main.rbp .rbhero .crumbs{margin:0 0 18px}
+main.rbp .rbhero .sec-label{margin:0 0 14px}
+main.rbp .rbhero h1{max-width:22ch;margin:0 0 14px;font-size:clamp(32px,3.6vw,48px);line-height:1.04;letter-spacing:-.045em}
+main.rbp .rbhero .lead{max-width:72ch;margin:0;font-size:17px;color:var(--muted)}
+main.rbp .rbhero .plain{max-width:76ch;margin:18px 0 0;padding:16px 0 0;border-top:1px solid var(--line);font-size:15px}
+main.rbp .rbhero .lact{margin:22px 0 0}
+/* on a wide screen "In plain words" is a white card beside the heading, so the tool starts higher */
+@media(min-width:1001px){
+  main.rbp .rbhero .khero-t{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,340px);column-gap:56px;align-items:end}
+  main.rbp .rbhero .khero-t>*{grid-column:1}
+  main.rbp .rbhero .khero-t>.crumbs{grid-column:1/-1}
+  main.rbp .rbhero .khero-t>.plain{grid-column:2;grid-row:3/span 3;align-self:end;margin:0;padding:20px 22px;border:1px solid var(--line);border-radius:20px;background:var(--card);font-size:14.5px;line-height:1.55}
+  main.rbp .rbhero .khero-t>.plain b{display:block;margin:0 0 6px;font:650 15px/1.3 var(--display)}
+}
+main.rbp .rbhero+#rb{margin-top:22px}
+main.rbp .rb-actions{padding:10px 12px;border-radius:24px;background:var(--card)}
+main.rbp .rb-set{padding:12px 14px;border-radius:20px}
+main.rbp .rb-tabs{gap:6px;padding-bottom:14px}
+main.rbp .rb-imp{padding:16px 18px;border:1px solid var(--line);border-radius:20px;background:var(--bg2)}
+main.rbp .rb-imp p:first-child b{font:650 16px/1.3 var(--display);letter-spacing:-.01em}
+main.rbp .rb-start label{flex-basis:100%;font-size:14.5px}
+main.rbp .rb-start input{min-width:0;height:40px;padding:0 14px;border:1px solid var(--line2);border-radius:999px;background:var(--card);color:var(--text);font:inherit;font-size:14px}
+main.rbp .rb-start input:focus{border-color:var(--text);outline:2px solid color-mix(in srgb,var(--ac) 35%,transparent);outline-offset:1px}
+main.rbp .rb-start .btn{min-height:40px;margin:0}
+main.rbp #rb-preview{border-radius:6px}
+main.rbp .rb-side .rbc{border-radius:24px;overflow:hidden}
+main.rbp .rb-plus{padding:16px 22px;border-radius:22px;align-items:center}
+main.rbp .rb-plus span{flex:1 1 0;min-width:0;font-size:14px}
+@media(max-width:820px){main.rbp .rb-plus span{flex-basis:100%}main.rbp .rb-plus a{margin-left:0}}
+main.rbp .rb-plus a{display:inline-flex;align-items:center;gap:10px;padding:5px 6px 5px 16px;border:1px solid var(--line2);border-radius:999px;color:var(--text);text-decoration:none}
+main.rbp .rb-plus a::after{content:"\2192";display:grid;place-items:center;flex:none;width:26px;height:26px;border-radius:50%;background:var(--text);color:var(--bg);font-size:13px;line-height:1}
+main.rbp .rb-plus a:hover{border-color:var(--text)}
+@media(max-width:820px){main.rbp .rb-actions{border-radius:0}}
+@media(max-width:700px){
+  main.rbp .rbhero{padding:16px 20px 22px}
+  main.rbp .rbhero .crumbs{margin:0 0 12px}
+  main.rbp .rbhero h1{font-size:clamp(28px,8vw,34px)}
+  main.rbp .rbhero .lead{font-size:16px}
+  main.rbp .rbhero .lact{margin-top:16px}
+  main.rbp .rbhero+#rb{margin-top:16px}
+}
+
+/* ---- resume, CV and cover letter examples (/resume/examples/<work>/, /cv-examples/<work>/): the heading in two weights (the work in
+   bold, "resume example" light); the buttons under the sheet as one row with the arrow pill; the side's parts divided by hairlines;
+   the other levels' headings set alike (one had the label and two weights, the other was a plain bold line) ---- */
+main.kw .rexgrid>div>p:has(>.btn){display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0}
+main.kw .rexgrid>div>p:has(>.btn)>.btn{margin:0}
+main.kw .rexgrid>div>p>a.btn.primary{gap:10px;padding:6px 6px 6px 18px}
+main.kw .rexgrid>div>p>a.btn.primary::after{content:"\2192";display:grid;place-items:center;flex:none;width:30px;height:30px;border-radius:50%;background:var(--btn-ink);color:var(--btn);font-size:14px;line-height:1}
+main.kw .rexside>h2{margin:34px 0 10px;padding-top:26px;border-top:1px solid var(--line);font-size:20px}
+main.kw .rexside>h2:first-child,main.kw .rexside>.rexprev+h2{margin-top:0;padding-top:0;border-top:0}
+main.kw .rexside>.rexprev{margin:0 0 28px;padding:16px;border:1px solid var(--line);border-radius:24px;background:var(--card)}
+main.kw .rexside>.rexprev img{max-width:100%;border-radius:4px;box-shadow:none}
+main.kw .rexside>.rexprev figcaption{margin-top:10px}
+main.kw .rexwhy{padding:20px 22px;border-radius:22px}
+main.kw .rexwhy ul.ticks li{border-radius:14px}
+.kwlv .sec-head h2,.kwlv .sec-head h2.tw{font-weight:650}
+.kwlv .sec-head h2.tw b{font-weight:inherit}
+@media(min-width:1000px){main.kw .rexside>.rexprev{display:grid;grid-template-columns:96px minmax(0,1fr);gap:18px;align-items:center;padding:12px 18px 12px 12px;border-radius:20px}main.kw .rexside>.rexprev figcaption{margin:0;font-size:14px}}
+main.kw .rexgrid>div>p>a.btn.primary{flex:1 1 100%;justify-content:space-between}
+main.kw .rexgrid>div>p:has(>a.btn.primary)>.btn.ghost{flex:1 1 0;justify-content:center;white-space:nowrap}

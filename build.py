@@ -1275,7 +1275,9 @@ def frame_first(path, body):
     seg = path.strip("/").split("/")
     if seg[0] not in FRAME_LABEL or seg[0] == "resume" and seg[1:2] != ["examples"] or 'class="khero' in body[:3000]: return body
     if len(seg) == 1 and seg[0] in ("locations",): return body
-    lab = f'<p class="sec-label">{FRAME_LABEL[seg[0]]}</p>'
+    lab_ = FRAME_LABEL[seg[0]]
+    if lab_.endswith(" example") and (len(seg) == 1 or seg == ["resume", "examples"]): lab_ += "s"     # the hub of examples: "CV examples"
+    lab = f'<p class="sec-label">{lab_}</p>'
     if (m := FRAME_ARTICLE.match(body)):                 # guides and "jobs for": the panel opens the article
         pre, cr, h1, stamp, short, lead = (g or "" for g in m.groups())
         if short:          # an advice guide (v4, 25 Nov 2026): the byline under the title, then the short answer as a white card, then the opening
@@ -7051,7 +7053,7 @@ def main():
         page(f"resume/examples/{slug_r}/", (f"{tcase(rname)} Resume Examples: Entry-Level, Mid & Senior ({TODAY[:4]})" if n_ex == 3 else f"{tcase(rname)} Resume Example ({TODAY[:4]})") + f" | {SITE}",
              (f"{art(low).capitalize()} {low} resume example with the skills employers name in {len(rj):,} open postings today: {', '.join(t for t, _ in top_[:5])}. Open it in the free builder and make it yours." if tech_ and top_ else
               f"{art(low).capitalize()} {low} resume example with measured results, next to what {len(rj):,} open postings for this work offer today. Open it in the free builder and make it yours."),
-             crumbs(("Resume builder", "resume/"), ("Examples", "resume/examples/"), (rname, "")) + f"<h1>{e(rname)} resume example</h1>"
+             crumbs(("Resume builder", "resume/"), ("Examples", "resume/examples/"), (rname, "")) + f"<h1>{e(rname)} <span class=\"lt\">resume example</span></h1>"
              f'<p class="lead">' + (f"A person in this job {e(w_)}. " if w_ else "") + f"Below: an example to start from, and what {len(rj):,} open postings for this work ask for today.</p>"
              + nums(facts_) + act_row(f"resume/?example={slug_r}", "Open this example in the builder", [("tools/resume-review/", "Check your own resume")], note=FREE_RB)
              + '<div class="rexgrid"><div>' + paper(d) + '<p class="note">Example. The person, the employers and the numbers are invented; replace them with yours.</p>'
@@ -7124,7 +7126,7 @@ def main():
         cv_dir[fs].append((slug_r, rname, len(uk_)))
         page(f"cv-examples/{slug_r}/", (f"{tcase(rname)} CV Examples (UK): Entry-Level, Mid & Senior ({TODAY[:4]})" if cv_three else f"{tcase(rname)} CV Example (UK): Template & Guide ({TODAY[:4]})") + f" | {SITE}",
              f"{art(low).capitalize()} {low} CV example in UK format: personal profile, employment history with results, no photo. Open it in the free builder; {len(uk_):,} {low} jobs open in the UK today.",
-             crumbs(("Resume builder", "resume/"), ("CV examples", "cv-examples/"), (rname, "")) + f"<h1>{e(rname)} CV example <span class=\"hl\">(UK format)</span></h1>"
+             crumbs(("Resume builder", "resume/"), ("CV examples", "cv-examples/"), (rname, "")) + f"<h1>{e(rname)} <span class=\"lt\">CV example (UK format)</span></h1>"
              f'<p class="lead">The same document Americans call a resume, written the way UK and European employers expect it: a personal profile first, your employment history with results, '
              f'no photo, age or marital status. Below, an example to start from and what {len(rj):,} open {e(low)} postings ask for.</p>'
              + nums(facts_cv) + act_row(f"resume/?example={slug_r}", "Open this CV in the builder", [(f"resume/examples/{slug_r}/", "US resume version")], note=FREE_RB)
@@ -10107,14 +10109,17 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                 '<li><b>Download.</b> “Save as PDF” through your browser’s print window, or “Download for Word”. Free, with no watermark and no account.</li></ol>')
     page("resume/", f"100% Free Resume Builder: PDF & Word Download, No Sign-Up | {SITE}",
          f"Build an ATS-friendly resume in your browser: {RB_TPLS} templates, free PDF and Word download, no account. Nothing is uploaded, and one click matches it to open jobs.",
-         crumbs(("Resume builder", "")) + f'<h1>Free resume builder that screening software can read</h1><p class="lead">{RB_TPLS.capitalize()} plain templates that applicant tracking systems read cleanly '
+         # v4, pass 2 (26 Nov 2026): the heading, the paragraph and the action are the framed panel the other pages open with (two weights,
+         # the label pill); the panel stays out of the printed resume like the rest of the page around the preview
+         '<div class="khero phero rbhero no-print"><div class="khero-t">' + crumbs(("Resume builder", "")) + '<p class="sec-label">Resume builder</p>'
+         f'<h1>Free resume builder that <span class="hl">screening software can read</span></h1><p class="lead">{RB_TPLS.capitalize()} plain templates that applicant tracking systems read cleanly '
          '(two-column layouts with icons can come out as scrambled text), and the PDF and the Word file are free, where many builders charge for the download. '
          'Fill in the form, watch the page update, download. No account; nothing leaves this browser.</p>'
          '<p class="plain"><b>In plain words:</b> many employers first run every resume through a program, called an applicant tracking system, that reads the text and sorts the applications. Fancy layouts with columns and icons can turn into jumbled text for that program, so these templates keep one plain column that both the program and a person can read.</p>'
          # Sections review, batch 5: the builder is the page's first screen. Above it stand the heading, one paragraph and the one
          # action (on a phone it jumps to the form, not to the row of download buttons); the bar of downloads is the top of the
          # tool; the notes and the Plus line moved under the tool. The action row is "no-print": it used to print into the PDF.
-         + '<div class="no-print">' + act_row("#rb-app", "Start your resume", [("resume/examples/", "Examples by job"), ("guides/how-to-write-a-resume/", "How to write a resume"), ("guides/employment-gap/", "Explaining a gap")]) + "</div>"
+         + act_row("#rb-app", "Start your resume", [("resume/examples/", "Examples by job"), ("guides/how-to-write-a-resume/", "How to write a resume"), ("guides/employment-gap/", "Explaining a gap")]) + "</div></div>"
          '<div id="rb"><div class="rb-actions"><button class="btn" id="rb-print" type="button">Save as PDF — free</button><button class="btn ghost" id="rb-doc" type="button">Download for Word</button><button class="btn ghost" id="rb-json" type="button" title="The open JSON Resume format, readable by other tools and AI assistants">JSON</button>'
          '<label class="wl rb-tplpick">Template<select id="rb-tpl"><option value="classic">Classic</option><option value="modern">Modern</option><option value="compact">Compact</option>'
          '<option value="developer">Developer</option><option value="executive">Executive</option><option value="timeline">Timeline</option><option value="minimal">Minimal</option><option value="accent">Accent</option></select></label>'
