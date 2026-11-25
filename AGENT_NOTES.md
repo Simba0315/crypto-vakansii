@@ -27,6 +27,14 @@ it from there. After a change of name or palette: `python3 brand.py`, `python3 o
   ones; `logos.json` then says `board:<ats>/<token>`, and the build does not use that as the company's site). A name whose
   obvious domain belongs to someone else goes into `NO_SITE` (mesh.com shows Microsoft's logo). Look at every new logo
   before publishing: put them on one page and take a screenshot.
+- `logos_official.py` (25 Nov 2026) does the same for the companies with the most open jobs, from the live site's company
+  list: the site from `logos.json`, its hand-checked `SITES`, the site the company's own job board links to, or `<name>.com`
+  only when the home page names the company and links to our board (or the name is long and not a dictionary word). Icons:
+  apple-touch-icon, manifest icons, `<link rel=icon>` (SVG drawn by Quick Look, WebP read by sips), favicon.ico of 64 px or
+  more; 48 px at least, square, not blank, not an enlarged favicon; then the square logo on the company's own board. Polite:
+  4 companies at a time, 10 s timeouts, our User-Agent, nothing behind a bot check (403, 429, challenge pages are skipped).
+  Files: 96 px and 72 px (`s/`), palette PNGs of about 1.5 KB. Progress in `data/logos_official.jsonl`; `--retry` tries the
+  failures again, `--dedupe` drops an icon that two different companies share.
 
 ## Freshness: exact times and the hourly run
 

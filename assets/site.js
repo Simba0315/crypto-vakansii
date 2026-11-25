@@ -1052,7 +1052,7 @@
         a.className = 'tile'; a.href = P + '/companies/' + r[1] + '/';
         av.className = 'ava sm' + (r[5] ? ' has' : ''); av.setAttribute('aria-hidden', 'true');
         av.appendChild(document.createTextNode((r[0].match(/[A-Za-z0-9\u00C0-\uFFFF]/) || ['?'])[0].toUpperCase()));
-        if (r[5]) { var im = document.createElement('img'); im.src = P + '/logos/s/' + r[1] + '.png'; im.alt = ''; im.loading = 'lazy'; av.appendChild(im); }
+        if (r[5]) { var im = document.createElement('img'); im.src = P + '/logos/s/' + r[1] + '.png'; im.alt = im.title = r[0] + ' logo'; im.width = im.height = 72; im.loading = 'lazy'; av.appendChild(im); }
         nm.className = 'n'; nm.textContent = r[0];
         a.appendChild(av); a.appendChild(nm);
         if (r[3]) { var up = document.createElement('span'); up.className = 'up'; up.title = r[3] + ' posted in the last 7 days'; up.textContent = '+' + r[3]; a.appendChild(up); }
