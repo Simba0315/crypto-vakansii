@@ -4769,7 +4769,7 @@ main.hub #clist .tile .n{overflow-wrap:normal;word-break:normal;hyphens:none}
 #acc .acc-cv-x li{padding-left:14px;border-left:2px solid var(--line)}
 #acc .acc-cv-x span{display:block;font-size:13.5px;color:var(--faint)}
 #acc .acc-cv-x p{margin:4px 0 0;font-size:14.5px;line-height:1.5;color:var(--muted)}
-#acc .acc-cand .talent-ask,#acc .acc-pan .acc-cv+.acc-btns{margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
+#acc .acc-cand .talent-ask,#acc .acc-pan .acc-cv+.acc-btns,#acc .acc-cand .acc-cv+.acc-quiet{margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
 /* a payment link, opened by whoever pays: a receipt-like card */
 #acc .acc-inv{display:grid;justify-items:center;padding:12px 0 48px}
 #acc .acc-inv-c{width:100%;max-width:640px;padding:38px 40px;border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);
