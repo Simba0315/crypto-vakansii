@@ -250,7 +250,7 @@ def check(out, full_url=None, workers=4):
             from concurrent.futures import ProcessPoolExecutor
             with ProcessPoolExecutor(min(workers, len(tasks)), mp_context=multiprocessing.get_context("fork")) as ex:
                 results = list(ex.map(_check_part, tasks))
-        except (ValueError, OSError, ImportError):
+        except Exception:                            # no fork here, or a worker died: read them one after another
             results = None
     if results is None: results = [_check_part(t) for t in tasks]
     seen, n_all = set(), 0
