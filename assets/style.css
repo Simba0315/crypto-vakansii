@@ -4130,17 +4130,14 @@ h1{font-weight:700;letter-spacing:-.03em;line-height:1.08}
 /* cards and panels: one corner, one line, no heavy shadow */
 .khero,.lhero{border-radius:24px}
 .pic,.panel,.card,.tablewrap,.qa,.kpanel:not(.ink){border-radius:20px}
-/* the footer: quiet link rows, and the wordmark drawn large at the very bottom, filled with dots a slow green light passes over
-   (the owner liked the big drawn wordmark at the foot of adapty.io; this is our own: our wordmark as a mask, CSS only) */
+/* the footer: quiet link rows, and the wordmark drawn large at the very bottom (the owner liked the big drawn wordmark at the foot of
+   adapty.io; our wordmark as a mask, CSS only). 25 Nov 2026, the owner: like the word at the foot of hypestkey.com, solid letters in a
+   soft green that fades downwards, with no dots and nothing moving. The green is --ac, so the dark theme gets its own lighter green. */
 footer .pop a,footer .fask a{color:#c9c7bd;text-decoration:none}
 footer .pop a:hover,footer .fask a:hover{color:var(--pop);text-decoration:underline;text-underline-offset:3px}
 .fbig{display:block;width:100%;aspect-ratio:271.18/39.76;margin:44px 0 -6px;-webkit-mask:var(--wm) center/100% auto no-repeat;mask:var(--wm) center/100% auto no-repeat;
-  background-color:#15201a;background-image:radial-gradient(circle,rgba(95,212,134,.95) 0 1.15px,transparent 1.5px),
-  linear-gradient(105deg,#13261b 0%,#13261b 30%,#1f9d55 46%,#9ff0bb 50%,#1f9d55 54%,#13261b 70%,#13261b 100%);
-  background-size:7px 7px,250% 100%;background-position:0 0,120% 0;animation:fbig 12s linear infinite}
-@keyframes fbig{from{background-position:0 0,120% 0}to{background-position:0 0,-120% 0}}
-@media (prefers-reduced-motion:reduce){.fbig{animation:none;background-position:0 0,50% 0}}
-@media (max-width:560px){.fbig{margin-top:32px;background-size:5px 5px,250% 100%}}
+  background:linear-gradient(180deg,color-mix(in srgb,var(--ac) 32%,transparent) 0%,color-mix(in srgb,var(--ac) 4%,transparent) 92%)}
+@media (max-width:560px){.fbig{margin-top:32px}}
 
 /* ---- the filters' own menus (assets/fsel.js, 24 Nov 2026): a pill opens a panel in the site's style instead of the system list ---- */
 main.srch #fwrap .fx-n{display:none}
@@ -4206,7 +4203,7 @@ main.srch #fwrap .fx-n{display:none}
 .qa.gl-index dt a{text-decoration:none}
 .qa.gl-index dt a:hover{color:var(--ac);text-decoration:underline;text-underline-offset:3px}
 /* ---- the footer in white (owner, 24 Nov 2026: "низ лучше белым оставить!"): the page's own card colour with a thin line on top, the
-   ordinary wordmark (light file, dark file in the dark theme), quiet links, and the big dotted wordmark in green on white ---- */
+   ordinary wordmark (light file, dark file in the dark theme), quiet links, and the big wordmark in soft green on white ---- */
 footer{background:var(--card);color:var(--muted);border-top:1px solid var(--line)}
 footer .logo{color:var(--text)}
 footer .fcols .fhd{color:var(--text)}
@@ -4217,9 +4214,6 @@ footer .pop a,footer .fask a{color:var(--muted)}
 footer .fask b{color:var(--text)}
 footer .fine{border-top-color:var(--line);color:var(--faint)}
 footer.mini a{color:var(--muted)}
-.fbig{background-color:color-mix(in srgb,var(--ac) 9%,var(--card));
-  background-image:radial-gradient(circle,var(--ac) 0 1.15px,transparent 1.5px),
-  linear-gradient(105deg,transparent 0%,transparent 34%,color-mix(in srgb,var(--ac) 30%,transparent) 46%,color-mix(in srgb,var(--pop) 70%,transparent) 50%,color-mix(in srgb,var(--ac) 30%,transparent) 54%,transparent 66%,transparent 100%)}
 /* ---- the filter bar (owner, 24 Nov 2026: "фильтры до сих пор уебищно некрасиво сделаны"): the five menus in one white card, each a small
    label over its value (Location, Category, Level, Salary, Posted) with thin dividers, as in the search bars of travel sites; the on/off
    filters are quiet chips under it. assets/fsel.js builds the card from the same controls. ---- */
@@ -4280,18 +4274,6 @@ main.srch #fwrap .fx-chips .flabel{position:absolute;width:1px;height:1px;margin
 /* 24 Nov 2026, Lighthouse "Links rely on color to be distinguishable": the "Ask ChatGPT / Claude / Perplexity" links sit inside a
    sentence in the footer, so they keep a thin underline, not only a colour */
 footer .fask a{text-decoration:underline;text-decoration-thickness:1px;text-decoration-color:currentColor;text-underline-offset:3px}
-/* ---------- 24 Nov 2026: the footer wordmark's shimmer without repainting. Lighthouse on the home page counted 15.8 s of "Rendering" in a
-   25 s trace: the old shimmer animated background-position, which repaints the whole masked block every frame on every page. Now the
-   dots are a still layer (::after) and the band of light (::before) moves with transform, which the compositor does on its own. Same
-   look, same 12 s sweep; still for people who ask for reduced motion. */
-.fbig{position:relative;overflow:hidden;background-image:none;animation:none}
-.fbig::before{content:"";position:absolute;top:0;bottom:0;left:0;width:250%;pointer-events:none;
-  background:linear-gradient(105deg,transparent 0%,transparent 34%,color-mix(in srgb,var(--ac) 30%,transparent) 46%,color-mix(in srgb,var(--pop) 70%,transparent) 50%,color-mix(in srgb,var(--ac) 30%,transparent) 54%,transparent 66%,transparent 100%);
-  transform:translateX(-72%);animation:fbig2 12s linear infinite;will-change:transform}
-.fbig::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle,var(--ac) 0 1.15px,transparent 1.5px) 0 0/7px 7px}
-@keyframes fbig2{from{transform:translateX(-72%)}to{transform:translateX(72%)}}
-@media (max-width:560px){.fbig::after{background-size:5px 5px}}
-@media (prefers-reduced-motion:reduce){.fbig::before{animation:none;transform:translateX(-30%)}}
 /* 24 Nov 2026: on phones the filter bar and the chips scroll sideways; their right edge was a hard cut ("Any le…") that did not say
    there was more. A soft fade on the side that still has content says so; it goes away at the end of the row (fsel.js sets .at-end). */
 @media (max-width:860px){
