@@ -10,13 +10,15 @@ On the server nginx hands out the files itself, keeps each job page for a few mi
 Two more addresses, both read-only and public:
   /api/search?q=python+berlin&remote=1&limit=20&offset=0   word search over every open job, as JSON: Lucene (OpenSearch, see
                                                            search_engine.py) when HRN_OPENSEARCH is set, else SQLite FTS5
+  /api/search?list=1&q=nurse&loc=texas&sort=rel            the search page's list: its own address in, 50 rows out, with every
+                                                           filter of /jobs/ (search_engine.listing; Lucene only, 503 without it)
   /mcp                                                     the connector an AI assistant adds by address (Model Context Protocol):
                                                            tools search_jobs and get_job
   /api/check-duplicate?company=Stripe&title=Senior+Engineer&location=London&url=…
                                                            is this job already on the site? (dedupe.py) The matching open jobs,
                                                            answered from memory in well under a millisecond
 """
-import json, os, re, sys, threading, time, urllib.parse
+import collections, json, os, re, sys, threading, time, urllib.parse
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -44,6 +46,9 @@ def find(q, remote=False, limit=20, offset=0):
 
 DUP = {"idx": None, "stamp": None, "busy": False}
 LATEST_ANSWER = {}      # /api/latest: limit -> (when, answer)
+# /api/search?list=1, the rows of the search page: the newest answers, by the search written one way (a few hundred, under 10 MB)
+LIST_CACHE, LIST_LOCK, LIST_TTL, LIST_KEEP = collections.OrderedDict(), threading.Lock(), 60, 400
+LIST_HEADERS = [("Cache-Control", "public, max-age=60")]
 
 
 def dup_index():
@@ -219,6 +224,7 @@ class Handler(SimpleHTTPRequestHandler):
         if path == SEARCH:
             qs = urllib.parse.parse_qs(self.path.partition("?")[2])
             one = lambda k, d="": (qs.get(k) or [d])[0]
+            if one("list") == "1": return self.send_list(qs)
             if one("all") == "1":
                 # For the site's own search box: every match, best first, as slugs only (up to 5,000); the page applies its
                 # filters to them. Lucene only: without it the page keeps its own word matching.
@@ -253,6 +259,34 @@ class Handler(SimpleHTTPRequestHandler):
         return super().do_HEAD() if self.command == "HEAD" else super().do_GET()
 
     do_HEAD = do_GET
+
+    def send_list(self, qs):
+        """/api/search?list=1&<the search page's own address>: one page of 50 rows for /jobs/ (search_engine.listing). The answer for a
+        search, written one way (search_engine.params), is kept LIST_TTL seconds, here and in nginx (2 minutes, by address)."""
+        p = search_engine.params(qs)
+        key = json.dumps(p, sort_keys=True, ensure_ascii=False)
+        now = time.monotonic()
+        with LIST_LOCK:
+            hit = LIST_CACHE.get(key)
+            if hit and now - hit[0] < LIST_TTL:
+                LIST_CACHE.move_to_end(key)
+                return self.send(200, hit[1], "application/json; charset=utf-8", LIST_HEADERS)
+        if not search_engine.ready():
+            return self.send_json(503, {"error": "search is being reloaded; try again in a few minutes"}, [("Cache-Control", "no-store"), ("Retry-After", "60")])
+        try:
+            got = search_engine.listing(p)
+        except (OSError, ValueError, KeyError) as err:
+            self.log_error("list %s: %r", key[:200], err)
+            return self.send_json(503, {"error": "search engine unavailable"}, [("Cache-Control", "no-store"), ("Retry-After", "30")])
+        stamp = int(time.time())
+        body = json.dumps({"total": got["total"], "offset": p["offset"], "more": got["more"], "fuzzy": got["fuzzy"], "exact": got["exact"],
+                           "without": got["without"], **({"sum": got["sum"]} if "sum" in got else {}),
+                           "jobs": [search_engine.row(src, extra, build.slugify(src.get("company") or "") in build.LOGOS, stamp) for src, extra in got["hits"]]},
+                          ensure_ascii=False, separators=(",", ":"))
+        with LIST_LOCK:
+            LIST_CACHE[key] = (now, body)
+            while len(LIST_CACHE) > LIST_KEEP: LIST_CACHE.popitem(last=False)
+        return self.send(200, body, "application/json; charset=utf-8", LIST_HEADERS)
 
     def log_message(self, fmt, *args):
         if os.environ.get("HRN_QUIET") != "1": super().log_message(fmt, *args)
