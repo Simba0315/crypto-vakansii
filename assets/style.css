@@ -5031,3 +5031,6 @@ main.nfp .nf{position:relative;overflow:hidden;isolation:isolate}
 main.nfp .nf::after{content:"";position:absolute;z-index:-1;right:-120px;top:-150px;width:420px;height:420px;border-radius:50%;border:46px solid color-mix(in srgb,var(--ac) 9%,transparent);pointer-events:none}
 main.nfp .nf::before{content:"";position:absolute;z-index:-1;right:62px;top:42px;width:10px;height:10px;border-radius:50%;background:color-mix(in srgb,var(--ac) 30%,transparent);pointer-events:none}
 @media(max-width:700px){main.nfp .nf::after{right:-200px;top:-210px;width:300px;height:300px;border-width:36px}main.nfp .nf::before{display:none}}
+main.hbp .phero~.hbgrid{margin-top:28px}
+main.hbp .phero~.hbco{margin:28px 0 0}
+main.hbp .hbgrid>*{border-radius:24px}
