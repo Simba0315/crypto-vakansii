@@ -5499,8 +5499,16 @@ def main():
         sal_qa.append(("What job title pays the most?", "By the median of advertised ranges in today’s postings: " + ", ".join(f"{rlow(nm_)} ({money(m_)})" for m_, _, nm_, _, _ in sal_t[:5])
                        + ". The table above ranks every job title with at least 20 postings that state pay."))
     if all_m:
+        # Against the whole country (25 Nov 2026: the answers compared $70,000 only with the postings here, and "What is the average
+        # salary in the US?" had no answer on a page about salaries): the government's figures for all US jobs, as on /jobs-that-pay/.
+        bj_s = bls_wages.ALL_JOBS
         sal_qa.append(("Is $70,000 a good yearly salary?", f"Among the {len(all_m):,} open jobs on {SITE} that state a yearly US-dollar range, {100 * below70 / len(all_m):.0f}% advertise less than $70,000 at the midpoint. "
-                       + mix_note("this share runs lower than across all US jobs; whether $70,000 is enough depends mostly on where you live.", "this share can differ from all US jobs; whether $70,000 is enough depends mostly on where you live.")))
+                       + mix_note("this share runs lower than across all US jobs; whether $70,000 is enough depends mostly on where you live.", "this share can differ from all US jobs; whether $70,000 is enough depends mostly on where you live.")
+                       + f" Across all US jobs, the Bureau of Labor Statistics puts the median at ${bj_s['y_median']:,} a year and the top quarter at ${bj_s['y_p75']:,} or more ({bls_wages.PERIOD}), "
+                       + ("so $70,000 is above the middle of all US pay." if 70000 > bj_s["y_median"] else "so $70,000 is below the middle of all US pay.")))
+        sal_qa.append(("What is the average salary in the US?", f"For all US jobs, the Bureau of Labor Statistics puts the median at ${bj_s['y_median']:,} a year (${bj_s['median']:,.2f} an hour) and the mean at "
+                       f"${bj_s['mean']:,.2f} an hour, about ${round(bj_s['mean'] * 2080, -1):,.0f} a year at 2,080 hours ({bls_wages.PERIOD}, {bj_s['employed'] / 1e6:,.1f} million jobs). The median is the better guide, "
+                       f"because a few very high wages pull the mean up. The open jobs here that state a yearly range advertise a median of {money(median(all_m))}: the advertised pay of the jobs open today, not what everyone earns."))
     if common_t:
         sal_qa.append(("What are the most common job titles?", "By open postings today: " + ", ".join(f"{rlow(nm_)} ({k_:,})" for _, _, nm_, _, k_ in common_t) + "."))
     sal_qa.append(("What are the levels of job titles?", "From the bottom: intern, junior or associate, the plain title (mid-level), senior, then lead, staff or principal for experts and manager, "
