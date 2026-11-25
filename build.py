@@ -570,6 +570,7 @@ OPEN = Counter()   # open roles per company
 FACT = {}          # one-paragraph hiring summary per company
 TB = {}            # trust marks per company: [(name, the number behind it)], shown on its page and on each of its job pages
 CATMED = {}        # median advertised salary per category slug
+HMED = {}          # median advertised hourly pay (US dollars) per category slug, from the postings that state an hourly rate
 EST = {}           # median advertised salary per (category slug, level)
 PERK_SLUG = {name: slug for name, slug, _ in PERKS}
 PERK_OK = set()    # perks with enough jobs to have their own page
@@ -2763,6 +2764,7 @@ def job_page(j, active_by_cat):
     est_ok = j["level"] != "Intern" and j["cat"] != OTHER[0] and (not j["location"] or any(c == "US" for c, _ in countries_of(j["location"])))
     if full and ("<" in DESC_TAGS.sub("", full) or not j["active"]): full = ""
     if full: full = DESC_RUN.sub(" ", DESC_RULE.sub("<hr>", full))
+    est_ok_h = not j["location"] or any(c == "US" for c, _ in countries_of(j["location"]))     # a plain "$" hourly rate is only compared for US roles
     comp_url = f'{P}/companies/{slugify(j["company"])}/'
     rows = [("Company", f'<a href="{comp_url}">{e(j["company"])}</a>')]
     if j["location"]: rows.append(("Location", loc_flags(j["location"], 6) + e(j["location"])))
@@ -2924,6 +2926,19 @@ def job_page(j, active_by_cat):
         paybar = (f'<div class="paybar"><p class="pb-h"><b>{e(j["salary"])}</b><span>stated in the posting</span></p>'
                   f'<div class="pb-t" aria-hidden="true"><i style="left:{pos_(lo_):.1f}%;width:{max(1.5, pos_(hi_) - pos_(lo_)):.1f}%"></i><u style="left:{pos_(med_):.1f}%"></u></div>'
                   f'<p class="pb-s">The middle of this range is {verdict} the median for {e(CAT[j["cat"]])} roles, {money(med_)} (the mark on the line).</p></div>')
+    # Pay stated by the hour (26 Nov 2026): the bar above only reads yearly ranges, so nursing, retail, warehouse and care postings,
+    # which state an hourly rate, got no comparison at all. Same line, drawn on the hourly figures of the category; US dollars only.
+    if not paybar and j["active"] and j["cat"] in HMED and (h2_ := usd_hourly(j.get("salary"))) and h2_[1] >= h2_[0] > 0 and est_ok_h:
+        lo_, hi_ = h2_; med_ = HMED[j["cat"]]
+        a_, b_ = min(lo_, med_) * 0.85, max(hi_, med_) * 1.15
+        pos_ = lambda v: max(0.0, min(100.0, 100 * (v - a_) / (b_ - a_)))
+        mid_ = (lo_ + hi_) / 2
+        verdict = "above" if mid_ > med_ * 1.05 else "below" if mid_ < med_ * 0.95 else "close to"
+        year_ = f"${mid_ * 2080 / 1000:,.0f}K"
+        paybar = (f'<div class="paybar"><p class="pb-h"><b>{e(j["salary"])}</b><span>stated in the posting</span></p>'
+                  f'<div class="pb-t" aria-hidden="true"><i style="left:{pos_(lo_):.1f}%;width:{max(1.5, pos_(hi_) - pos_(lo_)):.1f}%"></i><u style="left:{pos_(med_):.1f}%"></u></div>'
+                  f'<p class="pb-s">The middle of this range is {verdict} the median hourly rate for {e(CAT[j["cat"]])} roles that state one, ${med_:,.2f} (the mark on the line). '
+                  f'At 40 hours a week all year, {"$%.2f" % mid_} an hour comes to about {year_} a year before tax.</p></div>')
     # What the range leaves after US federal tax, Social Security and Medicare, for postings in the United States only (the rules are the ones the take-home pay tool uses)
     thline = ""
     if j["active"] and j.get("usd") and j["usd"][1] >= j["usd"][0] > 0 and j["location"] and [c_ for c_, _ in countries_of(j["location"])] == ["US"]:
@@ -3210,6 +3225,8 @@ def main():
     for cs in CAT:
         mids = [(lo + hi) / 2 for j in by_cat[cs] if j["usd"] for lo, hi in [j["usd"]]]
         if len(mids) >= 15: CATMED[cs] = median(mids)
+        hm_ = [(h_[0] + h_[1]) / 2 for j in by_cat[cs] if (h_ := usd_hourly(j.get("salary")))]
+        if len(hm_) >= 15 and cs != OTHER[0]: HMED[cs] = median(hm_)
         for lv in ("Intern", "Junior", "Senior", "Lead"):
             lm = [(lo + hi) / 2 for j in by_cat[cs] if j["level"] == lv and j["usd"] for lo, hi in [j["usd"]]]
             if len(lm) >= 15: EST[(cs, lv)] = median(lm)
