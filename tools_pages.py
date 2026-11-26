@@ -483,7 +483,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
          "married filing jointly: $24,800, $100,800, $211,400, $403,550, $512,450, $768,700 and above). Source: IRS Revenue Procedure 2025-32.</li>"
          "<li><strong>Social Security</strong>: 6.2% of wages up to $184,500 (the 2026 wage base, Social Security Administration).</li>"
          "<li><strong>Medicare</strong>: 1.45% of all wages, plus 0.9% above $200,000 single or $250,000 married filing jointly.</li>"
-         f"<li><strong>State income tax</strong>, if you choose a state: its 2026 brackets, standard deduction, exemption and credit, and the payroll deductions it charges employees. Each state’s page lists its figures and sources, and says so where the state’s own site could not be opened. Still to come: {state_tax.WAITING}.</li></ul>"
+         f"<li><strong>State income tax</strong>, if you choose a state: its 2026 brackets, standard deduction, exemption and credit, and the payroll deductions it charges employees. Each state’s page lists its figures and sources, and says so where the state’s own site could not be opened." + (f" Still to come: {state_tax.WAITING}." if state_tax.WAITING else "") + "</li></ul>"
          "<p>Not included: city and county taxes, credits (child tax credit and others), itemized deductions, bonuses taxed at a flat rate, and benefits taken from pay "
          "such as health insurance. Your employer’s withholding can differ a little from this year-end figure. This is an estimate, not tax advice.</p>",
          [("How much is $75,000 a year after taxes?", "For a single filer with no pre-tax contributions, $61,593 a year after 2026 federal income tax ($7,670), Social Security ($4,650) "
@@ -510,7 +510,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
              "and Medicare (1.45%, plus 0.9% above $200,000). Enter your own figures above for another salary, married filing jointly or pre-tax contributions.</p>"
              f'<h3>$75,000 a year, state by state</h3><p>A single filer with no pre-tax contributions. Each state links to its own paycheck calculator, figures and sources.</p>'
              '<div class="tablewrap"><table class="rkt"><tr><th>State</th><th>State income tax</th><th>State payroll deductions</th><th>Take-home a year</th><th>A month</th></tr>'
-             + "".join(st_row(c) for c in ST) + f'</table></div><p class="note">Still to come, once their special rules are built and their figures agree: {state_tax.WAITING}.</p>'))
+             + "".join(st_row(c) for c in ST) + f'</table></div>' + (f'<p class="note">Still to come, once their special rules are built and their figures agree: {state_tax.WAITING}.</p>' if state_tax.WAITING else "")))
 
     # ------------------------------------------------------------ 4. raise calculator
     tool("raise-calculator", "seekers", "Pay raise calculator",
