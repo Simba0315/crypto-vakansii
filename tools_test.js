@@ -48,14 +48,14 @@ ok('cover letter: one skill reads as one', /My strongest skill is Python\./.test
   const page = path.join(path.dirname(process.argv[3] || ''), '..', 'tools', 'take-home-pay', 'index.html');
   if (process.argv[3] && fs.existsSync(page)) {
     const D = JSON.parse(/id="tl-data">(.*?)<\/script>/s.exec(fs.readFileSync(page, 'utf8'))[1]);
-    ok('state tax: 50 states on the page', Object.keys(D).length === 50, Object.keys(D).length);
+    ok('state tax: 51 states on the page', Object.keys(D).length === 51, Object.keys(D).length);
     [['NC', 75000, 'single', 0, 2483.775, 0], ['GA', 75000, 'single', 0, 2994, 0], ['IL', 75000, 'single', 0, 3567.7125, 0], ['IL', 300000, 'single', 0, 14850, 0], ['PA', 75000, 'single', 5000, 2302.5, 52.5],
      ['CA', 75000, 'single', 0, 2665.12, 975], ['TX', 75000, 'single', 0, 0, 0], ['IA', 75000, 'single', 0, 2198.2, 0], ['MT', 75000, 'single', 0, 2876.6, 0], ['MS', 75000, 'single', 0, 2268, 0],
      ['KY', 75000, 'single', 0, 2507.4, 0], ['MA', 75000, 'single', 0, 3530, 345], ['NJ', 75000, 'single', 0, 2596, 505.4], ['WA', 100000, 'single', 0, 0, 1387.2], ['AK', 100000, 'single', 0, 0, 271],
      ['MI', 75000, 'single', 0, 2936.75, 0], ['CO', 75000, 'single', 0, 2591.6, 330], ['OH', 75000, 'single', 0, 1619, 0], ['WI', 75000, 'single', 0, 2943.52, 0], ['SC', 75000, 'single', 0, 2657.32, 0], ['UT', 75000, 'single', 0, 3103.45, 0], ['MO', 75000, 'single', 0, 2533.59, 0],
      ['NY', 75000, 'single', 0, 3453, 355.2], ['NY', 150000, 'single', 0, 8291.05775, 443.11], ['NY', 300000, 'single', 0, 20002, 443.11], ['AL', 75000, 'single', 0, 3126.5, 0], ['OR', 75000, 'single', 0, 5058.625, 525],
      ['CT', 75000, 'single', 0, 3475, 375], ['CT', 300000, 'single', 0, 19750, 922.5], ['CT', 150000, 'joint', 0, 7250, 750], ['CT', 36400, 'single', 0, 925.2, 182],
-     ['ME', 75000, 'single', 0, 3577.075, 375], ['ME', 46700, 'single', 0, 1666.825, 233.5], ['AR', 75000, 'single', 0, 2287.447, 0], ['AR', 150000, 'single', 0, 5349.707, 0], ['AR', 25524, 'joint', 0, 437.87, 0]].forEach(function (c) {
+     ['ME', 75000, 'single', 0, 3577.075, 375], ['ME', 46700, 'single', 0, 1666.825, 233.5], ['AR', 75000, 'single', 0, 2287.447, 0], ['AR', 150000, 'single', 0, 5349.707, 0], ['AR', 25524, 'joint', 0, 437.87, 0], ['VT', 60000, 'single', 0, 1697.6125, 0], ['VT', 120000, 'joint', 0, 3677.3, 0]].forEach(function (c) {
       const r = T.stateTax(D[c[0]], c[1], c[2], c[3]);
       near('state tax ' + c[0] + ' ' + c[1], r.tax, c[4], 0.01); near('state payroll ' + c[0] + ' ' + c[1], r.payTotal, c[5], 0.01);
     });

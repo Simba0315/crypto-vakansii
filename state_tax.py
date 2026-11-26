@@ -13,8 +13,9 @@ taken off]] (Connecticut); read: the day a state added later was read, when it i
 
 25 Nov 2026: Connecticut (DRS TPG-211 and IP 2026(1), opened through a public DNS resolver because the local one does not find
 portal.ct.gov), Maine (withholding tables revised August 2026) and Arkansas (DFA's formula with the 3.7% top rate; arkansas.gov's
-name servers do not answer the local resolver, so the address came from a public one). Vermont: tax.vermont.gov answers 403 to
-scripts and to the browser, so it stays in WAITING.
+name servers do not answer the local resolver, so the address came from a public one). Vermont (26 Nov 2026): tax.vermont.gov answers
+403 to scripts, to the browser and to the owner, so its 2026 tables come from the USDA National Finance Center's payroll bulletin, which
+republishes them for federal employees; the bands' base amounts in that bulletin check against the rates to the cent.
 
 Run `python3 state_tax.py` to check the figures against sums worked out by hand.
 """
@@ -70,13 +71,14 @@ STATES = {
     "TX": {'name': 'Texas', 'slug': 'texas', 'kind': 'none', 'base': 'wages', 'year': 2026, 'single': {'b': [[None, 0]], 'd': 0, 'e': 0, 'c': 0}, 'joint': {'b': [[None, 0]], 'd': 0, 'e': 0, 'c': 0}, 'pay': [], 'local': '', 'note': '', 'src': [['Texas Constitution, Article 8, Section 24-a', 'https://statutes.capitol.texas.gov/Docs/CN/htm/CN.8.htm#8.24-a']]},
     "UT": {'name': 'Utah', 'slug': 'utah', 'kind': 'flat', 'base': 'wages', 'year': 2026, 'single': {'b': [[None, 0.0445]], 'd': 0, 'e': 0, 'c': 966}, 'joint': {'b': [[None, 0.0445]], 'd': 0, 'e': 0, 'c': 1932}, 'pay': [], 'local': '', 'note': 'The credit shrinks by 1.3 cents for each dollar above $18,696 of income, or twice that on a joint return; this is worked out here.', 'src': [['Utah Code 59-10-104, effective 1 Jan 2026: 4.45%', 'https://le.utah.gov/xcode/title59/chapter10/C59-10-S104_2026050620260506.pdf'], ['2026 draft TC-40: credit and threshold', 'https://files.tax.utah.gov/tax/forms/drafts/tc-40.pdf'], ['$966 / $1,932 credit', 'https://taxfoundation.org/wp-content/uploads/2026/02/2026-State-Individual-Income-Tax-Rates-Brackets.xlsx']], 'secondary': True, 'credit_phase': {'single': [18696, 0.013], 'joint': [37392, 0.013]}},
     "VA": {'name': 'Virginia', 'slug': 'virginia', 'kind': 'graduated', 'base': 'wages', 'year': 2026, 'single': {'b': [[3000, 0.02], [5000, 0.03], [17000, 0.05], [None, 0.0575]], 'd': 8750, 'e': 930, 'c': 0}, 'joint': {'b': [[3000, 0.02], [5000, 0.03], [17000, 0.05], [None, 0.0575]], 'd': 17500, 'e': 1860, 'c': 0}, 'pay': [], 'local': '', 'note': '', 'src': [['Va. Code 58.1-320: rates', 'https://law.lis.virginia.gov/vacode/title58.1/chapter3/section58.1-320/'], ['Va. Code 58.1-322.03: $8,750 / $17,500 for 2025 and 2026, $930…', 'https://law.lis.virginia.gov/vacode/title58.1/chapter3/section58.1-322.03/']]},
+    "VT": {'name': 'Vermont', 'slug': 'vermont', 'kind': 'graduated', 'base': 'wages', 'year': 2026, 'read': '2026-11-26', 'single': {'b': [[3925, 0], [54675, 0.0335], [126775, 0.066], [260225, 0.076], [None, 0.0875]], 'd': 0, 'e': 5400, 'c': 0}, 'joint': {'b': [[11775, 0], [96475, 0.0335], [216525, 0.066], [323825, 0.076], [None, 0.0875]], 'd': 0, 'e': 10800, 'c': 0}, 'pay': [], 'local': '', 'note': 'From Vermont’s 2026 withholding tables as republished by the US Department of Agriculture’s National Finance Center for federal payroll (bulletin NFC-26-1780320782, 9 June 2026): $5,400 for each withholding allowance (one single, two married), no tax on the first $3,925 of taxable wages ($11,775 married), then 3.35%, 6.60%, 7.60% and 8.75%. Vermont’s own tax site (tax.vermont.gov) could not be opened for this check.', 'src': [['USDA National Finance Center: Vermont State Income Tax Withholding, 2026 (NFC-26-1780320782)', 'https://help.nfc.usda.gov/bulletins/2026/1780320782.htm'], ['2026 Social Security wage base, $184,500', 'https://www.ssa.gov/oact/cola/cbb.html']]},
     "WA": {'name': 'Washington', 'slug': 'washington', 'kind': 'none', 'base': 'wages', 'year': 2026, 'single': {'b': [[None, 0]], 'd': 0, 'e': 0, 'c': 0}, 'joint': {'b': [[None, 0]], 'd': 0, 'e': 0, 'c': 0}, 'pay': [['Paid Family and Medical Leave', 0.008072, 184500, None], ['WA Cares Fund', 0.0058, None, None]], 'local': '', 'note': 'A 9.9% tax on income above $1 million starts in 2028.', 'src': [['Washington Department of Revenue: income tax', 'https://dor.wa.gov/taxes-rates/income-tax'], ['2026 Paid Leave premium and split', 'https://esd.wa.gov/about-us/news-release/2025/paid-family-medical-leave-premium-rate-increases-113-2026'], ['Paid Leave estimate page', 'https://paidleave.wa.gov/estimate-your-paid-leave-payments/']]},
     "WV": {'name': 'West Virginia', 'slug': 'west-virginia', 'kind': 'graduated', 'base': 'wages', 'year': 2026, 'single': {'b': [[10000, 0.0211], [25000, 0.0281], [40000, 0.0316], [60000, 0.0422], [None, 0.0458]], 'd': 0, 'e': 2000, 'c': 0}, 'joint': {'b': [[10000, 0.0211], [25000, 0.0281], [40000, 0.0316], [60000, 0.0422], [None, 0.0458]], 'd': 0, 'e': 4000, 'c': 0}, 'pay': [], 'local': 'Some cities charge a flat weekly service fee.', 'note': '', 'src': [['2026 rate cut and rate schedule, retroactive to 1 Jan 2026', 'https://tax.wv.gov/Individuals/Pages/PersonalIncomeTaxReductionBill.aspx'], ['Withholding: $38.46 a week per exemption ($2,000 a year)', 'https://tax.wv.gov/Documents/Withholding/it100.2a.pdf']]},
     "WI": {'name': 'Wisconsin', 'slug': 'wisconsin', 'kind': 'graduated', 'base': 'wages', 'year': 2026, 'single': {'b': [[15110, 0.035], [51950, 0.044], [332720, 0.053], [None, 0.0765]], 'd': 13960, 'e': 700, 'c': 0}, 'joint': {'b': [[20150, 0.035], [69260, 0.044], [443630, 0.053], [None, 0.0765]], 'd': 25840, 'e': 1400, 'c': 0}, 'pay': [], 'local': '', 'note': 'The standard deduction shrinks as income rises and reaches zero at $136,453 for a single filer and $159,690 on a joint return; this is worked out here.', 'src': [['2026 Form 1-ES: rate schedules, standard deduction schedules, $700…', 'https://www.revenue.wi.gov/TaxForms2026/2026-Form1-ES-Inst.pdf']], 'std_phase': {'single': [20120, 0.12], 'joint': [29040, 0.19778]}},
     "WY": {'name': 'Wyoming', 'slug': 'wyoming', 'kind': 'none', 'base': 'wages', 'year': 2026, 'single': {'b': [[None, 0]], 'd': 0, 'e': 0, 'c': 0}, 'joint': {'b': [[None, 0]], 'd': 0, 'e': 0, 'c': 0}, 'pay': [], 'local': '', 'note': '', 'src': [['Wyoming Legislature, tax structure 2025', 'https://wyoleg.gov/InterimCommittee/2025/03-202506032-01WyomingtaxstructureratesandcollectionsJune32025.pdf']]},
 }
 
-WAITING = "Vermont"
+WAITING = ""
 
 
 def _sched(b, x):
@@ -193,6 +195,15 @@ def check():
     assert state_tax("ME", 15600, "single", 5300)["tax"] == 0
     # Paid Family and Medical Leave: $375 on $75,000 (the state's premium chart), at most $922.50
     assert abs(state_tax("ME", 75000)["pay_total"] - 375) < .01 and abs(state_tax("ME", 250000)["pay_total"] - 922.5) < .01
+    # Vermont 2026 (USDA NFC bulletin NFC-26-1780320782): single, $60,000, one allowance: $60,000 - $5,400 = $54,600,
+    # 3.35% of ($54,600 - $3,925) = $1,697.61
+    assert abs(state_tax("VT", 60000)["tax"] - 1697.61) < .01
+    # married, $120,000, two allowances: $120,000 - $10,800 = $109,200, $2,837.45 + 6.60% of ($109,200 - $96,475) = $3,677.30
+    assert abs(state_tax("VT", 120000, "joint")["tax"] - 3677.30) < .01
+    # the bulletin's base amounts follow from its rates: $1,700.13 at $54,675 single, $18,915.55 at $323,825 married
+    assert abs(state_tax("VT", 54675 + 5400)["tax"] - 1700.13) < .01 and abs(state_tax("VT", 323825 + 10800, "joint")["tax"] - 18915.55) < .01
+    # below the zero band nothing is withheld
+    assert state_tax("VT", 9000)["tax"] == 0
     return len(STATES)
 
 
