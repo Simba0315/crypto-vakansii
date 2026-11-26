@@ -5346,6 +5346,16 @@ table.adm-log td:last-child{min-width:280px}
   .job .jr time{order:2;flex:none;margin-left:auto}
 }
 
+/* ---- the first screen of a job page: the marks under the title are one row that scrolls sideways, as the facts row under them does
+   (a closed job's nine skills took four rows and pushed "See open … jobs" under the first screen) ---- */
+@media(max-width:700px){
+  .jhero .pills{flex-wrap:nowrap;gap:8px;margin:16px -20px 0;padding:0 20px 2px;overflow-x:auto;scrollbar-width:none;
+    -webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+  .jhero .pills::-webkit-scrollbar{display:none}
+  .jhero .jhead>*{min-width:0;max-width:100%}      /* the row is wider than the screen: its block keeps the screen's width, so the title wraps */
+  .jhero .pill{flex:none;padding:7px 13px;font-size:13.5px}
+}
+
 /* ---- a button whose words are longer than a 360 px screen wraps instead of running past it ---- */
 @media(max-width:560px){.adv-jobs .btn,.lact .btn{max-width:100%;white-space:normal;text-align:left}}
 
@@ -5359,4 +5369,11 @@ table.adm-log td:last-child{min-width:280px}
   /* the builder's fields: the corner of the other form fields of the site, not a 6 px box beside pill-shaped ones */
   #rb input[type=text],#rb textarea,.rb-which select{border-radius:12px}
   #rb input[type=text]{min-height:44px}
+}
+
+/* ---- a company's marks ("States the pay 86% of its open roles state it", "Files H-1B 205 certified filings…") in a job's "Hiring at"
+   card: a mark too long for one line becomes a card with its name on one line, not a pill broken in four ---- */
+@media(max-width:560px){
+  .tb{flex-wrap:wrap;border-radius:14px;gap:2px 6px;font-size:14px}
+  .tb b{white-space:nowrap}
 }
