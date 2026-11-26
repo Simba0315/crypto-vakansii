@@ -5331,6 +5331,21 @@ table.adm-log td:last-child{min-width:280px}
   .jfrow dt,.jfacts dt{font-size:13px}
 }
 
+/* ---- a row of jobs (every list: home, search, companies, kinds of work, places, fields, closed jobs): the pay, the tags and the date
+   share one line under the title, aligned with it, and the date always ends that line at the right. It fell to a line of its own at the
+   left whenever the tags took two lines; tags that do not fit drop out whole ---- */
+@media(max-width:720px){
+  .job>a{column-gap:12px;row-gap:8px;align-items:start}
+  .job>a>.ava{margin-top:2px}
+  .jr{grid-column:2;flex-wrap:wrap;gap:4px 12px;justify-content:flex-start;align-items:baseline;min-width:0}
+  .job>a:not(:has(>.ava))>.jr{grid-column:1/-1}
+  .jr .jp{flex:none;order:0}
+  .shot .job .jp.none+.pills .pill.ok::before,.shot .job .jr>.pills:first-child .pill.ok::before{content:none}      /* the home list's dot after the pay, not before a lone mark */
+  .jr .jp.none{display:none}
+  .job .jr .pills{order:1;flex:1 1 0;min-width:0;flex-wrap:wrap;line-height:22px;max-height:22px;overflow:hidden;gap:0 12px}
+  .job .jr time{order:2;flex:none;margin-left:auto}
+}
+
 /* ---- a button whose words are longer than a 360 px screen wraps instead of running past it ---- */
 @media(max-width:560px){.adv-jobs .btn,.lact .btn{max-width:100%;white-space:normal;text-align:left}}
 
