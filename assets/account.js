@@ -1463,6 +1463,27 @@
     if (Date.now() - saidAt > 1500) { var box = document.getElementById('acc-say'); if (box) box.innerHTML = ''; }
     showTab(); if (!ALIAS[location.hash.slice(1)]) toTop();
   });
+  /* One H1 on every screen (26 Nov 2026). The page's own heading (#acc-hd, read without JavaScript) goes once a screen draws its own; in
+     the signed-in account every part carries its headline, so only the open part's is the H1 and the hidden parts keep theirs as H2.
+     Watched here, so every way a screen is drawn or a part is opened keeps to it; while the account loads the hidden page heading stays. */
+  function oneH1() {
+    var hs = root.querySelectorAll('h1.acc-t, h2.acc-t');
+    if (!hs.length) return;
+    if (hd && hd.parentNode) hd.parentNode.removeChild(hd);
+    hd = null;
+    var lead = null;
+    Array.prototype.forEach.call(hs, function (h) { if (!lead && !h.closest('[hidden]')) lead = h; });
+    if (!lead) lead = hs[0];
+    Array.prototype.forEach.call(hs, function (h) {
+      var want = h === lead ? 'H1' : 'H2';
+      if (h.tagName === want) return;
+      var n = document.createElement(want);
+      Array.prototype.forEach.call(h.attributes, function (a) { n.setAttribute(a.name, a.value); });
+      while (h.firstChild) n.appendChild(h.firstChild);
+      h.parentNode.replaceChild(n, h);
+    });
+  }
+  if (window.MutationObserver) new MutationObserver(oneH1).observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] });
   var waiting = '<div class="acc-wait"><p class="note">Loading your account…</p></div>';
   if (hd) hd.hidden = true;
   root.innerHTML = waiting;

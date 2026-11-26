@@ -174,6 +174,15 @@ if shutil.which("node"):
     for js in sorted(SITE.glob("*.js")):
         counts["scripts"] += 1
         if subprocess.run(["node", "--check", str(js)], capture_output=True).returncode: fails["scripts"][f"{js.name} does not parse"] += 1
+# the account page (26 Nov 2026): its HTML has one H1, the page's own in #acc-hd, and account.js draws every screen (sign-in, each part
+# of the job seeker's and the employer's account) with a headline of its own; two H1s stood in the page once it had loaded. account.js
+# keeps one (oneH1: the page's own goes once a screen draws its own, and only the open part's headline is an H1)
+if (SITE / "account" / "index.html").is_file():
+    counts["account"] += 1
+    acc_ = (SITE / "account" / "index.html").read_text(encoding="utf-8", errors="replace")
+    if len(re.findall(r"<h1[\s>]", acc_)) != 1 or not re.search(r'<div id="acc-hd"><h1[\s>]', acc_): fails["account"]["the one H1 of the HTML is not the page's own in #acc-hd"] += 1
+    acc_js = (SITE / "account.js").read_text(encoding="utf-8", errors="replace") if (SITE / "account.js").is_file() else ""
+    if "function oneH1()" not in acc_js or "MutationObserver(oneH1)" not in acc_js: fails["account"]["account.js does not keep one H1 per screen (oneH1)"] += 1
 # the XML feed for job search engines (job_feed.py, 26 Nov 2026): every file read back with a streaming parser, the fields of every
 # job, no control characters, and the .gz copy unpacked and compared with the file
 if (SITE / "feeds" / "index.xml").is_file():
