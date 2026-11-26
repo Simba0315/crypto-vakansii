@@ -5478,3 +5478,9 @@ table.adm-log td:last-child{min-width:280px}
   main:has(>.tl) .phero .lead{font-size:16px;line-height:1.5}
   main:has(>.tl) .phero .plain{margin-top:18px;padding:14px 16px;font-size:15px;line-height:1.5}
 }
+
+/* ---- /jobs/ on a phone: the chips under the filters (Remote, Hybrid, Work from anywhere…) and "All filters" are 44 px high, as every
+   other control (they were 36 and 40) ---- */
+@media(max-width:860px){
+  main.srch #fwrap .filters label,main.srch #fwrap #f-rc-w,main.srch #fwrap .morefilters summary{height:44px;min-height:44px}
+}
