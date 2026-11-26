@@ -140,8 +140,23 @@ jobs:
           if [ "$HRN_SERVER_ON" = "true" ] && [ -n "$switched" ]; then echo "HRN_RECORDS=1" >> "$GITHUB_ENV"; echo "SWITCHED=1" >> "$GITHUB_ENV"
           elif [ "$HRN_SERVER_ON" = "true" ]; then echo "HRN_RECORDS=both" >> "$GITHUB_ENV"
           fi
+      # The day each page's text last changed (data/lastmod.json, build.page_dates): the sitemap's lastmod of the pages that are no list of
+      # jobs. Carried from run to run in the Actions cache, newest first; without it the build counts every such page as changed today.
+      - name: Restore the days pages last changed
+        continue-on-error: true
+        uses: actions/cache/restore@v4
+        with:
+          path: data/lastmod.json
+          key: lastmod-${{ github.run_id }}
+          restore-keys: lastmod-
       - name: Build site
         run: python3 build.py
+      - name: Keep the days pages last changed
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: data/lastmod.json
+          key: lastmod-${{ github.run_id }}-${{ github.run_attempt }}
       # The build adds this month's figures to data/reports.json; past months in it must never be lost, so it is saved again.
       # Once a day (DAILY) is enough: the snapshot is one set of figures per month, and saving it means pushing the whole jobs
       # database a second time. In the other runs the file restored at the start is carried over unchanged by "Save jobs database".

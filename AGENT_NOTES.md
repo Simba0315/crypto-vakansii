@@ -201,6 +201,19 @@ made"): add it where the pages are made. A skill named like a field (`SKILL_FIEL
 "Jobs that ask for AI skills" and link the field page, which links them back. Check after a build: `python3 inlinks.py site` (orphans,
 pages linked only from the header or footer, links to copies or redirects) and `python3 seo_audit.py site`.
 
+What search engines are asked to index (26 Nov 2026, Bing's webmaster guidelines; numbers in SERP_AI_CHECK.md, "Bing webmaster
+guidelines"): a narrow list under `INDEX_MIN` (20) jobs and a company page under `INDEX_MIN_CO` (5) open jobs are `noindex,follow`
+and leave the sitemap and the IndexNow list (`THIN`); they stay for visitors, keep their links (crosslinks.py) and come back by
+themselves when they have the jobs. A list opts in with `listing(..., index_min=...)`: the long-tail combinations, the crypto lists,
+the /new/ lists by skill and kind of work, the company pages. Never pass it for /categories/, the hubs, the guides, the tools or /vs/.
+`every_list` leaves out the lists under the line. `DUP_PAGES`: /skills/<s>/new/ and /roles/<r>/new/ name /new/skills/<s>/ and
+/new/roles/<r>/ (the same jobs) as canonical. `same_text_jobs()`: an open job page that repeats an earlier one word for word (same
+company, title, place and text) gets `dup_of` in its record and names the first as canonical. Sitemap lastmod: a job page its first
+day (or `changed`, which collect.py sets when the posting's text changes or it reopens), a closed one its closing day, a list the
+first day of its newest job (`PAGE_MOD`), any other page the day its text last changed, figures aside (`page_dates()`, the file
+data/lastmod.json, carried between runs in the Actions cache). check.py fails when a sitemap lists a noindex or canonicalised page,
+a missing page or an address twice.
+
 ## The owner's taste (screenshots of 14 Nov 2026 — follow it in every new block)
 
 He sends what he likes; keep these, and build new blocks the same way:
