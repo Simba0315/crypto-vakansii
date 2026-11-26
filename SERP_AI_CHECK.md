@@ -1448,9 +1448,6 @@ Done (build.py, tools_pages.py, glossary_more.json), for every page of each kind
 Not done: "employment lawyer" (a searcher who wants a lawyer); the hire-a-developer pages at 40–90 (not a title problem); /roles/program-manager/
 (the page is "Program and Project Manager Jobs", one kind of work; a split would make two pages compete). Check CTR of the place lists on 3 Dec.
 
-Left out on purpose: "employment lawyer" (a searcher who wants a lawyer); the hire-a-developer pages at 40–90 (not a title problem); /roles/program-manager/
-(the page is "Program and Project Manager Jobs", one kind of work; a split would make two pages compete). Once the branch is live, check the CTR of the place lists a week later.
-
 ## Bing webmaster guidelines: what they flag on this site, measured (26 Nov 2026)
 
 Bing Webmaster Tools on 26 Nov: the home page "Indexed successfully"; /entry-level/ "Discovered but not crawled" since 18 Nov ("known
