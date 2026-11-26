@@ -5291,6 +5291,7 @@ table.adm-log td:last-child{min-width:280px}
    cut there (the tools hub's "Templates and examples", the kinds of work on a field page, two-column question lists) */
 @media(max-width:720px){
   .qa,.feats,.hubgrid,.gloss,.pics,.pics.two,.tiers,.faq2,.types,.rbc-asks,.shots,.tgrid,#ex-out .pics.two,main.hub #clist,.tl-grid.wide,.tl-faq,.acc-grid,#acc .acc-grid{grid-template-columns:minmax(0,1fr)}
+  main .tl-faq,main .tl-grid.wide{grid-template-columns:minmax(0,1fr)}      /* tools.css loads after this sheet: its 320 px column ran past a 320 px phone */
 }
 
 /* ---- taps: every control a thumb uses is at least 44 px high (the pill rows were 38-40, the header's buttons 36-40, the small
