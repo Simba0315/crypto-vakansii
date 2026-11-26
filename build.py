@@ -78,7 +78,8 @@ MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
 # written in the part decides; only when neither is written do well-known city names count. That keeps "Vancouver, Washington"
 # in the United States, "Porto Alegre, Brazil" out of Portugal and "Dublin, CA" out of Ireland.
 COUNTRIES = [   # (ISO code, name, the country written out, well-known cities)
-    ("GB", "United Kingdom", r"united kingdom|\buk\b|\bu\.k\.|(?<!new )england|scotland|(?<!south )\bwales\b|great britain", r"\blondon\b(?!, on\b)|manchester|edinburgh|\bbristol\b|cambridge, uk|\bleeds\b|glasgow|belfast"),
+    # "43 New Scotland Avenue, Albany, NY" is a street in New York (data teardown, 26 Nov 2026: an Albany nurse stood on the UK pages)
+    ("GB", "United Kingdom", r"united kingdom|\buk\b|\bu\.k\.|(?<!new )england|(?<!new )scotland|(?<!south )\bwales\b|great britain", r"\blondon\b(?!, on\b)|manchester|edinburgh|\bbristol\b|cambridge, uk|\bleeds\b|glasgow|belfast"),
     ("CA", "Canada", r"\bcanada\b|\bontario\b|british columbia|\bquebec\b|\balberta\b", r"toronto|vancouver|montr[eé]al|ottawa|calgary|waterloo"),
     ("DE", "Germany", r"\bgermany\b|deutschland", r"\bberlin\b|munich|münchen|frankfurt|hamburg|cologne|stuttgart|düsseldorf"),
     ("FR", "France", r"\bfrance\b", r"\bparis\b|\blyon\b"), ("IE", "Ireland", r"(?<!northern )\bireland\b", r"\bdublin\b|\bcork\b"),
@@ -107,6 +108,10 @@ COUNTRIES = [   # (ISO code, name, the country written out, well-known cities)
     ("MY", "Malaysia", r"malaysia", r"kuala lumpur"), ("PH", "Philippines", r"philippines", r"\bmanila\b"), ("ID", "Indonesia", r"indonesia", r"jakarta"),
     ("TH", "Thailand", r"thailand", r"bangkok"), ("VN", "Vietnam", r"vietnam", r"ho chi minh|hanoi|da nang"),
     ("ZA", "South Africa", r"south africa", r"cape town|johannesburg"), ("NG", "Nigeria", r"nigeria", r"\blagos\b"), ("KE", "Kenya", r"\bkenya\b", r"nairobi"),
+    # 26 Nov 2026 (data teardown): "Karachi 5, Sindh, Pakistan", "CR, Heredia, VIRTUAL" and "Aguadilla, Puerto Rico" stood on no place page
+    ("PK", "Pakistan", r"\bpakistan\b", r"karachi|lahore|islamabad|rawalpindi"), ("BD", "Bangladesh", r"bangladesh", r"\bdhaka\b"),
+    ("EG", "Egypt", r"\begypt\b", r"\bcairo\b(?!,? (?:ga|il|ny|georgia|illinois)\b)"), ("CR", "Costa Rica", r"costa rica", r"\bheredia\b|\bescaz[uú]\b|san jos[eé],? cr\b"),
+    ("PR", "Puerto Rico", r"puerto rico", r"\bsan juan\b(?! capistrano|,? (?:tx|texas)\b)|aguadilla|\bponce\b|mayag[uü]ez|bayam[oó]n|\bcaguas\b|guaynabo"),
 ]
 US_NAME = r"united states|\busa\b|\bu\.s\.(a\.)?|(?-i:\bUS\b)(?! ?\$)"
 US_STATES = (r"alabama|alaska|arizona|arkansas|california|colorado|connecticut|delaware|florida|\bgeorgia\b(?! \(country\))|hawaii|idaho|illinois|\bindiana\b|\biowa\b|kansas|kentucky|louisiana|"
@@ -123,13 +128,19 @@ def countries_of(loc):
     """Every country a location line names: [(ISO code, name), ...] in the order the parts are written."""
     if loc in _geo_cache: return _geo_cache[loc]
     found = []
-    for part in re.split(r";|\||/| or | and |•", loc):
+    parts = re.split(r";|\||/| or | and |•", loc)
+    # "Serbia; Georgia; Armenia": a bare "Georgia" among other countries is the country, not the US state (data teardown, 26 Nov 2026:
+    # a relocation internship for the Caucasus and the Balkans stood on the United States pages)
+    if len(parts) > 1 and any(re.fullmatch(r"\s*georgia\s*", p_, re.I) for p_ in parts) and not re.search(US_NAME + r"|" + US_ABBR.pattern, loc, re.I) and \
+            any(re.search(rx_, p_, re.I) for p_ in parts if not re.fullmatch(r"\s*georgia\s*", p_, re.I) for c_, _, rx_, _ in COUNTRIES if c_ != "GE"):
+        parts = ["Georgia (country)" if re.fullmatch(r"\s*georgia\s*", p_, re.I) else p_ for p_ in parts]
+    for part in parts:
         # "OH-Dublin-Cardinal Place", "Dublin OH": a state's two letters before a hyphen or after a space, with no comma. Cardinal Health
         # and Labcorp internships in Dublin, Ohio stood on the Dublin (Ireland) entry-level page under the Irish flag (24 Nov 2026), the
         # page that Google shows at 5th for "entry level jobs" in Ireland. Written as "Dublin, OH", the rules below read them.
         m_st = re.match(r"\s*([A-Z]{2})-(?=[A-Z][a-z])", part)
         if m_st and US_ABBR.search(", " + m_st.group(1)): part = part[m_st.end():] + ", " + m_st.group(1)
-        m_st = re.search(r"(?<=[a-z]) ([A-Z]{2})\s*$", part)
+        m_st = re.search(r"(?<=[a-z)]) ([A-Z]{2})\s*$", part)            # "Dublin OH", "IL049 - Elwood (Joliet) IL"
         if m_st and US_ABBR.search(", " + m_st.group(1)): part = part[:m_st.start()] + ", " + m_st.group(1)
         named = [(c, nm) for c, nm, rx, _ in COUNTRIES if re.search(rx, part, re.I)]
         province = bool(CA_PROVINCE.search(part))
@@ -147,6 +158,9 @@ def countries_of(loc):
         if not named:                                           # nothing written out: fall back to cities everyone knows
             named = [(c, nm) for c, nm, _, city in COUNTRIES if city and re.search(city, part, re.I)]
             if re.search(US_CITY, part, re.I): named.append(("US", "United States"))
+        # "Kernersville - 27284": a US ZIP code alone, when nothing else names a place (a five-digit code with a city of another
+        # country, "10115 Berlin", is read by the cities above first)
+        if not named and not found and re.fullmatch(r"[A-Za-z .'-]{3,40}\s*[-,]?\s*\d{5}(?:-\d{4})?\s*", part.strip() + " "): named = [("US", "United States")]
         found += [x for x in named if x not in found]
     _geo_cache[loc] = found
     return found
@@ -154,6 +168,12 @@ def countries_of(loc):
 
 assert countries_of("OH-Dublin-Cardinal Place") == countries_of("Dublin OH") == [("US", "United States")] and countries_of("Munich DE") == [("DE", "Germany")] and countries_of("Dublin, Ireland") == [("IE", "Ireland")], countries_of("Dublin OH")
 assert countries_of("Tbilisi, Georgia") == [("GE", "Georgia (country)")] and countries_of("Atlanta, Georgia") == [("US", "United States")], countries_of("Tbilisi, Georgia")
+# the data teardown's sample (26 Nov 2026): each line as the hiring system wrote it, and the countries it names
+for _l, _w in (("43 New Scotland Avenue Albany, NY 12208", ["US"]), ("Serbia; Georgia; Armenia", ["RS", "GE", "AM"]), ("Atlanta; Georgia", ["US"]),
+               ("Aguadilla, Puerto Rico", ["PR"]), ("San Juan, PR", ["PR"]), ("Karachi 5, Sindh, Pakistan", ["PK"]), ("CR, Heredia, VIRTUAL", ["CR"]),
+               ("IL049 - Elwood (Joliet) IL", ["US"]), ("Kernersville - 27284", ["US"]), ("Edinburgh, Scotland", ["GB"]), ("Dhaka, Bangladesh", ["BD"]),
+               ("San Juan Capistrano, CA", ["US"]), ("Cairo, GA", ["US"]), ("Georgia", ["US"]), ("Savannah, Georgia", ["US"])):
+    assert [c_ for c_, _ in countries_of(_l)] == _w, (_l, countries_of(_l))
 
 
 def country_of(loc):
@@ -252,10 +272,34 @@ def path_fl(path):
     return pfl(m.group(1)) if m else ""
 
 
+# The state a US city or state page stands for. A city's name in a line that names another state is that state's town: "Dallas, GA",
+# "Dallas, PA", "Portland, Maine", "Austin, MN" stood on the Dallas, Portland (Oregon) and Texas pages (data teardown, 26 Nov 2026: 115
+# of the first 500 jobs on the Portland list were in Maine or Indiana). Washington, DC is left out: its suburbs are in Virginia.
+PLACE_STATE = {"new-york": "NY", "san-francisco": "CA", "california": "CA", "seattle": "WA", "austin": "TX", "chicago": "IL", "boston": "MA", "denver": "CO",
+               "los-angeles": "CA", "dallas": "TX", "atlanta": "GA", "san-diego": "CA", "pittsburgh": "PA", "portland": "OR", "miami": "FL", "phoenix": "AZ",
+               "raleigh-durham": "NC", "houston": "TX", "texas": "TX", "florida": "FL"}
+_ST_NAME = None
+
+
+def part_states(part):
+    """The US states a part of a location line names, by code or by name ("Dallas, TX" -> {"TX"}, "Portland, Maine" -> {"ME"}, "OR-Portland" ->
+    {"OR"}); a name inside a longer one does not count ("West Virginia" is not Virginia, "New York" is not York)."""
+    global _ST_NAME
+    if _ST_NAME is None:
+        _ST_NAME = re.compile(r"\b(" + "|".join(sorted((re.escape(n) for n in US_STATE_CODE if n != "washington"), key=len, reverse=True)) + r")\b(?! city\b)", re.I)
+    got = set(US_ABBR.findall(part))
+    m_ = re.match(r"\s*([A-Z]{2})-(?=[A-Z][a-z])", part) or re.search(r"(?<=[a-z)]) ([A-Z]{2})(?:\s+\d{5}(?:-\d{4})?)?\s*$", part)
+    if m_ and m_.group(1) in US_ST: got.add(m_.group(1))
+    got |= {US_STATE_CODE[n.lower()] for n in _ST_NAME.findall(part) if n.lower() in US_STATE_CODE}
+    if re.search(r"\bwashington\b(?!,? ?d\.?c\b)(?! dc\b)", part, re.I) and not re.search(r"washington,? ?d\.?\s?c\b|district of columbia", part, re.I): got.add("WA")
+    return got - {"PR"} if "puerto rico" not in part.lower() else got
+
+
 def places_of(loc):
     """Slugs of every place page a location line belongs on."""
     codes = {c for c, _ in countries_of(loc)}
     out = []
+    parts = None
     for _, slug, rule in PLACES:
         if rule == "region":
             members, words = REGIONS[slug]
@@ -264,8 +308,14 @@ def places_of(loc):
             hit = rule in codes
         else:
             hit = bool(re.search(rule[0], loc, re.I)) and (rule[1] in codes or not codes)
+            if hit and slug in PLACE_STATE:            # the part that names the city must not name another state
+                if parts is None: parts = re.split(r";|\||/| or | and |•", loc)
+                st_ = PLACE_STATE[slug]
+                hit = any(re.search(rule[0], p_, re.I) and (lambda got_: not got_ or st_ in got_)(part_states(p_)) for p_ in parts)
         if hit: out.append(slug)
     return out
+
+
 
 
 ROLES = [   # (name, slug, pattern matched against the job title)
@@ -917,6 +967,16 @@ US_STATE_CODE = dict(zip([x.replace("_", " ") for x in "alabama alaska arizona a
                           "WV WI WY DC PR".split()))
 CA_PROV_CODE = {"ontario": "ON", "british columbia": "BC", "quebec": "QC", "québec": "QC", "alberta": "AB", "manitoba": "MB", "saskatchewan": "SK",
                 "nova scotia": "NS", "new brunswick": "NB", "newfoundland and labrador": "NL", "newfoundland": "NL", "prince edward island": "PE"}
+for _l, _no, _yes in (("Dallas, GA, USA", {"dallas", "texas"}, {"united-states"}), ("Dallas, PA", {"dallas", "texas"}, set()), ("Dallas, TX", set(), {"dallas", "texas"}),
+                      ("Portland, Maine", {"portland"}, set()), ("PORTLAND, IN, US", {"portland"}, set()), ("Portland, OR", set(), {"portland"}),
+                      ("OR-Portland-Cardinal Health at-Home Solutions DC", set(), {"portland"}), ("Austin, MN, USA", {"austin", "texas"}, set()),
+                      ("Columbus/Dallas/Atlanta, OH", {"atlanta"}, {"dallas"}), ("Chicago; Newport Beach; Dallas", set(), {"dallas", "chicago"}),
+                      ("Seattle, Washington", set(), {"seattle"}), ("Washington, DC", set(), {"washington-dc"}), ("Manhattan, KS", {"new-york"}, set()),
+                      ("Brooklyn, NY 11201", set(), {"new-york"}), ("Plano, TX", set(), {"dallas", "texas"}), ("Dallas", set(), {"dallas", "texas"}),
+                      ("43 New Scotland Avenue Albany, NY 12208", {"united-kingdom", "europe"}, {"new-york", "united-states"}),
+                      ("Serbia; Georgia; Armenia", {"united-states", "atlanta"}, {"serbia", "armenia"})):
+    _got = set(places_of(_l))
+    assert not (_got & _no) and _yes <= _got, (_l, _got)
 # cities postings name without their state; only names that mean one place in practice (no Cambridge, Portland or Springfield)
 CITY_REGION = {"US": {**{c: "CA" for c in ("san francisco", "los angeles", "san diego", "san jose", "palo alto", "mountain view", "sunnyvale", "santa clara",
                                            "menlo park", "redwood city", "san mateo", "bay area", "sf bay area", "san francisco bay area", "milpitas", "cupertino",
