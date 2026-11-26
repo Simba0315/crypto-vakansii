@@ -13052,7 +13052,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
 <title>Jobs widget | {e(SITE)}</title><style>html,body{{margin:0;background:transparent}}body{{padding:2px 8px 8px 2px}}</style></head><body>
 <div id="w"><a href="{FULL}/" target="_blank" rel="noopener">Jobs on {e(SITE)}</a></div>
 <script>(function(){{var p=new URLSearchParams(location.search),el=document.getElementById('w');
-el.setAttribute('data-hrn-jobs',p.get('jobs')||'latest');['limit','layout','theme','accent','title','search','company'].forEach(function(k){{if(p.get(k))el.setAttribute('data-'+k,p.get(k));}});
+el.setAttribute('data-hrn-jobs',p.get('jobs')||'latest');['limit','layout','theme','accent','title','search','popup','company'].forEach(function(k){{if(p.get(k))el.setAttribute('data-'+k,p.get(k));}});
 el.setAttribute('data-hrn-base','{P}');}})();</script><script src="{P}/widget.js?v={V}"></script></body></html>""", sitemap=False)
 
     lap('The board: a full-screen, auto-rotating wall of the freshest')
@@ -13115,7 +13115,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              ("Does it work with WordPress, Webflow, Wix, Squarespace, Shopify and Framer?", "Yes. Anything that lets you paste HTML works with the script version. Builders that strip scripts, such as Notion, take the iframe version. The table on this page says where to paste the code on each platform."),
              ("Will the widget slow my page down?", f"The script is about {wsize} KB, loads asynchronously and draws inside its own container, so it does not block your page and your styles do not leak into it or out of it."),
              ("Where does a click on a job lead?", "To the job’s page on this site, which shows the salary, the remote rules and the date of the last check, and from there to the employer’s own application page. For your own board the click goes straight to your application page."),
-             ("Can I change how it looks?", "Yes: six layouts (list, cards, compact, ticker, a sliding row of cards and a full careers page), a light, dark or automatic theme, your own accent color, your own heading and an optional search box.")]
+             ("Can I change how it looks?", "Yes: six layouts (list, cards, compact, ticker, a sliding row of cards and a full careers page), a light, dark or automatic theme, your own accent color, your own heading and an optional search box. A click on a role can open its details in a window inside the widget instead of leaving your page at once.")]
     w_faq_html = '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in w_faq) + "</dl>"
     w_ld = ('<script type="application/ld+json">' + json.dumps([
         {"@context": "https://schema.org", "@type": "WebApplication", "name": f"{SITE} job widget", "url": f"{FULL}/widgets/", "applicationCategory": "BusinessApplication", "operatingSystem": "Any",
@@ -13147,7 +13147,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          '<label class="wl">Light or dark<select id="wb-theme"><option value="auto">Match the visitor</option><option value="light">Light</option><option value="dark">Dark</option></select></label>'
          '<label class="wl">Color<input type="color" id="wb-accent" value="#15803d" aria-label="Accent color"></label>'
          '<label class="wl">Kind of code<select id="wb-mode"><option value="script">Standard (works on most sites)</option><option value="iframe">For Notion and builders that block scripts</option></select></label>'
-         '<label class="check"><input type="checkbox" id="wb-search"> Search box and “Show more”</label></div>'
+         '<label class="check"><input type="checkbox" id="wb-search"> Search box and “Show more”</label>'
+         '<label class="check"><input type="checkbox" id="wb-popup"> Details in a window when a role is clicked</label></div>'
          '<p class="note" id="wb-hint" hidden style="margin:12px 0 0">The board name is the last part of your careers page address: boards.greenhouse.io/<b>acme</b>, jobs.lever.co/<b>acme</b> or jobs.ashbyhq.com/<b>acme</b>, acme.recruitee.com, jobs.smartrecruiters.com/<b>Acme</b> or <b>acme</b>.teamtailor.com.</p></div>'
          + section("This is how it [[will look]]", '<div id="wb-preview" style="margin-bottom:16px"></div><textarea id="wb-code" rows="4" readonly aria-label="Widget code"></textarea>'
                    '<p><button class="btn sm" type="button" data-copy="wb-code">Copy the code</button> <span class="note">Above is the real widget, working on this page. Below it is the code to copy and paste into your site.</span></p>', label="Live preview")
@@ -13187,6 +13188,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              ["<code>data-theme</code>", "<code>auto</code> follows the visitor’s system, or force <code>light</code> or <code>dark</code>", "<code>auto</code>"],
              ["<code>data-accent</code>", "Any hex color for the hover bar and the link underline", "<code>#15803d</code>"],
              ["<code>data-search</code>", "<code>1</code> adds a search box, a team filter where teams exist, and “Show more”", "off"],
+             ["<code>data-popup</code>", "<code>1</code> opens a role’s details (company, place, team, pay, age) in a window inside the widget; the button there leads on to the posting. Not used with the ticker", "off"],
              ["<code>data-title</code>", "Your own heading for the widget", "the name of the list"],
              ["<code>data-company</code>", "Your company name, shown in the heading of your own board", "none"]])), label="Reference")
          + section("Match the widget to [[your own site]]",

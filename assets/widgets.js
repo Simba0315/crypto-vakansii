@@ -4,7 +4,7 @@
   var D = JSON.parse(document.getElementById('wb-data').textContent), FULL = root.getAttribute('data-full');
   var $ = function (id) { return document.getElementById(id); };
   var type = $('wb-type'), val = $('wb-val'), limit = $('wb-limit'), theme = $('wb-theme'), layout = $('wb-layout'), accent = $('wb-accent'), mode = $('wb-mode');
-  var board = $('wb-board'), co = $('wb-co'), search = $('wb-search'), ATS = { greenhouse: 1, lever: 1, ashby: 1, recruitee: 1, smartrecruiters: 1, teamtailor: 1 };
+  var board = $('wb-board'), co = $('wb-co'), search = $('wb-search'), popup = $('wb-popup'), ATS = { greenhouse: 1, lever: 1, ashby: 1, recruitee: 1, smartrecruiters: 1, teamtailor: 1 };
   /* the page carries only the first twelve of each list, so the drop-down is never empty; the full lists for the drop-down (skills, categories, places, companies) are a file read after the page has loaded */
   var fill = function () {
     var list = { skill: D.skills, category: D.categories, location: D.locations, company: D.companies }[type.value], own = !!ATS[type.value];
@@ -31,10 +31,10 @@
     var label = { latest: 'Tech jobs', remote: 'Remote tech jobs', skill: nameOf() + ' jobs', category: nameOf() + ' jobs', location: 'Tech jobs in ' + nameOf(), company: 'Jobs at ' + nameOf() }[t];
     if (own) { page = 'widgets/'; label = 'Jobs widget'; }
     var link = own ? '<a href="' + FULL + '/widgets/">Jobs widget by ' + D.site + '</a>' : '<a href="' + FULL + '/' + page + '">' + label.replace(/&/g, '&amp;') + ' on ' + D.site + '</a>';
-    var extra = (search.checked ? ' data-search="1"' : '') + (own && company ? ' data-company="' + company.replace(/&/g, '&amp;') + '"' : '');
+    var extra = (search.checked ? ' data-search="1"' : '') + (popup.checked && layout.value !== 'ticker' ? ' data-popup="1"' : '') + (own && company ? ' data-company="' + company.replace(/&/g, '&amp;') + '"' : '');
     var acc = accent.value && accent.value.toLowerCase() !== '#15803d' ? accent.value : '';
     var attrs = ' data-limit="' + limit.value + '"' + (layout.value !== 'list' ? ' data-layout="' + layout.value + '"' : '') + (theme.value !== 'auto' ? ' data-theme="' + theme.value + '"' : '') + (acc ? ' data-accent="' + acc + '"' : '') + extra;
-    var q = 'jobs=' + encodeURIComponent(spec) + '&limit=' + limit.value + (layout.value !== 'list' ? '&layout=' + layout.value : '') + (theme.value !== 'auto' ? '&theme=' + theme.value : '') + (acc ? '&accent=' + encodeURIComponent(acc) : '') + (search.checked ? '&search=1' : '') + (own && company ? '&company=' + encodeURIComponent(company) : '');
+    var q = 'jobs=' + encodeURIComponent(spec) + '&limit=' + limit.value + (layout.value !== 'list' ? '&layout=' + layout.value : '') + (theme.value !== 'auto' ? '&theme=' + theme.value : '') + (acc ? '&accent=' + encodeURIComponent(acc) : '') + (search.checked ? '&search=1' : '') + (popup.checked && layout.value !== 'ticker' ? '&popup=1' : '') + (own && company ? '&company=' + encodeURIComponent(company) : '');
     var rowsH = layout.value === 'careers' ? 1300 : layout.value === 'ticker' ? 150 : layout.value === 'carousel' ? 330 : layout.value === 'cards' ? 150 + Math.ceil(limit.value / 3) * 120 : 120 + limit.value * (layout.value === 'compact' ? 38 : 58);
     var code = mode.value === 'iframe'
       ? '<iframe src="' + FULL + '/embed/?' + q + '" title="' + label.replace(/"/g, '') + '" loading="lazy" style="width:100%;max-width:720px;height:' + rowsH + 'px;border:0"></iframe>\n<p>' + link + '</p>'
@@ -44,7 +44,7 @@
     var el = document.createElement('div');
     el.setAttribute('data-hrn-jobs', spec); el.setAttribute('data-limit', limit.value); el.setAttribute('data-theme', theme.value);
     el.setAttribute('data-layout', layout.value); if (acc) el.setAttribute('data-accent', acc);
-    if (search.checked) el.setAttribute('data-search', '1'); if (own && company) el.setAttribute('data-company', company);
+    if (search.checked) el.setAttribute('data-search', '1'); if (popup.checked && layout.value !== 'ticker') el.setAttribute('data-popup', '1'); if (own && company) el.setAttribute('data-company', company);
     el.setAttribute('data-hrn-base', root.getAttribute('data-base')); el.innerHTML = link;
     prev.appendChild(el); if (window.HRNWidget) window.HRNWidget.render(el);
     if (own) return;
@@ -54,7 +54,7 @@
     $('wb-badge-md').value = '[![' + label + ' on ' + D.site + '](' + FULL + '/' + badge + ')](' + FULL + '/' + page + ')';
   };
   type.addEventListener('change', function () { fill(); run(); });
-  [val, limit, theme, layout, accent, mode, search].forEach(function (el) { el.addEventListener('change', run); });
+  [val, limit, theme, layout, accent, mode, search, popup].forEach(function (el) { el.addEventListener('change', run); });
   var later; [board, co].forEach(function (el) { el.addEventListener('input', function () { clearTimeout(later); later = setTimeout(run, 500); }); });
   accent.addEventListener('input', run);
   root.addEventListener('click', function (ev) {

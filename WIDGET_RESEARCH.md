@@ -50,7 +50,7 @@ Every result on the first page of Google for the two main phrases is kind (b). T
    "greenhouse job board embed", "lever jobs embed", "hiring badge". ✅ (25 Nov 2026) a page per hiring system: `/widgets/greenhouse/`, `lever`, `ashby`, `recruitee`, `smartrecruiters`, `teamtailor`; "hiring badge" ✅ exists at `/hiring-badge/` (checked 26 Nov 2026).
 3. A WordPress plugin (shortcode and block) published on wordpress.org: needs the owner's wordpress.org account.
 4. ✅ (partly, 20 Nov 2026) Recruitee (`recruitee:name`) and SmartRecruiters (`smartrecruiters:Name`, up to the newest 500 roles) are read in own-board mode; both feeds answer cross-origin reads (checked). ✅ (21 Nov 2026) Teamtailor (`teamtailor:name`, reads the public jobs.rss, which answers cross-origin reads). Left: Workable (its public feed answered 429 from the cloud runner, test again from another address).
-5. Job popup inside the widget; ✅ (21 Nov 2026) carousel layout (`data-layout="carousel"`: a sliding row of cards with two arrow buttons). ✅ (20 Nov 2026) custom look hook: `--hrn-bg`, `--hrn-ink`, `--hrn-muted`, `--hrn-line`, `--hrn-hover`, `--hrn-accent`, `--hrn-font`, `--hrn-radius`.
+5. ✅ (26 Nov 2026) job details in a window inside the widget (`data-popup="1"`); ✅ (21 Nov 2026) carousel layout (`data-layout="carousel"`: a sliding row of cards with two arrow buttons). ✅ (20 Nov 2026) custom look hook: `--hrn-bg`, `--hrn-ink`, `--hrn-muted`, `--hrn-line`, `--hrn-hover`, `--hrn-accent`, `--hrn-font`, `--hrn-radius`.
 6. Click statistics and an email-alert form: need the server.
 7. Revenue share for publishers: needs payments and real traffic first.
 

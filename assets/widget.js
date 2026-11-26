@@ -4,6 +4,7 @@
    </div>
    <script src="…/widget.js" async></script>
    Layouts: list (default), cards, compact, ticker, carousel, careers. data-search="1" adds a search box and "show more".
+   data-popup="1": a click on a role opens its details (title, company, place, pay, age) in a window inside the widget, with the button that goes to the employer.
    A company can also show its own jobs straight from its hiring system, with no account anywhere:
      data-hrn-jobs="greenhouse:acme" | "lever:acme" | "ashby:acme" | "recruitee:acme" | "smartrecruiters:Acme" | "teamtailor:acme"   (the name of the board in that system), data-company="Acme"
    Look: set --hrn-bg, --hrn-ink, --hrn-muted, --hrn-line, --hrn-hover, --hrn-accent, --hrn-font or --hrn-radius in your own stylesheet on the element
@@ -65,10 +66,18 @@
     '.cs{display:flex;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}' +
     '.cs input,.cs select{font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}.cs input{flex:1;min-width:150px}' +
     '.more[hidden]{display:none}.more{display:block;width:100%;padding:11px;border:0;border-bottom:1px solid var(--line);background:var(--hov);color:var(--ink);font:inherit;font-weight:600;cursor:pointer}' +
+    /* popup: the role's details inside the widget */
+    '.w{position:relative}.ov{position:absolute;inset:0;z-index:5;background:rgba(14,14,12,.45);display:flex;align-items:center;justify-content:center;padding:14px}.ov[hidden]{display:none}' +
+    '.pop{position:relative;width:100%;max-width:420px;max-height:100%;overflow:auto;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:var(--hrn-radius,8px);padding:18px 18px 16px}' +
+    '.pop h3{margin:0 34px 4px 0;font-size:18px;line-height:1.3;overflow-wrap:anywhere}.pop .pc{color:var(--mut);font-size:14px;margin:0 0 12px}' +
+    '.pop dl{margin:0 0 14px;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px}.pop dt{color:var(--mut)}.pop dd{margin:0;font-weight:600;overflow-wrap:anywhere}' +
+    '.pop .go{display:inline-block;background:var(--acc);color:#fff;font-weight:700;padding:10px 16px;border-radius:999px}.pop .go:hover{text-decoration:underline;text-underline-offset:3px}' +
+    '.pop .x{position:absolute;top:8px;right:8px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:700 18px/1 system-ui,sans-serif;cursor:pointer;padding:0}.pop .x:hover{border-color:var(--acc)}' +
+    '.pop .nt{margin:12px 0 0;font-size:12.5px;color:var(--mut)}' +
     '@media(prefers-reduced-motion:reduce){.tick .run{animation:none;flex-wrap:wrap;width:auto;padding:0 14px}}';
   function row(j, logos) {
     var mark = j.logo && logos ? '<img class="lg" src="' + esc(j.logo) + '" alt="' + esc(j.company) + ' logo" title="' + esc(j.company) + ' logo" width="96" height="96" loading="lazy">' : '<span class="lt">' + esc((String(j.company).match(/[A-Za-z0-9]/) || ['?'])[0].toUpperCase()) + '</span>';
-    return '<a class="r" href="' + esc(j.url) + '" target="_blank" rel="noopener">' + mark + '<span class="t">' + esc(j.title) + '</span>' +
+    return '<a class="r" href="' + esc(j.url) + '"' + (j.k != null ? ' data-k="' + j.k + '"' : '') + ' target="_blank" rel="noopener">' + mark + '<span class="t">' + esc(j.title) + '</span>' +
       '<span class="c">' + esc([j.company, j.location || (j.remote ? 'Remote' : '')].filter(Boolean).join(' · ')) + '</span>' +
       '<span class="m">' + (j.salary ? '<b>' + esc(j.salary) + '</b>' : '') + esc(age(j.posted)) + '</span></a>';
   }
@@ -148,10 +157,12 @@
     var layout = { cards: 'cards', compact: 'compact', ticker: 'ticker', carousel: 'carousel', careers: 'careers' }[el.getAttribute('data-layout')] || 'list';
     var accent = /^#[0-9a-fA-F]{3,8}$/.test(el.getAttribute('data-accent') || '') ? el.getAttribute('data-accent') : '';
     var src = el.getAttribute('data-hrn-base') || base;
+    var popup = el.getAttribute('data-popup') === '1' && layout !== 'ticker';
     var interactive = layout === 'careers' || el.getAttribute('data-search') === '1', step = layout === 'careers' ? 20 : limit;
     (ats === 'sr' ? sr(slug) : ats === 'tt' ? tt(slug) : fetch(ats || src + '/api/v1/' + path + '.json').then(function (r) { return r.json(); })).then(function (d) {
       if (ats) d = own(type, d, el, src);
       var jobs = interactive ? d.jobs : d.jobs.slice(0, limit), body;
+      if (popup) d.jobs.forEach(function (j, i) { j.k = i; });
       if (!jobs.length) body = '<div class="e">No open roles right now.</div>';
       else if (layout === 'ticker') {
         var items = jobs.map(function (j) { return '<a href="' + esc(j.url) + '" target="_blank" rel="noopener"><b>' + esc(j.title) + '</b><span>' + esc(j.company) + '</span></a>'; }).join('');
@@ -167,8 +178,35 @@
       var html = '<style>' + CSS + '</style><div class="w ' + theme + '"' + (accent ? ' style="--acc:' + accent + '"' : '') + '><div class="h"><span class="ht"><span class="dot"></span>' + esc(el.getAttribute('data-title') || d.name) + '</span>' +
         '<span class="n">' + Number(d.total).toLocaleString('en-US') + ' open</span></div>' + body +
         '<div class="f">' + (root ? '<slot><a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + (d.own ? 'Jobs widget by ' : 'See all on ') + esc(d.site) + '</a></slot>' :
-          '<a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + (d.own ? 'Jobs widget by ' : 'See all on ') + esc(d.site) + '</a>') + '<span class="by">' + (d.own ? 'Live from the hiring system' : 'Updated hourly') + '</span></div></div>';
+          '<a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + (d.own ? 'Jobs widget by ' : 'See all on ') + esc(d.site) + '</a>') + '<span class="by">' + (d.own ? 'Live from the hiring system' : 'Updated hourly') + '</span></div>' + (popup ? '<div class="ov" hidden></div>' : '') + '</div>';
       if (root) root.innerHTML = html; else el.innerHTML = html;
+      if (popup && jobs.length) {          // details of one role in a window inside the widget; the link itself still works with a new tab or a copy
+        var pz = root || el, ov = pz.querySelector('.ov'), back = null;
+        var shut = function () { ov.hidden = true; ov.innerHTML = ''; if (back && back.focus) back.focus(); back = null; };
+        pz.addEventListener('click', function (ev) {
+          var t = ev.target, a = t && t.closest ? t.closest('.r[data-k]') : null;
+          if (ov.contains(t) && t === ov) return shut();
+          if (!a || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button) return;
+          var j = d.jobs[+a.getAttribute('data-k')]; if (!j) return;
+          ev.preventDefault(); back = a;
+          var rows = [['Company', j.company], ['Place', j.location || (j.remote ? 'Remote' : '')], ['Team', j.category], ['Pay', j.salary], ['Posted', j.posted ? (age(j.posted) === 'Today' ? 'Today' : age(j.posted) + ' ago') + ' (' + j.posted + ')' : '']]
+            .filter(function (r) { return r[1]; });
+          ov.innerHTML = '<div class="pop" role="dialog" aria-modal="true" aria-labelledby="pt"><button class="x" type="button" aria-label="Close">&times;</button><h3 id="pt">' + esc(j.title) + '</h3>' +
+            '<dl>' + rows.map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + esc(r[1]) + '</dd>'; }).join('') + '</dl>' +
+            '<a class="go" href="' + esc(j.url) + '" target="_blank" rel="noopener">' + (d.own ? 'Read and apply' : 'Open the full posting') + '</a>' +
+            '<p class="nt">' + (d.own ? 'The button opens the posting on the company’s own hiring page.' : 'The posting page shows where the job was read and when it was last checked, with the link to the employer.') + '</p></div>';
+          ov.hidden = false; ov.querySelector('.x').focus();
+          ov.querySelector('.x').addEventListener('click', shut);
+        });
+        pz.addEventListener('keydown', function (ev) {
+          if (ov.hidden) return;
+          if (ev.key === 'Escape') { ev.stopPropagation(); return shut(); }
+          if (ev.key === 'Tab') {    // keep the focus inside the window
+            var f = ov.querySelectorAll('button,a'), first = f[0], last = f[f.length - 1], cur = (pz.activeElement || document.activeElement);
+            if (ev.shiftKey && cur === first) { ev.preventDefault(); last.focus(); } else if (!ev.shiftKey && cur === last) { ev.preventDefault(); first.focus(); }
+          }
+        });
+      }
       if (layout === 'carousel' && !interactive && jobs.length) {
         var cs = root || el, trk = cs.querySelector('.trk'), pv = cs.querySelector('.prev'), nx = cs.querySelector('.next');
         var sync = function () { pv.disabled = trk.scrollLeft < 4; nx.disabled = trk.scrollLeft + trk.clientWidth >= trk.scrollWidth - 4; pv.hidden = nx.hidden = trk.scrollWidth <= trk.clientWidth + 4; };
