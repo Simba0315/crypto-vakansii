@@ -770,21 +770,22 @@
     // The card is the search box (jobs) or the menu's main action, which is also a link in a group for the phone menu.
     var M = {
       '/jobs/': [{ search: 1 }, [
-        [['Search', [['/jobs/', 'All jobs', 'search', 'Every job, checked every hour'], ['/new/', 'New jobs', 'clock', 'Posted in the last 3 days'],
-          ['/jobs-near-me/', 'Jobs near me', 'pin', 'Open jobs in your city'], ['/remote/', 'Remote jobs', 'home', 'Work from home, by country']]],
+        [['Search', [['/jobs/', 'All jobs', 'search', 'Every open job, with filters'], ['/remote/', 'Remote jobs', 'home', 'Work from home, by country'],
+          ['/jobs-near-me/', 'Jobs near me', 'pin', 'Open jobs in your city'], ['/new/', 'New jobs', 'clock', 'Posted in the last 3 days']]],
          ['For you', [['/for-you/', 'Jobs that fit you', 'target', 'Five questions, your matches'], ['/my-jobs/', 'My jobs', 'mark', 'Saved jobs and applications']]]],
         [['Schedule and type', [['/jobs/?etype=Full-time', 'Full-time', 'bag'], ['/part-time/', 'Part-time', 'half'], ['/hybrid/', 'Hybrid', 'swap'],
           ['/work-from-anywhere/', 'Work from anywhere', 'globe'], ['/contract/', 'Contract', 'doc'], ['/temporary/', 'Temporary, seasonal', 'cal'],
           ['/night-shift/', 'Night shift', 'moon'], ['/weekend/', 'Weekend', 'sun']]]],
-        [['Experience', [['/internships/', 'Internships', 'cap'], ['/entry-level/', 'Entry-level', 'sprout'], ['/no-experience-jobs/', 'No experience', 'steps']]],
-         ['By field', [['/tech/', 'Tech jobs', 'code'], ['/government-jobs/', 'Government jobs', 'gov'], ['/categories/', 'All categories', 'grid'], ['/salaries/', 'Salaries by title', 'coin']]]]]],
-      '/resume/': [{ h: '/resume/', t: 'Resume builder', p: 'A one-page resume in your browser, no account.', a: 'Start a resume' }, [
+        [['Experience', [['/entry-level/', 'Entry-level', 'sprout'], ['/internships/', 'Internships', 'cap'], ['/no-experience-jobs/', 'No experience', 'steps']]],
+         ['By field', [['/categories/', 'All categories', 'grid'], ['/tech/', 'Tech jobs', 'code'], ['/government-jobs/', 'Government jobs', 'gov'], ['/salaries/', 'Salaries by title', 'coin']]]]]],
+      '/resume/': [{ h: '/resume/', t: 'Resume builder', p: 'A one-page resume in your browser, no account.', a: 'Start a resume', h2: '/resume/examples/', a2: 'See resume examples' }, [
         [['Write', [['/resume/', 'Resume builder', 'pen', 'A one-page resume, no account'], ['/resume/examples/', 'Resume examples', 'doc', 'A written example for each kind of work'],
           ['/cover-letter-examples/', 'Cover letter examples', 'mail', 'A letter for each kind of work, ready to copy'],
-          ['/resignation-letters/', 'Resignation letters', 'exit', 'From two weeks notice to effective immediately'],
-          ['/resume-words/', 'Resume words', 'text', 'What to write instead of “managed”']]]],
-        [['Check', [['/tools/resume-review/', 'Resume review', 'check', 'A score out of 10 and what to fix first'],
-          ['/tools/resume-match/', 'Resume match', 'cols', 'Your resume against a posting, word by word']]]]]],
+          ['/resume-words/', 'Resume words', 'text', 'What to write instead of “managed”'],
+          ['/resignation-letters/', 'Resignation letters', 'exit', 'From two weeks notice to effective immediately']]]],
+        [['Check and tailor', [['/tools/resume-review/', 'Resume review', 'check', 'A score out of 10 and what to fix first'],
+          ['/tools/resume-match/', 'Resume match', 'cols', 'Your resume against a posting, word by word'],
+          ['/tools/cover-letter/', 'Cover letter writer', 'mail', 'A letter for one posting, in your browser']]]]]],
       '/tools/': [{ h: '/tools/', t: 'Free tools', p: 'Offer check, raise calculator, letters and more. They run in your browser.', a: 'See all tools' }, [
         [['Prepare', [['/tools/', 'All free tools', 'tool', 'Offer check, raise calculator and more'], ['/interview-questions/', 'Interview questions', 'chat', 'What to prepare for each job'],
           ['/career-quiz/', 'Career quiz', 'compass', 'Seven plain questions, the fields that fit'], ['/how-to-become/', 'How to become…', 'trend', 'Skills, pay and first jobs, career by career'],
@@ -811,7 +812,8 @@
           '<input type="search" name="where" placeholder="City or remote" aria-label="Where: city, country or remote" autocomplete="off">' +
           '<button class="btn" type="submit">Search jobs</button></form></div>';
       }
-      return '<div class="np-card"><p class="np-t">' + esc(c.t) + '</p><p class="np-p">' + esc(c.p) + '</p><a class="btn sm" href="' + P + c.h + '">' + esc(c.a) + '</a></div>';
+      return '<div class="np-card"><p class="np-t">' + esc(c.t) + '</p><p class="np-p">' + esc(c.p) + '</p><a class="btn ghost sm" href="' + P + c.h + '">' + esc(c.a) + '</a>' +
+        (c.h2 ? '<a class="np-a2" href="' + P + c.h2 + '">' + esc(c.a2) + '</a>' : '') + '</div>';
     };
     var panel = function (m, id) {
       var p = document.createElement('div');

@@ -5700,3 +5700,15 @@ h2.tw b,h2.tw2 b,.kcta h2.tw b,.alertf h2.tw b,.sec-head h2.tw b{font-weight:inh
 :root[data-theme=light]{--ac:#121110;--ac-ink:#ffffff}
 .pill.perk,.jhero .pill.perk{border:1px solid var(--line);background:var(--card);color:var(--muted)}
 .job .pill.ok{color:var(--muted);font-weight:500}
+
+/* ---- one filled button a screen: the jobs menu's Search (and Search jobs on the home page, Apply on a job page). Post a job is a quiet
+   outlined button, in the phone menu too; the menu cards' buttons, the Tech jobs chip and "See all jobs" are quiet. Nothing removed ---- */
+.hact .btn.hpost{margin:0;background:transparent;color:var(--text);border-color:var(--line2)}
+.hact .btn.hpost:hover{background:transparent;color:var(--text);border-color:var(--text)}
+nav a.nl.nl-cta,nav a.nl.nl-cta:hover{background:transparent;color:var(--text);box-shadow:inset 0 0 0 1px var(--line2)}
+.np-card .btn.ghost{margin-top:0}
+.np-a2{display:block;margin:12px 0 0;font-size:14px;font-weight:600;text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+.np-a2:hover{text-decoration-color:var(--text)}
+.popular a.pop-tech,.hero.v2 .popular a.pop-tech{background:var(--card);color:var(--text);border-color:var(--line2)}
+.hero.v2 .shot-more .btn{background:transparent;color:var(--text);border-color:var(--line2)}
+.hero.v2 .shot-more .btn::after{background:var(--text);color:var(--bg)}
