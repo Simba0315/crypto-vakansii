@@ -681,7 +681,7 @@ VC = hashlib.md5(b"".join((ROOT / "assets" / f).read_bytes() for f in ("compare.
 # without a dot left at the start of a line (26 Nov 2026)
 MINI_FOOT = (f'<footer class="mini"><div class="wrap"><p class="fine"><span class="fc">© {TODAY[:4]} {e(SITE)}</span>' + "".join(
              f'<span class="sep"> · </span><a href="{P}/{u_}">{n_}</a>' for u_, n_ in (("jobs/", "All jobs"), ("remote/", "Remote"), ("companies/", "Companies"),
-             ("salaries/", "Salaries"), ("post-a-job/", "For employers"), ("about/", "About"), ("about/#contact", "Contact"), ("methodology/", "How it works"),
+             ("salaries/", "Salaries"), ("post-a-job/", "Post a job"), ("about/", "About"), ("about/#contact", "Contact"), ("methodology/", "How it works"),
              ("methodology/#editorial-policy", "Editorial policy"), ("privacy/", "Privacy"), ("terms/", "Terms")))
              + '</p></div></footer>')
 SAL_BAD = re.compile(r"CA\$|C\$|A\$|AU\$|S\$|SG\$|HK\$|NZ\$|CAD|AUD|SGD|EUR|GBP|CHF|JPY|INR|€|£|¥|₹", re.I)
@@ -1924,16 +1924,7 @@ def fit_desc(d):
     return d[:157].rsplit(" ", 1)[0].rstrip(",.;:–—") + "…"
 
 
-NAV_PLUS = f'<a class="nl" href="{P}/plus/">Plus</a>' if CFG.get("plus", {}).get("live") else ""      # in the top menu only once it can be bought (the footer's "More" has it)
-# The header (track "one button", 26 Nov 2026; the owner: "a good product is not a thousand buttons but one button", then "a simple site
-# where everything is one click away"). It held 56 to 59 links: six menus with panels, Plus, a black "Post a job" button and the same
-# again in the phone menu. Now: the jobs menu (its panel: the search box and seven lists, site.js), Companies, Salaries, Resume, a quiet
-# "Post a job" link, My jobs with its count beside Sign in (one click back to saved jobs on every screen), and nothing filled but the
-# panel's Search. Career help, the employers' panel, the quizzes, helpers and the rest are in the footer and its "More".
-NAV_LINKS = (f'<a class="nl" href="{P}/jobs/">Find jobs</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a>'
-             f'<a class="nl" href="{P}/resume/">Resume</a>{NAV_PLUS}<a class="nl nl-emp" href="{P}/post-a-job/">Post a job</a>')
-NAV_MY = (f'<a class="hmy" href="{P}/my-jobs/" aria-label="My jobs: saved jobs and searches"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>'
-          '<span class="hmy-t">My jobs</span><span id="saved-n"></span></a>')
+NAV_PLUS = f'<a class="nl" href="{P}/plus/">Plus</a>' if CFG.get("plus", {}).get("live") else f'<a class="nl only-m" href="{P}/plus/">Plus</a>'      # in the top menu only once it can be bought
 CRUMB_RX = re.compile(r'<div class="crumbs">(.*?)</div>', re.S)
 CRUMB_A = re.compile(r'<a href="([^"]*)">(.*?)</a>')
 
@@ -2147,8 +2138,8 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False,
 <link rel="preload" href="{P}/fonts/publicsans-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="{P}/fonts/schibsted-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{P}/style.css?v={V}"><script>try{{var t=localStorage.getItem("hrn_theme");if(t)document.documentElement.setAttribute("data-theme",t)}}catch(e){{}}</script><script src="{P}/site.js?v={V}" defer></script>{head}</head><body>
 <a class="skip" href="#main">Skip to content</a><header class="site"><div class="wrap"><a class="logo" href="{P}/" aria-label="{e(SITE)}, home">{LOGO}</a><nav id="nav"{f' data-n="{ALL_OPEN[0]}"' if ALL_OPEN[0] else ""}>
-{NAV_LINKS}</nav>
-<div class="hact"><button class="icon ic-s" id="palbtn" type="button" aria-label="Quick search (Ctrl K)"></button>{NAV_MY}{ACCT_HEAD}
+<a class="nl" href="{P}/jobs/">Find jobs</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/resume/">Resume</a><a class="nl" href="{P}/tools/">Career help</a><a class="nl" href="{P}/post-a-job/">For employers</a>{NAV_PLUS}<a class="nl only-m" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl only-m nl-cta" href="{P}/post-a-job/">Post a job</a></nav>
+<div class="hact"><button class="icon ic-s" id="palbtn" type="button" aria-label="Quick search (Ctrl K)"></button>{ACCT_HEAD}<a class="btn" href="{P}/post-a-job/">Post a job</a>
 <button class="icon ic-m burger" id="menu" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav"></button></div></div></header>
 <!--email_off-->{hero}<main class="wrap{" " + cls if cls else ""}" id="main">{body}</main>
 {MINI_FOOT if compact else FULL_FOOT()}<!--/email_off-->
@@ -2180,30 +2171,14 @@ def fpop(name, row):
 
 
 def FULL_FOOT():
-    """The footer (track "one button", 26 Nov 2026): it had 105 links, two clouds of searches and a giant pale logo. Now five short columns
-    of what people come back for, and one closed "More" that keeps every other section one click away (the quizzes, helpers, maps, Plus,
-    the guides, the kinds of work by hours, the pages for investors and the brand), so no page loses its way in. The links to every
-    skill and field are on their own directories (/skills/, /categories/), which the columns name."""
-    li = lambda rows: "<ul>" + "".join(f'<li><a href="{P}/{u_}">{n_}</a></li>' for u_, n_ in rows) + "</ul>"
-    col = lambda name, rows: f'<details class="fgrp" open><summary>{name}</summary><p class="fhd">{name}</p>{li(rows)}</details>'
-    more = [("tools/", "Free tools"), ("for-you/", "Jobs that fit you"), ("career-quiz/", "Career quiz"), ("swipe/", "Swipe through jobs"), ("map/", "Jobs map"),
-            ("ahead/", "Helpers in your browser"), ("tech/", "Tech jobs"), ("crypto/", "Crypto &amp; web3 jobs"), ("senior-jobs/", "Senior-level"), ("executive-jobs/", "Executive"),
-            ("jobs-that-pay/", "Jobs by hourly pay"), ("perks/", "Perks"), ("collections/", "Job lists by pay and hours"), ("guides/", "Guides"), ("glossary/", "Glossary"), ("trends/", "Hiring trends"),
-            ("reports/", "Monthly reports"), ("insights/", "Rankings"), ("open-hiring-index/", "Open hiring index"), ("compare/", "Compare skills"),
-            ("cover-letter-examples/", "Cover letter examples"), ("resignation-letters/", "Resignation letters"), ("resume-words/", "Resume words"),
-            ("how-to-become/", "How to become…"), ("how-to-hire/", "How to hire…"), ("job-descriptions/", "Job description templates"),
-            ("free-resume-builders/", "Free resume builders compared"), ("job-search-engines/", "Job search engines compared"), ("archive/", "Closed jobs archive"),
-            ("pricing/", "Pricing"), ("partners/", "Partners"), ("mentors/", "Mentors"), ("plus/", "Plus"), ("investors/", "Investors"), ("brand/", "Brand")]
-    return (f"""<footer><div class="wrap"><div class="fcols">
-<div><a class="logo" href="{P}/" aria-label="{e(SITE)}, home">{LOGO}</a><p>Every job here comes from the company’s own careers page and is re-checked every hour.</p></div>"""
-            + col("Find jobs", (("jobs/", "All jobs"), ("new/", "New jobs"), ("remote/", "Remote jobs"), ("entry-level/", "Entry-level"), ("part-time/", "Part-time"), ("jobs-near-me/", "Jobs near me")))
-            + col("Browse", (("categories/", "Job categories"), ("roles/", "Roles A to Z"), ("skills/", "Skills"), ("locations/", "Jobs by country"), ("companies/", "Companies"), ("salaries/", "Salaries")))
-            + col("Your search", (("my-jobs/", "My jobs"), ("resume/", "Resume builder"), ("resume/examples/", "Resume examples"), ("interview-questions/", "Interview questions"),
-                                  ("how-long-job-postings-stay-open/", "How long jobs stay open"), ("safety/", "Job offer safety")))
-            + col("About", (("methodology/", "How we check jobs"), ("promise/", "Our promise"), ("status/", "Is the data fresh?"), ("vs/", "Compared with other job sites"), ("help/", "Help"), ("media-kit/", "Media kit")))
-            + col("Employers", (("post-a-job/", "For employers"), ("api/", "For developers")))
-            + '</div><details class="fmore"><summary>More</summary>' + li(more) + FOOT.get("types", "") + "</details>"
-            + f"""{FOOT_TRUST}<p class="fine"><button class="icon ic-t" id="theme" type="button" aria-label="Switch between light and dark"></button><span class="flang"><span class="vh">Language: </span>English</span> © {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p></div></footer>""")
+    return f"""<footer><div class="wrap"><div class="fcols">
+<div><a class="logo" href="{P}/" aria-label="{e(SITE)}, home">{LOGO}</a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every hour.</p></div>
+<details class="fgrp" open><summary>Find jobs</summary><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/map/">Jobs map</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/senior-jobs/">Senior-level</a></li><li><a href="{P}/executive-jobs/">Executive</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/jobs-that-pay/">Jobs by hourly pay</a></li><li><a href="{P}/collections/">Job lists by pay and hours</a></li><li><a href="{P}/tech/">Tech jobs</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></details>
+<details class="fgrp" open><summary>Browse</summary><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Jobs by country</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></details>
+<details class="fgrp" open><summary>Tools and data</summary><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/free-resume-builders/">Free resume builders compared</a></li><li><a href="{P}/how-to-become/">How to become…</a></li><li><a href="{P}/career-quiz/">Career quiz</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/interview-questions/">Interview questions</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/how-long-job-postings-stay-open/">How long jobs stay open</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></details>
+<details class="fgrp" open><summary>Employers and sites</summary><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/pricing/">Pricing</a></li><li><a href="{P}/job-descriptions/">Job description templates</a></li><li><a href="{P}/how-to-hire/">How to hire…</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></details>
+<details class="fgrp" open><summary>About</summary><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/about/#contact">Contact</a></li><li><a href="{P}/vs/">Compared with other job sites</a></li><li><a href="{P}/job-search-engines/">Job search engines compared</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/ahead/">What is new here</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/methodology/#editorial-policy">Editorial policy</a></li><li><a href="{P}/guides/">Guides</a></li><li><a href="{P}/help/">Help</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></details>
+</div>{fpop("Popular searches", FOOT.get("pop", ""))}{fpop("Jobs by type", FOOT.get("types", ""))}{ask_ai_row()}{FOOT_TRUST}<p class="fine"><button class="icon ic-t" id="theme" type="button" aria-label="Switch between light and dark"></button><span class="flang"><span class="vh">Language: </span>English</span> © {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p><div class="fbig" aria-hidden="true" style="--wm:url('{P}/brand/{brand.APPLIED}-logo-mono-white.svg')"></div></div></footer>"""
 
 
 def age(iso):
@@ -15179,7 +15154,6 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                f'<p class="kact">{go("jobs/", "Search the jobs")}<a href="{P}/methodology/">How the jobs are collected</a></p>',
                after=nums([(f"{WEEKNEW:,}", "open jobs posted in the last 7 days"), (f"{len(archived):,}", f'closed jobs kept in the <a href="{P}/archive/">archive</a>'),
                            (f"{len(by_role)}", "kinds of work"), ("$0", "cost to job seekers")]))
-         + ask_ai_row()          # moved here from the footer of every page (track "one button", 26 Nov 2026)
          + '<p class="sec-label">How the site works</p><div class="about-grid three"><div>'
          f'<h2 class="h2s">Where {e(SITE)} gets its jobs</h2><p>{SOURCE_LINE[0]}. Every listing links to the original posting, and you apply there. '
          f'The full process is on the <a href="{P}/methodology/">methodology page</a>.</p></div>' '<div>'

@@ -5613,37 +5613,6 @@ table.adm-log td:last-child{min-width:280px}
   .lhero>.nums{order:2;margin-top:22px}
   .lhero>.nums-src{order:3}
 }
-
-/* ================= One button (track 2 of the teardown, 26 Nov 2026). The owner: "a good product is not a thousand buttons but one
-   button", then "a simple, clear site where everything is one click away". One filled button a screen (Search; Apply on a job page),
-   jobs on the first screen of every list, the template's tricks taken off. This block is last so it wins over the layers above. ====== */
-
-/* ---- the header: four links and a quiet "Post a job"; My jobs with its count beside Sign in, on every screen ---- */
-nav a.nl.nl-emp{color:var(--muted)}
-.hmy{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 11px;border:1px solid var(--line2);border-radius:999px;font-size:14.5px;font-weight:600;color:var(--text);white-space:nowrap;text-decoration:none}
-.hmy:hover{border-color:var(--text)}
-.hmy svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
-.hmy #saved-n{margin-left:0}
-.hmy:focus-visible{outline:2px solid var(--text);outline-offset:2px}
-@media(max-width:560px){.hmy{width:44px;height:44px;justify-content:center;padding:0}.hmy-t{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-  .hmy #saved-n{position:absolute;margin:-26px -26px 0 0;padding:0 4px;font-size:10.5px}}
-@media(max-width:560px){.hmy{position:relative}}
-
-/* ---- the footer: five short columns, one closed "More" ---- */
-.fcols{grid-template-columns:1.6fr repeat(5,1fr)}
-.fmore{margin:28px 0 0;padding:14px 0 0;border-top:1px solid var(--line)}
-.fmore>summary{display:inline-flex;align-items:center;gap:8px;min-height:44px;cursor:pointer;list-style:none;font-size:14.5px;font-weight:600;color:var(--text)}
-.fmore>summary::-webkit-details-marker{display:none}
-.fmore>summary::after{content:"";width:7px;height:7px;margin:0 0 4px 2px;border:solid var(--muted);border-width:0 1.8px 1.8px 0;transform:rotate(45deg)}
-.fmore[open]>summary::after{margin-bottom:-3px;transform:rotate(-135deg)}
-.fmore ul{display:flex;flex-wrap:wrap;gap:4px 18px;margin:6px 0 0;padding:0;list-style:none;font-size:14px}
-.fmore ul a,.fmore .pop a{color:var(--muted)}
-.fmore ul a:hover,.fmore .pop a:hover{color:var(--ac)}
-.fmore .pop{margin:14px 0 0}
-@media(max-width:720px){.fmore ul a,.fmore .pop a{display:inline-flex;align-items:center;min-height:40px}}
-main .fask{margin:28px 0 0;font-size:14.5px;color:var(--muted)}
-main .fask b{color:var(--text)}
-main .fask a{color:var(--text)}
 .gapl{list-style:none;margin:0;padding:0}
 .gapl li{padding:2px 0}
 .gapl .s{color:var(--muted)}
