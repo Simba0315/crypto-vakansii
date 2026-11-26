@@ -9474,7 +9474,7 @@ def main():
         def r_med(r_):
             m_ = [(j["usd"][0] + j["usd"][1]) / 2 for j in by_role[r_][1] if j["usd"]]
             return money(median(m_)) if len(m_) >= 15 else "–"
-        which_ = (section("Which role do you need?", f'<p>Close to {e(low)} work, and often confused with it. Pick by the work you need done, then the guide for that role:</p>'
+        which_ = (section(f"Roles close to {e(rname)}, and what they pay", f'<p>These roles are close to {e(low)} work and often confused with it. Pick by the work you need done, then open the guide for that role:</p>'
                           '<div class="tablewrap"><table><tr><th>Role</th><th>Open postings</th><th>Median advertised pay</th><th>Guide</th></tr>'
                           + f'<tr><td><strong>{e(rname)}</strong></td><td>{n_:,}</td><td>{money(median(mids_)) if len(mids_) >= 15 else "–"}</td><td>this page</td></tr>'
                           + "".join(f'<tr><td><a href="{P}/roles/{r_}/">{e(by_role[r_][0])}</a></td><td>{len(by_role[r_][1]):,}</td><td>{r_med(r_)}</td>'
