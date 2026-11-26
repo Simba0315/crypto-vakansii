@@ -5356,6 +5356,14 @@ table.adm-log td:last-child{min-width:280px}
   .jhero .pill{flex:none;padding:7px 13px;font-size:13.5px}
 }
 
+/* ---- rows that scroll sideways run to the screen's edge on both sides, so the last item is cut by the screen and not by an invisible
+   line 20 px before it (the tools' row on every tool page) ---- */
+@media(max-width:700px){
+  main .tsub,main .phero+.tsub{margin-left:-20px;margin-right:-20px;padding:2px 20px 4px;scrollbar-width:none}
+  main .tsub::-webkit-scrollbar{display:none}
+  main.lp .lrow>div a,main.hub .lrow>div a{min-height:44px;display:inline-flex;align-items:center}
+}
+
 /* ---- a button whose words are longer than a 360 px screen wraps instead of running past it ---- */
 @media(max-width:560px){.adv-jobs .btn,.lact .btn{max-width:100%;white-space:normal;text-align:left}}
 
