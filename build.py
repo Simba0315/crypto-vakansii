@@ -2795,7 +2795,7 @@ def weekend_parts(js):
     f_rows = sorted(((CAT[c_], sorted(v_)) for c_, v_ in by_f.items() if len(v_) >= 10), key=lambda x: -x[1][len(x[1]) // 2])[:10]
     if len(f_rows) >= 3:
         after += section("Weekend pay [[by field]]", '<div class="tablewrap"><table><tr><th>Field</th><th>Weekend postings with an hourly rate</th><th>Median hourly pay</th><th>Middle half</th></tr>'
-                         + "".join(f"<tr><td>{e(nm_)}</td><td>{len(v_):,}</td><td>${v_[len(v_) // 2]:,.2f}</td><td>${v_[len(v_) // 4]:,.2f} to ${v_[3 * len(v_) // 4]:,.2f}</td></tr>" for nm_, v_ in f_rows)
+                         + "".join(f"<tr><td>{e(nm_)}</td><td>{len(v_):,}</td><td>${v_[len(v_) // 2]:,.2f}</td><td>${v_[len(v_) // 4]:,.2f}&nbsp;to ${v_[3 * len(v_) // 4]:,.2f}</td></tr>" for nm_, v_ in f_rows)
                          + '</table></div><p class="note">The middle of each posting’s hourly range, for fields with ten or more open weekend postings that state one, highest median first.</p>',
                          sid="pay-fields", label="Pay by field")
     ti_ = [(t_, c_) for t_, c_ in Counter(short_title(j["title"]) for j in (only if len(only) >= 20 else js)).most_common(10)
@@ -4573,7 +4573,7 @@ def main():
         rows_c = []
         for c_, s_, nm_, m_, hj_ in rk_c[:10]:
             v_ = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in hj_ if j["usd"])
-            rows_c.append(f'<tr><td><a href="{P}/roles/{s_}/">{e(nm_)}</a></td><td>{c_:,}</td><td>{money(m_)}</td><td>{money(v_[len(v_) // 4])} to {money(v_[3 * len(v_) // 4])}</td></tr>')
+            rows_c.append(f'<tr><td><a href="{P}/roles/{s_}/">{e(nm_)}</a></td><td>{c_:,}</td><td>{money(m_)}</td><td>{money(v_[len(v_) // 4])}&nbsp;to {money(v_[3 * len(v_) // 4])}</td></tr>')
         COMBO_AFTER[path_c] = COMBO_AFTER.get(path_c, "") + section(f"What {h1_c[0].lower() + h1_c[1:]} pay [[by job title]]",
             '<div class="tablewrap"><table><tr><th>Kind of work</th><th>Open jobs</th><th>Median advertised pay</th><th>Middle half</th></tr>' + "".join(rows_c)
             + '</table></div><p class="note">The midpoints of the yearly US-dollar ranges these postings state; a kind of work needs 5 postings with pay. A job can count under two kinds of work.</p>',
@@ -6469,7 +6469,7 @@ def main():
         yrs_q = None
         if len(rows_y) >= 3:
             cut += section(f"{label} salary by years of experience", '<div class="tablewrap"><table><tr><th>Experience the posting asks for</th><th>Postings with pay</th><th>Median advertised salary</th><th>Middle half</th></tr>'
-                           + "".join(f"<tr><td>{k_}</td><td>{len(v_):,}</td><td><strong>{money(v_[len(v_) // 2])}</strong></td><td>{money(v_[len(v_) // 4])} to {money(v_[3 * len(v_) // 4])}</td></tr>" for k_, v_ in rows_y)
+                           + "".join(f"<tr><td>{k_}</td><td>{len(v_):,}</td><td><strong>{money(v_[len(v_) // 2])}</strong></td><td>{money(v_[len(v_) // 4])}&nbsp;to {money(v_[3 * len(v_) // 4])}</td></tr>" for k_, v_ in rows_y)
                            + f'</table></div><p class="note">The years are the ones each posting asks for (“3+ years of experience”), not the years of the person hired; a band needs 8 postings that state both. '
                              "Advertised ranges, counted from today’s open postings.</p>", sid="years")
             yrs_q = (f"How much does {art(psn)} {psn} make with experience?" if psn else f"How does experience change {label} pay?",
@@ -8926,8 +8926,8 @@ def main():
         lv_sec = ""
         if len(lv_pay) >= 2:
             lv_sec = section(f"What {art(psn)} {psn} costs [[by level]]", '<div class="tablewrap"><table><tr><th>Level in the title</th><th>Postings with pay</th><th>Median advertised pay</th><th>Middle half</th></tr>'
-                             + "".join(f"<tr><td>{e(nm_)}</td><td>{len(v_):,}</td><td>{money(v_[len(v_) // 2])}</td><td>{money(v_[len(v_) // 4])} to {money(v_[3 * len(v_) // 4])}</td></tr>" for nm_, v_ in lv_pay)
-                             + (f"<tr><td>Paid by the hour (contract and hourly roles)</td><td>{len(hr_r):,}</td><td>${hr_r[len(hr_r) // 2]:,.0f} an hour</td><td>${hr_r[len(hr_r) // 4]:,.0f} to ${hr_r[3 * len(hr_r) // 4]:,.0f}</td></tr>" if len(hr_r) >= 5 else "")
+                             + "".join(f"<tr><td>{e(nm_)}</td><td>{len(v_):,}</td><td>{money(v_[len(v_) // 2])}</td><td>{money(v_[len(v_) // 4])}&nbsp;to {money(v_[3 * len(v_) // 4])}</td></tr>" for nm_, v_ in lv_pay)
+                             + (f"<tr><td>Paid by the hour (contract and hourly roles)</td><td>{len(hr_r):,}</td><td>${hr_r[len(hr_r) // 2]:,.0f} an hour</td><td>${hr_r[len(hr_r) // 4]:,.0f}&nbsp;to ${hr_r[3 * len(hr_r) // 4]:,.0f}</td></tr>" if len(hr_r) >= 5 else "")
                              + f'</table></div><p class="note">The midpoints of the yearly US-dollar ranges in today’s {e(low)} postings, by the level their title names (a level needs 5 postings with pay); the hourly row is the low end of each hourly range. '
                                "Base pay as advertised: benefits, payroll taxes and any bonus or equity come on top.</p>", sid="cost", label="Cost")
         hh_qa = [(f"How much does it cost to hire {art(psn)} {psn}?", (f"The pay is the largest part: today’s {low} postings that state a yearly US-dollar range advertise a median of {money(median(mids_))}"
