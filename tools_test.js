@@ -1402,5 +1402,16 @@ eq('bonus: bad figures are refused', [T.bonus({ bonus: '0' }), T.bonus({ bonus: 
 bn = T.bonus({ bonus: '5000', salary: '60000', bracket: '12' });
 near('bonus: 22% withheld against a 12% bracket comes back', bn.settle, 500);
 
+// severance
+let sv = T.severance({ salary: '78000', years: '5', perYear: '2' });
+near('severance: weekly pay', sv.weekly, 1500); near('severance: 10 weeks', sv.severance, 15000); near('severance: total', sv.total, 15000); eq('severance: no months without spending', sv.months, undefined);
+sv = T.severance({ salary: '78000', years: '5', notice: '4', pto: '5', spend: '4000', minWeeks: '' });
+near('severance: notice', sv.noticePay, 6000); near('severance: unused days', sv.ptoPay, 1500); near('severance: total with extras', sv.total, 22500); near('severance: months', sv.months, 5.625); near('severance: total weeks', sv.totalWeeks, 15);
+sv = T.severance({ salary: '52000', years: '0.5', perYear: '2', minWeeks: '4' });
+near('severance: minimum applies', sv.weeks, 4); eq('severance: minimum flag', sv.floorUsed, true);
+sv = T.severance({ salary: '52000', years: '3' });
+near('severance: default two weeks a year', sv.weeks, 6);
+eq('severance: no salary', T.severance({ years: '3' }), null); eq('severance: negative years', T.severance({ salary: '50000', years: '-1' }), null); eq('severance: absurd years', T.severance({ salary: '50000', years: '80' }), null);
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

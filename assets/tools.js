@@ -2175,6 +2175,19 @@
     return r;
   };
 
+  /* ---------- severance: weeks of pay for each year worked, plus notice and unused time off, and how many months the total covers. Plain arithmetic; the real amount is whatever the agreement says ---------- */
+  T.severance = function (o) {
+    o = o || {};
+    var blank = function (v) { return clean(v) === ''; };
+    var sal = num(o.salary), yrs = num(o.years), wpy = blank(o.perYear) ? 2 : num(o.perYear), notice = blank(o.notice) ? 0 : num(o.notice), pto = blank(o.pto) ? 0 : num(o.pto),
+        spend = blank(o.spend) ? 0 : num(o.spend), flat = blank(o.minWeeks) ? 0 : num(o.minWeeks);
+    if (!(sal > 0) || sal > 1e8 || !(yrs >= 0) || yrs > 60 || !(wpy >= 0) || wpy > 52 || !(notice >= 0) || notice > 104 || !(pto >= 0) || pto > 500 || !(spend >= 0) || spend > 1e6 || !(flat >= 0) || flat > 104) return null;
+    var week = sal / 52, weeks = Math.max(yrs * wpy, flat), sev = weeks * week, noticePay = notice * week, ptoPay = pto * sal / 260, total = sev + noticePay + ptoPay;
+    var r = { salary: sal, years: yrs, perYear: wpy, weekly: week, weeks: weeks, floorUsed: flat > yrs * wpy, severance: sev, noticePay: noticePay, ptoPay: ptoPay, total: total, totalWeeks: total / week, spend: spend };
+    if (spend > 0) r.months = total / spend;
+    return r;
+  };
+
   if (typeof module !== 'undefined' && module.exports) module.exports = T;
   if (typeof document === 'undefined') return;
   window.HRNT = T;                       // the resume builder scores the resume and matches it to a posting with the same code
@@ -3331,6 +3344,25 @@
           : 'The withholding matches your bracket, so nothing is left to settle when you file.';
       } else note += 'The 22% is only what the employer holds back. Your real federal tax on the bonus is settled when you file, at your own bracket.';
       board(out, title, fmt(r.share * 100, 1) + '% taken', big(money(r.net, '$', 2), 'after tax') + sub(note) + kv(rows));
+    });
+  };
+
+  /* ---------- severance pay ---------- */
+  tools['severance-pay'] = function () {
+    var out = $('tl-out'), title = 'Your severance pay';
+    form(function (v) {
+      if (!clean(v.salary) || !clean(v.years)) return idle(out, title, 'Enter your yearly salary and the years you worked for the employer.');
+      var r = T.severance(v), s = v.cur;
+      if (!r) return idle(out, title, 'Check the figures: the salary must be above zero, the years cannot be negative or above 60, and the weeks for each year, the notice weeks and the paid days must be zero or more.');
+      var w = function (x) { return fmt(x, 1) + (x === 1 ? ' week' : ' weeks'); };
+      var rows = [['Pay for one week', money(r.weekly, s, 2)], ['Weeks of severance', w(r.weeks) + (r.floorUsed ? ' (the minimum applies)' : ' (' + fmt(r.years, 1) + ' years \u00d7 ' + fmt(r.perYear, 1) + ')')], ['Severance pay', money(r.severance, s, 0)]];
+      if (r.noticePay) rows.push(['Pay for the notice weeks', money(r.noticePay, s, 0)]);
+      if (r.ptoPay) rows.push(['Unused paid days', money(r.ptoPay, s, 0)]);
+      rows.push(['All together', money(r.total, s, 0) + ' (' + w(r.totalWeeks) + ' of pay)']);
+      if (r.months) rows.push(['Months it covers at ' + money(r.spend, s, 0) + ' a month', fmt(r.months, 1)]);
+      board(out, title, w(r.totalWeeks) + ' of pay', big(money(r.total, s, 0), 'before tax') +
+        sub('That is ' + esc(w(r.weeks)) + ' of severance at ' + esc(money(r.weekly, s, 2)) + ' a week' + (r.noticePay || r.ptoPay ? ', with the notice and the unused days added' : '') +
+          '. Severance is usually taxed like wages, so less reaches your account. Whether you are owed any, and how much, is set by your agreement and the law where you work: this is arithmetic, not legal advice.') + kv(rows));
     });
   };
 

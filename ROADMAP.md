@@ -111,6 +111,7 @@
 | «python vs …», «which pays more» | сравнения навыков | ✅ |
 | «free resume builder no sign up», «ats resume checker» | конструктор резюме, проверка резюме под вакансию | ✅ |
 | «salary to hourly calculator», «stock options calculator», «cover letter generator», «boolean search» | бесплатные инструменты | ✅ |
+| «severance pay calculator», «how much severance» | калькулятор выходного пособия `/tools/severance-pay/` (недели за год, уведомление, неиспользованные дни, на сколько месяцев хватит; 26.11) | ✅ |
 | «job application tracker», «job tracker spreadsheet» | трекер «My jobs» (переименован под запрос) | ✅ |
 | «python jobs in the last 3 days», «since yesterday» | страницы «за 3 дня» по навыкам и профессиям (`/new/skills/…`, `/new/roles/…`, 22.11) | ✅ |
 | «free job posting sites for employers», «post a job for free» | бесплатная публикация в кабинете | 🟡 ждёт запуска сервера |

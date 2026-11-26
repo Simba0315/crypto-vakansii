@@ -133,7 +133,7 @@ TERMS = [
     ("Screening call", "A short first call, usually with a recruiter, to check basics: interest, pay expectations, work rights and start date.",
      "Have your pay range and notice period ready, and ask what the next steps are.", [("tools/interview-answer-builder/", "Interview answer builder")]),
     ("Severance", "Pay given when an employer ends your job, often tied to years of service.",
-     "Read what you are asked to sign in return for severance before you sign it.", [("tools/offer-check/", "Offer check")]),
+     "Read what you are asked to sign in return for severance before you sign it.", [("tools/severance-pay/", "Severance pay calculator"), ("tools/offer-check/", "Offer check")]),
     ("Sign-on bonus", "A one-time payment for joining, often to make up for a bonus you lose by leaving your old job.",
      "Check whether you must repay it if you leave within a year.", [("tools/negotiation-email/", "Negotiation email")]),
     ("Skill", "A tool or a language that a posting mentions, such as Python or Figma.",

@@ -2476,6 +2476,62 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
              '<tr><td>Federal tax at the 24% bracket</td><td>$10,000 × 24%</td><td class="num">$2,400.00</td></tr></table></div>'
              '<p class="note">The bracket asks for $200 more than the 22% withheld, so $200 is owed when the return is filed. In the 12% bracket the same bonus would send $1,000 back.</p>'))
 
+    # ------------------------------------------------------------ 43. severance pay
+    tool("severance-pay", "seekers", "Severance pay calculator",
+         "Weeks of pay for each year worked, plus notice and unused days: what a severance offer comes to and how many months it covers.",
+         "Severance Pay Calculator: What Your Package Is Worth",
+         "Work out severance from your salary and years of service, add paid notice and unused time off, and see how many months of spending the total covers. Free, in your browser.",
+         "What your severance package comes to",
+         "A severance offer arrives as a number of weeks, and it is hard to tell from the letter what that is in money or how long it lasts. "
+         "Enter your yearly salary, the years you worked there and the weeks of pay for each year that your agreement names. Add paid notice, unused days and your monthly spending if you want them counted. "
+         "The calculator shows the total before tax, the same total in weeks of pay and the months it covers: this is arithmetic, not legal advice.",
+         wrap("severance-pay",
+              '<div class="card tl-form"><div class="tl-grid">'
+              + _f("salary", "Yearly salary before tax", "78000", "78000") + _cur()
+              + _f("years", "Years worked for this employer", "5", "5", hint="Part years count: 2.5 for two and a half.")
+              + _f("perYear", "Weeks of severance for each year worked", "2", "2", hint="The figure in your agreement. Leave 2 if you only want an example.")
+              + _f("minWeeks", "Minimum weeks, if the agreement sets one", "", "", hint="Some agreements promise at least a fixed number of weeks. Leave empty if yours does not.")
+              + _f("notice", "Weeks of notice that are paid", "", "", hint="Only if the notice is paid on top of the severance.")
+              + _f("pto", "Unused paid days that will be paid out", "", "", hint="Whether they are paid out depends on where you work and on your employer\u2019s policy.")
+              + _f("spend", "Your spending in a month", "", "", hint="Rent, food, bills and loans. It is used only to count the months.") + "</div>"
+              + '<div class="tl-actions">' + _clear() + "</div></div>"
+              + _board("Your severance pay", "Enter your salary and the years you worked there.")
+              + '<p class="note tl-priv"><b>Not legal advice</b>Whether you are owed severance, and how much, depends on your contract, the agreement you are asked to sign and the law where you work. '
+                'The page multiplies the numbers you type. Nothing you type leaves your browser.</p>'),
+         "How severance is counted here",
+         "<ul><li><code>pay for one week = yearly salary ÷ 52</code></li>"
+         "<li><code>weeks of severance = years worked × weeks for each year</code>, or the minimum if that is higher</li>"
+         "<li><code>severance pay = weeks of severance × pay for one week</code></li>"
+         "<li><code>notice pay = paid notice weeks × pay for one week</code></li>"
+         "<li><code>unused days = paid days × yearly salary ÷ 260</code>, with 260 working days in a year</li>"
+         "<li><code>months covered = total ÷ your monthly spending</code></li></ul>"
+         "<p>All figures are before tax. Severance is usually taxed like wages, so the amount that reaches your account is smaller: the <a href=\"" + P + "/tools/bonus-tax/\">bonus tax calculator</a> shows the withholding on a one-time payment of that kind, and the <a href=\"" + P + "/tools/take-home-pay/\">take-home pay calculator</a> shows the usual cut. "
+         "Health cover often ends with the job or on a set date, which the sum above does not include.</p>"
+         "<p><strong>What the page does not know.</strong> In the United States there is no general law that requires severance; it comes from a contract, a company policy or an agreement you sign when you leave. "
+         "Large layoffs can come with a legal notice period: the <a href=\"" + P + "/glossary/warn-notice/\">WARN notice</a> entry explains it. Read the agreement before you sign, because it often asks you to give up the right to sue, and ask in writing what happens to health cover, bonus and shares.</p>",
+         [("How do I calculate severance pay?",
+           "Divide your yearly salary by 52 for one week of pay, then multiply by the weeks of severance. With $78,000, 5 years and 2 weeks for each year, that is $1,500 × 10 weeks = $15,000 before tax."),
+          ("How many weeks of severance is normal?",
+           "There is no fixed rule. Many agreements are written as a number of weeks for each year worked, and the number is whatever your employer or contract states. Use the figure in your own agreement, and ask whether it can be negotiated."),
+          ("Is severance pay taxed?",
+           "In the United States it is usually taxed as wages, with income tax and payroll tax withheld, so less than the gross amount reaches you. A lump sum can also be withheld at a flat rate."),
+          ("Do I get severance if I quit?",
+           "Usually not. Severance is paid when the employer ends the job, for example in a layoff, and many agreements say nothing is paid to someone who resigns. Check the wording of your contract."),
+          ("Can I negotiate a severance offer?",
+           "Often yes, because the employer is asking you to sign a release in return. People ask for more weeks, paid health cover for a set time, a good reference, and a later end date so that shares keep vesting. Get the final terms in writing."),
+          ("How long does a severance package last?",
+           "Divide the total by what you spend in a month. $22,500 against $4,000 a month covers about 5.6 months. Add what you expect from unemployment benefits, which this page does not count.")],
+         ["bonus-tax", "pto-payout", "last-working-day"], ["salaries/"],
+         ex=("Severance example: $78,000 salary, 5 years, 2 weeks for each year, 4 weeks of paid notice, 5 unused days",
+             '<div class="tablewrap"><table><tr><th>What is counted</th><th>Sum</th><th>Amount</th></tr>'
+             '<tr><td>Pay for one week</td><td>$78,000 ÷ 52</td><td class="num">$1,500.00</td></tr>'
+             '<tr><td>Severance pay</td><td>5 × 2 weeks × $1,500</td><td class="num">$15,000.00</td></tr>'
+             '<tr><td>Pay for the notice weeks</td><td>4 × $1,500</td><td class="num">$6,000.00</td></tr>'
+             '<tr><td>Unused paid days</td><td>5 × $78,000 ÷ 260</td><td class="num">$1,500.00</td></tr>'
+             '<tr class="tl-total"><td>All together, before tax</td><td>$15,000 + $6,000 + $1,500</td><td class="num">$22,500.00</td></tr>'
+             '<tr><td>Months it covers</td><td>$22,500 ÷ $4,000 a month</td><td class="num">5.6 months</td></tr></table></div>'
+             '<p class="note">The total is 15 weeks of pay. Tax and the end of health cover come off it, so the months are a ceiling, not a promise.</p>'))
+
     # ------------------------------------------------------------ write the pages
     by_slug = {t["slug"]: t for t in TOOLS}
     org = {"@type": "Organization", "name": SITE, "url": FULL + "/"}
@@ -2521,6 +2577,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
         "raise-calculator": "A raise is a percent, an amount or a new salary, and people quote it in different ways. Give one of them and this page shows the other two, and what the raise is worth after prices have gone up.",
         "pto-payout": "Paid time off, or PTO, is the pay you keep while you are away from work for a holiday, an illness or a personal day. It is counted in hours on a payslip. This page turns those hours into days and money, and shows how many hours you earn in a year.",
         "bonus-tax": "A bonus is paid on top of your salary, and the employer holds back tax from it before you see the money. This page shows how much is held back, what is left and whether you get some of it back at the end of the year.",
+        "severance-pay": "Severance is money an employer pays when it ends a job, and it is usually written as a number of weeks of pay for each year you worked. This page turns that number of weeks into money, and into the months it can cover.",
         "overtime-pay": "Overtime is the hours you work above a set number in a week, usually 40. Those hours are often paid at a higher rate, such as one and a half times your normal rate, and this page adds up the week for you.",
         "resume-skills": "A skill here means a tool, a programming language, a certificate or a spoken language that a job posting names. This page counts which of them today’s postings for one job title name most, so you know what to put first.",
         "elevator-pitch": "An elevator pitch is what you say when someone asks what you do and you have half a minute to answer. This page puts your answer in order and tells you how long it takes to say.",
@@ -2688,6 +2745,8 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
                            '<span class="ln"><b>104 hours</b> earned in a year at 4 hours every two weeks</span>',
         "bonus-tax": ex + '<span class="ln">$10,000 bonus · $90,000 salary</span><span class="big">$7,035<small>after tax</small></span>'
                            '<span class="ln"><b>$2,200</b> federal at 22% + <b>$765</b> Social Security and Medicare</span>',
+        "severance-pay": ex + '<span class="ln">$78,000 salary · 5 years · 2 weeks each</span><span class="big">$15,000<small>10 weeks</small></span>'
+                              '<span class="ln"><b>$1,500</b> a week, so <b>5.6 months</b> with $22,500 and $4,000 spent a month</span>',
         "overtime-pay": ex + '<span class="ln">$20 an hour · 46 hours in the week</span><span class="big">$980<small>for the week</small></span>'
                              '<span class="ln"><b>$800</b> regular + <b>$180</b> overtime at time and a half</span>',
     })
@@ -2762,6 +2821,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
         "resume-summary": "Two wordings of two lines each",
         "recommendation-letter": "Two strengths, an example of each",
         "bonus-tax": "$10,000 bonus = $7,035 after federal tax",
+        "severance-pay": "5 years at 2 weeks each = 10 weeks of pay",
         "overtime-pay": "46 hours at $20 = $980 for the week",
         "pto-payout": "60 hours at $25 = $1,500, 7.5 days",
     }
@@ -2791,7 +2851,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
            ("Applying and interviews", "applying", ["cover-letter", "application-email", "follow-up-email", "job-search-calculator", "interview-answer-builder", "thank-you-email", "reference-request-email", "recommendation-letter"]),
            ("Networking and introductions", "networking", ["referral-request", "linkedin-connection-message", "elevator-pitch", "professional-bio"]),
            ("Pay and offers", "pay", ["salary-checker", "offer-check", "compare-offers", "negotiation-email", "job-offer-response", "raise-calculator", "raise-request-email", "salary-converter", "overtime-pay", "bonus-tax", "equity-calculator", "401k-match", "contractor-rate"]),
-           ("Remote work and leaving a job", "remote-leaving", ["remote-work-savings", "time-zone-overlap", "resignation-letter", "last-working-day", "pto-payout"])]
+           ("Remote work and leaving a job", "remote-leaving", ["remote-work-savings", "time-zone-overlap", "resignation-letter", "last-working-day", "pto-payout", "severance-pay"])]
     named = {s_ for _, _, ss in HUB for s_ in ss}
     rest = [t["slug"] for t in TOOLS if t["group"] == "seekers" and t["slug"] not in named]
     grid = lambda slugs: '<div class="tgrid">' + "".join(found(s_) for s_ in slugs if s_ in by_slug) + "</div>"
