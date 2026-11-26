@@ -333,14 +333,28 @@
   });
 
   /* preview pane: on wide screens a click shows the job next to the list instead of leaving the page */
-  var pane = $('pane'), wide = window.matchMedia('(min-width: 1240px)'), current = '';
+  var pane = $('pane'), wide = window.matchMedia('(min-width: 1240px)'), current = '', allCss = null;
+  // This page's stylesheet is cut to the search page (build.cut_css, 26 Nov 2026); a job shown in the pane needs a job page's rules.
+  // The first preview adds the whole style.css (the same rules in the same order, so the list's look does not change) and the job is
+  // put in once it has arrived.
+  var wholeCss = function () {
+    if (allCss) return allCss;
+    var cut = document.querySelector('link[rel="stylesheet"][href*="/css/"]');
+    if (!cut) return (allCss = Promise.resolve());
+    var l = document.createElement('link'), v = (cut.getAttribute('href') || '').match(/\?v=\w+/);
+    l.rel = 'stylesheet'; l.href = H.base + '/style.css' + (v ? v[0] : '');
+    allCss = new Promise(function (res) { l.onload = res; l.onerror = res; setTimeout(res, 8000); });
+    document.head.appendChild(l);
+    return allCss;
+  };
   var preview = function (a) {
     var href = a.getAttribute('href');
     if (!pane || !href || href === current) return;
     current = href;
     list.querySelectorAll('.job.sel').forEach(function (li) { li.classList.remove('sel'); });
     a.parentNode.classList.add('sel');
-    fetch(href).then(function (r) { return r.text(); }).then(function (html) {
+    var css = wholeCss();
+    fetch(href).then(function (r) { return r.text(); }).then(function (html) { return css.then(function () { return html; }); }).then(function (html) {
       if (current !== href) return;
       var main = new DOMParser().parseFromString(html, 'text/html').querySelector('main');
       if (!main) return;

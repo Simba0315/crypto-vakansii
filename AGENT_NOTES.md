@@ -132,6 +132,13 @@ paging; the search page works on a phone-width screen; no console errors on the 
   and registers `sw.js`, which caches fonts, logos and `?v=` assets. Anything that changes state on page load must wait for
   `prerenderingchange` (see `markSeen`).
 - The stylesheet is minified at build time by `mincss()`; double-quoted strings are safe, do not use single-quoted CSS strings.
+- Pages do not load the whole stylesheet (26 Nov 2026): `cut_css()` in `finish_html` gives each page only the rules that can match it.
+  Pages of a build link `css/<kind>.css` (kind = first part of the address; `cut_files()` writes them at the end of the build from the
+  classes and ids of all the pages of that kind plus every word of the scripts they load); the home page, job pages (serve.py),
+  `offline/` and `my-jobs/` carry their rules in a `<style>`; a page with a script that is not ours keeps `style.css`. So: write class
+  names whole in scripts (`'ic-' + name` would be cut), keep scripts in `assets/`, and anything that inserts another page's markup must
+  add `style.css` first (app.js `wholeCss()` for the search page's preview pane). Long blocks (footer, lists of jobs, tables, FAQ, tiles)
+  have `content-visibility:auto` in style.css: only on blocks whose inner margins cannot leak out, or the spacing would change.
 
 ## Local work
 

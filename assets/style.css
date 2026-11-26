@@ -351,6 +351,12 @@ a.feat:hover h2,a.feat:hover h3{text-decoration-color:var(--text)}
 
 /* Footer */
 footer{margin-top:84px;background:#0e0e0c;color:#b9b7ad;padding:48px 0 34px;font-size:14px}
+/* speed on phones (26 Nov 2026): long blocks are laid out and painted only when they come near the screen; a phone laid out all of
+   them at load and again when the fonts arrived (the footer is about 2,600 px of links on a phone, a list of jobs 13,000). Only blocks
+   whose inner margins cannot reach outside them (padding, border, grid, columns, scrolling): nothing moves. overflow-clip-margin keeps
+   focus rings at their edges. */
+footer:not(.mini),main .tablewrap,main dl.qa,main ul.jobs,main ul.tiles,main ul.xl{content-visibility:auto;contain-intrinsic-size:auto 500px;overflow-clip-margin:24px}
+footer:not(.mini){contain-intrinsic-size:auto 2600px}
 footer .logo{color:#fff}
 .fcols{display:grid;grid-template-columns:1.5fr repeat(5,1fr);gap:28px}
 .fcols>div:first-child p{max-width:30ch}
@@ -3418,6 +3424,11 @@ main.srch #results[aria-busy=true]:empty{height:504px;border:1px solid var(--lin
   linear-gradient(to bottom,transparent 24px,var(--bg2) 24px 38px,transparent 38px) 72px 0/46% 84px repeat-y,
   linear-gradient(to bottom,transparent 48px,var(--bg2) 48px 59px,transparent 59px) 72px 0/28% 84px repeat-y,
   linear-gradient(to bottom,transparent 83px,var(--line) 83px) 0 0/100% 84px repeat-y,var(--card)}
+/* the page arrives with the list marked busy (build.py), so the quiet rows hold the place of the jobs from the first paint and the
+   alerts form under them does not show and then jump away (26 Nov 2026); without scripts the list stays hidden */
+@media (scripting:none){main.srch #results[aria-busy]{display:none}}
+/* the count line is as tall as the "Near you: only …" link app.js puts beside it, so the list does not move down 11 px when it comes */
+main.srch .rbar #count{display:flex;align-items:center;min-height:37.7px}
 main.srch .pane{border-radius:18px}
 main.srch .pane-empty{padding:80px 16px;font-size:15px}
 /* a phone: the search box (the filters are one sideways row of pills since 21 Nov 2026, at the end of this file) */

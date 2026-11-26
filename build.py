@@ -997,7 +997,8 @@ _WM = re.search(r'width="(\d+)" height="(\d+)"', (ROOT / "assets" / "brand" / f"
 WM_W, WM_H = (int(_WM.group(1)), int(_WM.group(2))) if _WM else (271, 40)
 # the wordmark: light file on light pages, dark file on dark ones (style.css swaps them); the link carries the name
 LOGO = (f'<img class="wm-l" src="{P}/brand/{brand.APPLIED}-logo.svg?v=WMV" alt="{e(SITE)}" title="{e(SITE)}" width="{WM_W}" height="{WM_H}">'
-        f'<img class="wm-d" src="{P}/brand/{brand.APPLIED}-logo-dark.svg?v=WMV" alt="{e(SITE)}" title="{e(SITE)}" width="{WM_W}" height="{WM_H}">')
+        # the dark file loads lazily (26 Nov 2026): on a light page it is never shown, so a phone no longer fetches it
+        f'<img class="wm-d" src="{P}/brand/{brand.APPLIED}-logo-dark.svg?v=WMV" alt="{e(SITE)}" title="{e(SITE)}" width="{WM_W}" height="{WM_H}" loading="lazy">')
 LOGO_DARK = f'<img src="{P}/brand/{brand.APPLIED}-logo-dark.svg?v=WMV" alt="{e(SITE)}" title="{e(SITE)}" width="{WM_W}" height="{WM_H}">'
 LOGO_V = hashlib.md5((ROOT / "assets" / "brand" / f"{brand.APPLIED}-logo.svg").read_bytes()).hexdigest()[:8]
 LOGO, LOGO_DARK = LOGO.replace("WMV", LOGO_V), LOGO_DARK.replace("WMV", LOGO_V)
@@ -1226,6 +1227,186 @@ def css_prune(css, classes, ids):
     return "".join(out)
 
 
+# ---- The stylesheet cut to the page (speed on phones, 26 Nov 2026) ----
+# style.css (about 360 KB, 67 KB compressed) is written for some 150 kinds of page, and every page waited for all of it before its first
+# paint: on a phone at 1.6 Mbit/s that is about half a second, and the browser then matched every rule against the page. Now:
+#  - every page made by a build links css/<kind>.css, the rules that can match a page of its kind (kind = the first part of its address:
+#    companies, roles, salaries ...), cut at the end of the build to the classes and ids found on all the pages of that kind, plus every
+#    word of the scripts they load (those build markup from strings: a class added by a script is a word of that script);
+#  - the home page, job pages (built on request by serve.py from the records, after the build) and the two pages the service worker keeps
+#    for use offline carry their rules inside the page instead, so they need no stylesheet at all;
+#  - a page whose scripts are not ours, or with no canonical address, keeps the whole style.css.
+# A selector is kept unless it names a class or an id that is not there, the rule css_prune() follows; nothing is reordered, so the look
+# is the same. crosslinks.py adds its blocks to pages after they are written: the classes of its markup are added to every kind.
+CUT_INLINE = ("", "job", "offline", "my-jobs")
+CUT_SETS = {}           # kind -> [".class"/"#id" tokens of its pages, names of the scripts they load]
+CUT_ON = [False]        # main() turns it on: only a build writes css/<kind>.css, so only a build may link one (serve.py builds job pages)
+_CUT = {}               # caches: the parsed stylesheet, words of each script, the rules for a set of tokens
+CUT_ATTR = {".": re.compile(r"""class=("[^"]*"|'[^']*'|[^\s>"']+)"""), "#": re.compile(r"""id=("[^"]*"|'[^']*'|[^\s>"']+)""")}     # data-id= too: more is harmless
+CUT_SCRIPT = re.compile(r"<script\b([^>]*)>(.*?)</script>", re.S)
+CUT_SRC = re.compile(r"""\bsrc=["']([^"']+)["']""")
+CUT_WORD = re.compile(r"[A-Za-z_][\w-]*")
+CUT_CANON = re.compile(r'<link rel="canonical" href="([^"]*)"')
+
+
+def _css_sels(pre):
+    """The selectors of a rule's prelude (commas inside parentheses do not split)."""
+    parts, depth, cur = [], 0, ""
+    for ch in pre:
+        depth += ch == "("; depth -= ch == ")"
+        if ch == "," and depth == 0: parts.append(cur); cur = ""
+        else: cur += ch
+    return [x.strip() for x in parts + [cur] if x.strip()]
+
+
+def _css_needs(sel):
+    """What a selector needs on the page to match, as ".class" and "#id" (judged as css_prune() judges it)."""
+    s_ = re.sub(r"::?[a-z-]+(?:\([^)]*\))?", "", re.sub(r":(?:not|is|where|has)\([^)]*\)", "", sel))
+    return frozenset(["." + c for c in re.findall(r"\.([A-Za-z_][\w-]*)", s_)] + ["#" + x for x in re.findall(r"#([A-Za-z_][\w-]*)", s_)])
+
+
+def _cut_tree():
+    """style.css as a tree of (0, at-rule kept whole) / (1, group prelude, children) / (2, [(selector, needs)], body), read once.
+    Font addresses are made absolute: the rules are served from css/ and inside pages at any depth. Read again when the file changes
+    (serve.py runs for days, and an upload brings a new style.css without restarting it)."""
+    src_ = ROOT / "assets" / "style.css"
+    stamp_ = src_.stat().st_mtime_ns
+    if _CUT.get("stamp") != stamp_:
+        _CUT.clear(); _CUT["stamp"] = stamp_
+        css = mincss(src_.read_text(encoding="utf-8")).replace("url(fonts/", f"url({P}/fonts/")
+        def walk(s):
+            out = []
+            for pre, body in css_blocks(s):
+                if pre.startswith(("@media", "@supports", "@layer")): out.append((1, pre, walk(body)))
+                elif pre.startswith("@"): out.append((0, f"{pre}{{{body}}}", None))
+                else: out.append((2, [(x, _css_needs(x)) for x in _css_sels(pre)], body))
+            return out
+        _CUT["tree"] = walk(css)
+        need = set()
+        def all_needs(items):
+            for kind, a, b in items:
+                if kind == 1: all_needs(b)
+                elif kind == 2:
+                    for _, n_ in a: need.update(n_)
+        all_needs(_CUT["tree"])
+        _CUT["needed"] = frozenset(need)
+        _CUT["memo"] = {}
+        # crosslinks.py writes its blocks into pages after the build wrote them: their classes count on every page
+        xl_ = ROOT / "crosslinks.py"
+        _CUT["extra"] = frozenset(t_ for t_ in _attr_tokens(xl_.read_text(encoding="utf-8") if xl_.exists() else "") if CUT_WORD.fullmatch(t_[1:]))
+    return _CUT["tree"]
+
+
+def css_cut(have):
+    """The rules of style.css that can match a page with these tokens (".class", "#id"), in their order."""
+    tree = _cut_tree()
+    key = frozenset(have) & _CUT["needed"]
+    memo = _CUT["memo"]
+    if key in memo: return memo[key]
+    def walk(items):
+        res = []
+        for kind, a, b in items:
+            if kind == 0: res.append(a)
+            elif kind == 1:
+                inner = walk(b)
+                if inner: res.append(a + "{" + inner + "}")
+            else:
+                keep = [s_ for s_, n_ in a if n_ <= key]
+                if keep: res.append(",".join(keep) + "{" + b + "}")
+        return "".join(res)
+    if len(memo) > 120: memo.clear()          # about 100 KB each; serve.py keeps them between requests
+    memo[key] = out = walk(tree)
+    return out
+
+
+def _script_tokens(src):
+    """Every word of one of our scripts as ".word" and "#word" (a script may add any of them as a class or an id), or None when the
+    script is not one of ours, so the page keeps the whole stylesheet."""
+    tok = _CUT.setdefault("scripts", {})
+    if src not in tok:
+        name = src.split("?", 1)[0].split("#", 1)[0]
+        f_ = None
+        if name.startswith(P + "/") and "/" not in name[len(P) + 1:]:
+            for d_ in (ROOT / "assets", OUT):
+                if (d_ / name[len(P) + 1:]).is_file(): f_ = d_ / name[len(P) + 1:]; break
+        words = set(CUT_WORD.findall(f_.read_text(encoding="utf-8", errors="replace"))) if f_ else None
+        tok[src] = frozenset(["." + w for w in words] + ["#" + w for w in words]) if words is not None else None
+    return tok[src]
+
+
+def _attr_tokens(content):
+    """".class" and "#id" for every class and id attribute in the text (each distinct value read once)."""
+    have = set()
+    for pre, rx in CUT_ATTR.items():
+        for v in set(rx.findall(content)): have.update(pre + w for w in v.strip("\"'").split())
+    return have
+
+
+def _cut_page_tokens(content):
+    """(tokens of the page's own markup and inline scripts, the addresses of the scripts it loads), or None if a script is not ours."""
+    have = _attr_tokens(content)
+    srcs = []
+    for attrs, body in CUT_SCRIPT.findall(content):
+        s_ = CUT_SRC.search(attrs)
+        if s_:
+            if _script_tokens(s_.group(1)) is None: return None
+            srcs.append(s_.group(1))
+        elif "json" not in attrs:                     # data (application/json, ld+json) is drawn by scripts with their own words
+            for w in CUT_WORD.findall(body): have.add("." + w); have.add("#" + w)
+    return have, srcs
+
+
+def cut_css(content):
+    """finish_html's part: the page's stylesheet link becomes its kind's cut file, or the cut rules inside the page (see CUT_INLINE).
+    Any failure leaves the page as it was, with the whole stylesheet: a job page must never fail for this."""
+    try:
+        return _cut_css(content)
+    except Exception as ex:
+        if not _CUT.get("warned"): print(f"cut_css: kept the whole stylesheet ({type(ex).__name__}: {ex})"); _CUT["warned"] = 1
+        return content
+
+
+def _cut_css(content):
+    link_ = f'<link rel="stylesheet" href="{P}/style.css?v={V}">'
+    if link_ not in content: return content
+    m_ = CUT_CANON.search(content)
+    if not m_ or not m_.group(1).startswith(FULL + "/"): return content
+    kind = re.sub(r"[^a-z0-9-]+", "-", m_.group(1)[len(FULL) + 1:].split("/", 1)[0].lower()).strip("-")
+    if kind not in CUT_INLINE and not CUT_ON[0]: return content
+    got = _cut_page_tokens(content)
+    if got is None: return content
+    have, srcs = got
+    _cut_tree()
+    if kind in CUT_INLINE:
+        for s_ in srcs: have |= _script_tokens(s_)
+        css_ = css_cut(have | _CUT["extra"])
+        if "</style" in css_: return content
+        return content.replace(link_, f"<style>{css_}</style>", 1)
+    rec = CUT_SETS.setdefault(kind, [set(), set()])
+    rec[0] |= have; rec[1].update(srcs)
+    return content.replace(link_, f'<link rel="stylesheet" href="{P}/css/{kind}.css?v={V}">', 1)
+
+
+def cut_files():
+    """The end of a build: css/<kind>.css for every kind of page that links one."""
+    if not CUT_SETS: return
+    (OUT / "css").mkdir(parents=True, exist_ok=True)
+    whole = mincss((ROOT / "assets" / "style.css").read_text(encoding="utf-8")).replace("url(fonts/", f"url({P}/fonts/")
+    for kind, (have, srcs) in sorted(CUT_SETS.items()):
+        try:
+            _cut_tree()
+            have = set(have) | _CUT["extra"]
+            for s_ in srcs: have |= _script_tokens(s_) or set()
+            text_ = css_cut(have)
+        except Exception as ex:          # the pages already link this file: it must exist, so the whole stylesheet stands in
+            print(f"cut_files: css/{kind}.css is the whole stylesheet ({type(ex).__name__}: {ex})"); text_ = whole
+        (OUT / "css" / f"{kind}.css").write_text(text_ or whole, encoding="utf-8")
+    sizes = sorted(((OUT / "css" / f"{k_}.css").stat().st_size, k_) for k_ in CUT_SETS)
+    print(f"stylesheets cut to {len(sizes)} kinds of page: {sizes[0][0] // 1024}-{sizes[-1][0] // 1024} KB each (the whole file "
+          f"{(OUT / 'style.css').stat().st_size // 1024 if (OUT / 'style.css').exists() else '?'} KB); largest: "
+          + ", ".join(f"{k_} {s_ // 1024} KB" for s_, k_ in sizes[-3:]))
+
+
 def ava(name, cls=""):
     """Company avatar: the real logo when we have one, with the coloured initial underneath as a fallback. The small copy of the logo
     (small_logos) except in the large square."""
@@ -1300,7 +1481,7 @@ def finish_html(content):
         # "median 1 years", "asks for 1 years" (job description pages, 24 Nov 2026): twenty phrases put a count before "years"; one place
         # makes "1" singular instead of a condition in each of them
         content = ONE_PLURAL.sub(lambda m: "1 " + ONE_WORD[m.group(1)], content)
-    return content
+    return cut_css(content)           # last: the stylesheet cut to the page's classes (26 Nov 2026)
 
 
 def write(path, content, sitemap=True):
@@ -3942,6 +4123,7 @@ ENTITY_TEXT = re.compile(r"&(?:amp|lt|gt|quot|apos|nbsp|#\d{2,5}|#x[0-9a-fA-F]{2
 
 def main():
     LAP_NOW[0] = time.time()
+    CUT_ON[0] = True                  # pages of this build link css/<kind>.css, written by cut_files() at the end
     if OUT.exists(): shutil.rmtree(OUT)
     OUT.mkdir()
     db = jobsdb.load(ROOT / "data" / "jobs.json")   # one record at a time, see jobsdb.py
@@ -4706,12 +4888,18 @@ def main():
               + group("Type", '<select id="etype" aria-label="Type"><option value="">Any type</option><option>Full-time</option><option>Contract</option><option>Part-time</option><option>Internship</option></select>')
               + group("Skills", f'<div class="skillbar" id="skills">{skill_chips}</div>')
               + '</div></details><div class="fgroup fclear"><button class="linkbtn" id="fclear" type="button">Clear all</button></div></aside>'
+              # the filter menus (fsel.js) run here, as the page is read, not after it (26 Nov 2026): the filters were first drawn as five
+              # rows of plain selects and then folded into one bar, and the list and everything under it jumped up 190 px (layout shift
+              # 0.45 on a phone, most of the page's PageSpeed loss). The script needs only what is above this point.
+              + '<script>' + (ROOT / "assets" / "fsel.js").read_text(encoding="utf-8").replace("</", "<\\/") + '</script>'
               '<div><p class="note srch-promise">Every job opens on the employer’s own page · no account, no phone number · closed jobs leave the list within the hour · '
               f'<a href="{P}/promise/">what we never do</a></p>'
               '<div class="rbar"><p class="note" id="count">Loading…</p><div class="rtools">'
               '<select id="sort" aria-label="Sort"><option value="new">Newest first</option><option value="rel">Best match</option><option value="sal">Highest salary</option></select>'
               '<button class="btn ghost sm" id="save-search" type="button">Save this search</button></div></div>'
-              '<ul class="jobs" id="results"></ul><p><button class="btn" id="more" type="button" hidden>Show more</button></p>'
+              # aria-busy in the page: the list keeps the place of its rows from the first paint (style.css draws quiet rows), until
+              # app.js shows the first ones; without scripts it is hidden (the noscript list below stands in)
+              '<ul class="jobs" id="results" aria-busy="true"></ul><p><button class="btn" id="more" type="button" hidden>Show more</button></p>'
               # when the search does not answer: say so and offer the lists that need no search (assets/app.js shows it)
               f'<div class="srch-down" id="srch-down" hidden><p class="lead" id="srch-down-t">Search is not answering right now.</p>'
               f'<p class="kact"><a href="{P}/new/">New this week</a><a href="{P}/remote/">Remote jobs</a><a href="{P}/locations/">Jobs by place</a><a href="{P}/companies/">Companies</a></p>'
@@ -4724,7 +4912,7 @@ def main():
               # (search_engine.row). Filters and words go to the server (/api/search?list=1); no list of every job is downloaded.
               # "deepest": the engine lists no further than this many rows, so app.js stops "Show more" there and says so (26 Nov 2026)
               + '<script type="application/json" id="srch-first">' + json.dumps({"total": n, "deepest": search_engine.DEEPEST, "jobs": first_rows}, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/") + '</script>'
-              + f'<script src="{P}/app.js?v={V}" defer></script><script src="{P}/fsel.js?v={V}" defer></script>')
+              + f'<script src="{P}/app.js?v={V}" defer></script>')
     page("jobs/", f"All Jobs: {n:,} Open Roles, Filter by Title, Place and Pay | {SITE}",
          "Search jobs by title, skill or company. Filter by level, location, salary and remote, sort by pay, and save your searches.", search, cls="srch")
 
@@ -14294,19 +14482,11 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     for f in ("app.js", "embed.js", "site.js", "widget.js", "widgets.js", "resume.js", "account.js", "admin.js", "stats.js", "fsel.js", "map.js", "explorer.js", "compare.js"):
         shutil.copy(ROOT / "assets" / f, OUT / f)
     (OUT / "style.css").write_text(mincss((ROOT / "assets" / "style.css").read_text(encoding="utf-8")), encoding="utf-8")
-    # The home page carries the styles it uses in the page itself, and the whole file comes after the first paint (PageSpeed, phone,
-    # 20 Nov 2026: Speed Index 4.2 s with the first paint at 1.1 s, the filmstrip blank until the 270 KB stylesheet, written for some
-    # 120 kinds of page, had arrived and been read; about 88 KB of it can match the home page, counting every class site.js may add).
-    full_css = (OUT / "style.css").read_text(encoding="utf-8")
-    js_words = set(re.findall(r"[A-Za-z_][\w-]*", (ROOT / "assets" / "site.js").read_text(encoding="utf-8")))      # every word of the script: it builds markup from long strings
-    for rel_ in ("index.html",):
-        f_ = OUT / rel_
-        h_ = f_.read_text(encoding="utf-8")
-        link_ = f'<link rel="stylesheet" href="{P}/style.css?v={V}">'
-        css_ = css_prune(full_css, {w for cl in re.findall(r'class="([^"]*)"', h_) for w in cl.split()} | js_words, set(re.findall(r'id="([^"]+)"', h_)) | js_words)
-        if link_ in h_ and "</style" not in css_:
-            f_.write_text(h_.replace(link_, f'<style>{css_}</style><link rel="stylesheet" href="{P}/style.css?v={V}" media="print" onload="this.media=\'all\'">'
-                                              f'<noscript>{link_}</noscript>', 1), encoding="utf-8")
+    # The home page carried the styles it uses in the page itself since 20 Nov 2026 (PageSpeed, phone: Speed Index 4.2 s with the first
+    # paint at 1.1 s, the filmstrip blank until the whole stylesheet had arrived) and fetched the whole file after the first paint.
+    # Since 26 Nov 2026 every page gets its rules cut to it (cut_css() in finish_html, cut_files() at the end of the build), and the home
+    # page no longer fetches the whole file afterwards: applying it re-styled and re-laid out the 14,000 px page, the longest task of
+    # its load on a phone (about 220 ms at 4x CPU slowdown).
     (OUT / "tools.css").write_text(mincss((ROOT / "assets" / "tools.css").read_text(encoding="utf-8")), encoding="utf-8")
     (OUT / "compare.css").write_text(mincss((ROOT / "assets" / "compare.css").read_text(encoding="utf-8")), encoding="utf-8")
     shutil.copy(ROOT / "assets" / "tools.js", OUT / "tools.js")
@@ -14440,6 +14620,8 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
         changed += [f"job/{j['slug']}/" for j in jobs if j.get("first_seen") in (YDAY, TODAY) or j.get("closed") in (YDAY, TODAY)]
         (ROOT / "data" / "indexnow.json").write_text(json.dumps({"host": BASE.split("//", 1)[-1], "key": CFG["indexnow_key"], "keyLocation": f'{FULL}/{CFG["indexnow_key"]}.txt',
                                                                  "urlList": [f"{FULL}/{u}" for u in changed[:10000]]}))
+    lap('stylesheets cut to each kind of page')
+    cut_files()                       # after crosslinks.py, which adds blocks to written pages
     lap("end")
     print("slowest stages: " + "; ".join(f"{s_:.0f} s {n_}" for s_, n_ in sorted(LAPS, reverse=True)[:30] if s_ >= 1))
     print(f"built {len(URLS)} pages: {n} active jobs, {len(archived)} archived, {len(companies)} companies, {len(places)} locations")

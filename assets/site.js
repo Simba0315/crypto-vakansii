@@ -740,7 +740,9 @@
       if (c.search) {
         var n = +nav.getAttribute('data-n') || 0;
         return '<div class="np-card"><p class="np-k"><i></i>Checked every hour</p>' +
-          (n ? '<p class="np-n"><b>' + n.toLocaleString('en-US') + '</b> open jobs</p>' : '<p class="np-n"><b>Every open job</b></p>') +
+          // the count with commas by hand: toLocaleString here was the page's first use of the browser's number formatting, which loads
+          // its locale data (about 60 ms of a phone's main thread at 4x slowdown, inside the script's first run; 26 Nov 2026)
+          (n ? '<p class="np-n"><b>' + String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '</b> open jobs</p>' : '<p class="np-n"><b>Every open job</b></p>') +
           '<form class="np-f" action="' + P + '/jobs/" method="get" role="search">' +
           '<input type="search" name="q" placeholder="Job title or skill" aria-label="What: job title, skill or company" autocomplete="off">' +
           '<input type="search" name="where" placeholder="City or remote" aria-label="Where: city, country or remote" autocomplete="off">' +
@@ -2440,7 +2442,7 @@
     var cm = ul.id === 'clist' ? document.getElementById('cmore') : null;
     var total = items.length + (cm && !cm.hidden ? +(cm.getAttribute('data-n') || '0').replace(/,/g, '') : 0);
     if (cm) cm.hidden = true;
-    b.type = 'button'; b.className = 'tiles-more'; b.textContent = 'Show all ' + total.toLocaleString('en-US') + (cm ? ' employers' : '');
+    b.type = 'button'; b.className = 'tiles-more'; b.textContent = 'Show all ' + String(total).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (cm ? ' employers' : '');      // commas by hand, as in the menu's count
     b.addEventListener('click', function () {
       ul.classList.remove('cut'); b.remove();
       if (cm && total > items.length) { cm.hidden = false; var mb = document.getElementById('cmorebtn'); if (mb) mb.click(); }
