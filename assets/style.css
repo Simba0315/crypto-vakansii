@@ -5436,6 +5436,15 @@ table.adm-log td:last-child{min-width:280px}
   #rb input[type=text]{min-height:44px}
 }
 
+/* ---- the strip of company logos under a first panel (/post-a-job/, /pricing/, /plus/): on a phone one row that scrolls sideways, as
+   on the home page; centred and wrapped it stood as a ragged column (one name, one name, one name, then two) ---- */
+@media(max-width:700px){
+  .klogos{text-align:left}
+  .klogos .logorow{flex-wrap:nowrap;justify-content:flex-start;gap:0 22px;margin:0 -20px;padding:0 20px 4px;overflow-x:auto;scrollbar-width:none}
+  .klogos .logorow::-webkit-scrollbar{display:none}
+  .klogos .logorow a{flex:none;min-height:44px;white-space:nowrap}
+}
+
 /* ---- a company's marks ("States the pay 86% of its open roles state it", "Files H-1B 205 certified filings…") in a job's "Hiring at"
    card: a mark too long for one line becomes a card with its name on one line, not a pill broken in four ---- */
 @media(max-width:560px){
