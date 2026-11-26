@@ -357,6 +357,9 @@ footer{margin-top:84px;background:#0e0e0c;color:#b9b7ad;padding:48px 0 34px;font
    focus rings at their edges. */
 footer:not(.mini),main .tablewrap,main dl.qa,main ul.jobs,main ul.tiles,main ul.xl{content-visibility:auto;contain-intrinsic-size:auto 500px;overflow-clip-margin:24px}
 footer:not(.mini){contain-intrinsic-size:auto 2600px}
+/* the same for each row of a long list of jobs after the first screen (a company page lists 100 on one page: about 3,800 boxes laid out
+   at load, 1,100 with this). Only where the clip of the row can be widened for focus rings (Chrome, Firefox); elsewhere as before. */
+@supports (overflow-clip-margin:1px){main ul.jobs>li:nth-child(n+8){content-visibility:auto;contain-intrinsic-size:auto 120px;overflow-clip-margin:24px}}
 footer .logo{color:#fff}
 .fcols{display:grid;grid-template-columns:1.5fr repeat(5,1fr);gap:28px}
 .fcols>div:first-child p{max-width:30ch}
