@@ -144,6 +144,9 @@ paging; the search page works on a phone-width screen; no console errors on the 
   names whole in scripts (`'ic-' + name` would be cut), keep scripts in `assets/`, and anything that inserts another page's markup must
   add `style.css` first (app.js `wholeCss()` for the search page's preview pane). Long blocks (footer, lists of jobs, tables, FAQ, tiles)
   have `content-visibility:auto` in style.css: only on blocks whose inner margins cannot leak out, or the spacing would change.
+- Measuring on this Mac when the PageSpeed API's daily quota is used up: `python3 speedlab.py out.json --runs 3 home=<url> ...` (cold
+  loads in headless Chrome as a mid-range phone, Lighthouse-style score; `--mod` rewrites the live pages to try a change first).
+  Its numbers move with the Mac's load: compare runs made at the same time, and confirm with PageSpeed when the quota is back.
 
 ## Local work
 
