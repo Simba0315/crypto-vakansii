@@ -5452,6 +5452,14 @@ table.adm-log td:last-child{min-width:280px}
   #acc .acc-gate .acc-auth{padding:22px 18px}
 }
 
+/* ---- a card of rows (.tiles: the comparisons, places, skills, lists): on a phone the rows start 20 px inside the card, not 40, so a
+   name like "LinkedIn Jobs vs Jobs Every Hour" keeps to one line more often ---- */
+@media(max-width:560px){
+  .tiles:not(.hsc){padding:4px 14px}
+  .tiles:not(.hsc) .tile{padding-left:6px;padding-right:6px}
+  .tiles:not(.hsc)>li:last-child{border-bottom:0}      /* one column: the last row's line stood just above the card's own edge */
+}
+
 /* ---- a company's marks ("States the pay 86% of its open roles state it", "Files H-1B 205 certified filings…") in a job's "Hiring at"
    card: a mark too long for one line becomes a card with its name on one line, not a pill broken in four ---- */
 @media(max-width:560px){
