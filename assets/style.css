@@ -5460,6 +5460,11 @@ table.adm-log td:last-child{min-width:280px}
   .tiles:not(.hsc)>li:last-child{border-bottom:0}      /* one column: the last row's line stood just above the card's own edge */
 }
 
+/* ---- headings on a phone: lines of even length, no last word left alone ("Not sure what to search / for?"); the home page's
+   opening label, too long for a 360 px screen, breaks into two even lines ("…checked Nov / 25" before) ---- */
+@media(max-width:720px){h2,h3{text-wrap:balance}}
+@media(max-width:400px){.hero.v2 .stamp{text-wrap:balance;border-radius:16px;padding:6px 14px}}
+
 /* ---- a company's marks ("States the pay 86% of its open roles state it", "Files H-1B 205 certified filings…") in a job's "Hiring at"
    card: a mark too long for one line becomes a card with its name on one line, not a pill broken in four ---- */
 @media(max-width:560px){
