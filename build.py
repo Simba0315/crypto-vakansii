@@ -559,9 +559,13 @@ ORG_LD = [""]
 ORG_SAME_AS = ["https://www.linkedin.com/company/jobseveryhour/"]      # the profiles that are the site's own: one list for every Organization block
 V = hashlib.md5(b"".join((ROOT / "assets" / f).read_bytes() for f in ("style.css", "site.js", "app.js", "account.js", "tools.js", "tools.css", "resume.js", "widget.js", "widgets.js", "map.js", "explorer.js", "fsel.js"))).hexdigest()[:8]   # cache-busting version
 VC = hashlib.md5(b"".join((ROOT / "assets" / f).read_bytes() for f in ("compare.js", "compare.css"))).hexdigest()[:8]     # the comparison table's own files (/vs/compare/)
-MINI_FOOT = (f'<footer class="mini"><div class="wrap"><p class="fine">© {TODAY[:4]} {e(SITE)} · <a href="{P}/jobs/">All jobs</a> · <a href="{P}/remote/">Remote</a> · '
-             f'<a href="{P}/companies/">Companies</a> · <a href="{P}/salaries/">Salaries</a> · <a href="{P}/post-a-job/">Post a job</a> · <a href="{P}/about/">About</a> · <a href="{P}/about/#contact">Contact</a> · '
-             f'<a href="{P}/methodology/">How it works</a> · <a href="{P}/methodology/#editorial-policy">Editorial policy</a> · <a href="{P}/privacy/">Privacy</a> · <a href="{P}/terms/">Terms</a></p></div></footer>')
+# a job page's short footer; the dots between the links are their own spans, so on a phone the links can stand as a row of 44 px taps
+# without a dot left at the start of a line (26 Nov 2026)
+MINI_FOOT = (f'<footer class="mini"><div class="wrap"><p class="fine"><span class="fc">© {TODAY[:4]} {e(SITE)}</span>' + "".join(
+             f'<span class="sep"> · </span><a href="{P}/{u_}">{n_}</a>' for u_, n_ in (("jobs/", "All jobs"), ("remote/", "Remote"), ("companies/", "Companies"),
+             ("salaries/", "Salaries"), ("post-a-job/", "Post a job"), ("about/", "About"), ("about/#contact", "Contact"), ("methodology/", "How it works"),
+             ("methodology/#editorial-policy", "Editorial policy"), ("privacy/", "Privacy"), ("terms/", "Terms")))
+             + '</p></div></footer>')
 SAL_BAD = re.compile(r"CA\$|C\$|A\$|AU\$|S\$|SG\$|HK\$|NZ\$|CAD|AUD|SGD|EUR|GBP|CHF|JPY|INR|€|£|¥|₹", re.I)
 SAL_NUM = re.compile(r"(\d[\d,\. ]*\d|\d)\s?([kK])?")
 

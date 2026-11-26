@@ -5564,3 +5564,12 @@ table.adm-log td:last-child{min-width:280px}
   :root[data-theme=dark] header.site.open::after{background:rgba(0,0,0,.55)}
 }
 @media(max-width:1040px) and (prefers-color-scheme:dark){:root:not([data-theme=light]) header.site.open::after{background:rgba(0,0,0,.55)}}
+
+/* ---- the short footer of a job page on a phone: its nine links were 16 px high in two tight lines. They are a row of 44 px taps that
+   wraps, without the dots (MINI_FOOT in build.py gives each dot its own span), and the copyright line stands under them ---- */
+@media(max-width:720px){
+  footer.mini .fine{display:flex;flex-wrap:wrap;align-items:center;gap:0 18px}
+  footer.mini .fine .sep{display:none}
+  footer.mini .fine a{display:inline-flex;align-items:center;min-height:44px;font-size:14px;text-decoration:none}
+  footer.mini .fine .fc{order:9;flex:1 1 100%;margin-top:6px}
+}
