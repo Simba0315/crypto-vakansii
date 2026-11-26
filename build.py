@@ -3919,7 +3919,8 @@ def job_page(j, active_by_cat):
         t = j.get("t") or 0
         # With an exact time from the feed the date carries it, and a posting under a day old gets a second line that freshen() in site.js
         # fills in: "35 minutes ago". It is empty in the file on purpose: a page built an hour ago must not state an age.
-        rows.append(("Posted", (f'<time datetime="{j["posted_at"]}">{fdate(j["posted"])}</time>' if t else fdate(j["posted"]))
+        # an iCIMS site that gives no real date: the day the posting last changed, said as such (collect.icims_placeholder)
+        rows.append(("Last updated" if j.get("posted_from") == "lastmod" else "Posted", (f'<time datetime="{j["posted_at"]}">{fdate(j["posted"])}</time>' if t else fdate(j["posted"]))
                      + (f'<br><time {when(j)} data-long></time>' if t and j["active"] and NOW - t < 86400 else "")))
     days_known = False                               # the posting's date could be read: only then does the facts row say how long it is open
     if j["active"] and j["posted"]:

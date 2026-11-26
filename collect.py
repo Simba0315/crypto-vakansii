@@ -2147,9 +2147,44 @@ def fetch_icims(src, reuse=None):
         et = (et[0] if isinstance(et, list) and et else et) or ""
         remote = str(d.get("jobLocationType") or "").upper() == "TELECOMMUTE"
         posted = str(d.get("datePosted") or "")
+        if icims_placeholder(posted, d.get("validThrough")):
+            rec = parse(name, "icims", jid, title, raw["url"], icims_place(d), remote, "", raw["mod"][:10], text, jazz_pay(d),
+                        ICIMS_TYPE.get(str(et).upper(), ""), desc, False)
+            if rec and raw["mod"]: rec["posted_from"] = "lastmod"
+            return rec
         return parse(name, "icims", jid, title, raw["url"], icims_place(d), remote, "", posted[:10], text, jazz_pay(d),
                      ICIMS_TYPE.get(str(et).upper(), ""), desc, False, posted_at=posted or None)
-    return detail_board(src, reuse, "icims", items, read)
+    name, out = detail_board(src, reuse, "icims", items, read)
+    # records read before this check kept the placeholder date: they take the day the posting last changed, from the same sitemap
+    mods = {f"icims-{slugify(name)}-{jid}": raw["mod"] for jid, raw in items if raw["mod"]}
+    for rec in out or ():
+        if rec.get("posted_from") != "lastmod" and rec.get("id") in mods and icims_placeholder(rec.get("posted") or "", None, rec.get("last_seen") or rec.get("first_seen")):
+            rec.update(posted=mods[rec["id"]][:10], posted_at="", posted_from="lastmod")
+    return name, out
+
+
+def icims_placeholder(posted, valid, day=None):
+    """Is an iCIMS datePosted a stand-in rather than a date? Many iCIMS careers sites write the moment of the request minus two years as
+    datePosted and plus one year as validThrough (read 26 Nov 2026 at 08:23 UTC: UnityPoint Health, Concentra, Huntsville Hospital and
+    Liberty Mutual all said 2024-11-26T08:23:5x, while their sitemaps dated the same postings Nov 2026; Select Medical gave its real
+    day, 2026-11-03, with validThrough a year on). Every posting of 17,218 open jobs read "open 731 to 736 days". day: the day the
+    posting was read (a record's last_seen), else today. With no validThrough the age alone decides, within two days of 730."""
+    try:
+        p = datetime.date.fromisoformat(str(posted or "")[:10])
+        age = (datetime.date.fromisoformat(str(day)[:10]) if day else datetime.date.today()) - p
+    except ValueError:
+        return False
+    if valid:
+        try:
+            return 720 <= age.days <= 745 and 1090 <= (datetime.date.fromisoformat(str(valid)[:10]) - p).days <= 1100
+        except ValueError:
+            pass
+    return abs(age.days - 730) <= 2 if not day else 720 <= age.days <= 745
+
+
+assert icims_placeholder("2024-11-26T08:23:52.940Z", "2027-11-26T08:23:52.940Z", "2026-11-26")
+assert not icims_placeholder("2026-11-03T05:00:00.000Z", "2027-11-03T04:00:00.000Z", "2026-11-26")
+assert icims_placeholder("2024-11-20", None, "2026-11-20") and not icims_placeholder("2025-06-01", None, "2026-11-20")
 
 
 _fetch_any = fetch
