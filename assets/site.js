@@ -2024,12 +2024,14 @@
   }
 })();
 
-/* Pricing: one table for people looking for work, another for employers. Without this script both are shown, one after the other. */
+/* Pricing: one table for people looking for work, another for employers, and the figures under the switch for the side shown.
+   Without this script both sides are shown, one after the other (the employers' figures stay hidden). */
 (function () {
   var sw = document.getElementById('pswitch'); if (!sw) return;
   var a = document.getElementById('for-seekers'), b = document.getElementById('for-employers');
   function show(emp) {
     a.hidden = emp; b.hidden = !emp;
+    [].forEach.call(document.querySelectorAll('.pside'), function (x) { x.hidden = (x.getAttribute('data-side') === 'e') !== emp; });   // the figures under the switch
     [].forEach.call(sw.querySelectorAll('button'), function (x) { x.setAttribute('aria-pressed', String((x.getAttribute('data-v') === 'e') === emp)); });
   }
   sw.hidden = false;

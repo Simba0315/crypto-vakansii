@@ -14079,8 +14079,12 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          khero(crumbs(("Pricing", "")), "Pricing", 'Pricing: what is free and <span class="hl">what you pay for</span>',
                'Two sets of plans, because a person looking for work and a company hiring buy different things. Every price is one payment in crypto; nothing renews. Pick yours.',
                '<p class="tabs pswitch" id="pswitch" hidden><button class="tab" type="button" data-v="s" aria-pressed="true">I’m looking for work</button><button class="tab" type="button" data-v="e" aria-pressed="false">I’m hiring</button></p>',
-               after=nums([("$0", "Job search, alerts and the resume builder")] + ([(e(plans_[0]["price"]), f"Plus, the AI help, for {e(plans_[0]['name'])}")] if plans_ else [])
-                          + [("Free", "Posting a job for 30 days"), (e(price_of("Standard boost")), "A Standard boost for 30 days")], src=False))
+               # the figures under the switch belong to the side it shows (owner, 26 Nov 2026: «когда это переключается ничего не
+               # меняется»: the tiles showed both sides at once and only the sections below the first screen changed)
+               after='<div class="pside" data-side="s">' + nums([("$0", "Job search, alerts and the resume builder")]
+                                  + [(e(pl["price"]), f"Plus, the AI help, for {e(pl['name'])}") for pl in plans_[:3]], src=False) + '</div>'
+                     + '<div class="pside" data-side="e" hidden>' + nums([("Free", "Posting a job for 30 days")]
+                                  + [(e(price_of(x)), f"{x} for 30 days") for x in ("Standard boost", "Premium boost", "Hiring Pass") if price_of(x)], src=False) + '</div>')
          + '<section class="sec hsec" id="for-seekers"><div class="sec-head"><div class="sec-ttl"><p class="sec-label">Job seekers</p><h2 class="tw">Plans for people <b>looking for work</b></h2></div>'
            f'<p class="sec-sub">Finding a job and applying is free. Plus is the AI help, paid once.</p><a href="{P}/plus/">What Plus does</a></div>{soon}{seek_trust}{seek_cards}{seek_passes}'
            f'<h3 class="cmp-h">Which plan fits</h3>{seek_fit}'
