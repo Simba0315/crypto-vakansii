@@ -2301,6 +2301,18 @@
   }).catch(function () { box.innerHTML = '<p class="note">The jobs could not be loaded. Try again in a minute.</p>'; });
 })();
 
+/* The footer's groups of links (26 Nov 2026) are <details>, open in the HTML so every link is there without JavaScript. On a phone they
+   start closed, one row of 52 px each, and open on a tap; on a wider screen they stay open as columns (their row names are hidden there).
+   Turning a phone from portrait to landscape past 720 px opens them again. */
+(function () {
+  var gs = document.querySelectorAll('footer details.fgrp');
+  if (!gs.length || !window.matchMedia) return;
+  var mq = window.matchMedia('(max-width: 720px)');
+  function fit() { for (var i = 0; i < gs.length; i++) gs[i].open = !mq.matches; }
+  fit();
+  if (mq.addEventListener) mq.addEventListener('change', fit); else if (mq.addListener) mq.addListener(fit);
+})();
+
 /* A salary in the visitor's own currency (plan item 4.25, 20 Nov 2026): an element with data-usd gets "about €148K a year", from the
    ECB euro reference rates in /data/fx.json and the country of the device's time zone (/data/geo.json, as "near you" uses). Nothing
    is shown for a visitor in the United States, or when either file is missing. */
