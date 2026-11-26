@@ -5401,7 +5401,7 @@ table.adm-log td:last-child{min-width:280px}
    ("$210K to $276K") takes two lines instead of three and the last column keeps away from the card's edge ---- */
 @media(max-width:560px){
   .tablewrap table:not(.rkt):not(.vs-t):not(.pt):not(.jft):not(.dirt):has(tr:first-child>:nth-child(4)) :is(th,td){padding:10px 7px}
-  .tablewrap table:not(.rkt):not(.vs-t):not(.pt):not(.jft):not(.dirt):has(tr:first-child>:nth-child(4)) :is(th,td):first-child{padding-left:14px}
+  .tablewrap table:not(.rkt):not(.vs-t):not(.pt):not(.jft):not(.dirt):has(tr:first-child>:nth-child(4)) :is(th,td):first-child{padding-left:14px;min-width:0}      /* the 9.5em kept for names held the first column at 133 px */
   .tablewrap table:not(.rkt):not(.vs-t):not(.pt):not(.jft):not(.dirt):has(tr:first-child>:nth-child(4)) :is(th,td):last-child{padding-right:14px}
 }
 @media(max-width:400px){      /* a 360 px phone: 20 px less again */
