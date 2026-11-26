@@ -130,6 +130,28 @@ def standard2(h):
     return bad
 
 
+# Jobs first on the lists people reach from search engines (track "one button", 26 Nov 2026: the first job stood at 1,064 to 5,736 px,
+# under a paragraph, four big numbers, charts and cards of definitions). On the first page of a list, nothing comes before the first
+# job card but the trail, the H1, the one line under it, the ways to narrow the list, the alert line (with Save this list or Follow) and
+# the list's own heading.
+LIST_FIRST = re.compile(r"^(?:(?:locations|categories|roles|skills|companies|jobs|remote|crypto|perks|new)/[^/]+/(?:[a-z][^/]*/)?|"
+                        r"(?:remote|entry-level|new|part-time|internships|with-salary|contract|hybrid|work-from-anywhere|tech)/)index\.html$")
+BEFORE_OK = [re.compile(x_, re.S) for x_ in (r'<div class="crumbs">.*?</div>', r"<h1[\s>].*?</h1>", r'<p class="lline">.*?</p>', r'<div class="sec-head lst"[^>]*>.*?</div>',
+             r'<span class="lsave-n">.*?</span>',
+             r'<div class="pillrow lnarrow".*?</div>', r'<form class="alertf alert1".*?</form>', r'<button[^>]*(?:data-save-list|id="follow")[^>]*>.*?</button>',
+             r'<span class="ava[^"]*"[^>]*>.*?</span>', r"<!--.*?-->")]
+
+
+def jobs_first(h):
+    """False when a block other than the allowed ones stands between the start of <main> and the first job card of a list page."""
+    main_ = h.split('id="main">', 1)[-1]
+    at = main_.find('<li class="job')
+    if at < 0: return True
+    pre = main_[:at]
+    for rx_ in BEFORE_OK: pre = rx_.sub(" ", pre)
+    return not re.search(r"<(?:section|h2|h3|dl|table|figure|article|aside|p)\b", pre) and not plain(pre)
+
+
 pages = [p for p in SITE.rglob("index.html")]
 jobs = [str(p.relative_to(SITE)) for p in pages if p.relative_to(SITE).parts[0] == "job"] or [f"job/{s}/index.html" for s in sorted(REC)]
 others = [str(p.relative_to(SITE)) for p in pages if p.relative_to(SITE).parts[0] not in ("job", "embed")]
@@ -172,6 +194,7 @@ for rel in sample:
     if re.search(r"\{(?:fdate|money|e|len|round|art|tcase|rlow|TODAY|SITE|P)\b[^}]{0,40}\}", re.sub(r"<script.*?</script>|<style.*?</style>", "", h, flags=re.S)):
         fails[t]["code printed as text ({...})"] += 1
     for b_ in standard2(h): fails[t][b_] += 1
+    if LIST_FIRST.match(rel) and not jobs_first(h): fails[t]["a block before the first job of a list"] += 1
     for href in set(re.findall(r'href="(/[^"]*)"', h)):
         if not exists(href):
             fails[t]["broken internal link"] += 1; broken[href] += 1

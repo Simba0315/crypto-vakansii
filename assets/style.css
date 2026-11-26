@@ -5613,6 +5613,60 @@ table.adm-log td:last-child{min-width:280px}
   .lhero>.nums{order:2;margin-top:22px}
   .lhero>.nums-src{order:3}
 }
+
+/* ================= Track 2 of the teardown (26-27 Nov 2026): jobs first on list pages, one clear primary button a screen, every
+   link and block kept (the owner, 27 Nov: "make it clearer, do not remove"). This block is last so it wins over the layers above. ====== */
+
+/* ---- the alert in one line (alert_form(compact=True)): a field and one press, above the jobs of a list and on a job page ---- */
+.lalert{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:14px 0 18px;padding:12px 16px;border:1px solid var(--line);border-radius:16px;background:var(--card)}
+.alertf.alert1{position:relative;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;flex:1 1 560px;margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none}
+.alert1-l{font-size:15px;font-weight:650;color:var(--text);white-space:nowrap}
+.alert1-f{display:flex;gap:8px;flex:1 1 320px;max-width:540px;min-width:0}
+.alertf.alert1{min-width:0}
+.alert1-f input[type=email]{flex:1 1 0;width:0;min-width:0;height:42px;padding:0 14px;border:1px solid var(--line2);border-radius:999px;background:var(--bg);color:var(--text);font:inherit;font-size:15px}
+.alert1-f input[type=email]:focus{border-color:var(--text);outline:2px solid color-mix(in srgb,var(--ac) 35%,transparent);outline-offset:1px}
+.alert1-f select{flex:none;height:42px;padding:0 10px;border:1px solid var(--line2);border-radius:999px;background:var(--bg);color:var(--text);font:inherit;font-size:14px}
+.alertf.alert1 .btn{flex:none;height:42px;margin:0;padding:0 18px;border-radius:999px}
+.alert1-n{font-size:13px;color:var(--muted)}
+.alert1-n a{color:var(--muted)}
+.alertf.alert1 [data-alert-out]{flex:1 1 100%;margin:2px 0 0}
+.alertf.alert1 [data-alert-out]:empty{display:none}
+.lalert>.btn.ghost{margin:0}
+@media(max-width:560px){.lalert{padding:12px}.alert1-l{white-space:normal}.alert1-f{flex-basis:100%}.alert1-f select{padding:0 6px}}
 .gapl{list-style:none;margin:0;padding:0}
 .gapl li{padding:2px 0}
 .gapl .s{color:var(--muted)}
+
+/* ---- list pages from search engines: the trail, the heading, one line, the ways to narrow, the alert line, then the jobs; the opening
+   paragraph, the figures, the charts and the cards follow the list (listing() in build.py; check.py keeps the order) ---- */
+.lhead{margin:22px 0 12px}
+.lhead .crumbs{margin:0 0 10px}
+.lhead h1{margin:0;max-width:30ch;font-size:clamp(28px,3.2vw,40px);font-weight:700;line-height:1.1;letter-spacing:-.035em}
+.lline{margin:8px 0 0;font-size:15px;line-height:1.5;color:var(--muted)}
+.lline b{color:var(--text);font-weight:650}
+.lline a{color:var(--muted);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+main.lp .lnarrow{margin:12px 0 0}
+main.lp .lalert{margin:12px 0 16px}
+main.lp ul.jobs#list{margin-top:0}
+.lintro{margin:36px 0 0;padding:24px 0 0;border-top:1px solid var(--line)}
+.lintro .lead{max-width:72ch;margin:0;font-size:16.5px;line-height:1.6;color:var(--muted)}
+.lintro .nums{margin:20px 0 0}
+.lintro .lact{margin:16px 0 0}
+.lpics.lafter{margin-top:32px}
+.chead .cohead{display:flex;align-items:center;gap:16px;margin:0}
+.chead .cohead .ava.lg{flex:none;width:64px;height:64px;border-radius:16px;border:1px solid var(--line);background:#fff}
+.chead .cohead .ava.lg img{padding:8px;border-radius:16px}
+.chead .cohead .lline{margin-top:6px}
+.cintro .pills{justify-content:flex-start;margin:14px 0 0}
+.cintro .nums{margin:20px 0 0}
+@media(max-width:700px){
+  .lhead{margin:14px 0 10px}
+  .lhead .crumbs{margin-bottom:6px}
+  .lhead h1{font-size:27px}
+  .lline{font-size:14.5px}
+  .chead .cohead .ava.lg{width:52px;height:52px}
+}
+/* the list's own heading, right above its jobs, and the line beside Save this list */
+main.lp .sec-head.lst{margin:14px 0 10px}
+main.lp .sec-head.lst h2{margin:0;font-size:clamp(19px,1.9vw,23px);font-weight:700;letter-spacing:-.02em}
+.lsave-n{flex:1 1 220px;font-size:13px;line-height:1.45;color:var(--muted)}

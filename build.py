@@ -235,6 +235,9 @@ PLACES = [
 
 PLACES += [(nm, re.sub(r"[^a-z0-9]+", "-", nm.lower()).strip("-"), code) for code, nm, _, _ in COUNTRIES if code not in {r for _, _, r in PLACES if isinstance(r, str)}]
 PLACE_CODE = {slug: ("" if rule == "region" else rule if isinstance(rule, str) else rule[1]) for _, slug, rule in PLACES}      # a city or state carries its country's flag
+# where each place page sits (a city, a country or a region) and its name: the alerts of list and job pages (26 Nov 2026)
+PLACE_KIND = {slug: ("region" if rule == "region" else "country" if isinstance(rule, str) else "city") for _, slug, rule in PLACES}
+PLACE_TITLE = {slug: name.removeprefix("the ") for name, slug, _ in PLACES}
 REGION_FLAG = {"europe": "\U0001F1EA\U0001F1FA", "asia-pacific": "\U0001F30F", "latin-america": "\U0001F30E", "africa": "\U0001F30D"}
 PATH_PLACE = re.compile(r"^(?:locations|crypto/in)/([a-z0-9-]+)/")
 HOURLY_LISTS = {"part-time/", "night-shift/", "weekend/", "temporary/", "summer/", "remote/part-time/"}      # lists whose pay is quoted by the hour
@@ -2885,7 +2888,7 @@ def act_row(href, label, more=(), note="", clip=""):
             + (f"<span>{e(note)}</span>" if note else "") + "</p>")
 
 
-def list_alert(h1, qs, jobs):
+def list_alert(h1, qs, jobs, compact=False):
     """The job alert of a list page, when an alert can ask for exactly what the list holds: its search filters are only words, a category,
     a place and "remote" (server/src/alerts.js). Search check, 18 Nov 2026: the first results for "<work> jobs" offer an alert beside
     the list; here only category and country pages had one."""
@@ -2894,13 +2897,44 @@ def list_alert(h1, qs, jobs):
     # "sal" (least yearly pay) is an alert filter as well, and "age" needs none: an alert only ever sends jobs new since the last
     # letter (20 Nov 2026: /new/ and the /salary/ pages had no alert)
     f.pop("age", None)
-    if set(f) - {"cat", "loc", "remote", "q", "skills", "sal"} or ("q" in f and "skills" in f): return ""
+    if set(f) - {"cat", "loc", "remote", "q", "skills", "sal"} or ("q" in f and "skills" in f):
+        if not compact: return ""
+        # the one-line alert above a list (26 Nov 2026): a filter the alert server does not know (entry-level, a type of work) is left out,
+        # and the line says what it will send: "Email me new jobs in Dublin" over the entry-level jobs in Dublin
+        cat_, loc_, rem_ = f.get("cat", ""), f.get("loc", ""), f.get("remote") == "1"
+        if cat_ not in CAT: cat_ = ""
+        if loc_ not in PLACE_TITLE: loc_ = ""
+        if not (cat_ or loc_ or rem_): return ""
+        what_ = "new " + ("remote " if rem_ else "") + (rlow(CAT[cat_]) + " " if cat_ else "") + "jobs" + (f" in {PLACE_TITLE[loc_]}" if loc_ else "")
+        return alert_form(what_, cat=cat_, loc=loc_, remote=rem_, compact=True, label=f"Email me {what_}")
     words = unquote(f.get("q") or f.get("skills") or "")
     # every word of an alert must be in the job's title, company or skills, so a long descriptive name of a role ("Sales leader and VP of sales") would catch nothing
     if len(words.split()) > 3 or " and " in f" {words.lower()} ": return ""
     what = rlow(h1) if "q" in f else h1 if "skills" in f else h1[0].lower() + h1[1:]
     return alert_form(what if what.startswith("new ") else "new " + what, cat=f.get("cat", ""), loc=f.get("loc", ""), q=words, remote=f.get("remote") == "1",
-                      sal=int(f.get("sal") or 0))
+                      sal=int(f.get("sal") or 0), compact=compact, label="Email me new jobs from this list" if compact else "")
+
+
+ALERT_BLOCK = re.compile(r'<form class="alertf" .*?</form>', re.S)
+
+
+def alert_line(block, label="Email me new jobs from this list"):
+    """The one-line alert made from a full alert block a page passed (same filters, same words): lists show it right above their jobs."""
+    hid = {k_: html.unescape(v_) for k_, v_ in re.findall(r'<input type="hidden" name="(\w+)" value="([^"]*)">', block)}
+    m_ = re.search(r'data-what="([^"]*)"', block)
+    what = html.unescape(m_.group(1)) if m_ else "new jobs"
+    return alert_form(what, cat=hid.get("cat", ""), loc=hid.get("loc", ""), q=hid.get("q", ""), remote=hid.get("remote") == "1",
+                      sal=int(hid.get("sal") or 0) if (hid.get("sal") or "").isdigit() else 0, compact=True, label=label)
+
+
+def list_line(jobs, what="open"):
+    """The one line under a list's heading: how many are open, how many are new this week, when they were checked."""
+    k_ = sum(1 for j in jobs if j.get("active", True))
+    if not k_: return f"<b>{len(jobs):,}</b> closed jobs, kept for reference"
+    week_ = HUB["week"] or (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
+    new_ = sum(1 for j in jobs if j.get("active", True) and (j["posted"] or "") >= week_)
+    return (f"<b>{k_:,}</b> {what} · {new_:,} new this week · checked {fdate(TODAY, False)} · "
+            f'<a href="{P}/methodology/">How we check</a>')
 
 
 def list_narrow(qs, jobs):
@@ -2928,7 +2962,7 @@ def list_save(h1, qs, feed_path="", links=()):
             '<span>My jobs then shows how many are new each time you come back. No account, no email.</span></p>')
 
 
-def alert_form(what, cat="", loc="", search=False, q="", remote=False, sal=0):
+def alert_form(what, cat="", loc="", search=False, q="", remote=False, sal=0, compact=False, label=""):
     """"Email me new jobs like these": the free job alert sign-up (server/src/alerts.js), small and reusable. Shown only once the API is
     on (config.json api_url): a form that goes nowhere is not shown (rule 7). Without a script the form posts itself and the API answers
     with a page; with one, site.js sends it and writes the answer under it. On the search page (search=True) site.js copies the current
@@ -2937,7 +2971,17 @@ def alert_form(what, cat="", loc="", search=False, q="", remote=False, sal=0):
     uid = "alert-" + re.sub(r"[^a-z0-9-]+", "-", (q or cat or loc or (f"pay-{sal}" if sal else "") or ("remote" if remote else "") or "search").lower()).strip("-")
     hid = "".join(f'<input type="hidden" name="{k}" value="{e(v)}">' for k, v in (("cat", cat), ("loc", loc), ("q", q), ("remote", "1" if remote else ""), ("sal", str(sal) if sal else "")) if v)
     if search: hid = "".join(f'<input type="hidden" name="{k}" value="">' for k in ("q", "cat", "loc", "remote", "sal"))
-    return (f'<form class="alertf" method="post" action="{e(CFG["api_url"])}/api/alerts" data-alert{" data-alert-search" if search else ""} aria-labelledby="{uid}-h">'
+    if compact:
+        # One line (26 Nov 2026): the same alert where people decide, above the jobs of a list or beside Apply: a field and one press,
+        # weekly unless they pick daily. The same fields, server and script as the block below; how the address is kept is linked in the line.
+        lab_ = label or f"Email me {what}"
+        return (f'<form class="alertf alert1" method="post" action="{e(CFG["api_url"])}/api/alerts" data-alert{" data-alert-search" if search else ""} data-what="{e(what)}" aria-label="{e(lab_)}">'
+                f'<label class="alert1-l" for="{uid}-e">{e(lab_)}</label><span class="alert1-f"><input id="{uid}-e" type="email" name="email" required autocomplete="email" maxlength="254" placeholder="Your email">'
+                f'<select name="freq" aria-label="How often"><option value="weekly">Weekly</option><option value="daily">Daily</option></select>'
+                '<button class="btn ghost" type="submit">Email me</button></span>'
+                '<p class="alertf-hp" aria-hidden="true"><label>Leave this empty <input type="text" name="website" tabindex="-1" autocomplete="off"></label></p>'
+                f'{hid}<span class="note alert1-n">Free, stop any time. <a href="{P}/privacy/#alerts">Your address</a></span><p class="note" role="status" aria-live="polite" data-alert-out></p></form>')
+    return (f'<form class="alertf" method="post" action="{e(CFG["api_url"])}/api/alerts" data-alert{" data-alert-search" if search else ""} data-what="{e(what)}" aria-labelledby="{uid}-h">'
             f'<p class="sec-label">Alerts</p><h2 class="tw" id="{uid}-h">Free job alerts: <b>{e(what)}</b></h2>'
             '<p>New jobs by email, once a day or once a week, at most 20 in a letter. We send a link to confirm first, and every letter can be stopped in one click.</p>'
             f'<div class="alertf-row"><label for="{uid}-e">Your email</label><input id="{uid}-e" type="email" name="email" required autocomplete="email" maxlength="254">'
@@ -3148,7 +3192,7 @@ def title_pay(path, title, jobs):
 
 
 def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", feed=False, head_html=None, after="", max_pages=None, more=None, faq=None, hub="", accent=None, list_title="", faq_first=None, live="", faq_extra=(),
-            stats=False, pics="", tail="", links=(), index_min=None):
+            stats=False, pics="", tail="", links=(), index_min=None, below="", act_html=""):
     """A page that is a list of jobs. The order on its first page (sections review, 17 Nov 2026): the trail, the heading, one
     paragraph, the row of the list's own numbers (`stats`), the main action with `links` beside it, then `extra` (rows of links
     that narrow the list), `pics` (charts: above the list on wide screens, under it on phones, where the list must come first),
@@ -3178,7 +3222,11 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
     ld = crumbs_ld(list(trail) + [(h1, "")]) if head_html is None else ""
     if accent: ld += f"<style>:root:root:root{{--hl:{accent};--accent-soft:color-mix(in srgb,{accent} 22%,var(--card))}}</style>"      # each section of the site has its own colour
     faq_html, faq_ld = faq_for(faq, jobs, faq_first, faq_extra) if faq else ("", "")
-    if more and head_html is None and "data-alert" not in after: after += list_alert(h1, more, jobs)
+    # the alert in one line right above the jobs (track "one button", 26 Nov 2026: a list page had it, if at all, under 60 rows and the
+    # questions): the block a page passed becomes that line, or the list's own search makes one
+    m_al = ALERT_BLOCK.search(after)
+    if m_al: alert_top, after = alert_line(m_al.group(0)), after[:m_al.start()] + after[m_al.end():]
+    else: alert_top = list_alert(h1, more, jobs, compact=True) if more and head_html is None else ""
     for n in range(1, pages + 1):
         chunk = rows[(n - 1) * per:n * per]
         if head_html is not None: top = head_html
@@ -3186,19 +3234,26 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
             # The first screen of a list as one framed panel, as on the key pages (owner, 17 and 19 Nov 2026: dLocal's way of building a
             # page, "the design of every page"): the trail, a small label, the heading with its key word marked, the opening paragraph,
             # the figures and the actions inside the panel; the narrowing row under it.
-            top = ('<div class="khero lhero"><div class="khero-t">' + crumbs(*trail, (h1, "")) + f'<p class="sec-label">{e(list_label(path))}</p>'
-                   + f"<h1>{path_fl(path)}{h1_marked(h1)}</h1>" + (f'<p class="lead">{intro}</p>' if intro else "") + "</div>"
-                   + (hub_stats(jobs, stats == "rest") if stats else "") + list_save(h1, more, path if feed else "", links) + "</div>" + list_narrow(more, jobs))
+            # Track "one button" (26 Nov 2026; design critic: the first job stood at 1,064 to 5,736 px, under a paragraph, four big numbers,
+            # charts and 36 cards of definitions): the trail, the heading, one line, the ways to narrow, the alert line, then the jobs. The
+            # opening paragraph, the figures, the charts and the cards follow the list; every word is still in the page. check.py keeps it so.
+            top = ('<div class="lhead">' + crumbs(*trail, (h1, "")) + f"<h1>{path_fl(path)}{e(h1)}</h1>" + f'<p class="lline">{list_line(jobs)}</p></div>'
+                   + list_narrow(more, jobs))
         else: top = crumbs(*trail, (h1, "")) + f"<h1>{path_fl(path)}{e(h1)}</h1>"
         if n > 1: top = top.replace("</h1>", f", page {n}</h1>", 1)        # page 2 and later do not repeat the first page's heading word for word (one page per query, 18 Nov 2026)
-        # v4: the list's title carries the "Open jobs" label and two weights, like the labelled sections of the page
-        tw_l = two_weight(e(list_title)) if list_title else ""
-        the_list = ((f'<div class="sec-head lst" id="list"><div class="sec-ttl"><p class="sec-label">Open jobs</p>{f"<h2 class={chr(34)}tw{chr(34)}>{tw_l}</h2>" if tw_l else f"<h2>{e(list_title)}</h2>"}</div></div>'
-                     if list_title and n == 1 and chunk else "")
+        the_list = ((f'<div class="sec-head lst" id="list"><h2>{e(list_title)}</h2></div>' if list_title and n == 1 and chunk else "")
                     + (f'<ul class="jobs"{live if n == 1 else ""}>{"".join(card(j, x) for j, x in chunk)}</ul>' if chunk else '<p class="lead">Nothing here today. The list is rebuilt several times a day.</p>')
                     + pager_html(path, n, pages) + note)
-        if pics and n == 1: the_list = f'<div class="lflow"><div class="lpics">{pics}</div><div class="llist">{the_list}</div></div>'
-        body = top + (extra if n == 1 else "") + the_list + ((hub + after + kind_row(path) + faq_html + tail) if n == 1 else "")      # questions after what the page shows
+        if n == 1:
+            save_ = act_html or (f'<button class="btn ghost sm" type="button" data-save-list="{e(more)}" data-label="{e(h1)}">Save this list</button>'
+                                 '<span class="lsave-n">My jobs then shows how many are new each time you come back. No account, no email.</span>' if more else "")
+            lalert = f'<div class="lalert">{alert_top}{save_}</div>' if alert_top or save_ else ""
+            rss_ = "".join(f'<a href="{P}/{u}">{e(t)}</a>' for u, t in links) + (f'<a href="{P}/{path}feed.xml">RSS feed</a>' if feed else "")
+            intro_ = ((f'<p class="lead">{intro}</p>' if intro and head_html is None else "") + (hub_stats(jobs, stats == "rest") if stats else "")
+                      + (f'<p class="lact">{rss_}</p>' if rss_ else ""))
+            body = (top + lalert + the_list + below + (f'<div class="lintro">{intro_}</div>' if intro_ else "") + (f'<div class="lpics lafter">{pics}</div>' if pics else "")
+                    + extra + hub + after + kind_row(path) + faq_html + tail)      # questions after what the page shows
+        else: body = top + the_list
         if n == 1:
             # the month in the title, as Upwork and Indeed do on lists that really change: "Data Analyst Jobs (133 open, November 2026)"
             pay_l = title_pay(path, title, jobs)
@@ -3706,7 +3761,8 @@ def intern_hub(path, h1, yr, ej):
     links = labrow("Also see", [f'<a href="{P}/entry-level/">Entry-level jobs</a>', f'<a href="{P}/crypto/internships/">Crypto internships</a>', f'<a href="{P}/categories/internships-entry-level/">Internships and first jobs</a>',
                                 f'<a href="{P}/guides/">Guides</a>', f'<a href="{P}/resume/">Resume builder</a>'])
     ld = crumbs_ld([("All jobs", "jobs/"), (h1, "")])
-    top = crumbs(("All jobs", "jobs/"), (h1, "")) + f"<h1>{e(h1)}{e(yr)}</h1>" + f'<p class="lead">{plain}</p>'
+    # the jobs first, as on every list (track "one button", 26 Nov 2026): the trail, the heading and one line; the opening after the jobs
+    top = '<div class="lhead">' + crumbs(("All jobs", "jobs/"), (h1, "")) + f"<h1>{e(h1)}{e(yr)}</h1>" + f'<p class="lline">{list_line(ej)}</p></div>'
     rows = collapse(order(ej))
     per = 100
     shown = rows[:per * LIST_PAGES]
@@ -3721,8 +3777,9 @@ def intern_hub(path, h1, yr, ej):
         # table of seasons and the chart stand side by side above the list on a wide screen and under it on a phone, where the list
         # used to start on the third screen.
         # the same row of filters as the other lists (20 Nov 2026: the internship hub had none; its own builder skipped listing())
-        if n == 1: body += (hub_stats(ej, True) + list_save(h1, "etype=Internship", path) + list_narrow("etype=Internship", ej) + links + '<div class="lflow"><div class="lpics">' + seas + glance + pay_note
-                            + '</div><div class="llist"><div class="sec-head lst" id="list"><h2>Newest internships</h2></div>' + the_list + "</div></div>" + it_pay + tail + kind_row(path) + own)
+        if n == 1: body += (list_narrow("etype=Internship", ej) + f'<div class="lalert"><button class="btn ghost sm" type="button" data-save-list="etype=Internship" data-label="{e(h1)}">Save this list</button></div>'
+                            + the_list + f'<div class="lintro"><p class="lead">{plain}</p>{hub_stats(ej, True)}<p class="lact"><a href="{P}/{path}feed.xml">RSS feed</a></p></div>'
+                            + '<div class="lpics lafter">' + seas + glance + pay_note + "</div>" + links + it_pay + tail + kind_row(path) + own)
         else: body += the_list
         title = f"{h1}{yr} ({k:,} open, {MONTH_YEAR}) | {SITE}"
         desc = (f"{k:,} open internships{yr}: when they start, whether they pay, which companies hire interns and where, straight from employers’ careers pages. Updated several times a day.")
@@ -6929,7 +6986,8 @@ def main():
                 js_, fp_["lead"], trail=(("Categories", "categories/"),), per=50, max_pages=3, more=False, feed=True,
                 stats="rest", extra=vers_line + pics_first(mini_pics(js_), section(f"Types of [[{fp_['q']}]]", role_list, label="Kinds of work")), list_title=f"Newest {fp_['q']}", faq=fp_["q"],
                 faq_first=(f"What are the different types of {fp_['q']}?", f"{fd[0].upper() + fd[1:]}. On {SITE} that is {len(live)} kinds of work: {', '.join(names_)}."),      # Google's "People also ask", 25 Nov 2026
-                faq_extra=fp_["qa"], hub=fp_["hub"] + secs[1] + fp_["how"] + fp_["gov"] + fp_["links"], after=others)
+                faq_extra=fp_["qa"], hub=fp_["hub"] + secs[1] + fp_["how"] + fp_["gov"] + fp_["links"],
+                after=others + (alert_form(f"new {low_f} jobs", cat=fp_["cats"][0]) if len(fp_["cats"]) == 1 and fp_["cats"][0] in CAT else ""))
         # the job lists of the same field (/jobs/<cat>/, and their remote lists) name this page as canonical: one page per search
         for cs_ in fp_["cats"]:
             if by_cat.get(cs_):
@@ -7506,8 +7564,14 @@ def main():
                                 '<p class="rel chips">' + "".join(f'<a href="{P}/companies/{slugify(o)}/">{e(o)}<b>{OPEN[o]:,}</b></a>' for o in near_) + "</p>"
                                 '<p class="note">Employers whose open jobs are mostly in the same field, with about as many open roles; the number is their open jobs today.</p>', sid="near")
         # design, step 3 (19 Nov 2026): the company's first screen in the same framed panel as the lists and the key pages
-        head_html = ('<div class="khero chero"><div class="khero-t">' + crumbs(("Companies", "companies/"), (c, "")) + '<p class="sec-label">Company</p>'
-                     + f'<div class="jhead cohead">{ava(c, "lg")}<div><h1>Jobs at <span class="hl">{e(c)}</span></h1><span class="js">{lead}</span>'
+        wk7_c = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
+        c_line = (f"<b>{len(act):,}</b> open role{'s' if len(act) != 1 else ''} · {sum(1 for j in act if (j['posted'] or '') >= wk7_c):,} new this week · checked {fdate(TODAY, False)}"
+                  if act else f"No open roles today · {len(arc):,} closed, kept below")
+        # track "one button" (26 Nov 2026): the logo, the heading and one line above the jobs; the rest of the old panel follows the list
+        top_c = ('<div class="lhead chead">' + crumbs(("Companies", "companies/"), (c, ""))
+                 + f'<div class="jhead cohead">{ava(c, "lg")}<div><h1>Jobs at {e(c)}</h1><p class="lline">{c_line}</p></div></div></div>')
+        follow_c = f'<button class="btn ghost sm" id="follow" type="button" data-slug="{slug}" data-name="{e(c)}">Follow {e(c)}</button>'
+        head_html = (f'<div class="lintro cintro"><div class="cintro-t"><div class="cintro-h"><div><p class="lead">{lead}</p>'
                      # the badge a Company spotlight buys, and the mark of a page the company keeps itself
                      + ('<div class="pills">' + ('<span class="pill acc">Featured employer</span>' if c in spot_cos else "")
                         + ('<span class="pill ok">Page kept by the company</span>' if c in CLAIMED else "") + "</div>" if c in spot_cos or c in CLAIMED else "") + "</div></div>"
@@ -7517,9 +7581,7 @@ def main():
                              ("Hires in " + ", ".join(e(x_) for x_ in cl_.get("locations", [])[:8])) if cl_.get("locations") else "",
                              f"Written by the company, which has kept this page since {fdate(cl_['since'])}" if cl_.get("since") else "Written by the company") if x_) + "</p></div>")
                         if (cl_ := CLAIMED.get(c)) and (cl_.get("about") or cl_.get("website") or cl_.get("locations")) else "") + "</div>"
-                     # the page's one action is an ink button under the heading, as "Save this list" is on every other list
-                     + f'<p class="lact"><button class="btn primary sm" id="follow" type="button" data-slug="{slug}" data-name="{e(c)}">Follow {e(c)}</button>'
-                       '<span>Get a “new roles” count for this company in My jobs. No account, no email.</span></p>'
+                     + '<p class="note">Follow adds a “new roles” count for this company to My jobs, in this browser. No account, no email.</p>'
                      + (f'<p class="note cosrc">Official source: {e(c)} publishes these jobs on <a href="{e(src_[1])}" rel="nofollow noopener">{e(src_[0])}</a>'
                         + (f" (its hiring system, {e(src_[2])})" if src_[2] else "") + ". Every job below opens its posting there; you apply on that site.</p>" if (src_ := official_source(act)) else "")
                      + (f'<dl class="nums">{"".join(chips)}</dl>' if act else "") + tbadges + "</div>"
@@ -7583,7 +7645,7 @@ def main():
                           f'<a href="{P}/skills/{slug}/">{roles(len(by_tag[sk_]), "open job")} that ask for {e(sk_)}</a>.</p>')
         listing(f"companies/{slug}/", f"Jobs at {c}", f"{c} Careers: {roles(len(act), 'Open Job')}, Pay & Hiring ({datetime.date.fromisoformat(TODAY).strftime('%b %Y')}) | {SITE}",
                 f"All jobs at {c}: {len(act):,} open" + (f" and {len(arc):,} closed" if arc else "") + f", {new7_:,} added this week. Pay by field, locations and remote roles, from its own careers page.",
-                act, head_html=head_html, after=overview + (alert_form(f"new jobs at {c}", q=c) if act else ""), tail=closed + embed, faq=f"jobs at {c}", feed=True, faq_extra=co_qa,
+                act, head_html=top_c, below=head_html, act_html=follow_c if act else "", after=overview + (alert_form(f"new jobs at {c}", q=c) if act else ""), tail=closed + embed, faq=f"jobs at {c}", feed=True, faq_extra=co_qa,
                 index_min=INDEX_MIN_CO)
         # the page lists the company's closed jobs too: a closing changes it as much as a new job
         if arc: PAGE_MOD[f"companies/{slug}/"] = max([PAGE_MOD.get(f"companies/{slug}/", "")] + [(j.get("closed") or "")[:10] for j in arc])
