@@ -4683,6 +4683,10 @@ def main():
         j["usd"] = usd_range(j["salary"])
         j["rkey"] = search_engine.role_key(j["title"], j["location"])      # one row per role in every list (collapse)
         j["usd_h"] = None if j["usd"] else usd_hourly(j["salary"])      # an hourly rate in US dollars: the search's pay filter reads it (search_engine.doc)
+        # "Remote" from the hiring system, where the posting's own text asks for days in the office (collect.says_hybrid; records read before
+        # 26 Nov 2026 were not checked, and only the last 14 days keep their text)
+        if j["remote"] and j["active"] and (j.get("desc") or j.get("excerpt")) and collect.says_hybrid(TAG_RX.sub(" ", (j.get("desc") or "") + " " + (j.get("excerpt") or ""))):
+            j["remote"], j["hybrid"] = False, True
         j["places"] = places_of(j["location"]) if j["active"] and j["location"] else []
         j["t"], j["ts"] = exact(j), stamp(j)
     active = [j for j in jobs if j["active"]]

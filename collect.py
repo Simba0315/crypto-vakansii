@@ -1174,11 +1174,36 @@ def utc_iso(v):
         return ""
 
 
+# A posting the hiring system marks remote that says in its own text that it is hybrid (data teardown, 26 Nov 2026: 4 of 17 "remote" jobs
+# opened, e.g. "This is a hybrid role requiring Tuesdays and Thursdays in-office in Fenton, Missouri"). Only an obligation to be in the
+# office counts: "hybrid cloud", "a remote or hybrid role" and an office the company also has do not.
+HYBRID_TEXT = re.compile(
+    r"\bthis (?:is an? |role is an? |position is an? |job is an? )hybrid (?:role|position|job|opportunity|schedule)\b|\bhybrid (?:schedule|work schedule|work model|working model|"
+    r"work arrangement|work environment|working environment)\b(?!s? (?:for|across) (?:some|other|many|most) )|\bhybrid\s*[-–:]\s*on-?site\b|\b(?:\d|one|two|three|four)\s*\+?\s*days? "
+    r"(?:a|per|each|every) week (?:in|at|on)[- ](?:the |our )?(?:office|site|person|campus|location)\b|\b(?:minimum|at least) (?:of )?(?:\d|one|two|three|four) days? "
+    r"(?:a week |per week |weekly |each week )?(?:in|at|on)[- ](?:the |our )?(?:office|site)\b|\b(?:\d|one|two|three|four) days? in[- ](?:the[- ])?office\b|\bmandatory in[- ]office\b|"
+    r"\bin[- ]office (?:days|requirement|attendance|presence)\b|(?-i:#?\bLI-Hybrid\b)|\b(?:mondays?|tuesdays?|wednesdays?|thursdays?|fridays?)\b[^.]{0,40}\bin[- ](?:the[- ])?office\b", re.I)
+FULLY_REMOTE = re.compile(r"\b(?:fully|100%|completely|entirely|permanently) remote\b|\bremote[- ]first\b|\bno (?:office|in-office) (?:attendance|requirement)", re.I)
+
+
+def says_hybrid(text):
+    """Does the text of a posting ask for days in the office?"""
+    return bool(text) and bool(HYBRID_TEXT.search(text)) and not FULLY_REMOTE.search(text)
+
+
+for _t in ("This is a hybrid role requiring Tuesdays and Thursdays in-office in Fenton, Missouri.", "Tuesdays, Wednesdays, and Thursdays being mandatory in-office days",
+           "Location: Hybrid - Onsite minimum of 2 days a week", "We offer a hybrid work environment, a flexible work schedule. #LI-Hybrid"):
+    assert says_hybrid(_t), _t
+for _t in ("Support our Companies in a remote or hybrid role.", "Experience with hybrid cloud environments.", "This role is fully remote; our offices use a hybrid work model.", ""):
+    assert not says_hybrid(_t), _t
+
+
 def norm(company, ats, jid, title, url, location, remote, dept, posted, text, salary="", hint="", desc="", hybrid=False, posted_at=None):
     title = re.sub(r"\s+", " ", str(title or "")).strip()
     location = re.sub(r"\s+", " ", str(location or "")).strip()
     hybrid = bool(hybrid) or bool(re.search(r"\bhybrid\b", location, re.I))
     remote = (bool(remote) or bool(re.search(r"\bremote\b", location, re.I))) and not (hybrid and not re.search(r"\bremote\b", location, re.I))
+    if remote and says_hybrid(text): remote, hybrid = False, True
     limited = re.search(r"\b(us|usa|u\.s\.|united states|eu|europe|emea|apac|canada|uk|americas|latam|time ?zone|est|pst|cet)\b|anywhere in", location, re.I)
     if location.lower() in {"n/a", "na", "none", "tbd", "-", "null", "not specified"}: location = ""
     blob = title + "\n" + text
