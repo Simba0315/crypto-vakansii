@@ -5415,6 +5415,12 @@ table.adm-log td:last-child{min-width:280px}
    cards stand one under another, so the gap between the price and its one line showed ---- */
 @media(max-width:760px){.pk-s:empty{display:none}}
 
+/* ---- the resume builder (/resume/) ---- */
+/* the step you are on: its number was white on a white circle */
+.rb-tabs button.on i{background:var(--btn-ink);color:var(--btn)}
+/* on a phone the preview stands under the form: no empty white sheet of 520 px before anything is typed */
+@media(max-width:820px){#rb-preview{position:static;min-height:0}}
+
 /* ---- a button whose words are longer than a 360 px screen wraps instead of running past it ---- */
 @media(max-width:560px){.adv-jobs .btn,.lact .btn{max-width:100%;white-space:normal;text-align:left}}
 
