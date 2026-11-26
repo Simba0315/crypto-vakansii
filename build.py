@@ -12187,7 +12187,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
              f'<div class="gl-top"><div class="gl-card"><span class="gl-k">{"Definition" if GM and "?" in GM["title"] else e(gq_)}</span>'
              f'<p class="gl-def"><b>{e(term)}</b>: {e(d if len(d.split()[0]) > 1 and d.split()[0].isupper() else d[0].lower() + d[1:])}</p>'
              + (f'<p class="gl-fig"><span class="gl-k">Today’s figure</span>{e(fig)} <span class="note">Counted on {fdate(TODAY)} from open postings.</span></p>' if fig else "")
-             + f'</div><div class="gl-card gl-tip"><h2 class="gl-k">What to do about {e(term)}</h2><p>{e(tip)}</p>'
+             + f'</div><div class="gl-card gl-tip"><h2 class="gl-k">What to do about {e(term if term[:2].isupper() else term[0].lower() + term[1:])}</h2><p>{e(tip)}</p>'
              + ('<div class="gl-next">' + "".join(f'<a href="{P}/{u}">{e(lbl)}</a>' for u, lbl in links) + "</div>" if links else "") + "</div></div>"
              + g_more
              + (section(f"Terms related to {term[0].lower() + term[1:] if not term[:2].isupper() else term}", '<p class="rel chips">' + "".join(f'<a href="{P}/glossary/{gslug(o_)}/">{e(o_)}</a>' for o_ in gl_rel_[term]) + "</p>") if gl_rel_[term] else "")
