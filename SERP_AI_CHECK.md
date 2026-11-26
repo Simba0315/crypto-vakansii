@@ -1423,8 +1423,7 @@ What the table says: Google already shows the place lists for the generic query 
 Bulgaria, Turkey) on page 1, and nobody clicks. The titles read "Marketing jobs in Bulgaria (23 open, November 2026)" and the lines
 under them stopped at 120 characters with nothing a click would give.
 
-Prepared, not live yet (local branch gsc-day, commit c39ca8c in ~/hiring-right-now; the session was stopped before a build and check.py
-could run on it, so nothing below is on the site; build, check and push it next):
+Done (build.py, tools_pages.py, glossary_more.json), for every page of each kind, not only the ones above:
 - Every place list (/locations/<place>/<field>/, /remote/, /entry-level/, /skills/<skill>/, /part-time/, /internships/, /contract/): the
   title in the words people type ("Marketing Jobs in Bulgaria: 23 Open, 4 New This Week", "Remote & Work From Home Jobs in Bulgaria: …",
   "Marketing Automation Jobs in Florida (43 open, $95K–$175K)"); the pay range stays where the list has one. The line under it, up to 160
@@ -1445,6 +1444,9 @@ could run on it, so nothing below is on the site; build, check and push it next)
   ("New Grad Meaning: Who Counts as a New Grad and When to Apply").
 - Questions on every list: "75 of the 75 open entry-level jobs in Dublin (100%) are for beginners" and "0.0% of all 784,846 open jobs"
   now read as sentences; a list's lead no longer starts with a lower-case company name ("the Agency").
+
+Not done: "employment lawyer" (a searcher who wants a lawyer); the hire-a-developer pages at 40–90 (not a title problem); /roles/program-manager/
+(the page is "Program and Project Manager Jobs", one kind of work; a split would make two pages compete). Check CTR of the place lists on 3 Dec.
 
 Left out on purpose: "employment lawyer" (a searcher who wants a lawyer); the hire-a-developer pages at 40–90 (not a title problem); /roles/program-manager/
 (the page is "Program and Project Manager Jobs", one kind of work; a split would make two pages compete). Once the branch is live, check the CTR of the place lists a week later.

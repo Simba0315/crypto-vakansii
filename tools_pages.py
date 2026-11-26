@@ -1574,13 +1574,18 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
     _lwd_tbl = ('<h3>The last working day of each month</h3><div class="tablewrap"><table><thead><tr><th>Month</th><th>Last Monday-to-Friday</th></tr></thead><tbody>'
                 + "".join(f"<tr><td>{MONTHS_LONG[d_.month - 1]} {d_.year}</td><td>{_wd(d_)}</td></tr>" for d_ in _lwd)
                 + "</tbody></table></div><p>Public holidays are not taken out: if the last weekday of a month is a holiday where you work, the working day before it is the last one.</p>")
+    # Search Console, 19-24 Nov 2026 (read 26 Nov): "last working day of this month" 20 impressions at 7.2, no click, under the title
+    # "Last Working Day Calculator by Notice Period". The answer is a date, so the title and the line under it now carry it (the page is
+    # built every hour, so it turns to the next month on the 1st), and the lead opens with it.
+    _wd_s = lambda d_: f"{'Mon Tue Wed Thu Fri'.split()[d_.weekday()]}, {MONTHS_LONG[d_.month - 1][:3]} {d_.day}"
+    _wd_n = lambda d_: f"{'Monday Tuesday Wednesday Thursday Friday'.split()[d_.weekday()]}, {MONTHS_LONG[d_.month - 1]} {d_.day}"
     tool("last-working-day", "seekers", "Last working day calculator",
          "The day you give notice and your notice period in weeks, months or working days give your last working day, with weekends skipped.",
-         "Last Working Day Calculator by Notice Period",
-         "Enter the day you give notice and your notice period in weeks, months or working days to get your last working day. Weekends skipped; holidays are not known.",
+         f"Last Working Day of This Month ({_wd_s(_lwd[0])}) & Notice Calculator",
+         f"The last working day of this month is {_wd(_lwd[0])}; next month’s is {_wd_n(_lwd[1])}. Or count your notice period to your own last day.",
          "Find your last working day from your notice period",
-         "“Two weeks’ notice” sounds simple until you count it on a calendar: the day you hand it in, the weekends and the way your contract counts can each move the date. "
-         "Enter the day you give notice and the length of the notice period. You get the day the notice ends and the last Monday-to-Friday on or before it. "
+         f"The last working day of this month is {_wd(_lwd[0])}, the last Monday-to-Friday of {MONTHS_LONG[_lwd[0].month - 1]}; the table below has the next eleven months. "
+         "For your own last day at a job, enter the day you give notice and the length of the notice period: you get the day the notice ends and the last Monday-to-Friday on or before it. "
          "Public holidays are not known to this page, and your contract decides how notice is counted.",
          wrap("last-working-day",
               '<div class="card tl-form"><div class="tl-grid">'
