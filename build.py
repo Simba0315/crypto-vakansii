@@ -2735,7 +2735,7 @@ def list_save(h1, qs, feed_path="", links=()):
             '<span>My jobs then shows how many are new each time you come back. No account, no email.</span></p>')
 
 
-def alert_form(what, cat="", loc="", search=False, q="", remote=False, sal=0):
+def alert_form(what, cat="", loc="", search=False, q="", remote=False, sal=0, compact=False, label=""):
     """"Email me new jobs like these": the free job alert sign-up (server/src/alerts.js), small and reusable. Shown only once the API is
     on (config.json api_url): a form that goes nowhere is not shown (rule 7). Without a script the form posts itself and the API answers
     with a page; with one, site.js sends it and writes the answer under it. On the search page (search=True) site.js copies the current
@@ -2744,6 +2744,16 @@ def alert_form(what, cat="", loc="", search=False, q="", remote=False, sal=0):
     uid = "alert-" + re.sub(r"[^a-z0-9-]+", "-", (q or cat or loc or (f"pay-{sal}" if sal else "") or ("remote" if remote else "") or "search").lower()).strip("-")
     hid = "".join(f'<input type="hidden" name="{k}" value="{e(v)}">' for k, v in (("cat", cat), ("loc", loc), ("q", q), ("remote", "1" if remote else ""), ("sal", str(sal) if sal else "")) if v)
     if search: hid = "".join(f'<input type="hidden" name="{k}" value="">' for k in ("q", "cat", "loc", "remote", "sal"))
+    if compact:
+        # One line (track "one button", 26 Nov 2026): the alert where people decide, a field and one press, weekly unless they pick daily.
+        # The same fields, server and script as the block below; the address is kept as that block says, linked in the line.
+        lab_ = label or f"Email me {what}"
+        return (f'<form class="alertf alert1" method="post" action="{e(CFG["api_url"])}/api/alerts" data-alert{" data-alert-search" if search else ""} aria-label="{e(lab_)}">'
+                f'<label class="alert1-l" for="{uid}-e">{e(lab_)}</label><span class="alert1-f"><input id="{uid}-e" type="email" name="email" required autocomplete="email" maxlength="254" placeholder="Your email">'
+                f'<select name="freq" aria-label="How often"><option value="weekly">Weekly</option><option value="daily">Daily</option></select>'
+                '<button class="btn ghost" type="submit">Email me</button></span>'
+                '<p class="alertf-hp" aria-hidden="true"><label>Leave this empty <input type="text" name="website" tabindex="-1" autocomplete="off"></label></p>'
+                f'{hid}<span class="note alert1-n">Free, stop any time. <a href="{P}/privacy/#alerts">Your address</a></span><p class="note" role="status" aria-live="polite" data-alert-out></p></form>')
     return (f'<form class="alertf" method="post" action="{e(CFG["api_url"])}/api/alerts" data-alert{" data-alert-search" if search else ""} aria-labelledby="{uid}-h">'
             f'<p class="sec-label">Alerts</p><h2 class="tw" id="{uid}-h">Free job alerts: <b>{e(what)}</b></h2>'
             '<p>New jobs by email, once a day or once a week, at most 20 in a letter. We send a link to confirm first, and every letter can be stopped in one click.</p>'
@@ -4853,31 +4863,22 @@ def main():
     rem_n = sum(1 for j in active if j["remote"])
     paid_n = sum(1 for j in active if j["salary"])
     say_chips = (f'<a href="{P}/hiring-immediately/">Hiring immediately</a>' if len(imm_jobs) >= 20 else "") + (f'<a href="{P}/no-experience-jobs/">No experience</a>' if len(noexp_jobs) >= 20 else "")
-    hero = (f'<section class="hero v2"><div class="wrap">'
-            f'<p class="stamp"><i></i>Jobs hiring now · <b>{n:,}</b> open, checked {fdate(TODAY, False)} <span class="wide-only"> · <b>{fresh3:,}</b> new in 3 days</span></p>'
-            # the words people type ("job search": the home pages of Indeed, LinkedIn, ZipRecruiter and Monster stand first for it) are the heading;
-            # the sentence after it says what the site is in the form an answer engine quotes ("X is a job search engine that reads ...")
+    # The home page as a search page (track "one button", 26 Nov 2026; product, seeker and design critics: 37 things to press and no job
+    # on the first screen, 13 screens on a laptop). The heading, the search, one line with the count and how we check, six searches
+    # people make most, then the ten newest open jobs, the alert in one line and four questions. The directory, the market charts,
+    # the best paid, the tools, the widgets, the four big numbers and the logo row live on their own pages (categories, insights,
+    # salaries, tools, widgets), one click away from the header and the footer.
+    chip_ = lambda slug_, name_, q_: f'<a href="{P}/roles/{slug_}/">{name_}</a>' if slug_ in by_role else f'<a href="{P}/jobs/?q={quote(q_)}">{name_}</a>'
+    home_chips = (f'<a href="{P}/remote/">Remote</a><a href="{P}/entry-level/">Entry-level</a><a href="{P}/part-time/">Part-time</a>'
+                  + chip_("nursing", "Nurse", "nurse") + chip_("customer-support", "Customer service", "customer service") + chip_("warehouse-associate", "Warehouse", "warehouse"))
+    hero = (f'<section class="hero v2 hsearch"><div class="wrap">'
             f'<h1>Job search without <span class="hl">ghost jobs</span></h1>'
-            f'<p class="sub">Stop applying to jobs that are already gone. {SITE} is a job search engine that reads the career pages of {m:,} companies<span class="wide-only"> (on Greenhouse, Lever, Ashby, Workday and other hiring systems)</span>' + (f', {m_hourly:,} of them every hour and the rest every four hours,' if ROTATING else ' every hour') + ' and lists only the jobs that are still open.</p>'
-            f'<form class="searchbar two" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Software engineer, data analyst, customer service…" aria-label="What: job title, skill or company">'
+            f'<form class="searchbar two" action="{P}/jobs/" method="get" role="search">{ICON_SEARCH}<input type="search" name="q" placeholder="Job title, skill or company" aria-label="What: job title, skill or company">'
             f'<span class="sb-sep" aria-hidden="true"></span><input type="search" name="where" placeholder="City, country or remote" aria-label="Where: city, country or remote"><button class="btn primary">Search jobs</button></form>'
-            f'<p class="popular"><a class="pop-tech" href="{P}/tech/">Tech jobs</a>{hero_chips}<a href="{P}/remote/">Remote</a><a href="{P}/new/">New this week</a><a href="{P}/with-salary/">Salary listed</a>'
-            f'<a href="{P}/entry-level/">Entry-level</a><a href="{P}/part-time/">Part-time</a>{say_chips}<a href="{P}/jobs-near-me/">Jobs near me</a><a href="{P}/categories/">All categories</a><a href="{P}/locations/">By country</a></p>'
-            f'<p class="near" id="near" hidden></p>'
-            f'<div class="hstats"><div><b>{n:,}</b><span>open jobs today</span></div><div><b>{m:,}</b><span>companies, read {EVERY}</span></div>'
-            f'<div><b>{rem_n:,}</b><span>can be done from home</span></div><div><b>{len(by_role)}</b><span>kinds of work</span></div></div></div>'
-            f'<div class="wrap"><div class="shot"><div class="shot-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>'
-            f'<div class="shot-tabs" id="shot-tabs">{shot_nav}</div></div>'
-            f'<div class="shot-body"><div id="shot-panels">{shot_panels}<p class="shot-more"><a class="btn" id="shot-more" href="{P}/jobs/">See all {n:,} jobs</a></p></div>'
-            f'<aside class="shot-side">'
-            f'<a class="scard" href="{P}/for-you/"><b>Not sure what to search for?</b><span>Answer five questions and see the jobs that fit you, each with the reasons.</span><em>Find my fit</em></a>'
-            f'<a class="scard" href="{P}/resume/"><b>Resume builder</b><span>{RB_TPLS.capitalize()} templates, PDF and Word, and an example resume for your kind of work.</span><em>Build a resume</em></a>'
-            f'<a class="scard" href="{P}/salaries/"><b>What jobs pay</b><span>{paid_n:,} postings state the pay. See the median for your work.</span><em>Check salaries</em></a>'
-            f'<a class="scard" href="{P}/tools/"><b>{len(TOOLS) + len(tools_pages.EXTRA)} free tools</b><span>Resume review, offer check, letters, interview answers.</span><em>Open the tools</em></a>'
-            f'</aside></div></div></div>'
-            f'<div class="wrap0 hero-logos"><p>Read from the career pages of</p><div class="logorow">'
-            + "".join(f'<a href="{P}/companies/{slugify(c)}/" title="{e(c)}: {sum(j["active"] for j in js):,} open roles">{ava(c)}<span>{e(c)}</span></a>' for c, js in logo_cos)
-            + f'<a class="more" href="{P}/companies/">and {len(companies) - len(logo_cos):,} more</a></div></div></section>')
+            # the sentence an answer engine quotes ("X is a job search engine that reads ..."), now the one line under the search
+            f'<p class="hcount">{SITE} reads the career pages of {m:,} companies' + (f' ({m_hourly:,} of them every hour)' if ROTATING else f' {EVERY}')
+            + f': <b>{n:,}</b> open jobs now, <b>{fresh3:,}</b> new in 3 days. <a href="{P}/methodology/">How we check</a></p>'
+            f'<p class="popular">{home_chips}</p><p class="near" id="near" hidden></p></div></section>')
     plus_band = ""
     if CFG.get("plus", {}).get("live"):
         plus_band = (f'<div class="band"><div><h2>Get the email when a matching job appears</h2><p>Plus watches your saved searches and helps with the resume and cover letter for each posting. One payment, nothing renews.</p></div>'
@@ -5030,18 +5031,18 @@ def main():
                  f'<a class="tcard" href="{P}/api/"><span class="tprev" aria-hidden="true"><code>GET /api/v1/latest.json\n{{ "total": {n},\n  "jobs": [{{ "title": "…",\n    "company": "…" }}] }}</code></span>'
                  '<span class="tbody"><b>For programmers</b><span>The whole job list as data that programs can read, refreshed every hour. Free, with nothing to sign up for.</span><i><u>See the API</u></i></span></a>'
                  f'</div><p class="tabmore"><a href="{P}/widgets/">Make a widget or a badge</a></p></div></div>')
-    home = ('<section class="sec" id="home-recent" hidden><div class="sec-head"><h2>Pick up where you left off</h2><a href="' + P + '/my-jobs/">My jobs</a></div><ul class="jobs" id="home-recent-list"></ul></section>'
-            + (section("Featured employers", spot_tiles(spot_cos), ("post-a-job/", "Feature your company")) if spot_cos else "")
-            + section("Browse jobs [[by category]]", browse, ("categories/", f"All {len(by_role)} kinds of work"), sub="Pick the kind of work you do; each group opens its own list of jobs.", label="Directory")
-            + kpanel(section("The job market [[today]]", market_pics + pulse, ("insights/", "All rankings and charts"), sub="Counted from the open jobs on every update.", label="Market"))
-            + anatomy
-            + section("[[Highest paid]] right now", paid_board, ("salaries/", "Salary data"), label="Pay",
-                      sub=(f"Jobs posted in the last {paid_days} days" if paid_days else "Open jobs") + " that state a yearly pay in US dollars, by the middle of the range. The bar shows the range against the top one.")
-            + kpanel(section("How ghost jobs are [[kept out]]", ghost, ("promise/", "What we will never do"), sub="Five rules every listing passes, and four habits of job sites you will not meet here.", label="No ghost jobs"), "card")
-            + section("[[Free tools]], no sign-up", free_tabs, ("tools/", f"All {n_tools} tools"), sub="Nothing to sign up for: the tools work in your browser and send us nothing.", label="Free")
-            + plus_band + band
-            + section("Where the jobs come from and [[how the site works]]", faq_html
-                      + f'<p class="note">More: <a href="{P}/guides/how-we-check-jobs-every-hour/">how the hourly check works</a> · <a href="{P}/job-search-engines/">job search engines that read company career pages, compared</a></p>', sid="faq", label="Questions"))
+    FAQ4 = [FAQ[0], FAQ[2], FAQ[9],
+            ("Is it free?", "Yes. Searching, saving jobs, tracking your applications, email alerts and applying are free, and none of it needs an account: saved jobs "
+                            "and searches are kept in your browser. No job is ever held back for a paid plan.")]
+    faq_html = '<div class="faq2">' + "".join(f'<details><summary>{e(q_)}</summary><p>{e(a_)}</p></details>' for q_, a_ in FAQ4) + "</div>"
+    faq_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+        {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in FAQ4]}) + "</script>")
+    newest10 = "".join(card(j) for j in diverse(order([j for j in specific if not stale(j)] or specific), 10, 1))
+    home = (f'<section class="sec hnew" id="latest"><div class="sec-head"><h2>Newest jobs, checked {EVERY}</h2></div><ul class="jobs" data-live="home">{newest10}</ul>'
+            f'<p class="hmore"><a href="{P}/new/">All new jobs</a><a href="{P}/jobs/">Search all {n:,} jobs</a></p></section>'
+            + '<div class="lalert">' + alert_form("new jobs", compact=True, label="Email me new jobs") + "</div>"
+            + section(f"Where the jobs come from and how {SITE} works", faq_html
+                      + f'<p class="note">More: <a href="{P}/guides/how-we-check-jobs-every-hour/">how the hourly check works</a> · <a href="{P}/promise/">what we will never do</a></p>', sid="faq"))
     home_desc = f"Job search without ghost jobs: {n:,} jobs hiring now at {m:,} companies, read from their own career pages {EVERY}. {new_today:,} new today. Free, no account."
     if len(home_desc) > 165: home_desc = home_desc.removesuffix(" Remote and salary filters.")
     page("", f"Job Search: {n:,} Jobs Hiring Now, Checked Every Hour | {SITE}",
