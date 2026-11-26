@@ -1448,3 +1448,84 @@ could run on it, so nothing below is on the site; build, check and push it next)
 
 Left out on purpose: "employment lawyer" (a searcher who wants a lawyer); the hire-a-developer pages at 40–90 (not a title problem); /roles/program-manager/
 (the page is "Program and Project Manager Jobs", one kind of work; a split would make two pages compete). Once the branch is live, check the CTR of the place lists a week later.
+
+## Bing webmaster guidelines: what they flag on this site, measured (26 Nov 2026)
+
+Bing Webmaster Tools on 26 Nov: the home page "Indexed successfully"; /entry-level/ "Discovered but not crawled" since 18 Nov ("known
+to Bing but has some issues which are preventing indexation ... follow Bing Webmaster Guidelines"); job pages and guides "Not
+discovered"; 0 impressions. The technical side was already checked (Bingbot gets the same HTML with 200, no noindex, robots.txt
+open, IndexNow sent daily). So the lever left is the quality of what the site asks Bing to index.
+
+Bing's guidelines (bing.com/webmasters/help/webmaster-guidelines-30fba23a, read 26 Nov 2026) on the points that apply here:
+- Sitemaps "List only canonical URLs", "Remove deleted or redirected URLs promptly", and "accurate lastmod values ... help Bing detect
+  content changes more reliably".
+- Crawl waste: "Excessive low-value URLs, duplication, or crawl waste can ... delay indexing of important content"; "Eliminate
+  duplicate or low-value URLs".
+- "Thin, ad heavy, or affiliate-only URLs may lose ranking eligibility".
+- Things to avoid: duplicate content across multiple URLs ("Canonical tags help signal preference but do not replace fixing underlying
+  issues"), scraped or republished content without added value, automatically generated content at scale ("often lacks usefulness,
+  accuracy, and originality, and may be excluded from indexing"), keyword stuffing, link schemes, cloaking, misleading structured data.
+- IndexNow: notify Bing when "URLs are added", "Content is updated", "URLs are removed".
+The current page no longer gives a number of links per page; it asks for crawlable `<a href>` links with relevant anchor text.
+
+### The live site, measured (2,924 pages sampled from the sitemaps on 26 Nov; every one answered 200, none noindex, all self-canonical)
+
+Sitemaps: 47 files, 81,309 non-job addresses (seven of them twice) and 864,491 job pages. Every one of the 81,302 non-job addresses had lastmod
+2026-11-26, the day of the build. Job pages: 26% today, 39% yesterday, 21% two days before (an open job's lastmod was the day its
+board was last read, not a day its page changed). 309,768 job pages (36%) share their title and company with another page, in
+73,269 groups; most are the same job in other places.
+
+Thin narrow lists. A narrow list under 20 jobs loses the parts of the template that start at 20 (the row of figures, the charts, the
+employers, the list's heading): its own text (the job rows left out) is 310 to 420 words against 710 to 860 at 20 to 49 jobs.
+
+| Kind (addresses in the sitemaps) | Sampled | Under the line | Own words under / at 20-49 |
+|---|---|---|---|
+| /locations/<place>/skills/<skill>/ (33,537) | 359 | 37% under 20 jobs, ~12,500 | 409 / 776 |
+| /companies/<company>/ (25,299) | 355 | 27% under 5 open jobs, ~6,800 | 440 (1-4 jobs) / 780 (5-9) |
+| /roles/<work>/<place>/ (8,679) | 178 | 8%, ~730 | 421 / 820 |
+| /locations/<place>/<field>/ (1,711) | 155 | 20%, ~340 | 420 / 734 |
+| /skills/<skill>/entry-level/ (643), /new/ (659) | 114, 116 | 18%, 17%, ~230 | 309, 393 / 712, 857 |
+| contract, part-time, internships in a place (276) | 90 | 23-27%, ~70 | |
+| /perks/<perk>/<place>/ (158), crypto narrow lists (138) | 30, 27 | 30%, 44%, ~110 | |
+| about 20,900 of the 81,309 non-job addresses in all | | | |
+
+Near-duplicates (six-word runs and sentences found on half the pages of a kind or more, names and figures masked):
+- /vs/<site>/alternatives/ (34 pages): 90% of the sentences are on most of the others, two pages share 83% of their text: each lists
+  the same 34 sites with the same lines. /vs/ is kept open to search (owner's rule); it needs its own text per site, not a noindex.
+- /skills/<skill>/new/ and /new/skills/<skill>/, /roles/<work>/new/ and /new/roles/<work>/ (239 pairs): the same jobs posted in the
+  same three days at two addresses; the 50 rows of the first are the newest 50 of the second.
+- Cover letter, resume and CV examples (498 each): 53-56% of the sentences shared; job descriptions, how to become, how to hire
+  34-37%; interview questions 14%; glossary 0%. Not changed (content families, written per kind of work).
+- The state take-home pay calculators (50): 61% shared. A tool; not changed.
+
+Job pages (40 sampled live, 800 in the local build): the employer's text plus our own 300 to 370 words (the facts row, "At a glance",
+the pay set against the field's median, "Hiring at <company>", similar jobs). In the local sample (36,758 open jobs) 216 open job pages repeat an earlier one word for word with the same company, title and place.
+
+Links: the home page 341 (238 different, 222 KB); /salaries/ 1,936 (the A to Z list 1,194 and the titles table 486), /locations/united-states/
+1,720 ("Every list of jobs in United States" 1,285), /remote/ 1,418 ("Every list of remote jobs" 857), /skills/ 889, /categories/ 880,
+/roles/ 666, /companies/ 643; a place page 767 at the median; the footer 103 on every page.
+
+### Not live yet: the fix is written, not built
+
+The owner asked to wrap up at 13:40 local time before a local build could run (the shared build lock was held for two hours by another
+build on a swapping Mac), so nothing of it is on main. The code is on the branch `bing-quality` (one commit on top of main d561038):
+- `listing(..., index_min=)`: a narrow list under 20 jobs (`INDEX_MIN`: the long-tail combinations, the crypto lists, /new/ by skill
+  and kind of work) and a company page under 5 open jobs (`INDEX_MIN_CO`) get `noindex,follow` and leave the sitemap and the IndexNow
+  list; they stay for visitors and keep their links. Never /categories/, hubs, guides, tools or /vs/.
+- `DUP_PAGES`: /skills/<s>/new/ and /roles/<r>/new/ name /new/skills/<s>/ and /new/roles/<r>/ as canonical, links lead there.
+- `same_text_jobs()`: an open job page that repeats an earlier one (company, title, place, text) names the first as canonical
+  (`dup_of` in the record, so records.py builds the same page).
+- lastmod: a job's first day or the day its text changed (collect.py `changed`), a closed job's closing day, a list's newest job,
+  other pages the day their text changed, figures aside (`page_dates()`, data/lastmod.json in the Actions cache).
+- IndexNow sends only pages whose lastmod is yesterday or today; `every_list` leaves out the lists under the line.
+- check.py fails when a sitemap lists a noindex or canonicalised page, a missing page or an address twice.
+Before it goes to main: `HRN_RECORDS=both python3 build.py`, check.py, records_test.py (0 different), inlinks.py (orphans).
+
+### Expected after (from the live sample shares; the build prints the real counts)
+
+| | Before (live, 26 Nov) | After (expected) |
+|---|---|---|
+| non-job addresses in the sitemaps | 81,302 (+7 listed twice) | about 60,200: about 20,900 under the line (12,500 skill-in-place lists, 6,800 company pages, 730 kind of work in a place, 340 field in a place, 230 skill entry-level and last-3-days lists, about 300 others) and about 240 twins out |
+| job pages in the sitemaps | 864,491 | less the word-for-word repeats (0.6% of open jobs in the sample) |
+| lastmod = the day of the build | 100% of non-job pages, 26% of job pages | lists: the day of their newest job; other pages: the day their text changed |
+| noindex pages in the sitemaps | 0 | 0 (check.py now tests it) |
