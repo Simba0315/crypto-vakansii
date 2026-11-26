@@ -2160,6 +2160,21 @@
       yearHours: yearHours, yearDays: yearHours / day, yearWeeks: yearHours / (day * 5), yearValue: yearHours * rate, periodValue: per * rate };
   };
 
+  /* ---------- a bonus after tax (United States): the flat withholding on bonuses, Social Security, Medicare and a state rate typed by the person ---------- */
+  T.bonus = function (o) {
+    o = o || {};
+    var blank = function (v) { return clean(v) === ''; };
+    var b = num(o.bonus), sal = blank(o.salary) ? 0 : num(o.salary), st = blank(o.state) ? 0 : num(o.state), br = blank(o.bracket) ? 0 : num(o.bracket) / 100, X = T.TAX2026;
+    if (!(b > 0) || b > 1e9 || !(sal >= 0) || sal > 1e9 || !(st >= 0) || st > 20 || !(br >= 0) || br > 0.37) return null;
+    var fed = Math.min(b, 1e6) * 0.22 + Math.max(0, b - 1e6) * 0.37;                                  // flat withholding on supplemental wages: 22% up to $1,000,000 in the year, 37% above
+    var ss = Math.max(0, Math.min(b, X.ssBase - sal)) * X.ss;                                           // Social Security stops at the wage base
+    var med = b * X.med + Math.max(0, Math.min(b, sal + b - 200000)) * X.addMed;                       // 0.9% more on pay above $200,000, withheld whatever the filing status
+    var state = b * st / 100, taken = fed + ss + med + state, net = b - taken;
+    var r = { bonus: b, salary: sal, fed: fed, ss: ss, med: med, state: state, taken: taken, net: net, share: taken / b, bracket: br };
+    if (br) { r.actualFed = b * br; r.settle = fed - b * br; }                                           // positive: more was withheld than the bracket asks for, so it comes back at filing
+    return r;
+  };
+
   if (typeof module !== 'undefined' && module.exports) module.exports = T;
   if (typeof document === 'undefined') return;
   window.HRNT = T;                       // the resume builder scores the resume and matches it to a posting with the same code
@@ -3294,6 +3309,28 @@
         ? esc(h(r.unused)) + ' at ' + esc(money(r.rate, s, 2)) + ' an hour is ' + esc(money(r.payout, s, 2)) + ', which is ' + esc(d(r.days)) + ' of ' + esc(fmt(r.day, 2)) + ' hours. Whether unused time is paid out when you leave depends on where you work and on your employer\u2019s policy: this is arithmetic, not legal advice.'
         : esc(h(r.per)) + ' in each of ' + esc(fmt(r.periods, 0)) + ' pay periods is ' + esc(h(r.yearHours)) + ' a year, which is ' + esc(d(r.yearDays)) + ' of ' + esc(fmt(r.day, 2)) + ' hours.';
       board(out, title, r.unused ? d(r.days) + ' unused' : d(r.yearDays) + ' a year', lead + sub(note) + kv(rows));
+    });
+  };
+
+  /* ---------- a bonus after tax ---------- */
+  tools['bonus-tax'] = function () {
+    var out = $('tl-out'), title = 'Your bonus after tax';
+    form(function (v) {
+      if (!clean(v.bonus)) return idle(out, title, 'Enter the gross bonus, the amount before anything is taken off.');
+      var r = T.bonus(v);
+      if (!r) return idle(out, title, 'Check the figures: the bonus must be above zero, the salary cannot be negative and the state rate is a percent from 0 to 20.');
+      var rows = [['Bonus before tax', money(r.bonus, '$', 2)], ['Federal income tax withheld (' + (r.bonus > 1e6 ? '22% and 37%' : '22%') + ')', '\u2212' + money(r.fed, '$', 2)],
+        ['Social Security (6.2%)', '\u2212' + money(r.ss, '$', 2)], ['Medicare', '\u2212' + money(r.med, '$', 2)]];
+      if (r.state) rows.push(['State income tax', '\u2212' + money(r.state, '$', 2)]);
+      rows.push(['Arrives in your account', money(r.net, '$', 2)]);
+      var note = esc(fmt(r.share * 100, 1)) + '% of the bonus is taken before it reaches you. ' + (r.ss === 0 && r.salary ? 'Your salary is above the Social Security limit for 2026, so none is taken from the bonus. ' : '');
+      if (r.bracket) {
+        rows.push(['Federal tax your bracket asks for (' + fmt(r.bracket * 100, 0) + '%)', money(r.actualFed, '$', 2)]);
+        note += r.settle > 0.005 ? 'The 22% withheld is ' + esc(money(r.settle, '$', 2)) + ' more than your bracket asks for, so that much comes back when you file your tax return.'
+          : r.settle < -0.005 ? 'The 22% withheld is ' + esc(money(-r.settle, '$', 2)) + ' less than your bracket asks for, so you owe that much when you file your tax return.'
+          : 'The withholding matches your bracket, so nothing is left to settle when you file.';
+      } else note += 'The 22% is only what the employer holds back. Your real federal tax on the bonus is settled when you file, at your own bracket.';
+      board(out, title, fmt(r.share * 100, 1) + '% taken', big(money(r.net, '$', 2), 'after tax') + sub(note) + kv(rows));
     });
   };
 

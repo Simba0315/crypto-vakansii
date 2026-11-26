@@ -1389,5 +1389,18 @@ else {
 }
 }
 
+/* bonus after tax */
+let bn = T.bonus({ bonus: '10000', salary: '90000', state: '5', bracket: '24' });
+eq('bonus: $10,000 on $90,000, 5% state, 24% bracket', [bn.fed, bn.ss, bn.med, bn.state, bn.net, bn.settle], [2200, 620, 145, 500, 6535, -200]);
+bn = T.bonus({ bonus: '20000', salary: '180000' });
+near('bonus: Social Security stops at the 2026 wage base of $184,500', bn.ss, 4500 * 0.062);
+bn = T.bonus({ bonus: '50000', salary: '190000' });
+near('bonus: 0.9% more Medicare on the part of pay above $200,000', bn.med, 50000 * 0.0145 + 40000 * 0.009);
+bn = T.bonus({ bonus: '1500000', salary: '0' });
+near('bonus: 37% on the part above $1,000,000', bn.fed, 220000 + 185000);
+eq('bonus: bad figures are refused', [T.bonus({ bonus: '0' }), T.bonus({ bonus: '5000', state: '40' }), T.bonus({ bonus: '5000', bracket: '50' }), T.bonus({ bonus: 'x' })], [null, null, null, null]);
+bn = T.bonus({ bonus: '5000', salary: '60000', bracket: '12' });
+near('bonus: 22% withheld against a 12% bracket comes back', bn.settle, 500);
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

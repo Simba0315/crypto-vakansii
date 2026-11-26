@@ -2422,6 +2422,60 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
              '<tr><td>Value of a year of earning</td><td>104 × $25.00</td><td class="num">$2,600.00</td></tr></table></div>'
              '<p class="note">A balance of 60 hours is a week and a half of work. The 4 hours added every two weeks refill it in about 15 pay periods, which is just over half a year.</p>'))
 
+    # ------------------------------------------------------------ 42. a bonus after tax
+    tool("bonus-tax", "seekers", "Bonus after tax calculator",
+         "A US bonus after the flat 22% federal withholding, Social Security, Medicare and your state: what arrives, and what is settled at filing.",
+         "Bonus Tax Calculator 2026: Your Bonus After Tax",
+         "See what a US bonus pays after the flat 22% federal withholding, Social Security, Medicare and state tax, and whether you get money back or owe at filing. Free, in your browser.",
+         "What your bonus is worth after tax",
+         "A bonus of $10,000 rarely arrives as $10,000, and the payslip does not say why the cut looks larger than on an ordinary paycheck. "
+         "Enter the bonus, your yearly salary and, if you want it, your state rate and your federal tax bracket. The calculator shows each amount taken off, what reaches your account and whether the withholding is more or less than your bracket asks for. "
+         "It uses the 2026 Social Security limit and the standard 22% withholding on bonuses: this is an estimate, not tax advice.",
+         wrap("bonus-tax",
+              '<div class="card tl-form"><div class="tl-grid">'
+              + _f("bonus", "Bonus before tax, $", "10000", "10000")
+              + _f("salary", "Your yearly salary before the bonus, $", "90000", "90000", hint="Used for the Social Security limit and the extra Medicare on pay above $200,000. Leave empty if you do not know.")
+              + _f("state", "State income tax, % of the bonus", "0", "0", hint="Your state\u2019s rate for bonuses, or 0 for none. Look it up on your state\u2019s tax site.")
+              + _sel("bracket", "Your federal tax bracket", [("", "I do not know", True), ("10", "10%"), ("12", "12%"), ("22", "22%"), ("24", "24%"), ("32", "32%"), ("35", "35%"), ("37", "37%")],
+                     hint="The rate on your last dollar of income, as the take-home pay calculator shows it. It tells you whether tax is owed or refunded at filing.")
+              + "</div>"
+              + '<div class="tl-actions">' + _clear() + "</div></div>"
+              + _board("Your bonus after tax", "Enter the bonus before tax.")
+              + '<p class="note tl-priv"><b>Not tax advice</b>Your employer may withhold in a different way, for example by adding the bonus to a normal paycheck, and your real tax is settled when you file. '
+                'The page applies the standard rules to the numbers you type. Nothing you type leaves your browser.</p>'),
+         "How the bonus is calculated",
+         "<ul><li><strong>Federal income tax withheld</strong>: a flat 22% on bonuses and other extra pay up to $1,000,000 in the year, and 37% on the part above it (Internal Revenue Service, Publication 15). "
+         "This is what the employer holds back, not the tax you finally owe.</li>"
+         "<li><strong>Social Security</strong>: 6.2% of pay up to $184,500 in 2026 (Social Security Administration). If your salary already reaches that, nothing more is taken from the bonus.</li>"
+         "<li><strong>Medicare</strong>: 1.45% of the bonus, and 0.9% more on the part of your pay above $200,000.</li>"
+         "<li><strong>State tax</strong>: the percent you type. States tax bonuses at different rates and a few do not tax income at all.</li></ul>"
+         "<p>The final federal tax on a bonus is your bracket times the bonus, because the bonus is added to the rest of your income for the year. "
+         "When the 22% withheld is more than that, the difference comes back as a refund or lowers what you owe; when it is less, you pay the difference when you file. "
+         "Not included: city taxes, pre-tax contributions taken from the bonus and a bonus paid in company shares. "
+         "The <a href=\"" + P + "/tools/take-home-pay/\">take-home pay calculator</a> shows your bracket.</p>",
+         [("How much tax is taken from a $10,000 bonus?",
+           "With $90,000 of salary and no state tax, $2,965: $2,200 federal withholding at 22%, $620 Social Security and $145 Medicare, so $7,035 arrives. A state rate adds to that, for example $500 more at 5%."),
+          ("Why does my bonus feel taxed at a higher rate?",
+           "Employers often withhold a flat 22% on a bonus, which can be above your real bracket, and the payslip shows the cut on a large single payment. The tax you owe is settled at filing, and the extra is returned if too much was held."),
+          ("Is a bonus taxed more than my salary?",
+           "Not in the end. A bonus is added to your income for the year and taxed at your bracket like the rest. Only the amount withheld on the day it is paid can be higher or lower than that."),
+          ("What is the tax withholding on a bonus?",
+           "The federal rule for extra pay is a flat 22% on the first $1,000,000 in a year and 37% above it, plus Social Security and Medicare. Some employers add the bonus to a normal paycheck instead, which gives a different figure."),
+          ("Do I pay Social Security on a bonus?",
+           "Yes, 6.2%, until your pay for the year reaches $184,500 (the 2026 limit). Above that, no more Social Security is taken, but Medicare continues."),
+          ("Can I get the withheld bonus tax back?",
+           "If 22% is more than your bracket, the excess is returned as a refund or reduces the tax due when you file your return. If your bracket is higher than 22%, you owe the difference.")],
+         ["take-home-pay", "raise-calculator", "compare-offers"], ["salaries/"],
+         ex=("Bonus example: $10,000 with a $90,000 salary, 5% state tax and the 24% bracket",
+             '<div class="tablewrap"><table><tr><th>What is counted</th><th>Sum</th><th>Amount</th></tr>'
+             '<tr><td>Federal income tax withheld</td><td>$10,000 × 22%</td><td class="num">\u2212$2,200.00</td></tr>'
+             '<tr><td>Social Security</td><td>$10,000 × 6.2%</td><td class="num">\u2212$620.00</td></tr>'
+             '<tr><td>Medicare</td><td>$10,000 × 1.45%</td><td class="num">\u2212$145.00</td></tr>'
+             '<tr><td>State income tax</td><td>$10,000 × 5%</td><td class="num">\u2212$500.00</td></tr>'
+             '<tr class="tl-total"><td>Arrives in your account</td><td>$10,000 \u2212 $3,465</td><td class="num">$6,535.00</td></tr>'
+             '<tr><td>Federal tax at the 24% bracket</td><td>$10,000 × 24%</td><td class="num">$2,400.00</td></tr></table></div>'
+             '<p class="note">The bracket asks for $200 more than the 22% withheld, so $200 is owed when the return is filed. In the 12% bracket the same bonus would send $1,000 back.</p>'))
+
     # ------------------------------------------------------------ write the pages
     by_slug = {t["slug"]: t for t in TOOLS}
     org = {"@type": "Organization", "name": SITE, "url": FULL + "/"}
@@ -2466,6 +2520,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
         "remote-work-savings": "Working from home saves the time and money you spend getting to an office, but that cost never shows on a payslip. Enter your own travel and office costs and this page adds them up for a year.",
         "raise-calculator": "A raise is a percent, an amount or a new salary, and people quote it in different ways. Give one of them and this page shows the other two, and what the raise is worth after prices have gone up.",
         "pto-payout": "Paid time off, or PTO, is the pay you keep while you are away from work for a holiday, an illness or a personal day. It is counted in hours on a payslip. This page turns those hours into days and money, and shows how many hours you earn in a year.",
+        "bonus-tax": "A bonus is paid on top of your salary, and the employer holds back tax from it before you see the money. This page shows how much is held back, what is left and whether you get some of it back at the end of the year.",
         "overtime-pay": "Overtime is the hours you work above a set number in a week, usually 40. Those hours are often paid at a higher rate, such as one and a half times your normal rate, and this page adds up the week for you.",
         "resume-skills": "A skill here means a tool, a programming language, a certificate or a spoken language that a job posting names. This page counts which of them today’s postings for one job title name most, so you know what to put first.",
         "elevator-pitch": "An elevator pitch is what you say when someone asks what you do and you have half a minute to answer. This page puts your answer in order and tells you how long it takes to say.",
@@ -2631,6 +2686,8 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
                                       '<span class="ln">“What stands out most is <b>how calm she stays</b>…”</span><span class="sk" style="width:60%"></span>',
         "pto-payout": ex + '<span class="ln">$25 an hour · 60 unused hours</span><span class="big">$1,500<small>7.5 days</small></span>'
                            '<span class="ln"><b>104 hours</b> earned in a year at 4 hours every two weeks</span>',
+        "bonus-tax": ex + '<span class="ln">$10,000 bonus · $90,000 salary</span><span class="big">$7,035<small>after tax</small></span>'
+                           '<span class="ln"><b>$2,200</b> federal at 22% + <b>$765</b> Social Security and Medicare</span>',
         "overtime-pay": ex + '<span class="ln">$20 an hour · 46 hours in the week</span><span class="big">$980<small>for the week</small></span>'
                              '<span class="ln"><b>$800</b> regular + <b>$180</b> overtime at time and a half</span>',
     })
@@ -2704,6 +2761,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
         "elevator-pitch": f"{pitch_n} words, about 30 seconds",
         "resume-summary": "Two wordings of two lines each",
         "recommendation-letter": "Two strengths, an example of each",
+        "bonus-tax": "$10,000 bonus = $7,035 after federal tax",
         "overtime-pay": "46 hours at $20 = $980 for the week",
         "pto-payout": "60 hours at $25 = $1,500, 7.5 days",
     }
@@ -2732,7 +2790,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
     HUB = [("Resume and LinkedIn profile", "resume", ["resume-review", "resume-match", "resume-skills", "job-description-keywords", "resume-summary", "resume-bullet-builder", "linkedin-headline", "linkedin-summary", "linkedin-review"]),
            ("Applying and interviews", "applying", ["cover-letter", "application-email", "follow-up-email", "job-search-calculator", "interview-answer-builder", "thank-you-email", "reference-request-email", "recommendation-letter"]),
            ("Networking and introductions", "networking", ["referral-request", "linkedin-connection-message", "elevator-pitch", "professional-bio"]),
-           ("Pay and offers", "pay", ["salary-checker", "offer-check", "compare-offers", "negotiation-email", "job-offer-response", "raise-calculator", "raise-request-email", "salary-converter", "overtime-pay", "equity-calculator", "401k-match", "contractor-rate"]),
+           ("Pay and offers", "pay", ["salary-checker", "offer-check", "compare-offers", "negotiation-email", "job-offer-response", "raise-calculator", "raise-request-email", "salary-converter", "overtime-pay", "bonus-tax", "equity-calculator", "401k-match", "contractor-rate"]),
            ("Remote work and leaving a job", "remote-leaving", ["remote-work-savings", "time-zone-overlap", "resignation-letter", "last-working-day", "pto-payout"])]
     named = {s_ for _, _, ss in HUB for s_ in ss}
     rest = [t["slug"] for t in TOOLS if t["group"] == "seekers" and t["slug"] not in named]
