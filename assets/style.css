@@ -5712,3 +5712,11 @@ nav a.nl.nl-cta,nav a.nl.nl-cta:hover{background:transparent;color:var(--text);b
 .popular a.pop-tech,.hero.v2 .popular a.pop-tech{background:var(--card);color:var(--text);border-color:var(--line2)}
 .hero.v2 .shot-more .btn{background:transparent;color:var(--text);border-color:var(--line2)}
 .hero.v2 .shot-more .btn::after{background:var(--text);color:var(--bg)}
+
+/* ---- My jobs beside Sign in on every screen (27 Nov 2026): one click back to saved jobs and searches; the menu keeps its own link ---- */
+.hmy{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 11px;border:1px solid var(--line2);border-radius:6px;font-size:14.5px;font-weight:600;color:var(--text);white-space:nowrap;text-decoration:none}
+.hmy:hover{border-color:var(--text)}
+.hmy svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
+.hmy:focus-visible{outline:2px solid var(--text);outline-offset:2px}
+@media(max-width:1200px){.hmy-t{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.hmy{width:36px;justify-content:center;padding:0}}
+@media(max-width:560px){.hmy{width:44px;height:44px}}
