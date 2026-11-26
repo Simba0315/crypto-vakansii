@@ -1259,6 +1259,8 @@ def finish_html(content):
     if "<img" in content:
         # every image carries a title as well as its alt (owner, 24 Nov 2026: "title caption alt description" filled everywhere)
         content = IMG_NO_TITLE.sub(lambda m: m.group(0)[:-1].rstrip("/").rstrip() + f' title="{m.group(1)}">', content)
+    if 'class="rkt' in content:
+        content = RKT_TABLE.sub(rkt_named, content)
     if any(k_ in content for k_ in ONE_KEYS):         # plain substring tests first: the pattern runs only on the few pages that need it
         # "median 1 years", "asks for 1 years" (job description pages, 24 Nov 2026): twenty phrases put a count before "years"; one place
         # makes "1" singular instead of a condition in each of them
@@ -1279,6 +1281,37 @@ ONE_WORD = {"years": "year", "days": "day", "weeks": "week", "months": "month", 
             "jobs": "job", "postings": "posting", "countries": "country", "cities": "city", "openings": "opening"}
 ONE_PLURAL = re.compile(r"(?<![\d.,/$£€-])\b1 (" + "|".join(ONE_WORD) + r")\b")      # "54 open roles at 1 companies" too (24 Nov 2026)
 ONE_KEYS = tuple("1 " + w_ for w_ in ONE_WORD)
+
+# A table of class "rkt" becomes a card per row on a phone, and each figure shows its column's name from data-l (style.css). The tables
+# built in one string (the tool pages' take-home and hourly tables, a few guides) had no data-l, so a phone showed a column of bare
+# figures under "$40,000" (26 Nov 2026). Every cell without one takes the name of its column from the table's first row.
+RKT_TABLE = re.compile(r'<table class="rkt[^"]*"[^>]*>.*?</table>', re.S)
+RKT_ROW = re.compile(r"<tr[^>]*>(.*?)</tr>", re.S)
+RKT_CELL = re.compile(r"<(t[hd])(?=[\s>])([^>]*)>")
+
+
+def rkt_named(m_):
+    t_ = m_.group(0)
+    rows_ = RKT_ROW.findall(t_)
+    if not rows_ or "<th" not in rows_[0]:
+        return t_
+    head_ = [re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", c_)).strip().replace('"', "&quot;")
+             for c_ in re.findall(r"<th[^>]*>(.*?)</th>", rows_[0], re.S)]
+    if not any(head_):
+        return t_
+    first_ = [True]
+    def row_(r_):
+        if first_[0]:
+            first_[0] = False
+            return r_.group(0)
+        i_ = [-1]
+        def cell_(c_):
+            i_[0] += 1
+            if c_.group(1) == "th" or "data-l=" in c_.group(2) or i_[0] >= len(head_) or not head_[i_[0]]:
+                return c_.group(0)
+            return f'<td data-l="{head_[i_[0]]}"{c_.group(2)}>'
+        return RKT_CELL.sub(cell_, r_.group(0))
+    return RKT_ROW.sub(row_, t_)
 
 
 def mincss(s):
