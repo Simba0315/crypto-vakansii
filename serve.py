@@ -51,6 +51,7 @@ BUSY_N = [0]            # requests answered 503 Busy by a handler (for the log l
 LATEST_ANSWER = {}      # /api/latest: limit -> (when, answer)
 # /api/search?list=1, the rows of the search page: the newest answers, by the search written one way (a few hundred, under 10 MB)
 LIST_CACHE, LIST_LOCK, LIST_TTL, LIST_KEEP = collections.OrderedDict(), threading.Lock(), 60, 400
+LIST_STALE = 1800       # an answer up to 30 minutes old is sent when the search engine fails or is busy, rather than an error (27 Nov 2026)
 LIST_HEADERS = [("Cache-Control", "public, max-age=60")]
 
 
@@ -300,13 +301,18 @@ class Handler(SimpleHTTPRequestHandler):
             if hit and now - hit[0] < LIST_TTL:
                 LIST_CACHE.move_to_end(key)
                 return self.send(200, hit[1], "application/json; charset=utf-8", LIST_HEADERS)
+        # 26 Nov 2026: "search is being reloaded" for minutes at a time. ready() said no whenever one look at the index took over a second
+        # (OpenSearch loading the next index after an upload, or this program busy) and kept saying it for a minute; and after a change
+        # of the index's version it said no until the new index was loaded (6.5 minutes on 25 Nov). Now it says no only when there is
+        # no index at all, an older index answers with the filters it has (search_engine.fit), and when the engine fails, the last
+        # answer to the same search is sent if it is under LIST_STALE old.
         if not search_engine.ready():
-            return self.send_json(503, {"error": "search is being reloaded; try again in a few minutes"}, [("Cache-Control", "no-store"), ("Retry-After", "60")])
+            return self.list_stale(key) or self.send_json(503, {"error": "search is being reloaded; try again in a few minutes"}, [("Cache-Control", "no-store"), ("Retry-After", "60")])
         try:
             got = search_engine.listing(p)
         except (OSError, ValueError, KeyError) as err:
             self.log_error("list %s: %r", key[:200], err)
-            return self.send_json(503, {"error": "search engine unavailable"}, [("Cache-Control", "no-store"), ("Retry-After", "30")])
+            return self.list_stale(key) or self.send_json(503, {"error": "search engine unavailable"}, [("Cache-Control", "no-store"), ("Retry-After", "30")])
         stamp = int(time.time())
         body = json.dumps({"total": got["total"], "offset": p["offset"], "more": got["more"], "fuzzy": got["fuzzy"], "exact": got["exact"],
                            "without": got["without"], **({"sum": got["sum"]} if "sum" in got else {}),
@@ -314,8 +320,17 @@ class Handler(SimpleHTTPRequestHandler):
                           ensure_ascii=False, separators=(",", ":"))
         with LIST_LOCK:
             LIST_CACHE[key] = (now, body)
+            LIST_CACHE.move_to_end(key)
             while len(LIST_CACHE) > LIST_KEEP: LIST_CACHE.popitem(last=False)
         return self.send(200, body, "application/json; charset=utf-8", LIST_HEADERS)
+
+    def list_stale(self, key):
+        """The last answer to this search, when it is under LIST_STALE seconds old: sent (kept 30 s by nginx and browsers) instead of an
+        error while the search engine cannot answer. None when there is none."""
+        with LIST_LOCK:
+            hit = LIST_CACHE.get(key)
+        if not hit or time.monotonic() - hit[0] > LIST_STALE: return None
+        return self.send(200, hit[1], "application/json; charset=utf-8", [("Cache-Control", "public, max-age=30"), ("X-Stale", f"{time.monotonic() - hit[0]:.0f} s")]) or True
 
     def log_message(self, fmt, *args):
         if os.environ.get("HRN_QUIET") != "1": super().log_message(fmt, *args)

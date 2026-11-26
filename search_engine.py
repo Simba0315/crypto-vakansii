@@ -339,10 +339,10 @@ def search(q, remote=False, limit=20, offset=0, timeout=1.5, cap=50, facets=True
     if not URL: raise OSError("HRN_OPENSEARCH is not set")
     body = query(q, remote, limit, offset, cap=cap, facets=facets)
     if body is None: return 0, [], {}
-    r, fuzzy = call("POST", f"/{ALIAS}/_search", body, timeout=timeout), False
+    r, fuzzy = call("POST", f"/{ALIAS}/_search", fit(body), timeout=timeout), False
     exact = r["hits"]["total"]["value"]
     if exact < FEW:
-        rf = call("POST", f"/{ALIAS}/_search", query(q, remote, limit, offset, fuzzy=True, cap=cap, facets=facets), timeout=timeout)
+        rf = call("POST", f"/{ALIAS}/_search", fit(query(q, remote, limit, offset, fuzzy=True, cap=cap, facets=facets)), timeout=timeout)
         if prefer_fuzzy(exact, rf["hits"]["total"]["value"]): r, fuzzy = rf, True
     a = r.get("aggregations", {})
     facets = {"fuzzy": fuzzy, "exact": exact if fuzzy else r["hits"]["total"]["value"], "remote": a.get("remote", {}).get("doc_count", 0), "hybrid": a.get("hybrid", {}).get("doc_count", 0)}
@@ -515,7 +515,7 @@ def list_body(p, today, fuzzy=False, drop="", count=False):
 
 def msearch(bodies, timeout):
     """Several requests in one round trip; their answers in the same order."""
-    out = call("POST", f"/{ALIAS}/_msearch", "".join("{}\n" + json.dumps(b) + "\n" for b in bodies), timeout=timeout, ndjson=True)["responses"]
+    out = call("POST", f"/{ALIAS}/_msearch", "".join("{}\n" + json.dumps(fit(b)) + "\n" for b in bodies), timeout=timeout, ndjson=True)["responses"]
     for x in out:
         if "error" in x: raise OSError(f"OpenSearch msearch: {str(x['error'])[:300]}")
     return out
@@ -527,7 +527,7 @@ def listing(p, today=None, timeout=2.5):
     Raises OSError when OpenSearch is not there or does not answer in time."""
     if not URL: raise OSError("HRN_OPENSEARCH is not set")
     today = today or datetime.datetime.now(datetime.timezone.utc).date()
-    r = call("POST", f"/{ALIAS}/_search", list_body(p, today), timeout=timeout)
+    r = call("POST", f"/{ALIAS}/_search", fit(list_body(p, today)), timeout=timeout)
     total, fuzzy, exact, without = r["hits"]["total"]["value"], False, 0, {}
     if p["count"]: return {"total": total, "hits": [], "fuzzy": False, "exact": 0, "without": {}, "more": False}
     words = read_query(p["q"])["words"]
@@ -548,7 +548,7 @@ def listing(p, today=None, timeout=2.5):
     out = {"total": total, "hits": hits, "fuzzy": fuzzy, "exact": exact, "without": without,
            "more": not p["ids"] and len(hits) == p["limit"] and p["offset"] + p["limit"] < DEEPEST}
     a = r.get("aggregations")
-    if a: out["sum"] = {"remote": a["remote"]["doc_count"], "pay": a["pay"]["doc_count"], "fresh": a["fresh"]["doc_count"],
+    if a and all(k_ in a for k_ in ("remote", "pay", "fresh", "top")): out["sum"] = {"remote": a["remote"]["doc_count"], "pay": a["pay"]["doc_count"], "fresh": a["fresh"]["doc_count"],
                         "top": [[b["key"], b["doc_count"]] for b in a["top"]["buckets"]]}
     return out
 
@@ -568,20 +568,101 @@ def row(src, extra=0, logo=False, now=None):
             src.get("etype") or "", t // 60 if t and now - t < WEEK else 0, list(src.get("cc") or [])[:3], int(bool(logo)), int(extra)]
 
 
-_READY = {"at": -1e9, "ok": False}
+_READY = {"at": -1e9, "ok": False, "v": 0, "fields": None}
 
 
 def ready():
-    """Is the index there and new enough (_meta.v) to answer the list? Asked of OpenSearch at most once a minute. When this code
-    first arrives the index is still the old one for the few minutes until the load that follows the upload replaces it."""
-    if time.monotonic() - _READY["at"] < 60: return _READY["ok"]
+    """Is there an index to answer the list? Asked of OpenSearch at most once a minute.
+    27 Nov 2026: a look that fails or takes over 2 seconds (OpenSearch loading the next index after an upload, this program busy) keeps the
+    last answer and is tried again in 10 seconds. Until then one slow look turned every list into a 503 "search is being reloaded" for a
+    whole minute, again and again (26 Nov 2026, 07:00-07:25 UTC, with no index being loaded at all). And an index of an older version
+    (_meta.v) answers too, with the filters it has (fit), for the few minutes until the load that follows the upload replaces it
+    (25 Nov 2026: 6.5 minutes of 503 after the version changed)."""
+    now = time.monotonic()
+    if now - _READY["at"] < 60: return _READY["ok"]
     try:
-        m = call("GET", f"/{ALIAS}/_mapping", timeout=1.0)
-        ok = any(((v.get("mappings") or {}).get("_meta") or {}).get("v", 0) >= VERSION for v in m.values())
+        m = call("GET", f"/{ALIAS}/_mapping", timeout=2.0)
     except (OSError, ValueError):
-        ok = False
-    _READY.update(at=time.monotonic(), ok=ok)
-    return ok
+        _READY["at"] = now - 50
+        return _READY["ok"]
+    v, fields = 0, set()
+    for x in (m or {}).values():
+        mp = x.get("mappings") or {}
+        v = max(v, int((mp.get("_meta") or {}).get("v", 0) or 0))
+        for k, d in (mp.get("properties") or {}).items():
+            fields.add(k); fields.update(f"{k}.{sub}" for sub in ((d or {}).get("fields") or {}))
+    _READY.update(at=now, ok=bool(m), v=v, fields=None if v >= VERSION else fields)
+    return _READY["ok"]
+
+
+LEAF = ("term", "terms", "range", "match", "match_phrase", "match_phrase_prefix", "prefix", "wildcard", "fuzzy")
+
+
+def _fields(x):
+    """Every field a part of a request names (a clause, an aggregation, a function)."""
+    out = set()
+    if isinstance(x, dict):
+        for k, v in x.items():
+            if k in LEAF and isinstance(v, dict): out.update(f for f in v if f != "boost")
+            elif k == "field" and isinstance(v, str): out.add(v)
+            elif k == "fields" and isinstance(v, list): out.update(str(f).split("^")[0] for f in v)
+            elif k in ("exp", "gauss", "linear") and isinstance(v, dict): out.update(v)
+            else: out |= _fields(v)
+    elif isinstance(x, list):
+        for v in x: out |= _fields(v)
+    return out
+
+
+def _fit(c, known, neg=False):
+    """One clause for an older index: itself, a narrower copy, or None to leave it out. A clause on a field the index lacks is left out
+    where it filters (the filter is not applied, rather than matching nothing); inside a must_not a bool that would lose one of its
+    conditions is left out whole, so an exclusion never grows."""
+    if not isinstance(c, dict) or len(c) != 1: return c
+    (k, v), = c.items()
+    if k in LEAF or k == "exists": return c if all(known(f) for f in _fields(c)) else None
+    if k == "multi_match":
+        if not v.get("fields"): return c
+        fs = [f for f in v["fields"] if known(str(f).split("^")[0])]
+        return {k: {**v, "fields": fs}} if fs else None
+    if k == "constant_score":
+        inner = _fit(v.get("filter"), known, neg)
+        return None if inner is None else {k: {**v, "filter": inner}}
+    if k == "function_score":
+        q = _fit(v.get("query") or {"match_all": {}}, known, neg)
+        if q is None: return None
+        fns = [fn for fn in v.get("functions") or [] if all(known(f) for f in _fields(fn))]
+        return {k: {**v, "query": q, "functions": fns}} if fns else q
+    if k == "bool":
+        out, lost_should = {}, False
+        for part, xs in v.items():
+            if part not in ("filter", "must", "should", "must_not"): out[part] = xs; continue
+            xs = xs if isinstance(xs, list) else [xs]
+            got = [_fit(x, known, not neg if part == "must_not" else neg) for x in xs]
+            kept = [x for x in got if x is not None]
+            if neg and part in ("filter", "must", "must_not") and len(kept) < len(got): return None
+            if part == "should" and xs and not kept: lost_should = True
+            if kept: out[part] = kept
+        if lost_should:
+            if neg and int(v.get("minimum_should_match", 0) or 0) >= 1: return None
+            out.pop("minimum_should_match", None)
+        return {"bool": out}
+    return c
+
+
+def fit(body):
+    """The request as an index of an older version can answer it (ready() keeps the fields of that index); unchanged for an index of the
+    current version. Clauses, sorts, collapse and counts on fields the index does not have are left out."""
+    fields = _READY.get("fields")
+    if not fields or not isinstance(body, dict): return body
+    known = lambda f: f in fields or f.startswith("_")
+    out = dict(body)
+    if "query" in out: out["query"] = _fit(out["query"], known) or {"match_all": {}}
+    if "sort" in out:
+        out["sort"] = [x for x in out["sort"] if isinstance(x, str) or all(known(f) for f in x)]
+        if not out["sort"]: del out["sort"]
+    if "collapse" in out and not known(out["collapse"].get("field", "")): del out["collapse"]
+    if "aggs" in out and not all(known(f) for f in _fields(out["aggs"])): del out["aggs"]
+    return out
 
 
 def _test():
@@ -700,6 +781,40 @@ def _test():
     assert '{"terms": {"places": ["africa", "asia-pacific", "europe", "latin-america"]}}' in flat(no)
     f, no = list_filters(P("remote=1&rc=DE"), day)
     assert '"europe"' not in flat(no) and '"latin-america"' in flat(no)
+    # an index of an older version (fit): clauses on fields it lacks are left out, an exclusion never grows, the rest is unchanged
+    v1 = {k for k in SETTINGS["mappings"]["properties"] if k not in ("cc", "ckey", "etype", "perks", "hybrid")} | {"company.raw", "tags.raw"}
+    _READY["fields"] = None
+    full = list_body(P("q=nurse&loc=texas&remote=1&rc=DE&etype=Part-time&hybrid=1&sum=1"), day)
+    assert fit(full) == full                                      # the current version: untouched
+    _READY["fields"] = v1
+    try:
+        got = fit(full)
+        fq = got["query"]["bool"] if "bool" in got["query"] else got["query"]["function_score"]["query"]["bool"]
+        assert "collapse" not in got and "aggs" not in got and not {"cc", "etype", "hybrid"} & _fields(got["query"]) and got["_source"] == full["_source"]
+        assert {"term": {"places": "texas"}} in fq["filter"] and {"term": {"active": True}} in fq["filter"]
+        assert {"bool": {"should": [{"term": {"remote": True}}], "minimum_should_match": 1}} in fq["filter"]   # remote or hybrid: remote kept
+        assert "must_not" not in fq                                 # both "remote for other countries" exclusions name cc: left out whole
+        assert _fit({"bool": {"must_not": [{"bool": {"filter": [{"term": {"remote": True}}, {"exists": {"field": "cc"}}]}}]}}, lambda f: f in v1) == {"bool": {}}
+        assert got["sort"] and all(isinstance(x, str) or set(x) <= v1 | {"_score"} for x in got["sort"])
+    finally:
+        _READY["fields"] = None
+    # ready(): a look that fails keeps the last answer and asks again in 10 s; an older index counts as ready (it answers through fit)
+    global call
+    real_call, keep_ = call, dict(_READY)
+    try:
+        def down(*a_, **k_): raise OSError("timed out")
+        _READY.update(at=-1e9, ok=True); call = down
+        assert ready() is True and time.monotonic() - _READY["at"] > 45
+        _READY.update(at=-1e9, ok=False)
+        assert ready() is False
+        call = lambda *a_, **k_: {"jobs-1": {"mappings": {"_meta": {"v": VERSION - 1}, "properties": {"slug": {"type": "keyword"}, "company": {"type": "text", "fields": {"raw": {}}}}}}}
+        _READY.update(at=-1e9)
+        assert ready() is True and _READY["fields"] == {"slug", "company", "company.raw"}
+        call = lambda *a_, **k_: {"jobs-2": {"mappings": {"_meta": {"v": VERSION}, "properties": {"slug": {"type": "keyword"}}}}}
+        _READY.update(at=-1e9)
+        assert ready() is True and _READY["fields"] is None
+    finally:
+        call = real_call; _READY.clear(); _READY.update(keep_)
     print("search_engine: query builder checks passed")
 
 
