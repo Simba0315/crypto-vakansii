@@ -1556,6 +1556,7 @@ def _cut_tree():
         # crosslinks.py writes its blocks into pages after the build wrote them: their classes count on every page
         xl_ = ROOT / "crosslinks.py"
         _CUT["extra"] = frozenset(t_ for t_ in _attr_tokens(xl_.read_text(encoding="utf-8") if xl_.exists() else "") if CUT_WORD.fullmatch(t_[1:]))
+        _CUT["extra_need"] = _CUT["extra"] & _CUT["needed"]
     return _CUT["tree"]
 
 
@@ -1594,6 +1595,13 @@ def _script_tokens(src):
         words = set(CUT_WORD.findall(f_.read_text(encoding="utf-8", errors="replace"))) if f_ else None
         tok[src] = frozenset(["." + w for w in words] + ["#" + w for w in words]) if words is not None else None
     return tok[src]
+
+
+def _script_need(src):
+    """_script_tokens(src) & the tokens some rule of style.css needs: the part of a script's words that can change what a page keeps."""
+    got = _CUT.setdefault("script_need", {})
+    if src not in got: got[src] = (_script_tokens(src) or frozenset()) & _CUT["needed"]
+    return got[src]
 
 
 def _attr_tokens(content):
@@ -1640,8 +1648,12 @@ def _cut_css(content):
     have, srcs = got
     _cut_tree()
     if kind in CUT_INLINE:
-        for s_ in srcs: have |= _script_tokens(s_)
-        css_ = css_cut(have | _CUT["extra"])
+        # only the tokens some rule needs count (css_cut keeps have & needed): each script's few are worked out once, not its thousands of
+        # words joined to every page's set (27 Nov 2026: that join was most of the 4 ms a job page took to draw in serve.py)
+        need_ = _CUT["needed"]
+        have = {t_ for t_ in have if t_ in need_}
+        for s_ in srcs: have |= _script_need(s_)
+        css_ = css_cut(have | _CUT["extra_need"])
         if "</style" in css_: return content
         return content.replace(link_, f"<style>{css_}</style>", 1)
     rec = CUT_SETS.setdefault(kind, [set(), set()])

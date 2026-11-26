@@ -639,6 +639,40 @@ plain HTML, so the page is readable without the map.
 - **Tools' result board** is a light card that follows the theme (`.tl-board` in `assets/tools.css`): no green type on black
   anywhere; the owner dislikes it.
 
+## The page server under load (27 Nov 2026, after the outage of 26 Nov)
+
+- What happened on 26 Nov, 06:50-08:09 UTC (journal of hrn-site, nginx's hrn.error.log and access log, read only): a crawler spread over
+  about 200,000 addresses with browser user agents asked for job pages, half of them without the trailing slash, about 400 a second at
+  07:00. serve.py started a thread per connection, all queued on the one page lock, Python's listen backlog was 5, and by 07:00 nginx had
+  used its 768 worker connections ("768 worker_connections are not enough", 75,000 times in ten minutes), then "upstream timed out while
+  connecting" until serve.py was restarted at 08:09 (it had used 45 of a possible 57 CPU minutes and stood at its 1 GB memory limit).
+  /api/search failed with it: it waited for the same lock for the records of its results. The 503 "search is being reloaded" of 07:00-07:25
+  was not a reload (no index was loaded then): ready() answered no for a minute whenever one look at OpenSearch took over a second.
+- Now (serve.py, records.py; nothing on the server's configuration changed):
+  - `serve.Server`: at most 128 requests at once (`HRN_MAX_REQUESTS`) and at most 24 job pages (`HRN_JOB_PAGES`); more are answered at
+    once with 503 and Retry-After, so nginx serves its kept copy of a job page and a crawler slows down. The listen backlog is 512.
+    Every 10 minutes with anything to say, a log line: connections refused, answered busy, job pages from the copy kept and drawn.
+  - `records.Store`: only the drawing of a page takes the page lock (`Guard`, 5 s at most). Rows are read through `Readers`, pooled
+    read-only connections with no lock: a search, the records it names, the row of a page, /api/latest. A new records file is read in
+    the background (`Store._load`) while the old one answers, then swapped under the lock in well under a millisecond.
+  - `records.Pages`: finished job pages for 90 s, at most 24 MB, by slug and records file; nginx keeps copies only per exact address.
+    The response header `X-Render` says "kept" or the milliseconds the page took to draw: `curl -sI https://jobseveryhour.com/job/<slug>/?x=1`.
+  - Drawing a job page: 3.6-4.6 ms before, 1.4-1.7 ms after on the Mac (1,000 pages of data/jobs.db, `build._cut_css` no longer joins
+    every word of site.js to each page's set of classes; the stylesheet in the page is byte for byte the same).
+  - The duplicate index (`/api/check-duplicate`) is let go before the next one is built after an upload (it answers 503 for those seconds),
+    so two are never in memory at once.
+  - Search (`search_engine.ready`, `fit`): a failed or slow look keeps the last answer; an index of an older version answers with the
+    filters it has until the new one is loaded; and `/api/search?list=1` sends the last answer to the same search (up to 30 minutes
+    old, header `X-Stale`) when the engine fails, instead of a 503.
+- Load test on the Mac (records of 37,575 jobs, 600 requests a second for 15 s, each to another job page, one search every 0.25 s):
+  before, 285 pages a second at 3.4 s each (p50; 4.3 s at most), 3,836 connections reset, 23 of 60 searches failed and the rest took 3.4 s;
+  after, 321 pages a second at 0.12 s (0.21 s at most), the other 4,081 answered 503 at once, no connection failed, all 60 searches
+  answered in 0.07 s (0.17 s at most). At 150 a second: 90% of pages within 1.13 s before, within 0.01 s after.
+- What would need the owner's yes on the server (not done): nginx `worker_connections` above 768 and `LimitNOFILE` for hrn-site above 1,024;
+  `proxy_cache_use_stale ... updating` and `proxy_cache_background_update on` for /job/ (a kept copy while the next one is drawn); a
+  redirect of /job/<slug> to /job/<slug>/ in nginx itself (half the crawler's requests went to serve.py only for that); `limit_conn`
+  per address; a second serve.py process behind nginx (`upstream` with two ports); Cloudflare caching of /job/ for a few minutes.
+
 ## The server on 18 Nov 2026: an outage from outside, and the page service's memory
 
 - 02:55 to 03:17 UTC the site answered 522. The virtual machine was cut off and started again from outside: the journal of the previous

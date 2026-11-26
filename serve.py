@@ -18,7 +18,7 @@ Two more addresses, both read-only and public:
                                                            is this job already on the site? (dedupe.py) The matching open jobs,
                                                            answered from memory in well under a millisecond
 """
-import collections, json, os, re, sys, threading, time, urllib.parse
+import collections, json, os, re, socket, sys, threading, time, urllib.parse
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -45,6 +45,9 @@ def find(q, remote=False, limit=20, offset=0):
 
 
 DUP = {"idx": None, "stamp": None, "busy": False}
+JOB_MAX = int(os.environ.get("HRN_JOB_PAGES") or 24)
+JOB_SLOTS = threading.BoundedSemaphore(JOB_MAX)
+BUSY_N = [0]            # requests answered 503 Busy by a handler (for the log line of report())
 LATEST_ANSWER = {}      # /api/latest: limit -> (when, answer)
 # /api/search?list=1, the rows of the search page: the newest answers, by the search written one way (a few hundred, under 10 MB)
 LIST_CACHE, LIST_LOCK, LIST_TTL, LIST_KEEP = collections.OrderedDict(), threading.Lock(), 60, 400
@@ -64,8 +67,13 @@ def dup_index():
             DUP["busy"] = False
     if DUP["stamp"] != st and not DUP["busy"]:
         DUP["busy"] = True
+        # The old index is let go before the new one is built (27 Nov 2026): one index holds every open job, and two at once after each
+        # upload took serve.py to its 1 GB limit (MemoryPeak 1.0G on 26 Nov), where it slowed every page. For those seconds the check
+        # answers "being built" (503 with Retry-After): an employer posting a job tries again, nobody else asks this address.
         if DUP["idx"] is None: rebuild()
-        else: threading.Thread(target=rebuild, daemon=True).start()
+        else:
+            DUP["idx"] = None
+            threading.Thread(target=rebuild, daemon=True).start()
     return DUP["idx"]
 
 
@@ -167,7 +175,7 @@ class Handler(SimpleHTTPRequestHandler):
         super().__init__(*a, directory=str(SITE), **kw)
 
     def send(self, code, body, kind="text/html; charset=utf-8", extra=()):
-        data = body.encode("utf-8")
+        data = body if isinstance(body, bytes) else body.encode("utf-8")
         self.send_response(code)
         self.send_header("Content-Type", kind)
         self.send_header("Content-Length", str(len(data)))
@@ -197,7 +205,8 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         try:
             return self.get()
-        except records.Busy:                             # the job store stayed busy for 15 s: say so at once, do not join the queue
+        except records.Busy:                             # all the job page slots taken, or the page lock busy for Guard.WAIT s: say so at once
+            BUSY_N[0] += 1
             return self.send(503, "Busy for a moment. Try again in a few seconds.", extra=[("Retry-After", "5"), ("Cache-Control", "no-store")])
 
     def get(self):
@@ -251,15 +260,23 @@ class Handler(SimpleHTTPRequestHandler):
         if m:
             if not m.group(2):                           # /job/<slug> -> /job/<slug>/, as on GitHub Pages
                 return self.send(301, "", extra=[("Location", path + "/" + self.path[len(path):])])
+            # at most JOB_MAX job pages at once: drawing is one at a time, so more would only wait, and the slots left keep the search,
+            # the newest jobs and the assistants' connector answering while a crawler asks for thousands of job pages (27 Nov 2026)
+            if not JOB_SLOTS.acquire(timeout=0.05): raise records.Busy("too many job pages at once")
             try:
-                html = STORE.page(m.group(1))
+                html, kept, ms = STORE.page_bytes(m.group(1))
+            except records.Busy:
+                raise
             except Exception as err:                     # a broken record must not take the server down; nginx serves its last copy
                 self.log_error("job page %s: %r", m.group(1), err)
                 return self.send(500, "This page could not be built. Try again in a minute.")
+            finally:
+                JOB_SLOTS.release()
             if html is None:
                 to = STORE.moved(m.group(1))                 # published live under one address, the hourly record chose another
                 return self.send(301, "", extra=[("Location", f"{P}/job/{to}/")]) if to else self.not_found()
-            return self.send(200, html, extra=[("Cache-Control", "public, max-age=300")])
+            # X-Render: "kept" (records.Pages) or the milliseconds the page took to draw, so the time can be read from outside (curl -I)
+            return self.send(200, html, extra=[("Cache-Control", "public, max-age=300"), ("X-Render", "kept" if kept else f"{ms:.1f} ms")])
         if P and not (path == P or path.startswith(P + "/")): return self.not_found()
         self.path = self.path[len(P):] or "/"
         if not os.path.exists(self.translate_path(self.path)): return self.not_found()
@@ -304,6 +321,76 @@ class Handler(SimpleHTTPRequestHandler):
         if os.environ.get("HRN_QUIET") != "1": super().log_message(fmt, *args)
 
 
+BUSY = (b"HTTP/1.1 503 Service Unavailable\r\nContent-Type: text/plain; charset=utf-8\r\nRetry-After: 5\r\nCache-Control: no-store\r\n"
+        b"Content-Length: 46\r\nConnection: close\r\n\r\nBusy for a moment. Try again in a few seconds.")
+
+
+class Server(ThreadingHTTPServer):
+    """The standard threaded server with two limits (27 Nov 2026). On 26 Nov, from 06:50 UTC, a crawler that spread over about 200,000
+    addresses asked for job pages some 400 times a second; this program started a thread for every connection, each one waited for the
+    page lock, and by 07:00 nginx had used its 768 connections on them and answered 500 to every job page and search; serve.py stood at
+    its 1 GB memory limit and stopped taking connections until it was restarted at 08:09.
+      - At most MAX requests are worked on at once, and of them at most JOB_MAX job pages (more would not make pages faster: drawing
+        a page is one at a time). Another one is answered at once, 503 with Retry-After, and its connection is closed: nginx then sends
+        the copy it keeps of a job page, and a crawler slows down. The threads, the open files and the memory stay bounded however
+        many connections come, and a search is answered while job pages are refused.
+      - The queue of connections not yet taken (listen's backlog) is QUEUE instead of Python's 5, so a burst waits a moment instead of
+        nginx's connect timing out ("upstream timed out while connecting", 58,468 times that morning)."""
+    daemon_threads = True
+    request_queue_size = QUEUE = 512
+    MAX = int(os.environ.get("HRN_MAX_REQUESTS") or 128)
+
+    def __init__(self, *a, **kw):
+        self.working, self.refused, self.count_lock = 0, 0, threading.Lock()
+        super().__init__(*a, **kw)
+
+    def process_request(self, request, client_address):
+        with self.count_lock:
+            full = self.working >= self.MAX
+            if full: self.refused += 1
+            else: self.working += 1
+        if not full:
+            try:
+                return super().process_request(request, client_address)
+            except BaseException:                        # no thread could be started: the place it took is given back
+                with self.count_lock: self.working -= 1
+                raise
+        try:
+            request.settimeout(0.05)
+            try: request.recv(65536)                     # nginx has sent the request already: read it, so closing sends no reset
+            except (socket.timeout, OSError): pass
+            request.sendall(BUSY)
+        except OSError:
+            pass
+        self.shutdown_request(request)
+
+    def process_request_thread(self, request, client_address):
+        try:
+            super().process_request_thread(request, client_address)
+        finally:
+            with self.count_lock: self.working -= 1
+
+    def handle_error(self, request, client_address):
+        """A visitor who left before the page was sent (BrokenPipe, ConnectionReset) is not an error worth a traceback in the log."""
+        if isinstance(sys.exc_info()[1], (BrokenPipeError, ConnectionResetError, socket.timeout)): return
+        super().handle_error(request, client_address)
+
+
+def report(server):
+    """Once every 10 minutes, a line in the log when anything was refused or kept: requests refused for being too many, job pages
+    sent from the copy kept (records.Pages) and drawn."""
+    seen = (0, 0, 0, 0)
+    while True:
+        time.sleep(600)
+        now_ = (server.refused, BUSY_N[0], STORE.pages.hits, STORE.pages.misses)
+        d = [a - b for a, b in zip(now_, seen)]
+        if d[0] or d[1] or d[2]:
+            print(f"last 10 min: {d[0]:,} connections refused (at most {server.MAX} requests at once), {d[1]:,} answered busy (at most {JOB_MAX} job pages at once), "
+                  f"job pages {d[2]:,} from the copy kept, {d[3]:,} drawn; "
+                  f"{len(STORE.pages.d):,} pages kept, {STORE.pages.size / 2**20:.1f} MB", flush=True)
+        seen = now_
+
+
 CODE = [ROOT / f for f in ("build.py", "records.py", "serve.py", "search_engine.py", "dedupe.py", "config.json", "texts.py")]
 
 
@@ -324,7 +411,9 @@ def main():
     print(f"{STORE.count:,} job records; site on http://{host}:{port}{P}/", flush=True)
     if os.environ.get("HRN_WATCH") == "1":
         threading.Thread(target=watch, args=([f.stat().st_mtime_ns for f in CODE],), daemon=True).start()
-    ThreadingHTTPServer((host, port), Handler).serve_forever()
+    server = Server((host, port), Handler)
+    threading.Thread(target=report, args=(server,), daemon=True).start()
+    server.serve_forever()
 
 
 if __name__ == "__main__":
