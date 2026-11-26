@@ -2188,7 +2188,7 @@ def FULL_FOOT():
     col = lambda name, rows: f'<details class="fgrp" open><summary>{name}</summary><p class="fhd">{name}</p>{li(rows)}</details>'
     more = [("tools/", "Free tools"), ("for-you/", "Jobs that fit you"), ("career-quiz/", "Career quiz"), ("swipe/", "Swipe through jobs"), ("map/", "Jobs map"),
             ("ahead/", "Helpers in your browser"), ("tech/", "Tech jobs"), ("crypto/", "Crypto &amp; web3 jobs"), ("senior-jobs/", "Senior-level"), ("executive-jobs/", "Executive"),
-            ("jobs-that-pay/", "Jobs by hourly pay"), ("perks/", "Perks"), ("guides/", "Guides"), ("glossary/", "Glossary"), ("trends/", "Hiring trends"),
+            ("jobs-that-pay/", "Jobs by hourly pay"), ("perks/", "Perks"), ("collections/", "Job lists by pay and hours"), ("guides/", "Guides"), ("glossary/", "Glossary"), ("trends/", "Hiring trends"),
             ("reports/", "Monthly reports"), ("insights/", "Rankings"), ("open-hiring-index/", "Open hiring index"), ("compare/", "Compare skills"),
             ("cover-letter-examples/", "Cover letter examples"), ("resignation-letters/", "Resignation letters"), ("resume-words/", "Resume words"),
             ("how-to-become/", "How to become…"), ("how-to-hire/", "How to hire…"), ("job-descriptions/", "Job description templates"),
@@ -14638,6 +14638,53 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                        + conv_rows + f'</tbody></table></div><p class="note">Any other rate or number of hours: the <a href="{P}/tools/salary-converter/">pay converter</a>.</p>', label="Conversion")
              + section("Questions about hourly pay", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in hub_qa) + "</dl>"), head=hub_ld, cls="hub")
 
+    # The job lists that update themselves, in one place (COMPETITOR_GAPS.md, gap 4, "collections hub"): the lists by pay, by hours, for a first job,
+    # by where the work is done and by who the employer is were each a page of their own and met only in a footer row. Every count is the list's own
+    # (KIND_N, or the same filter the list uses); a list that has no page today is left out of the row and of the chart.
+    cl_cut_ = (datetime.date.today() - datetime.timedelta(days=2)).isoformat()      # "the last 3 days", the window of /new/
+    cl_visa_ = sum(1 for j in active if "Visa sponsorship" in j.get("perks", []))
+    cl_pay_ = [(f"salary/{k_}k/", f"Pay from ${k_}K a year", sum(1 for j in active if j["usd"] and j["usd"][0] >= k_ * 1000)) for k_ in (100, 150, 200, 250, 300)]
+    cl_groups_ = [
+        ("Pay that is written down", "Counted only where the employer wrote a range: the low end of it is the line.",
+         cl_pay_ + [("jobs-that-pay/", "Jobs by hourly pay", sum(1 for j in active if usd_hourly(j.get("salary"))))]),
+        ("Hours and kind of contract", "Part-time, nights, weekends, a season or a fixed term.",
+         [(u_, *KIND_N[u_]) for u_ in ("part-time/", "weekend/", "night-shift/", "temporary/", "summer/", "contract/") if u_ in KIND_N]),
+        ("A first job", "For people with little or no experience, or who need a second chance.",
+         [(u_, *KIND_N[u_]) for u_ in ("entry-level/", "internships/", "no-experience-jobs/", "fair-chance-jobs/") if u_ in KIND_N]),
+        ("Where the work is done", "From home, split between home and an office, or from any country.",
+         [(u_, *KIND_N[u_]) for u_ in ("remote/", "hybrid/", "work-from-anywhere/") if u_ in KIND_N]),
+        ("Who the employer is, and what it offers", "Public bodies, charities, and employers that help with a visa.",
+         [(u_, *KIND_N[u_]) for u_ in ("government-jobs/", "nonprofit-jobs/") if u_ in KIND_N] + [("perks/visa-sponsorship/", "Visa sponsorship", cl_visa_)]),
+        ("How fresh it is", "Posted in the last days, or saying the employer hires at once.",
+         [("new/", "New in the last 3 days", sum(1 for j in active if (j["posted"] or "") >= cl_cut_))] + [(u_, *KIND_N[u_]) for u_ in ("hiring-immediately/",) if u_ in KIND_N]),
+    ]
+    cl_groups_ = [(t_, d_, [r_ for r_ in rs_ if r_[0] in URLS and r_[2] > 0]) for t_, d_, rs_ in cl_groups_]
+    cl_groups_ = [g_ for g_ in cl_groups_ if len(g_[2]) >= 2]
+    cl_all_ = sorted((r_ for g_ in cl_groups_ for r_ in g_[2]), key=lambda r_: -r_[2])
+    if len(cl_all_) >= 8:
+        cl_qa_ = [("What is a list that updates itself?", f"A page that holds every open job that fits one rule, such as pay from $100K a year or part-time. The list is rebuilt from the employers’ own career pages, so a job that closes leaves it and a new one joins it. Today the lists below hold {len(cl_all_)} rules between them."),
+                  ("Why do the counts differ from the number of jobs on the site?", f"A job can fit several rules at once: a remote job with pay from $100K sits in both lists. The counts are per list, so do not add them up. The site holds {len(active):,} open jobs in all."),
+                  ("How do I know a rule was applied correctly?", "Pay lists use the range the employer wrote in the posting and never an estimate. Lists by hours, first jobs and employer read the posting’s own words, so they can miss a job that does not say it. Each list names its rule at the top.")]
+        cl_ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in cl_qa_]}) + "</script>")
+        cl_mx_ = cl_all_[0][2]
+        page("collections/", f"Job Lists by Pay, Hours and Remote | {SITE}",
+             f"{len(cl_all_)} job lists that update themselves: pay from $100K, part-time, entry-level, remote, hybrid, government and more, each with today’s count of open jobs.",
+             crumbs(("Job lists", "")) + "<h1>Job lists that update themselves</h1>"
+             f'<p class="lead">Each list is every open job that fits one rule, such as pay from $100K a year, part-time or remote. The count beside it is today’s.</p>'
+             '<p class="plain"><b>In plain words:</b> instead of searching with several filters, pick the one thing that matters to you and open its list. '
+             'A job that closes drops out of the list and a new one joins it, because the lists are rebuilt from the employers’ own pages.</p>'
+             + nums([(f"{len(cl_all_)}", "lists, each with one rule"), (f"{cl_all_[0][2]:,}", f"open jobs in the largest list: {cl_all_[0][1][0].lower() + cl_all_[0][1][1:]}"),
+                     (f"{len(active):,}", "open jobs on the site in all")])
+             + section("How many open jobs [[each list holds]]", '<figure class="pic"><figcaption><b>Open jobs by list</b>A job can be in several lists, so the bars are not added up. Each bar opens the list.</figcaption><div class="hbars">' + "".join(
+                 f'<a href="{P}/{u_}"><span class="hn">{e(nm_)}</span><span class="hb"><i style="width:{max(2, round(100 * k_ / cl_mx_))}%"></i></span><span class="hc">{k_:,}</span></a>' for u_, nm_, k_ in cl_all_[:12])
+               + f'</div></figure><p class="note">Counted from {len(active):,} open postings on {fdate(TODAY)}.</p>', label="Counted today")
+             + section("Every list, [[by what you need]]", '<div class="dir">' + "".join(
+                 f'<div class="dirb"><h3><b>{e(t_)}</b><span>{len(rs_)}</span></h3><p class="note">{e(d_)}</p><ul>' + "".join(
+                     f'<li><a href="{P}/{u_}">{e(nm_)}</a><span>{k_:,} open</span></li>' for u_, nm_, k_ in rs_) + "</ul></div>" for t_, d_, rs_ in cl_groups_) + "</div>", label="All the lists")
+             + section("Questions [[about these lists]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in cl_qa_) + "</dl>", label="Questions")
+             + act_row("jobs/", "Search all open jobs", [("for-you/", "Jobs that fit your answers"), ("categories/", "Job categories")]),
+             head=cl_ld_, cls="hub")
     lap('Resignation letters, one page per situation. In the Rezi stu')
     # Resignation letters, one page per situation. In the Rezi study these pages bring that site about a fifth of its search visits.
     RL = resignation_pages.LETTERS
