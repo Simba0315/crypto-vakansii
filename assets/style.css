@@ -5684,3 +5684,6 @@ main.home #faq{margin-top:48px}
 .alertf.alert1 [data-alert-out]:empty{display:none}
 .lalert>.btn.ghost{margin:0}
 @media(max-width:560px){.lalert{padding:12px}.alert1-l{white-space:normal}.alert1-f{flex-basis:100%}.alert1-f select{padding:0 6px}}
+.gapl{list-style:none;margin:0;padding:0}
+.gapl li{padding:2px 0}
+.gapl .s{color:var(--muted)}

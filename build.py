@@ -7425,6 +7425,32 @@ def main():
                                 + "".join(f'<tr><td><a href="{P}/job/{j["slug"]}/">{e(j["title"])}</a></td><td>{e((j["location"] if len(j["location"]) <= 48 else j["location"][:45].rstrip(" ,;") + "…") if j.get("location") else "—")}</td><td>{e(j["salary"])}</td></tr>' for j in exs_)
                                 + f'</table></div><p class="note">{len(ex_pay):,} of {e(c)}’s {len(act):,} open postings state pay; shown: '
                                 + ("all of them, highest first." if len(ex_pay) <= 10 else "the five highest and the five lowest.") + " The range is the one the posting prints, usually base pay before equity and bonus.</p>")
+        # Same role, different place (COMPETITOR_GAPS idea E, 26 Nov 2026): when one employer states pay for the same role (rkey) in two or
+        # more places, the places side by side. Only roles whose places each have a posting with pay and whose middles differ by 10% or more.
+        by_role_pl = {}
+        for j in act:
+            loc_ = re.sub(r"\s+", " ", j.get("location") or "").strip()
+            if j["usd"] and loc_ and not j["remote"] and len(loc_) <= 40 and ";" not in loc_ and ":" not in loc_ and not re.search(r"\d{3}", loc_) and " or " not in loc_.lower():
+                by_role_pl.setdefault(j["rkey"], {}).setdefault(loc_, []).append(j)
+        gaps_ = []
+        for rk_, pls_ in by_role_pl.items():
+            if len(pls_) < 2: continue
+            mids_ = sorted(((median([(a_ + b_) / 2 for a_, b_ in (x_["usd"] for x_ in v_)]), pl_, v_) for pl_, v_ in pls_.items()), reverse=True)
+            if mids_[-1][0] <= 0 or mids_[0][0] / mids_[-1][0] < 1.1: continue
+            gaps_.append((mids_[0][0] / mids_[-1][0], sum(len(v_) for _, _, v_ in mids_), mids_))
+        if len(gaps_) >= 1:
+            gaps_.sort(key=lambda g_: (-g_[1], -g_[0]))
+            def gap_row(g_):
+                ratio_, n_, mids_ = g_
+                top_ = mids_[0][2][0]
+                places_ = "".join(f'<li><b>{e(pl_)}</b> {money(md_)}<span class="s"> · {len(v_)} posting{"s" if len(v_) != 1 else ""}</span></li>' for md_, pl_, v_ in mids_[:4])
+                return (f'<tr><td><a href="{P}/job/{top_["slug"]}/">{e(top_["title"])}</a></td><td><ul class="gapl">{places_}</ul></td>'
+                        f'<td>{round(100 * (ratio_ - 1))}%</td></tr>')
+            overview += section(f"Same role, different place: [[pay at {c}]]", sid="places", label="Pay by place",
+                                inner='<div class="tablewrap"><table><tr><th>Role</th><th>Middle of the advertised pay in each place</th><th>Highest above lowest</th></tr>'
+                                + "".join(gap_row(g_) for g_ in gaps_[:6]) + "</table></div>"
+                                f'<p class="note">Counted from the open postings of {e(c)} that print a pay range, converted to US dollars: the middle of each range, then the middle of those in one place. '
+                                'A role appears when it is posted with pay in two or more places and the places differ by at least 10%. Postings of one role can differ in level or team, so read the gap as a hint to check the posting, not as a rule of the employer.</p>')
         overview += h1b_block(c, slug)          # H-1B filings from the Department of Labor's disclosure data, after the pay the postings state
         # Hiring week by week, as LinkedIn shows a company's growth beside its jobs (20 Nov 2026): the roles it opened each week (by the
         # employer's date) and closed (by the day its board stopped listing them). Counted only from the week after we first read the
