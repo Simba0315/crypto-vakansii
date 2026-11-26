@@ -5573,3 +5573,30 @@ table.adm-log td:last-child{min-width:280px}
   footer.mini .fine a{display:inline-flex;align-items:center;min-height:44px;font-size:14px;text-decoration:none}
   footer.mini .fine .fc{order:9;flex:1 1 100%;margin-top:6px}
 }
+
+/* ---- My jobs (/my-jobs/): the rows of the tracker (saved jobs, followed companies, saved searches) stood flush with the edges of their
+   white card, on a phone and on a wide screen alike: the logo touched the left line, the note field and "Remove" the right one. They
+   keep the inner margin of every other row of jobs (20 px, 16 on a phone); on a phone the logo stands at the title, and the status menu
+   and Remove are 44 px ---- */
+.jobs>.trow{padding:14px 20px}
+.jobs>.trow:last-child{border-bottom:0}
+@media(max-width:720px){
+  .jobs>.trow{padding:16px;column-gap:12px;align-items:start}
+  .jobs>.trow .ctl select,.jobs>.trow .ctl button{min-height:44px}
+}
+
+/* ---- taps the first phone pass did not reach (measured at 360 on 130 kinds of page): the header's wordmark (23 px), a job page's four
+   buttons under Apply (40 px), its share buttons (36 px) and "Not interested" / "Hide this company" (37 px), "Show all …" under a card
+   of rows (33 px), the chart switches "By day / By week" (32 px), the rows of a directory (/cover-letter-examples/, /how-to-hire/ and
+   the like: 40 px, their counts in 12 px type) ---- */
+@media(max-width:720px){
+  header.site a.logo{min-height:44px}
+  .jdec .jtwo .btn,.jdec .sideact .btn{min-height:44px}
+  .share .share-i{gap:4px}
+  .shbtn{width:42px;height:42px}
+  .share .linkbtn{min-height:44px}
+  .tiles-more{min-height:44px}
+  .vtabs>label{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;font-size:14px}
+  .dirb li a{padding:12px 0}
+  .dirb li span{font-size:13px}
+}
