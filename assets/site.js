@@ -1195,8 +1195,7 @@
         var opts = Object.keys(G.c).sort(function (a, b) { return G.c[a][0] < G.c[b][0] ? -1 : 1; }).map(function (k) {
           return '<option value="' + k + '"' + (k === code ? ' selected' : '') + '>' + esc(G.c[k][0]) + '</option>';
         }).join('');
-        // one link (track "one button", 26 Nov 2026: three links in three lines, "164 remote roles name it" read as a riddle)
-        box.innerHTML = '<span class="near-l">' + (label ? 'Near you:' : 'From anywhere:') + '</span> ' + bits.slice(0, 1).join('') +
+        box.innerHTML = '<span class="near-l">' + (label ? 'Near you, ' + esc(label) + ':' : 'From anywhere:') + '</span> ' + bits.join(' · ') +
           ' <label class="near-pick">Change place<select id="near-sel" aria-label="Your country"><option value="">Choose a country</option>' + opts + '</select></label>';
         box.hidden = false;
       };

@@ -5644,46 +5644,6 @@ nav a.nl.nl-emp{color:var(--muted)}
 main .fask{margin:28px 0 0;font-size:14.5px;color:var(--muted)}
 main .fask b{color:var(--text)}
 main .fask a{color:var(--text)}
-
-/* ---- the home page as a search page: the heading, the search, one line, six searches, the ten newest jobs, the alert, four questions ---- */
-.hero.v2.hsearch>.wrap:first-child{padding:44px 48px 34px}
-.hero.v2.hsearch h1{margin:0 auto 24px;font-size:clamp(34px,4.6vw,56px)}
-.hero.v2.hsearch .hcount{max-width:72ch;margin:16px auto 0;font-size:15.5px;line-height:1.5;color:var(--muted)}
-.hero.v2.hsearch .hcount b{color:var(--text);font-weight:650}
-.hero.v2.hsearch .hcount a{color:var(--text);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px;white-space:nowrap}
-.hero.v2.hsearch .popular{margin-top:16px}
-.hero.v2.hsearch .near{margin:12px 0 0;font-size:14.5px}
-.hero.v2.hsearch .near .near-pick{margin-left:10px}
-main.home .hnew{margin-top:32px}
-main.home .hnew .sec-head{margin-bottom:12px}
-main.home .hnew .sec-head h2{font-size:clamp(22px,2.4vw,28px)}
-.hmore{display:flex;flex-wrap:wrap;gap:6px 22px;margin:14px 0 0;font-size:15px;font-weight:600}
-.hmore a{text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
-main.home .lalert{margin:28px 0 0}
-main.home #faq{margin-top:48px}
-@media(max-width:700px){
-  .hero.v2.hsearch>.wrap:first-child{width:auto;margin:8px 10px 0;padding:22px 16px 20px;border-radius:22px}
-  .hero.v2.hsearch h1{margin-bottom:16px;font-size:30px}
-  .hero.v2.hsearch .hcount{margin-top:12px;font-size:14.5px}
-  .hero.v2.hsearch .popular{margin-top:12px}
-  main.home .hnew{margin-top:20px}
-}
-
-/* ---- the alert in one line (alert_form(compact=True)): a field and one press, on lists and on the home page ---- */
-.lalert{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:14px 0 18px;padding:12px 16px;border:1px solid var(--line);border-radius:16px;background:var(--card)}
-.alertf.alert1{position:relative;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;flex:1 1 560px;margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none}
-.alert1-l{font-size:15px;font-weight:650;color:var(--text);white-space:nowrap}
-.alert1-f{display:flex;gap:8px;flex:1 1 320px;max-width:540px;min-width:0}
-.alert1-f input[type=email]{flex:1 1 auto;min-width:0;height:42px;padding:0 14px;border:1px solid var(--line2);border-radius:999px;background:var(--bg);color:var(--text);font:inherit;font-size:15px}
-.alert1-f input[type=email]:focus{border-color:var(--text);outline:2px solid color-mix(in srgb,var(--ac) 35%,transparent);outline-offset:1px}
-.alert1-f select{flex:none;height:42px;padding:0 10px;border:1px solid var(--line2);border-radius:999px;background:var(--bg);color:var(--text);font:inherit;font-size:14px}
-.alertf.alert1 .btn{flex:none;height:42px;margin:0;padding:0 18px;border-radius:999px}
-.alert1-n{font-size:13px;color:var(--muted)}
-.alert1-n a{color:var(--muted)}
-.alertf.alert1 [data-alert-out]{flex:1 1 100%;margin:2px 0 0}
-.alertf.alert1 [data-alert-out]:empty{display:none}
-.lalert>.btn.ghost{margin:0}
-@media(max-width:560px){.lalert{padding:12px}.alert1-l{white-space:normal}.alert1-f{flex-basis:100%}.alert1-f select{padding:0 6px}}
 .gapl{list-style:none;margin:0;padding:0}
 .gapl li{padding:2px 0}
 .gapl .s{color:var(--muted)}
