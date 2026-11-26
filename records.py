@@ -109,12 +109,22 @@ def live_row(sql, args):
         con.close()
 
 
-def live_checked(company):
-    """The day live.py last read the company's board to the end (live.py, table read_ok), or "" when it has not, or there is no live store."""
+def live_checked_at(company):
+    """When live.py last read the company's board to the end (live.py, table read_ok), in seconds since 1970, or 0 when it has not, or
+    there is no live store."""
     got = live_row("SELECT at FROM read_ok WHERE company = ?", (company or "",))
     try:
-        return datetime.date.fromtimestamp(float(got[0][0])).isoformat() if got and got[0][0] else ""
-    except (TypeError, ValueError, OverflowError, OSError):
+        return float(got[0][0]) if got and got[0][0] else 0
+    except (TypeError, ValueError):
+        return 0
+
+
+def live_checked(company):
+    """The day live.py last read the company's board to the end, or "" (live_checked_at)."""
+    try:
+        at = live_checked_at(company)
+        return datetime.date.fromtimestamp(at).isoformat() if at else ""
+    except (ValueError, OverflowError, OSError):
         return ""
 
 
@@ -296,8 +306,15 @@ class Store:
             if self.live and j.get("active") and not j.get("tg"):
                 # live.py read the company's whole board later than the hourly record did, and this job was on it (one that had left it
                 # would be closed just above): "Last checked" is that day, not the day of the last full rebuild
-                day = live_checked(j.get("company"))
+                at = live_checked_at(j.get("company"))
+                try:
+                    day = datetime.date.fromtimestamp(at).isoformat() if at else ""
+                except (ValueError, OverflowError, OSError):
+                    day = ""
                 if day > str(j.get("last_seen") or ""): j["last_seen"] = day
+                # and the time of that reading, which the page shows as "checked 12 minutes ago" (teardown, 26 Nov 2026)
+                if at and datetime.datetime.fromtimestamp(at, datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ") > str(j.get("checked_at") or ""):
+                    j["checked_at"] = datetime.datetime.fromtimestamp(at, datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
             b, out = self.b, {}
             if self.live:
                 b.NOW = int(time.time())

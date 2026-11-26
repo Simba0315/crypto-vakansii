@@ -1818,8 +1818,11 @@ def fetch_breezy(src, reuse=None):
         if not d or not desc: return None
         text = strip_html(desc)
         if not english(f"{raw['title']}\n{text}"): return "not english"
-        return parse(name, "breezy", jid, raw["title"], raw["url"], raw["place"], raw["remote"], raw["dept"], str(d.get("datePosted") or raw["posted"])[:10],
-                     text, raw["pay"] or jazz_pay(d), raw["type"], desc, raw["hybrid"], posted_at=raw["posted"] or None)
+        # the day and the time from the same field: the list's published_date moves when a posting is published again, the page's
+        # datePosted keeps the first day (teardown, 26 Nov 2026: a posting of 27 Feb read "3 h" from the list's time; build.exact)
+        at = str(d.get("datePosted") or raw["posted"] or "")
+        return parse(name, "breezy", jid, raw["title"], raw["url"], raw["place"], raw["remote"], raw["dept"], at[:10],
+                     text, raw["pay"] or jazz_pay(d), raw["type"], desc, raw["hybrid"], posted_at=at or None)
     return detail_board(src, reuse, "breezy", items, read)
 
 
@@ -1901,8 +1904,9 @@ def fetch_paylocity(src, reuse=None):
         if not desc: return None
         text = strip_html(desc)
         if not english(f"{raw['title']}\n{text}"): return "not english"
-        return parse(name, "paylocity", jid, raw["title"], url, raw["place"], raw["remote"], raw["dept"], str(d.get("datePosted") or raw["posted"])[:10],
-                     text, jazz_pay(d), str(d.get("employmentType") or ""), desc, False, posted_at=raw["posted"] or None)
+        at = str(d.get("datePosted") or raw["posted"] or "")       # day and time from one field (fetch_breezy says why)
+        return parse(name, "paylocity", jid, raw["title"], url, raw["place"], raw["remote"], raw["dept"], at[:10],
+                     text, jazz_pay(d), str(d.get("employmentType") or ""), desc, False, posted_at=at or None)
     return detail_board(src, reuse, "paylocity", items, read)
 
 
@@ -2524,7 +2528,9 @@ def main():
                 used_slugs.add(slug)
                 j.update(slug=slug, first_seen=TODAY, first_seen_at=seen_at)
                 stats["new"] += 1
-            j.update(last_seen=TODAY, active=True)
+            # checked_at: when this run read the job on the employer's list; the job page shows it as "checked 12 minutes ago" and the
+            # site's freshness figure counts it (build.FACTS; teardown 26 Nov 2026: "re-checked every hour" was never measured)
+            j.update(last_seen=TODAY, checked_at=seen_at, active=True)
             j.pop("closed", None)
             db[j["id"]] = j
         gone = [db[jid] for jid in open_by_co.get(name, ()) if db[jid]["active"] and jid not in seen]

@@ -2215,7 +2215,10 @@ WEEK = 7 * 86400                                                         # exact
 
 
 def exact(j):
-    """The exact posting time of a job, or 0 when only the day is known."""
+    """The exact posting time of a job, or 0 when only the day is known. The time counts only when it falls on the employer's own day
+    (the posted date) or a day next to it (a time zone apart). Teardown, 26 Nov 2026: Paylocity and Breezy list a posting with the time
+    it was last published again while its page dates it months earlier, so 8,250 of the 45,847 open jobs with an exact time had one that
+    contradicted their date: a crew job posted in July read "3 h" in the home page's Latest jobs and sorted as the newest job."""
     try:
         return int(datetime.datetime.fromisoformat(j["posted_at"].replace("Z", "+00:00")).timestamp())
     except Exception:
@@ -2245,6 +2248,19 @@ ICON = {
     "cloud": '<path d="M7 18h10a4 4 0 0 0 .6-8A6 6 0 0 0 6.1 9.5 4.3 4.3 0 0 0 7 18z"/>',
     "shield": '<path d="M12 3l8 3v6c0 4.5-3.2 7.9-8 9-4.8-1.1-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/>',
     "board": '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v10"/>',
+def checked_html(j):
+    """When we last read a job on the employer's own list. The file says "Nov 26, 14:03 UTC"; site.js (freshen, data-ck) turns it into
+    "12 minutes ago" while it is under a day old. Only the day when the record has no time of the reading (before 26 Nov 2026)."""
+    at = str(j.get("checked_at") or "")
+    try:
+        t = int(datetime.datetime.fromisoformat(at.replace("Z", "+00:00")).timestamp())
+    except ValueError:
+        t = 0
+    if t and str(j.get("last_seen") or "")[:10] <= at[:10]:
+        return f'<time datetime="{at}" data-ck="{t}">{fdate(at, False)}, {at[11:16]} UTC</time>'
+    return fdate(j["last_seen"]) if j.get("last_seen") else ""
+
+
     "pen": '<path d="M4 20l4-1L19 8l-3-3L5 16l-1 4z"/><path d="M14 7l3 3"/>',
     "megaphone": '<path d="M4 10v4h3l8 4V6L7 10H4z"/><path d="M18 9a4 4 0 0 1 0 6"/>',
     "trend": '<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
@@ -3833,7 +3849,7 @@ def job_page(j, active_by_cat):
         days_open = 0
     again = REPOST.get((j["company"], j["title"].lower(), j["location"].lower())) if j["active"] else None
     if again and again < (j.get("first_seen") or ""): rows.append(("History", f"Posted again: an earlier posting of this role closed on {fdate(again)}"))
-    if j["active"] and j.get("last_seen"): rows.append(("Last checked", fdate(j["last_seen"])))
+    if j["active"] and j.get("last_seen"): rows.append(("Last checked", checked_html(j)))
     ats = j["id"].split("-", 1)[0]
     if j["active"]:
         rows.append(("Source", (f'A post in the public Telegram channel <a href="https://t.me/{e(j["tg"])}" rel="nofollow noopener">@{e(j["tg"])}</a>; not checked with {e(j["company"])}' if j.get("tg") else
@@ -4005,8 +4021,10 @@ def job_page(j, active_by_cat):
     # years of experience the posting asks for stand in its place. Pay stays: "Not listed" is itself the answer to the first question.
     facts_ = ([("Pay", e(pay_shown(j["salary"])) if j["salary"] else "Not listed")] + ([("Workplace", wp_)] if wp_ != "Not stated" else [])
               + ([("Level", e(LVL_NAME[j["level"]]))] if j["level"] else [("Experience", f'{j["years"]}+ years')] if j.get("years") else [])
-              + ([("Type", e(j["etype"]))] if j.get("etype") else []) + ([("Posted", "Today" if today_ else posted_)] if posted_ else [])
-              + ([("Open for" if j["active"] else "Status", open_)] if open_ else []))
+              + ([("Type", e(j["etype"]))] if j.get("etype") else []) + ([("Updated" if j.get("posted_from") == "lastmod" else "Posted", "Today" if today_ else posted_)] if posted_ else [])
+              + ([("Open for" if j["active"] else "Status", open_)] if open_ else [])
+              # when we last read it on the employer's list (teardown, 26 Nov 2026: the promise is a fresh job, so the page shows the check)
+              + ([("Checked", checked_html(j))] if j["active"] and j.get("last_seen") and not j.get("direct") else []))
     facts_row = '<dl class="jfrow">' + "".join(f'<div><dt>{k}</dt><dd{" class=" + chr(34) + "nd" + chr(34) if v == "Not listed" else ""}>{v}</dd></div>' for k, v in facts_) + "</dl>"
     two_ = (f'<div class="jtwo"><a class="btn ghost" href="{P}/resume/?job={j["slug"]}">Tailor my resume</a>'
             f'<a class="btn ghost" href="{P}/tools/cover-letter/?job={j["slug"]}" title="Write a cover letter for this job">Cover letter</a></div>' if j["active"] and not j.get("tg") else "")

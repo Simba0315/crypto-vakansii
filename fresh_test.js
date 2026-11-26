@@ -86,6 +86,18 @@ eq('expand: 0 stays 0', rows[1][23], 0);
 eq('expand: an index written before this field existed', rows[2][23], 0);
 eq('card with an exact time', /<time data-t="1800000000"[ >]/.test(S.card(rows[0])), true);
 eq('card without one has no data-t', /data-t=/.test(S.card(rows[1]) + S.card(rows[2])), false);
+// teardown, 26 Nov 2026: a posting the employer dated in July with a time from the day it was republished read "3 h"
+const july = S.expand(idx([base.slice(0, 9).concat([20260710], base.slice(10), [30000000])]));
+eq('card: an exact time months after the employer\'s day is not used', /data-t=/.test(S.card(july[0])), false);
+eq('card: the day label is the employer\'s', />\d+mo<\/time>/.test(S.card(july[0])), true);
+const fourMo = el({ 'data-t': now() - 3 * 3600 }, '4mo'), twoW = el({ 'data-t': now() - 600 }, '2w'), twoD = el({ 'data-t': now() - 600 }, '2d');
+page = [fourMo, twoW, twoD]; S.freshen();
+eq('freshen: a row built as "4mo" stays "4mo"', [fourMo.textContent, fourMo.cls.new], ['4mo', undefined]);
+eq('freshen: "2w" and "2d" stay', [twoW.textContent, twoD.textContent], ['2w', '2d']);
+const ck = el({ 'data-ck': now() - 12 * 60 }, 'Nov 26, 14:03 UTC'), ckOld = el({ 'data-ck': now() - 30 * 3600 }, 'Nov 25, 02:00 UTC');
+S.freshen({ querySelectorAll: (sel) => (sel === 'time[data-ck]' ? [ck, ckOld] : []) });
+eq('checked: 12 minutes ago, not marked new', [ck.textContent, ck.cls.new], ['12 minutes ago', undefined]);
+eq('checked: over a day keeps the date', ckOld.textContent, 'Nov 25, 02:00 UTC');
 
 
 /* skills on your resume / to grow: the resume made in the builder marks a job's skills */

@@ -241,9 +241,18 @@
   // sentence form. Runs on load, after every list a script renders (see decorate) and once a minute. What the page was built with stays
   // in data-day and comes back when the posting turns a day old while the page is open.
   function freshen(scope) {
-    var now = Date.now() / 1000;
+  // A day label the page was built with that is two days or more ("3d", "2w", "4mo") is the employer's date: an exact time never turns it
+  // into "3 h" (teardown, 26 Nov 2026: a list read a July posting as "3 h" from the time a hiring system last republished it).
+    var now = Date.now() / 1000, OLD_DAY = /^(?:[2-9]|1\d)d$|^\d+(?:w|mo)$/;
+    // <time data-ck="seconds since 1970">: when we last read the job on the employer's list ("checked 12 min ago"), never marked new
+    Array.prototype.forEach.call((scope || document).querySelectorAll('time[data-ck]'), function (el) {
+      if (!el.hasAttribute('data-day')) el.setAttribute('data-day', el.textContent);
+      var label = ago(now - Number(el.getAttribute('data-ck') || NaN), true);
+      el.textContent = label || el.getAttribute('data-day');
+    });
     Array.prototype.forEach.call((scope || document).querySelectorAll('time[data-t]'), function (el) {
       var label = ago(now - Number(el.getAttribute('data-t') || NaN), el.hasAttribute('data-long'));
+      if (OLD_DAY.test(el.getAttribute('data-day') || el.textContent.trim())) return;
       if (label) {
         if (!el.hasAttribute('data-day')) el.setAttribute('data-day', el.textContent);
         if (el.textContent !== label) el.textContent = label;
@@ -320,7 +329,9 @@
     return '<li class="job' + (j[11] ? ' feat' : '') + '"><a href="' + P + '/job/' + j[0] + '/">' + avatar(j[2], j[21], false) +
       '<span><span class="jt">' + esc(j[1]) + '</span><span class="js">' + esc(j[2]) + (place ? ' · ' + flags(j[24]) + esc(place) : '') +
       (more ? ' · +' + more + ' more location' + (more > 1 ? 's' : '') : '') + '</span></span>' +
-      '<span class="jr"><span class="jp' + (j[8] ? '' : ' none') + '">' + (j[8] ? esc(j[8].slice(0, 28)) : '—') + '</span><span class="pills">' + pills + '</span><time' + (j[23] ? ' data-t="' + j[23] * 60 + '"' : '') + (ag[1] ? ' class="new"' : '') + '>' + esc(ag[0]) + '</time></span></a></li>';
+      '<span class="jr"><span class="jp' + (j[8] ? '' : ' none') + '">' + (j[8] ? esc(j[8].slice(0, 28)) : '—') + '</span><span class="pills">' + pills + '</span><time' + (tx ? ' data-t="' + tx * 60 + '"' : '') + (ag[1] ? ' class="new"' : '') + '>' + esc(ag[0]) + '</time></span></a></li>';
+    // the exact time only when it falls on the employer's day or the day next to it (build.exact says why)
+    var tx = j[23] && (!j[16] || Math.abs(j[23] * 60000 - Date.UTC(Math.floor(j[16] / 10000), Math.floor(j[16] / 100) % 100 - 1, j[16] % 100)) < 2 * 864e5) ? j[23] : 0;
   }
   // mark cards of jobs the visitor already saved, applied to or opened (works for static and script-built lists)
   function decorate(scope) {
