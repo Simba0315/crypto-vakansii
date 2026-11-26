@@ -135,6 +135,7 @@ jobs = [str(p.relative_to(SITE)) for p in pages if p.relative_to(SITE).parts[0] 
 others = [str(p.relative_to(SITE)) for p in pages if p.relative_to(SITE).parts[0] not in ("job", "embed")]
 sample = others + random.sample(jobs, min(600, len(jobs)))
 fails, counts, broken = defaultdict(Counter), Counter(), Counter()
+not_for_map = set()          # pages a sitemap must not list: noindex, or a canonical that names another page (Bing: "only canonical URLs")
 for rel in sample:
     t = template(rel); counts[t] += 1
     h = STORE.page(rel.split("/")[1]) if STORE and t == "job" else (SITE / rel).read_text(encoding="utf-8", errors="replace")
@@ -149,10 +150,16 @@ for rel in sample:
     want = FULL + "/" + ("" if rel == "index.html" else rel[:-len("index.html")])
     # A list page may name a fuller page with the same words in its title as canonical (build.one_page_per_query): that is allowed
     # when the page it names exists and names itself. Anything else is a mistake.
+    if re.search(r'<meta name="robots" content="[^"]*noindex', h[:8000]) or (canon and canon.group(1) != want): not_for_map.add(want[len(FULL) + 1:])
     if not canon: fails[t]["canonical is not self"] += 1
     elif canon.group(1) != want:
         other = SITE / canon.group(1)[len(FULL) + 1:] / "index.html" if canon.group(1).startswith(FULL + "/") else None
-        ok_ = bool(other and other.exists() and f'<link rel="canonical" href="{canon.group(1)}"' in other.read_text(encoding="utf-8", errors="replace")[:6000])
+        # a job page that repeats an earlier one names that one (build.same_text_jobs); on a site built from records it is a record, not a file
+        rec_ = canon.group(1)[len(FULL) + 1:] if STORE and canon.group(1).startswith(FULL + "/job/") else ""
+        if rec_ and not (other and other.exists()):
+            ok_ = f'<link rel="canonical" href="{canon.group(1)}"' in (STORE.page(rec_.split("/")[1]) or "")[:6000]
+        else:
+            ok_ = bool(other and other.exists() and f'<link rel="canonical" href="{canon.group(1)}"' in other.read_text(encoding="utf-8", errors="replace")[:6000])
         if not ok_: fails[t]["canonical is not self"] += 1
     if 'lang="en"' not in h[:200]: fails[t]["no lang"] += 1
     heads = [int(x) for x in re.findall(r"<h([1-6])[\s>]", h.split("<footer")[0])]
@@ -168,6 +175,20 @@ for rel in sample:
     for href in set(re.findall(r'href="(/[^"]*)"', h)):
         if not exists(href):
             fails[t]["broken internal link"] += 1; broken[href] += 1
+# the sitemaps list only pages that exist, are offered to search engines and name themselves as canonical (Bing's webmaster
+# guidelines, 26 Nov 2026), each once: every non-job address in them, and the job pages of the sample
+if (SITE / "sitemap.xml").is_file():
+    counts["sitemaps"] = 0
+    listed_, in_sample_ = Counter(), set(sample)
+    for sm_ in sorted((SITE / "sitemaps").glob("*.xml")):
+        counts["sitemaps"] += 1
+        for u_ in re.findall(r"<loc>([^<]+)</loc>", sm_.read_text(encoding="utf-8", errors="replace")):
+            rel_ = html.unescape(u_)[len(FULL) + 1:]
+            listed_[rel_] += 1
+            if rel_.startswith("job/") and f"{rel_}index.html" not in in_sample_: continue
+            if rel_ in not_for_map: fails["sitemaps"]["lists a noindex or canonicalised page"] += 1
+            elif not rel_.startswith("job/") and not exists(f"{P}/{rel_}"): fails["sitemaps"]["lists a page that does not exist"] += 1
+    if any(k_ > 1 for k_ in listed_.values()): fails["sitemaps"]["lists an address twice"] += sum(1 for k_ in listed_.values() if k_ > 1)
 # every script the pages load must parse (20 Nov 2026: a stray "//" in assets/site.js left every script of the live site dead)
 import shutil, subprocess                     # noqa: E402
 if shutil.which("node"):

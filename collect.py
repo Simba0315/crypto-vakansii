@@ -2355,6 +2355,9 @@ def main():
             if old:
                 j.update(slug=old["slug"], first_seen=old["first_seen"])
                 if old.get("first_seen_at"): j["first_seen_at"] = old["first_seen_at"]      # jobs first seen before exact times were kept have none
+                # the day the job's page last changed, for the sitemap's lastmod (build.py, 26 Nov 2026): the posting's text changed, or it opened again
+                ch_ = TODAY if (old.get("h") and j.get("h") and old["h"] != j["h"]) or not old.get("active") else old.get("changed")
+                if ch_: j["changed"] = ch_
             else:
                 base = f"{slugify(j['title'])}-{slugify(name)}"
                 slug, i = base, 2

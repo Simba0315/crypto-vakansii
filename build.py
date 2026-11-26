@@ -491,6 +491,26 @@ TAG_SLUG = {"C++": "cpp", "C#": "csharp", ".NET": "dotnet", "Node.js": "nodejs",
             "FP&A": "fpa", "M&A": "mergers-and-acquisitions", "GD&T": "gdt", "Driver's license": "drivers-license", "Security+": "security-plus",
             "CompTIA A+": "comptia-a-plus"}
 URLS = []
+# What search engines are asked to index (Bing's webmaster guidelines, read 26 Nov 2026: thin pages, the same content at several
+# addresses and "automatically generated content at scale" keep a new site out of the index; /entry-level/ had been "Discovered but not
+# crawled" since 18 Nov and no job page or guide was known to Bing). Measured on the live site the same day (2,924 pages sampled):
+#  - a narrow list (a skill, kind of work, field or kind of contract in a place, a skill's or a kind of work's entry-level and last-3-days
+#    lists, the crypto lists) under 20 jobs loses the parts of the template that start at 20: the row of figures, the charts, the employers,
+#    the list's own heading. What is left is one sentence, a few rows and the template's questions: 405 words of its own (not counting
+#    the job rows) against 776 at 20 to 49 jobs, and half the text no other page has (165 six-word runs against 277). 37% of the
+#    33,537 "<skill> jobs in <place>" pages were under 20;
+#  - a company page under 5 open jobs has none of the parts that start at 5 (trust marks, pay, "is it hard to get hired"): 440 words of its
+#    own against 780 at 5 to 9. 27% of the 25,299 company pages.
+# Such a page stays for visitors and for the links that lead to it and from it (noindex,follow; crosslinks.py still links it up and
+# across), leaves the sitemap and the IndexNow list, and comes back by itself on the day it has the jobs. Never for /categories/, the
+# hubs, the guides, the tools or /vs/: only the listing() calls that pass index_min do it.
+INDEX_MIN = 20                 # jobs a narrow list needs to be offered to search engines
+INDEX_MIN_CO = 5               # open jobs a company page needs
+NOINDEX_FOLLOW = '<meta name="robots" content="noindex,follow">'
+THIN = {}                      # page -> its open jobs, for the pages under the line: kept, but noindex,follow and out of the sitemap
+PAGE_MOD = {}                  # page -> the day its list last changed: the newest job on it (first seen), or the newest closing on a list of closed jobs
+DUP_PAGES = {}                 # page -> the page with the same jobs that keeps the search (it names that page as canonical and leaves the sitemap)
+EVERY_CUT = []                 # (title of an every_list block, links kept, links to lists under the line left out), for the build's report
 # One page per query (the owner, 18 Nov 2026: "никаких конфликтов не должно быть"). The site files a job under a field (/jobs/<field>/),
 # under a group of kinds of work (/categories/<group>/), under a kind of work (/roles/<role>/) and under a place, and some of these
 # lists carry the same words: "Security jobs" twice, "Consulting jobs in London" twice, "Remote security jobs" twice. Every list page
@@ -541,6 +561,43 @@ def one_page_per_query():
             if any(f'/{p_}"' in t_ for p_ in late):
                 f.write_text(CAT_HOME_RX[0].sub(lambda m: CAT_HOME[m.group(1)], t_), encoding="utf-8")
     return moved
+
+
+MAIN_RX = re.compile(r"<main[^>]*>(.*)</main>", re.S)
+DATES_FILE = ROOT / "data" / "lastmod.json"
+
+
+def page_dates(urls):
+    """{page: the day its text last changed} for the pages of urls that are no list of jobs (PAGE_MOD holds those): a guide, a tool, a
+    glossary entry, a resume example, a comparison. What counts is the visible text of <main> with every figure taken out, so a count or
+    a median recounted every hour is not a change, and a new paragraph, a new row or a new link is. The fingerprint of each page and the
+    day it last changed are kept in data/lastmod.json (the workflow carries the file from run to run); a page seen for the first time,
+    or one whose file is missing, counts as changed today. A missing or damaged file is treated as empty."""
+    try: old_ = json.loads(DATES_FILE.read_text(encoding="utf-8")) if DATES_FILE.is_file() else {}
+    except (OSError, ValueError): old_ = {}
+    if not isinstance(old_, dict): old_ = {}
+    new_, out_ = {}, {}
+    for u in urls:
+        if u in PAGE_MOD:
+            out_[u] = PAGE_MOD[u]; continue
+        f = OUT / u / "index.html" if not u.endswith((".html", ".xml", ".txt", ".json")) else OUT / u
+        try: t_ = f.read_text(encoding="utf-8", errors="replace")
+        except OSError: continue
+        m_ = MAIN_RX.search(t_)
+        txt_ = re.sub(r"<script.*?</script>|<style.*?</style>", " ", m_.group(1) if m_ else t_, flags=re.S)
+        txt_ = " ".join(re.sub(r"[\d,.%$€£¥₹+−-]+", " ", html.unescape(re.sub(r"<[^>]+>", " ", txt_))).split())
+        h_ = hashlib.md5(txt_.encode("utf-8", "replace")).hexdigest()[:12]
+        was_ = old_.get(u)
+        day_ = was_[1] if isinstance(was_, list) and len(was_) == 2 and was_[0] == h_ and re.fullmatch(r"\d{4}-\d\d-\d\d", str(was_[1])) else TODAY
+        new_[u] = [h_, day_]; out_[u] = day_
+    try:
+        DATES_FILE.parent.mkdir(parents=True, exist_ok=True)
+        DATES_FILE.write_text(json.dumps(new_, separators=(",", ":")), encoding="utf-8")
+    except OSError as ex:
+        print(f"page dates: could not keep {DATES_FILE.name}: {ex}")
+    kept_ = sum(1 for u, (h_, d_) in new_.items() if d_ != TODAY)
+    print(f"page dates: {len(out_) - len(new_):,} lists dated by their newest job; {len(new_):,} other pages, {kept_:,} unchanged since an earlier day")
+    return out_
 
 
 def name_canonicals(moved):
@@ -1869,13 +1926,14 @@ def sec_labels(path, body):
     return body
 
 
-def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False, cls=""):
+def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False, cls="", canon=None):
     # <!--email_off--> around the body (22 Nov 2026): Cloudflare rewrote every address (abuse@ in "Report a problem with this listing",
     # partners@, press@) into /cdn-cgi/l/email-protection links whose decoding script our pages never load, so a click opened its
     # "Email Protection" page instead of the mail program. The comments tell Cloudflare to leave the addresses alone.
     """cls: a class on <main> ("lp" on list pages, "hub" on directory pages): the styles of the sections review are scoped by it,
-    so job pages, built by the same function, keep their look."""
-    url = f"{FULL}/{path}"
+    so job pages, built by the same function, keep their look. canon: the address the page names as canonical when it is not its
+    own (a job page that repeats an earlier one, same_text_jobs)."""
+    url = f"{FULL}/{canon or path}"
     body = sec_labels(path, frame_first(path, with_toc(path, body)))
     title, desc = fit_title(title), fit_desc(desc)
     if '"BreadcrumbList"' not in head:                 # every page with a visible trail carries the same trail as markup
@@ -2229,7 +2287,13 @@ def kind_row(path):
 def every_list(title, entries, groups):
     """Every narrower list under one page, grouped, with no cap (internal links, owner 18 Nov: "a link that boosts every page"):
     rel() shows the 14 largest, so the small lists of a big city were reached from nowhere. entries: [(path, label, count)];
-    groups: [(label, regex on the path)], the first group that matches takes the entry."""
+    groups: [(label, regex on the path)], the first group that matches takes the entry.
+    A list under the line (THIN: noindex, out of the sitemap) is left out (26 Nov 2026, Bing's guidelines on links and low-value
+    addresses): the block was there to make search engines find the small lists, and these are no longer offered to them. Each is still
+    linked from its neighbours ("Next to it") and from "Narrow down ..." (crosslinks.py), and the search has its jobs."""
+    kept_ = [x for x in entries if x[0] not in THIN]
+    EVERY_CUT.append((title, len(kept_), len(entries) - len(kept_)))
+    entries = kept_
     seen, rows = set(), ""
     for label, rx in groups:
         xs = [x for x in entries if x[0] not in seen and re.search(rx, x[0])]
@@ -2710,12 +2774,19 @@ def role_desc(name, rj, mids, what):
 
 
 def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", feed=False, head_html=None, after="", max_pages=None, more=None, faq=None, hub="", accent=None, list_title="", faq_first=None, live="", faq_extra=(),
-            stats=False, pics="", tail="", links=()):
+            stats=False, pics="", tail="", links=(), index_min=None):
     """A page that is a list of jobs. The order on its first page (sections review, 17 Nov 2026): the trail, the heading, one
     paragraph, the row of the list's own numbers (`stats`), the main action with `links` beside it, then `extra` (rows of links
     that narrow the list), `pics` (charts: above the list on wide screens, under it on phones, where the list must come first),
-    the list, `hub` and `after`, the questions, and `tail` (what may be long and is read last: a company's closed jobs)."""
+    the list, `hub` and `after`, the questions, and `tail` (what may be long and is read last: a company's closed jobs).
+    index_min: the jobs the list needs to be offered to search engines (INDEX_MIN); under it the page is noindex,follow and not in
+    the sitemap (THIN). None: always offered."""
     jobs = order(jobs)
+    thin_ = index_min is not None and len(jobs) < index_min
+    if thin_: THIN[path] = len(jobs)
+    # the sitemap's lastmod: the day the list last gained a job (a list of closed jobs: the newest closing), not the day of the build
+    mod_ = max(((j.get("first_seen") if j.get("active") else j.get("closed")) or "")[:10] for j in jobs) if jobs else ""
+    if mod_: PAGE_MOD[path] = mod_
     desc = tidy_list_desc(desc, jobs)
     if feed: rss(f"{path}feed.xml", f"{h1} — {SITE}", path, jobs)
     rows = collapse(jobs)
@@ -2774,7 +2845,7 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
             # ($85K–$185K)" quoted the few postings that state US dollars, which is not what people there are paid. No local range: the month.
             elif m_pl and "$" not in title and PLACE_CODE.get(m_pl.group(1), "") != "US":
                 pay_l = ""
-            page(path, re.sub(r"\((\d[\d,]*) open\)", lambda m_: f"({m_.group(1)} open{pay_l or ', ' + MONTH_YEAR})", title, count=1), desc, body, head=ld + faq_ld, cls="lp")
+            page(path, re.sub(r"\((\d[\d,]*) open\)", lambda m_: f"({m_.group(1)} open{pay_l or ', ' + MONTH_YEAR})", title, count=1), desc, body, head=ld + faq_ld + (NOINDEX_FOLLOW if thin_ else ""), cls="lp")
         else: page(f"{path}{n}/", f"{title.rsplit(' | ', 1)[0]}, page {n} | {SITE}", f"Page {n} of {pages}. {desc}", body, head=ld, sitemap=False, cls="lp")
 
 
@@ -3387,6 +3458,37 @@ def microdata(props):
     return "".join(out)
 
 
+def same_text_jobs(jobs):
+    """Marks the job pages that repeat an earlier one word for word: an open job at the same company, with the same title (the same
+    address before the "-2", "-3" the collector adds), the same place and the same text as one first seen before it. Its record gets
+    "dup_of" (the first one's address), so the page built from the file and the one built from the record (records.py) both name the
+    first as canonical, and it leaves the sitemap and the IndexNow list. Bing's guidelines (26 Nov 2026): "the same or substantially
+    similar content across multiple URLs" lowers the trust in all of them. A posting of one title in another place is a different job
+    for different people (its JobPosting has another jobLocation), so it keeps its own page; a closed job is left alone (the archive).
+    Returns how many were marked. Empty or missing fields are compared as empty strings."""
+    # Only addresses the collector had to number can repeat one (a second job of one title at one company gets "-2"): the numbered ones
+    # and the ones they were numbered after are the candidates, about a third of the jobs, so the full record is not grouped whole.
+    sfx_ = re.compile(r"-\d+$")
+    open_ = [j for j in jobs if j.get("active") and not j.get("tg") and j.get("slug")]
+    bases_ = {sfx_.sub("", j["slug"]) for j in open_ if sfx_.search(j["slug"])}
+    groups = defaultdict(list)
+    for j in jobs: j.pop("dup_of", None)
+    for j in open_:
+        if j["slug"] not in bases_ and sfx_.sub("", j["slug"]) not in bases_: continue
+        groups[(j.get("company") or "", slugify(j.get("title") or ""), " ".join((j.get("location") or "").lower().split()))].append(j)
+    n_ = 0
+    for js in groups.values():
+        if len(js) < 2: continue
+        js.sort(key=lambda j: (j.get("first_seen") or "", j.get("first_seen_at") or "", len(j["slug"]), j["slug"]))
+        first = {}
+        for j in js:
+            k_ = hashlib.md5(((j.get("desc") or "") + "\x1f" + (j.get("excerpt") or "")).encode("utf-8", "replace")).hexdigest()
+            if k_ in first:
+                j["dup_of"] = first[k_]; n_ += 1
+            else: first[k_] = j["slug"]
+    return n_
+
+
 def job_indexable(j):
     """Every job page goes to search engines: open ones, and closed ones as an archive (the owner, 13 Nov 2026: "every job must be in
     Google, every one"; "keep closed jobs, there may be search traffic on them"). Only posts read from Telegram channels stay out.
@@ -3683,7 +3785,10 @@ def job_page(j, active_by_cat):
                if j["active"] else " This job is closed."))
     # a Telegram post is a few lines of someone else's text: shown to visitors, kept out of search engines and the sitemap
     ok_ = job_indexable(j)
-    page(f"job/{j['slug']}/", title, desc, body, head + ("" if ok_ else '<meta name="robots" content="noindex">'), sitemap=ok_, compact=True)
+    # a repeat of an earlier posting (same_text_jobs) stays for visitors and names the first one as canonical, out of the sitemap
+    dup_ = j.get("dup_of") if ok_ and j.get("active") else None      # a job live.py saw close since the build is a closed page of its own
+    page(f"job/{j['slug']}/", title, desc, body, head + ("" if ok_ else '<meta name="robots" content="noindex">'), sitemap=ok_ and not dup_, compact=True,
+         canon=f"job/{dup_}/" if dup_ else None)
 
 
 def embed_code(spec, label, page_path, limit=6):
@@ -5172,6 +5277,25 @@ def main():
     tag_of_slug = {}
     for t in by_tag: tag_of_slug.setdefault(tslug(t), t)       # the first skill with that address, as the search through by_tag found it
     COMBO_PATHS = {c_[0] for c_ in combos}      # the combination pages that exist today: a link to one is written only when it is here
+    # The lists of the last three days by skill and by kind of work (/new/skills/<skill>/, /new/roles/<work>/), worked out here, before
+    # any page is written, because each has a twin (26 Nov 2026, Bing's guidelines: "the same or substantially similar content across
+    # multiple URLs"): /skills/<skill>/new/ and /roles/<work>/new/ list the same jobs posted in the same three days (on the live site the
+    # 50 rows of the first were the newest 50 of the second, 239 pairs). The /new/ page keeps the search (the full row of figures, 100
+    # rows a page, the link from /new/); the twin names it as canonical, leaves the sitemap, and every link to the twin leads to it.
+    # A pair under INDEX_MIN is left alone: both lists are then too short to be offered at all.
+    NEW_MIN = 15      # jobs a "new in the last 3 days" list needs to be worth a page (/new/skills/<skill>/)
+    _c3 = (datetime.date.today() - datetime.timedelta(days=2)).isoformat()      # the same three days as /new/
+    new_sk = sorted(((t, [j for j in js if (j["posted"] or "") >= _c3]) for t, js in by_tag.items()), key=lambda x: -len(x[1]))
+    new_sk = [(t, fj) for t, fj in new_sk if len(fj) >= NEW_MIN][:120]
+    NEWSK_N = {t: len(fj) for t, fj in new_sk}
+    fresh_ids_ = {id(j) for j in active if (j["posted"] or "") >= _c3}
+    new_ro = sorted(((s_, nm_, [j for j in js_ if id(j) in fresh_ids_]) for s_, (nm_, js_) in by_role.items() if s_ not in BROAD and not s_.endswith("-speaking")), key=lambda x: -len(x[2]))
+    new_ro = [(s_, nm_, fj) for s_, nm_, fj in new_ro if len(fj) >= NEW_MIN][:120]
+    for twin_, keep_ in ([(f"skills/{tslug(t)}/new/", f"new/skills/{tslug(t)}/") for t, fj in new_sk if len(fj) >= INDEX_MIN]
+                         + [(f"roles/{s_}/new/", f"new/roles/{s_}/") for s_, _, fj in new_ro if len(fj) >= INDEX_MIN]):
+        if twin_ in COMBO_PATHS:
+            DUP_PAGES[twin_] = keep_
+            same_as(twin_.rstrip("/"), keep_)
     # "work from home <work> jobs" is how many people search for the remote lists of a kind of work: each one answers it in words
     # (21 Nov 2026), with today's counts, in its questions and their FAQ markup
     for path_wfh, _h, js_wfh, *_r in combos:
@@ -5238,7 +5362,7 @@ def main():
         listing(path, h1, COMBO_TITLE.get(path) or (f"Remote & Work From Home Jobs in {h1[len('Remote jobs in '):]} ({len(js):,} open) | {SITE}" if wfh_ else f"{h1} ({len(js):,} open) | {SITE}"),
                 COMBO_DESC.get(path) or f"{roles(len(js), 'open role')}: {h1} at companies. Updated hourly.",
                 js, intro_for(js, pre, post, hub=row_), trail=trail, per=50, max_pages=3, more=qs, faq=lab_, stats=row_, pics=gl_, hub=tl_, list_title=lt_ if len(js) >= 20 else "",
-                after=COMBO_AFTER.get(path, ""), faq_extra=COMBO_QA.get(path, ()))
+                after=COMBO_AFTER.get(path, ""), faq_extra=COMBO_QA.get(path, ()), index_min=INDEX_MIN)
 
     lap('Listings')
     # Listings
@@ -5351,7 +5475,7 @@ def main():
             if len(js) < least: return
             row_, kw_ = list_parts(h1, js, skip, proper)
             listing(path, h1, f"{h1} ({len(js):,} open) | {SITE}", desc.format(n=roles(len(js), "open job")), js, intro_for(js, pre, post, row=row_), trail=ctrail, max_pages=3, more=qs,
-                    faq=h1 if proper else h1[0].lower() + h1[1:], links=tuple(up) + (("crypto/", "All crypto jobs"),), **kw_)
+                    faq=h1 if proper else h1[0].lower() + h1[1:], links=tuple(up) + (("crypto/", "All crypto jobs"),), index_min=INDEX_MIN, **kw_)
             bucket.append((path, label or h1, len(js)))
         cadd(ckinds, "crypto/remote/", "Remote crypto jobs", [j for j in crypto if j["remote"]], "{n} at crypto and web3 companies that can be done from home. Updated hourly.", "remote ", qs="crypto=1&remote=1")
         cadd(ckinds, "crypto/new/", "New crypto jobs", [j for j in crypto if (j["posted"] or "") >= cut3], "{n} at crypto and web3 companies posted in the last three days.", "", " at crypto and web3 companies posted in the last 3 days", qs="crypto=1&age=3")
@@ -5454,7 +5578,7 @@ def main():
                 listing(f"crypto/{s}/", f"{name} jobs in crypto & web3", f"{name} Jobs in Crypto & Web3 ({len(cj):,} open) | {SITE}",
                         f"{roles(len(cj), name + ' job')} at crypto and web3 companies. Remote and on-site roles, updated hourly.",
                         cj, intro_for(cj, f"{e(name)} ", " at crypto and web3 companies", row=row_c), trail=ctrail, faq=f"{name} jobs in crypto and web3",
-                        links=((f"jobs/{s}/", f"All {name} jobs"), ("crypto/", "All crypto jobs")), **kw_c)
+                        links=((f"jobs/{s}/", f"All {name} jobs"), ("crypto/", "All crypto jobs")), index_min=INDEX_MIN, **kw_c)
     sal = [j for j in active if j["salary"]]
     row_s, kw_s = list_parts("Jobs with salary listed", sal)
     listing("with-salary/", "Jobs with salary listed", f"Jobs With Salary Listed ({len(sal):,}) | {SITE}",
@@ -5573,11 +5697,6 @@ def main():
     # "<name> Careers", the skill's "<name> Jobs"; each says in one line where the other one is, so a reader who meant the other finds it.
     CO_OF_SLUG = {slugify(c_): (c_, n_) for c_, n_ in OPEN.items() if n_}
     SKILL_CO = {t: CO_OF_SLUG[tslug(t)] for t in by_tag if tslug(t) in CO_OF_SLUG and t not in SKILL_ROLE}
-    NEW_MIN = 15      # jobs a "new in the last 3 days" list needs to be worth a page (/new/skills/<skill>/)
-    _c3 = (datetime.date.today() - datetime.timedelta(days=2)).isoformat()      # the same three days as /new/
-    new_sk = sorted(((t, [j for j in js if (j["posted"] or "") >= _c3]) for t, js in by_tag.items()), key=lambda x: -len(x[1]))
-    new_sk = [(t, fj) for t, fj in new_sk if len(fj) >= NEW_MIN][:120]
-    NEWSK_N = {t: len(fj) for t, fj in new_sk}
     for t, js in by_tag.items():
         sr_ = SKILL_ROLE.get(t)
         sf_ = SKILL_FIELD.get(t)          # (field slug, field heading, its open jobs) when "<skill> jobs" is a field page's search
@@ -6808,7 +6927,10 @@ def main():
                           f'<a href="{P}/skills/{slug}/">{roles(len(by_tag[sk_]), "open job")} that ask for {e(sk_)}</a>.</p>')
         listing(f"companies/{slug}/", f"Jobs at {c}", f"{c} Careers: {roles(len(act), 'Open Job')}, Pay & Hiring ({datetime.date.fromisoformat(TODAY).strftime('%b %Y')}) | {SITE}",
                 f"All jobs at {c}: {len(act):,} open" + (f" and {len(arc):,} closed" if arc else "") + f", {new7_:,} added this week. Pay by field, locations and remote roles, from its own careers page.",
-                act, head_html=head_html, after=overview + (alert_form(f"new jobs at {c}", q=c) if act else ""), tail=closed + embed, faq=f"jobs at {c}", feed=True, faq_extra=co_qa)
+                act, head_html=head_html, after=overview + (alert_form(f"new jobs at {c}", q=c) if act else ""), tail=closed + embed, faq=f"jobs at {c}", feed=True, faq_extra=co_qa,
+                index_min=INDEX_MIN_CO)
+        # the page lists the company's closed jobs too: a closing changes it as much as a new job
+        if arc: PAGE_MOD[f"companies/{slug}/"] = max([PAGE_MOD.get(f"companies/{slug}/", "")] + [(j.get("closed") or "")[:10] for j in arc])
 
     lap('One-paragraph hiring summary per company, shown on each of i')
     # One-paragraph hiring summary per company, shown on each of its job pages
@@ -6828,6 +6950,8 @@ def main():
         if j.get("closed"):
             key = (j["company"], j["title"].lower(), j["location"].lower())
             REPOST[key] = max(REPOST.get(key, ""), j["closed"])
+    n_dup = same_text_jobs(jobs)
+    print(f"job pages that repeat an earlier page word for word (same company, title, place and text): {n_dup:,}, each names the first as canonical")
     lap('Job records (records.py), like the postings of a large job s')
     # Job records (records.py), like the postings of a large job site: HRN_RECORDS=1 stores every job as a row of data/jobs.db and writes no
     # job pages, serve.py builds each page when it is asked for; "both" writes the pages as well, for records_test.py. Unset: pages only.
@@ -6837,7 +6961,7 @@ def main():
         size = records.save(ROOT / "data" / "jobs.db", jobs, sys.modules[__name__])
         print(f"job records: {len(jobs):,} in data/jobs.db, {size / 2**20:.0f} MiB")
     if rec_mode == "1":
-        URLS.extend(f"job/{j['slug']}/" for j in jobs if job_indexable(j))        # the pages are not files, but they are in the sitemap all the same (not Telegram posts)
+        URLS.extend(f"job/{j['slug']}/" for j in jobs if job_indexable(j) and not j.get("dup_of"))        # the pages are not files, but they are in the sitemap all the same (not Telegram posts, not repeats)
     else:
         for j in jobs: job_page(j, by_cat)
     # Sections review, batch 5: the page was a heading, one line and a list. Under the line now stand the archive's own figures
@@ -6858,16 +6982,14 @@ def main():
     lap('New jobs by skill and by kind of work')
     # "python jobs in the last 3 days", "new data analyst jobs": the same three days as /new/, narrowed to one skill or one kind of
     # work, for the 15 jobs it takes to make a list worth opening (22 Nov 2026; ROADMAP "pages for the last 3 days by skill").
-    fresh_ids = {id(j) for j in fresh}
-    new_ro = sorted(((s_, nm_, [j for j in js_ if id(j) in fresh_ids]) for s_, (nm_, js_) in by_role.items() if s_ not in BROAD and not s_.endswith("-speaking")), key=lambda x: -len(x[2]))
-    new_ro = [(s_, nm_, fj) for s_, nm_, fj in new_ro if len(fj) >= NEW_MIN][:120]
+    # new_sk and new_ro (the skills and kinds of work with 15 jobs in these days) are worked out before the long-tail pages (DUP_PAGES)
     for t, fj in new_sk:
         n_co = len({j["company"] for j in fj})
         listing(f"new/skills/{tslug(t)}/", f"New {t} jobs", f"New {t} Jobs: {len(fj):,} Posted in the Last 3 Days | {SITE}",
                 f"{len(fj):,} {t} jobs posted in the last three days at {n_co:,} companies, read from employers’ own careers pages and rebuilt every hour.",
                 fj, (f"<strong>{e(t)}</strong>: {e(skills_info.INFO[t][1])}. " if t in skills_info.INFO else "")
                 + f"{roles(len(fj), 'new role')} asking for {e(t)} {'was' if len(fj) == 1 else 'were'} posted on the employers’ own careers pages in the last three days, as of {fdate(TODAY)}.",
-                trail=(("New jobs", "new/"),), feed=False, more=f"age=3&skills={quote(t)}", stats=True,
+                trail=(("New jobs", "new/"),), feed=False, more=f"age=3&skills={quote(t)}", stats=True, index_min=INDEX_MIN,
                 extra=f'<p class="note">The last three days only. All {len(by_tag[t]):,} open jobs that ask for {e(t)} are on <a href="{P}/skills/{tslug(t)}/">the {e(t)} page</a>; '
                       f'everything posted in these days, whatever the skill, is on <a href="{P}/new/">New jobs</a>.</p>',
                 list_title=f"New {t} jobs, newest first")
@@ -6877,7 +6999,7 @@ def main():
                 f"{len(fj):,} new {low_} jobs posted in the last three days at {len({j['company'] for j in fj}):,} companies, read from employers’ own careers pages and rebuilt every hour.",
                 fj, (f"<strong>{e(nm_)}</strong>: a person in this job {e(roles_info.INFO[s_][1])}. " if s_ in roles_info.INFO and roles_info.INFO[s_][1] else "")
                 + f"{roles(len(fj), 'new role')} for {e(low_)} {'was' if len(fj) == 1 else 'were'} posted on the employers’ own careers pages in the last three days, as of {fdate(TODAY)}.",
-                trail=(("New jobs", "new/"),), feed=False, more=f"age=3&q={quote(nm_)}", stats=True,
+                trail=(("New jobs", "new/"),), feed=False, more=f"age=3&q={quote(nm_)}", stats=True, index_min=INDEX_MIN,
                 extra=f'<p class="note">The last three days only. All {len(by_role[s_][1]):,} open {e(low_)} jobs are on <a href="{P}/roles/{s_}/">the {e(low_)} page</a>; '
                       f'everything posted in these days, whatever the work, is on <a href="{P}/new/">New jobs</a>.</p>',
                 list_title=f"New {low_} jobs, newest first")
@@ -14636,6 +14758,7 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     # every narrow page linked up, down and across (crosslinks.py): long-tail pages must not be orphans
     import crosslinks
     same_ = one_page_per_query()          # first: the cross-link blocks leave out the pages that give up their search and link the one that keeps it
+    for twin_, keep_ in DUP_PAGES.items(): same_.setdefault(twin_, keep_)        # the lists of the last three days at two addresses (DUP_PAGES)
     # every kind of work's field (26 Nov 2026): "Remote account executive jobs" links up to "Remote sales jobs" as well as to all remote jobs
     field_of_ = defaultdict(list)
     for fs_, _, _, live_, _ in fam_rows:
@@ -14645,9 +14768,27 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     print(f"cross-links: {n_x:,} pages got links up, down or across ({n_l:,} narrow-to-broad pairs)")
     n_same = name_canonicals(same_)
     print(f"one page per query: {n_same:,} list pages name a fuller page with the same words as canonical")
-    job_mod = {f"job/{j['slug']}/": (j.get("last_seen") if j["active"] else j.get("closed")) or TODAY for j in jobs}      # a closed job's page last changed the day it closed
+    # lastmod, the day each page's content last changed (Bing's guidelines, 26 Nov 2026: "accurate lastmod values" are how it tells which
+    # pages changed; until this day every address said the day of the build, 81,309 pages and every open job, which says nothing):
+    #  - a job page: the day it was first seen, or the day its posting changed (collect.py "changed"); a closed one, the day it closed;
+    #  - a list of jobs: the day the newest job on it was first seen (PAGE_MOD, listing());
+    #  - any other page: the day its text last changed, figures aside (page_dates(): data/lastmod.json, kept between runs).
+    job_mod = {f"job/{j['slug']}/": (max(d_ for d_ in ((j.get("first_seen") or "")[:10], (j.get("changed") or "")[:10]) if d_) if j.get("active") and (j.get("first_seen") or j.get("changed"))
+                                     else (j.get("closed") or "")[:10] if not j.get("active") else "") or TODAY for j in jobs if j.get("slug")}
+    noidx_ = set(THIN) | set(DUP_PAGES)       # under INDEX_MIN, or a twin: kept for visitors, not offered to search engines
+    seen_ = set()
+    URLS[:] = [u for u in URLS if u not in noidx_ and not (u in seen_ or seen_.add(u))]     # and each address once (seven were listed twice on 26 Nov 2026)
+    job_mod.update(page_dates([u for u in URLS if not u.startswith("job/")]))
     urlset = lambda urls: ('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
                            + "".join(f"<url><loc>{e(FULL + '/' + u)}</loc><lastmod>{job_mod.get(u, TODAY)}</lastmod></url>" for u in urls) + "</urlset>")
+    kw_ = {"skills", "remote", "new", "entry-level", "part-time", "internships", "contract", "roles", "in", "chains"}
+    thin_k = Counter((lambda sg_: "/".join([sg_[0]] + [x if x in kw_ else "*" for x in sg_[1:]]) + "/")(u.strip("/").split("/")) for u in THIN)
+    print(f"under the line (noindex,follow, out of the sitemap): {len(THIN):,} pages: " + ", ".join(f"{k_} {v_:,}" for k_, v_ in thin_k.most_common(12)))
+    print(f"lists of the last three days at two addresses: {len(DUP_PAGES):,} name the /new/ page as canonical")
+    if EVERY_CUT:
+        big_ = sorted(EVERY_CUT, key=lambda x: -(x[1] + x[2]))[:5]
+        print(f"every_list blocks: {len(EVERY_CUT):,}, {sum(x[2] for x in EVERY_CUT):,} links to lists under the line left out, {sum(x[1] for x in EVERY_CUT):,} kept; largest: "
+              + "; ".join(f"{t_} {k_ + c_:,} -> {k_:,}" for t_, k_, c_ in big_))
     job_urls = [u for u in URLS if u.startswith("job/")]
     lap('the pages the site is built to rank with: the home page, one')
     # the pages the site is built to rank with: the home page, one-level hubs (jobs/, salaries/, remote/ ...), every category, every
@@ -14708,11 +14849,16 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
         write(f'{CFG["indexnow_key"]}.txt', CFG["indexnow_key"], sitemap=False)
         YDAY = (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
         changed = ["", "jobs/", "new/", "remote/", "trends/", "salaries/", "companies/"]
-        # Every day also the main pages of sitemaps/core.xml (about 700). Why (24 Nov 2026): Bing had indexed 1 page of the site in four days;
-        # it crawls a new site from what IndexNow tells it, and the daily list named only jobs. Their counts and lists change every day,
-        # so they are changed pages each day (until 26 Nov 2026 they went on Mondays only; Bing still had /entry-level/ "discovered but not crawled").
-        changed += [u for u in core_urls if u not in changed]
-        changed += [f"job/{j['slug']}/" for j in jobs if j.get("first_seen") in (YDAY, TODAY) or j.get("closed") in (YDAY, TODAY)]
+        # Every day also the main pages of sitemaps/core.xml whose content changed (24 Nov 2026: Bing had indexed 1 page of the site in four
+        # days; it crawls a new site from what IndexNow tells it, and the daily list named only jobs). Since 26 Nov 2026 only those whose
+        # lastmod is yesterday or today: IndexNow is for "URLs added, updated or removed" (Bing's guidelines), and a list that gained a job
+        # changed, a privacy page that did not, did not. Then the new and the closed jobs, then the other pages that changed. Never a page
+        # under the line (THIN), a twin (DUP_PAGES) or a job page that repeats another (same_text_jobs): those are not in URLS.
+        changed += [u for u in core_urls if u not in changed and job_mod.get(u, TODAY) >= YDAY]
+        changed += [f"job/{j['slug']}/" for j in jobs if (j.get("first_seen") in (YDAY, TODAY) or j.get("closed") in (YDAY, TODAY) or (j.get("changed") or "") >= YDAY)
+                    and job_indexable(j) and not j.get("dup_of")]
+        seen_c = set(changed)
+        changed += [u for u in page_urls if u not in seen_c and job_mod.get(u, TODAY) >= YDAY]
         (ROOT / "data" / "indexnow.json").write_text(json.dumps({"host": BASE.split("//", 1)[-1], "key": CFG["indexnow_key"], "keyLocation": f'{FULL}/{CFG["indexnow_key"]}.txt',
                                                                  "urlList": [f"{FULL}/{u}" for u in changed[:10000]]}))
     lap('stylesheets cut to each kind of page')
