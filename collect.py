@@ -159,11 +159,11 @@ SKILLS = [
     ("Solidity", r"solidity"), ("Rust", r"\brust\b"), ("Go", r"golang|\bgoroutines?\b|(?<!to )\bgo[,/)]|[,/(] ?go\b(?![- ](?:to|live)\b)|\b(?:python|rust|java|c\+\+|typescript|javascript|node(?:\.js)?|kotlin|scala|ruby|php|c#|elixir|swift)(?:,| and| or| &) go\b(?![- ](?:to|live|ahead|above)\b)|\bgo (?:and|or|&) (?:python|rust|java|c\+\+|typescript|javascript|node(?:\.js)?|kotlin|scala|ruby|php|c#|elixir|swift)\b|\b(?:in|using|with|know|knows|write|writing|written in) go\b(?=[.;:)]|\s+(?:and|or)\b|$)|\bgo (?:developer|engineer|programmer|programming|microservices?|services|backend|codebase|code|modules?|stdlib|runtime)\b"), ("Python", r"python"),
     ("TypeScript", r"typescript"), ("JavaScript", r"javascript"), ("React", r"(?-i:\bReact\b)(?! to\b)|\breact\.?js\b|\breact native\b"), ("Node.js", r"node\.?js"),
     ("Java", r"\bjava\b"), ("C++", r"c\+\+"), ("Kotlin", r"kotlin"), ("Swift", r"(?-i:\bSwift\b)|\bswiftui\b"), ("SQL", r"\bsql\b"),
-    ("Ruby", r"\bruby\b"), ("PHP", r"\bphp\b"), ("C#", r"\bc#"), (".NET", r"\.net\b"), ("Scala", r"\bscala\b"), ("Elixir", r"\belixir\b"),
+    ("Ruby", r"\bruby\b"), ("PHP", r"\bphp\b"), ("C#", r"\bc#"), (".NET", r"(?<![\w@.-])\.net\b|\b(?:asp|vb|ado)\.net\b|\bdotnet\b"), ("Scala", r"\bscala\b"), ("Elixir", r"\belixir\b"),
     ("PostgreSQL", r"postgres"), ("Docker", r"\bdocker\b"), ("Terraform", r"terraform"), ("GCP", r"\bgcp\b|google cloud"), ("Azure", r"\bazure\b"),
     ("Machine Learning", r"machine learning"), ("LLM", r"\bllms?\b|large language model"), ("iOS", r"\bios\b"), ("Android", r"\bandroid\b"),
     ("Figma", r"\bfigma\b"), ("Salesforce", r"salesforce"),
-    ("Next.js", r"next\.?js"), ("Vue", r"\bvue(\.js|js)?\b"), ("Angular", r"\bangular\b"), ("React Native", r"react native"), ("Flutter", r"\bflutter\b"),
+    ("Next.js", r"next\.?js"), ("Vue", r"\bvue(\.js|js)?\b"), ("Angular", r"\bangular\b"), ("React Native", r"react native"), ("Flutter", r"\bflutter\b(?=[^.]{0,80}\b(?:dart|mobile|ios|android|apps?|widgets?|cross[- ]platform|react native)\b)|\b(?:dart|mobile|ios|android|react native|cross[- ]platform)\b[^.]{0,80}\bflutter\b|\bflutter (?:developer|engineer|framework|sdk)\b"),
     ("Django", r"\bdjango\b"), ("FastAPI", r"fastapi"), ("GraphQL", r"graphql"), ("PyTorch", r"pytorch"), ("TensorFlow", r"tensorflow"),
     ("Kafka", r"\bkafka\b"), ("Spark", r"apache spark|pyspark|spark sql"), ("Airflow", r"\bairflow\b"), ("dbt", r"\bdbt\b"), ("Snowflake", r"\bsnowflake\b"),
     ("Redis", r"\bredis\b"), ("MongoDB", r"mongodb"), ("MySQL", r"mysql"), ("Linux", r"\blinux\b"), ("CI/CD", r"ci/cd|ci cd"),
@@ -179,7 +179,7 @@ SKILLS = [
     ("ROS", r"(?-i:\bROS\b)|robot operating system"), ("Verilog", r"verilog"), ("Objective-C", r"objective[- ]c"), ("Perl", r"\bperl\b"), ("Power BI", r"power ?bi\b"),
     ("ClickHouse", r"clickhouse"), ("gRPC", r"\bgrpc\b"), ("WebAssembly", r"webassembly|\bwasm\b"), ("Playwright", r"\bplaywright\b"), ("Selenium", r"\bselenium\b"),
     ("Cypress", r"\bcypress\b(?! semiconductor)"), ("Pandas", r"\bpandas\b"), ("Hadoop", r"\bhadoop\b"), ("OpenTelemetry", r"opentelemetry"), ("Zendesk", r"\bzendesk\b"),
-    ("NetSuite", r"netsuite"), ("Workday", r"(?-i:\bWorkday\b)"), ("Shopify", r"\bshopify\b"), ("Solana", r"\bsolana\b"), ("Ethereum", r"\bethereum\b|\bevm\b"),
+    ("NetSuite", r"netsuite"), ("Workday", r"(?-i:\bWorkday\b)(?= (?:HCM|HRIS|Financials?|Payroll|Recruiting|Studio|Integrations?|Reporting|Adaptive|Prism|Extend|implementation|configuration|security|reports?|system|experience|certification|certified|modules?|administrat\w*|consultant|analyst))|(?:HRIS|experience with|experience in|knowledge of|proficien\w* (?:in|with)|systems? (?:such as|like|including)|e\.g\.,?|SAP|Oracle|ADP|UKG|PeopleSoft|SuccessFactors|NetSuite)\W{1,4}(?:\w+\W{1,3}){0,3}(?-i:\bWorkday\b)(?! (?:careers?|site|portal|account|application|profile|candidate)\b)"), ("Shopify", r"\bshopify\b"), ("Solana", r"\bsolana\b"), ("Ethereum", r"\bethereum\b|\bevm\b"),
     ("Zero-knowledge", r"zero[- ]knowledge|zk-?snarks?|\bzkp\b"), ("Embedded C", r"embedded c\b"), ("Computer Vision", r"computer vision"), ("NLP", r"(?-i:\bNLP\b)|natural language processing"),
     # added 15 Nov 2026. Certificates, licenses and spoken languages come first among the new skills: when a posting names more than MAX_TAGS,
     # the later ones are left out, and a required certificate or language says more than one more tool.
@@ -228,7 +228,7 @@ SKILLS = [
     ("Groovy", r"\bgroovy\b"), ("Haskell", r"\bhaskell\b"), ("Clojure", r"\bclojure(?:script)?\b"),
     # websites and apps
     ("REST APIs", r"\brest(?:ful)? (?:apis?|services|web services|endpoints|interfaces)\b|\brestful\b|\brest ?/ ?graphql\b|\bgraphql ?/ ?rest\b|\brest (?:and|or) graphql\b|\bgraphql (?:and|or) rest\b"),
-    ("Microservices", r"\bmicro-?services?\b"), ("HTML", r"\bhtml5?\b"), ("CSS", r"\bcss3?\b"), ("WebSockets", r"\bweb ?sockets?\b"), ("Protobuf", r"\bprotobufs?\b|\bprotocol buffers\b"),
+    ("Microservices", r"\bmicro-?services?\b"), ("HTML", r"\bhtml5?\b"), ("CSS", r"\bcss3?\b(?!-[a-z])(?! (?:patient|billing|accounting|department|dept|unit)\b)|\bcss-in-js\b"), ("WebSockets", r"\bweb ?sockets?\b"), ("Protobuf", r"\bprotobufs?\b|\bprotocol buffers\b"),
     ("Redux", r"\bredux\b"), ("Tailwind CSS", r"\btailwind(?:css| css)?\b"), ("SwiftUI", r"\bswiftui\b"), ("Jetpack Compose", r"\bjetpack compose\b|\bcompose multiplatform\b"),
     ("Webpack", r"\bwebpack\b"), ("NestJS", r"\bnest\.?js\b"), ("WebGL", r"\bwebgl\b|\bwebgpu\b"),
     ("Vite", r"\bvite\b(?=,| or| and|/|\)| (?:build|config|plugin|dev))|\b(?:webpack|rollup|esbuild|turbopack),? (?:and |or |/)?vite\b"), ("UIKit", r"\buikit\b"),
@@ -321,7 +321,7 @@ SKILLS = [
     ("Windows", r"\bwindows (?:10|11|os|desktop|environments?|administration|endpoints?|devices?|pcs?)\b|\bmicrosoft windows\b|\bwindows(?:,| and| or| /) ?(?:mac ?os|linux|unix|mac)\b|\b(?:mac ?os|linux|unix|mac),? (?:and |or |/)?windows\b"),
     ("macOS", r"\bmac ?os(?: x)?\b|\bos x\b"), ("VPN", r"\bvpns?\b|\bipsec\b|\bwireguard\b"),
     ("Help desk", r"\bhelp ?desk\b|\bservice desk\b|\bdesktop support\b|\btier [12] support\b|\bl[12] support\b"), ("ServiceNow", r"\bservicenow\b(?! ventures)|\bservice now\b"),
-    ("Active Directory", r"\bactive directory\b|\bentra id\b|\bazure ad\b|\bazure active directory\b|\bldap\b"), ("Unix", r"\bunix\b"), ("BGP", r"\bbgp\b|\bospf\b|\bmpls\b"),
+    ("Active Directory", r"\bactive directory\b|\bentra id\b|\bazure ad\b|\bazure active directory\b|\bldap\b"), ("Unix", r"\bunix\b"), ("BGP", r"\bbgp\b|\bospf\b|\bmpls (?:networks?|vpns?|circuits?|routing|backbone|l[23] ?vpn|te)\b"),
     ("SD-WAN", r"\bsd-?wan\b|\bsase\b"), ("Microsoft 365", r"\b(?:microsoft|office|ms|o) ?365\b|\bm365\b|\bexchange online\b"),
     ("Linux administration", r"\blinux (?:administration|system administration|sysadmin|admin|servers?)\b|\bred hat\b|\brhel\b|\bcentos\b|\bubuntu\b|\bdebian\b"),
     ("Cisco", r"\bcisco (?:ios|nx-os|asa|meraki|routers?|switches|catalyst|nexus|ise|networking|certifi\w*|equipment|webex|cimc|ucs)\b|\bmeraki\b|\bcisco,? (?:and |or |/)?(?:juniper|arista|palo alto|fortinet)\b|\b(?:juniper|arista|palo alto|fortinet),? (?:and |or |/)?cisco\b"),
@@ -370,7 +370,7 @@ SKILLS = [
     ("Usability testing", r"\busability (?:test(?:s|ing)?|studies|research)\b|\buser testing\b|\busertesting\b"),
     ("Video editing", r"\bvideo editing\b|\bedit(?:ing)? video\b|\bvideo production\b|\bpost-production\b"), ("Motion design", r"\bmotion (?:design|graphics)\b|\banimation principles\b"),
     ("Information architecture", r"\binformation architecture\b|\bcard sorting\b|\btree testing\b"), ("Wireframing", r"\bwirefram(?:e|es|ing)\b"), ("Photoshop", r"\bphotoshop\b"),
-    ("WCAG", r"\bwcag\b|\bweb accessibility\b|\baccessibility standards\b|\bsection 508\b|\ba11y\b|\bada complian(?:ce|t)\b|\baria\b(?= attributes| roles| labels)"),
+    ("WCAG", r"\bwcag\b|\bweb accessibility\b|\baccessibility standards\b|\bsection 508\b|\ba11y\b|\baria\b(?= attributes| roles| labels)"),
     ("Design thinking", r"\bdesign thinking\b|\bhuman[- ]centered design\b|\bhuman[- ]centred design\b"),
     ("3D modeling", r"\b3d model(?:l)?(?:ing|ers?)\b|\b3d art\b|\b3d assets\b|\bhard[- ]surface model"), ("After Effects", r"\bafter effects\b"),
     ("Illustration", r"\billustrations?\b(?! (?:of|purposes))|\bdigital painting\b|\bprocreate\b"),
@@ -383,7 +383,7 @@ SKILLS = [
     ("Maya", r"\bautodesk maya\b|\bmaya(?:,| and| or| /) ?(?:blender|houdini|3ds max|zbrush|unreal|unity|cinema 4d|substance|nuke|motionbuilder)\b|\b(?:blender|houdini|3ds max|zbrush|cinema 4d|substance painter|nuke),? (?:and |or |/)?maya\b"),
     ("Lottie", r"\blottie\b|\brive\b(?=,| and| or|/)"),
     # project management and office tools
-    ("Slack", r"\bslack\b(?! (?:time|off|season|period|tide)\b)"), ("PRDs", r"\bprds?\b|\bproduct requirements? documents?\b|\buser stories\b|\bacceptance criteria\b"),
+    ("Slack", r"\b(?:jira|confluence|notion|zoom|microsoft teams|teams|asana|trello|google workspace|g ?suite|github|gitlab|linear|loom|figma|discord|email|e-mail|gmail|clickup|monday\.com|airtable|hubspot|outlook|salesforce|dropbox|excel|zendesk|intercom|sharepoint|office 365|microsoft office|google docs)\s?(?:,|/|and|or|&)\s?(?:[a-z.]+\s?(?:,|/|and|or|&)\s?)?slack\b|\bslack\s?(?:,|/|and|or|&)\s?(?:jira|confluence|notion|zoom|microsoft teams|teams|asana|trello|google|github|gitlab|linear|loom|figma|discord|email|e-mail|clickup|airtable|hubspot|outlook|salesforce|dropbox|excel|zendesk|intercom|sharepoint|office|monday)\b|\bslack (?:channels?|workspaces?|apps?|bots?|integrations?|api|messages?|communities|community)\b|\b(?:via|over|using|on|through|in) slack\b(?! (?:time|off|season|period|tide)\b)"), ("PRDs", r"\bprds?\b|\bproduct requirements? documents?\b|\buser stories\b|\bacceptance criteria\b"),
     ("PowerPoint", r"\bpowerpoint\b|\bkeynote\b(?=,| and| or|/)|\bgoogle slides\b"),
     ("Microsoft Word", r"\b(?:microsoft|ms) word\b|\bword(?:,| and| /) ?(?:excel|powerpoint|outlook)\b|\b(?:excel|powerpoint|outlook),? (?:and |/)?word\b|\bgoogle docs\b"),
     ("Confluence", r"\bconfluence\b"), ("Low-code tools", r"\blow-code\b|\bno-code\b|\bretool\b|\bbubble\.io\b|\bappsmith\b"),
@@ -457,7 +457,7 @@ SKILLS = [
     ("SAP S/4HANA", r"\bs/?4 ?hana\b|\bsap hana\b|\bsap (?:fico|fi/co|mm|sd|pp|wm|ewm|basis|abap|bw|ecc|successfactors|ariba|concur|fiori|btp|crm|scm|ibp|hcm|qm|pm)\b|\babap\b"),
     ("Oracle NetSuite", r"\bnetsuite (?:erp|administrator|admin|suitescript|saved searches|implementation|oneworld)\b|\bsuitescript\b|\bsuiteflow\b|\bsaved searches\b"),
     # finance and accounting
-    ("Reconciliations", r"(?<!medication )(?<!medicine )\breconciliations?\b(?! loops?)|\breconcil(?:e|ing) accounts\b"),
+    ("Reconciliations", r"(?<!medication )(?<!medicine )(?<!med )(?<!drug )(?<!allergy )\breconciliations?\b(?! loops?)|\breconcil(?:e|ing) accounts\b"),
     ("Audit", r"\b(?:external|internal|financial|statutory|it) audits?\b|\baudit (?:experience|procedures|standards|readiness|support)\b|\bpcaob\b"),
     ("Financial modeling", r"\bfinancial model(?:l)?(?:ing|s)?\b|\bexcel model(?:l)?ing\b|\b(?:three|3)[- ]statement models?\b"),
     ("FP&A", r"\bfp&a\b|\bfinancial planning (?:and|&) analysis\b|\bbudgeting (?:and|&) forecasting\b|\bvariance analysis\b"),
@@ -548,7 +548,7 @@ SKILLS = [
     ("Smart contract auditing", r"\bsmart contract (?:audit(?:s|ing|ors?)?|security|vulnerabilit(?:y|ies)|reviews?)\b|\bsecurity audits? of smart contracts\b|\bslither\b|\bechidna\b|\bcertora\b"),
     ("Web3", r"\bweb ?3\b(?!\.js|js|\.py)"), ("Blockchain", r"\bblockchains?\b"),
     # hardware and robotics
-    ("Control systems", r"\bcontrol (?:systems|theory|loops?|algorithms|engineering)\b|\bpid (?:control|controllers?|loops?|tuning)\b|\bkalman filters?\b|\bstate estimation\b|\bmpc\b(?= control)|\bmodel predictive control\b"),
+    ("Control systems", r"(?<!version )(?<!source )(?<!revision )\bcontrol (?:systems|theory|loops?|algorithms|engineering)\b|\bpid (?:control|controllers?|loops?|tuning)\b|\bkalman filters?\b|\bstate estimation\b|\bmpc\b(?= control)|\bmodel predictive control\b"),
     ("Firmware", r"\bfirmware\b|\bbootloaders?\b"), ("Mechatronics", r"\bmechatronics?\b|\belectromechanical\b|\bactuators?\b|\bsensors and actuators\b|\bstepper motors?\b|\bbldc\b"),
     ("Hardware testing", r"\bhardware (?:testing|validation|verification|bring-?up|debugging|test)\b|\bhil\b|\bhardware[- ]in[- ]the[- ]loop\b|\bdvt\b|\bevt\b|\bpvt\b|\bemc (?:testing|compliance)\b|\bemi/emc\b|\bemc/emi\b"),
     ("Test equipment", r"\boscilloscopes?\b|\bspectrum analy[sz]ers?\b|\blogic analy[sz]ers?\b|\bnetwork analy[sz]ers?\b|\bfunction generators?\b|\btest equipment\b|\blab equipment\b"),
@@ -592,7 +592,7 @@ SKILLS = [
     ("Electrical troubleshooting", r"\belectrical (?:troubleshooting|schematics|diagrams|drawings)\b|\btroubleshoot(?:ing)? electrical\b|\bmultimeters?\b|\bmegger\b|\bthree[- ]phase\b|\b3[- ]phase\b|\b480v\b"),
     ("Six Sigma", r"\bsix sigma\b|\b6 ?sigma\b|\bdmaic\b|\b(?:green|black|yellow) belt\b"),
     ("Blueprint reading", r"\b(?:read(?:ing)?|interpret(?:ing)?|understand(?:ing)?) (?:and interpret(?:ing)? )?(?:blueprints|schematics|technical drawings|engineering drawings|mechanical drawings|drawings|wiring diagrams)\b|\bblueprint reading\b"),
-    ("Soldering", r"\bsolder(?:ing)?\b|\bipc-?a?-?6\d\d\b|\bj-std-001\b|\brework\b(?= and| of| stations?|,)|\bthrough[- ]hole\b|\bsmt\b|\bsurface mount\b"),
+    ("Soldering", r"\bsolder(?:ing)?\b|\bipc-?a?-?6\d\d\b|\bj-std-001\b|\brework stations?\b|\bthrough[- ]hole\b|\bsmt\b|\bsurface mount\b"),
     ("Preventive maintenance", r"\bpreventive maintenance\b|\bpreventative maintenance\b|\bpredictive maintenance\b|\bcmms\b|\bmaximo\b"),
     ("FEA", r"\bfea\b|\bfinite element\b|\bansys\b|\babaqus\b|\bcomsol\b|\bnastran\b"), ("FMEA", r"\bp?d?fmea\b|\bfailure modes? and effects?\b"),
     ("HVAC", r"\bhvac(?:/?r)?\b|\bheating,? ventilation\b|\bchillers?\b|\brooftop units?\b|\bboilers?\b(?= ,|,| and| or)"),
@@ -607,14 +607,14 @@ SKILLS = [
     ("Facilities management", r"\bfacilities management\b|\bfacility management\b|\bbuilding management systems?\b|\bbuilding automation\b|\bbms\b(?=/epms| and epms|,? scada)"),
     ("PLC", r"\bplcs?\b|\bprogrammable logic controllers?\b|\bladder logic\b|\ballen[- ]bradley\b|\brockwell (?:automation|studio)\b|\bstudio ?5000\b|\bsiemens (?:s7|tia portal|step 7)\b|\btia portal\b"),
     ("OSHA", r"\bosha\b"), ("ISO 9001", r"\biso ?9001\b|\bas ?9100\b|\biatf ?16949\b|\biso ?14001\b|\biso ?45001\b"), ("MRP", r"\bmrp\b|\bmaterial requirements planning\b"),
-    ("Low voltage", r"\blow[- ]voltage\b|\bcctv\b|\bfire alarms?\b|\bstructured wiring\b|\bfiber optic\b|\bfibre optic\b"), ("AutoCAD", r"\bauto ?cad\b"),
+    ("Low voltage", r"\blow[- ]voltage\b|\bcctv\b|\bfire alarm (?:systems?|panels?|install\w*|technicians?|wiring|devices)\b|\bstructured wiring\b|\bfiber optic\b|\bfibre optic\b"), ("AutoCAD", r"\bauto ?cad\b"),
     ("NFPA 70E", r"\bnfpa ?70e\b|\barc flash\b|\blockout/?tagout\b|\bloto\b|\block-?out,? tag-?out\b"),
     ("National Electrical Code", r"\bnational electric(?:al)? code\b|\bnec\b(?= code|,| and| standards| requirements| compliance)|\bjourneyman (?:electrician|licen[cs]e)\b|\bmaster electrician\b|\belectrical licen[cs]e\b"),
     ("Demand planning", r"\bdemand (?:planning|forecasting|planners?)\b|\bsupply planning\b|\bs&op\b|\bsales and operations planning\b|\bibp\b(?=,| and| process)|\bkinaxis\b|\bsap ibp\b|\bsap apo\b"),
     ("Quality management systems", r"\bqms\b|\bquality management systems?\b|\biso ?13485\b|\biso ?14971\b|\biec ?62304\b"),
     ("SCADA", r"\bscada\b|\bhmi\b|\bdcs\b(?= systems?|,| and)|\bignition\b(?= scada|,| and| or)|\bwonderware\b|\bfactorytalk\b"), ("CATIA", r"\bcatia\b|\b3dexperience\b"),
     ("CFD", r"\bcfd\b|\bcomputational fluid dynamics\b|\bstar-?ccm\b|\bopenfoam\b|\bfluent\b(?= ,|,| and| or|/| cfd)"),
-    ("Hazmat", r"\bhaz ?mat\b|\bhazardous (?:materials?|waste|goods)\b|\bdangerous goods\b|\biata dgr\b|\bdot hazmat\b"),
+    ("Hazmat", r"\bhaz ?mat\b|(?<!bio )(?<!bio-)\bhazardous (?:materials?|waste|goods)\b|\bdangerous goods\b|\biata dgr\b|\bdot hazmat\b"),
     ("Revit", r"\brevit\b|\bbim\b(?= ,|,| and| or| modell?ing| models?| software| 360| coordination)|\bbuilding information model"),
     ("Additive manufacturing", r"\badditive manufacturing\b|\b3d printing\b"),
     ("Freight", r"\bfreight (?:forwarding|brokerage|operations|logistics|audit|management|experience)\b|\bltl\b|\bftl\b|\bdrayage\b|\bintermodal\b|\b(?:ocean|air) freight\b"),
@@ -754,15 +754,75 @@ class _Skill:
 _SKILL_M = [_Skill(n, rx) for n, rx in SKILLS]
 
 
+# What a posting says that is not about the work (data teardown, 26 Nov 2026: 10 of 91 open jobs showed a skill they do not ask for):
+# e-mail and web addresses (".NET" from "MemorialTalent@mhs.net") and the equal-opportunity paragraph ("WCAG" from "an ADA compliant
+# agency") are left out before the skills are read.
+NOT_WORK = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+|\bhttps?://\S+|\bwww\.\S+", re.I)
+EEO = re.compile(r"\bequal (?:employment )?opportunit|\baffirmative action\b|\breasonable accommodations?\b|\bwithout regard to\b|\bamericans with disabilities\b|"
+                 r"\bada compliant\b|\be-?verify\b|\bdrug[- ]free workplace\b", re.I)
+EEO_KEYS = ("opportunit", "affirmative", "accommodat", "without regard", "disabilities", "ada compliant", "verify", "drug")
+SENTENCE = re.compile(r"(?<=[.!?\n])\s+")
+EEO_NEAR = re.compile(r"[^.!?\n]{0,150}(?:" + EEO.pattern + r")[^.!?\n]{0,150}", re.I)
+
+
+def work_text(blob):
+    """The posting without its addresses and the sentences of its equal-opportunity paragraph."""
+    blob = NOT_WORK.sub(" ", blob or "")
+    low = blob.lower()
+    if not any(k in low for k in EEO_KEYS): return blob
+    out = []
+    for x in SENTENCE.split(blob):                     # a long run without full stops loses only the words around the statement
+        if not EEO.search(x): out.append(x)
+        elif len(x) > 400: out.append(EEO_NEAR.sub(" ", x))
+    return " ".join(out)
+# Skills a kind of work does not use, whatever its text says: a nurse's "PHP" is a partial hospitalization program, a medical assistant's
+# "Soldering" a word in the clinic's list of duties, a software engineer's "Accounts payable" the product's own advertising.
+CLINICAL_TITLE = re.compile(r"\b(?:nurs\w*|rn|lpn|lvn|cna|medical assistant|patient|clinical|clinician|physician|therap\w*|dental|dentist|pharmac\w*|caregiver|"
+                            r"phlebotom\w*|surgical|sonograph\w*|radiolog\w*|counsel+or|psychiatr\w*|psycholog\w*|social worker|home health|hospice|behavior technician|"
+                            r"direct support|dsp|medication|med tech|respiratory|paramedic|emt|midwife|doula|optometr\w*|veterinar\w*|vet tech)\b", re.I)
+TECH_ONLY = {"PHP", "Soldering", "Hardware testing", "Control systems", "Flutter", "Go", "CSS", "HTML", ".NET", "BGP", "Low voltage", "WCAG", "Rust", "Ruby", "Scala",
+             "Elixir", "Slack", "Firmware", "Mechatronics", "Robotics", "Reconciliations", "Accounts payable", "Workday", "Data quality"}
+SOFTWARE_TITLE = re.compile(r"\b(?:software|full[- ]?stack|back[- ]?end|front[- ]?end|web|mobile|ios|android|devops|platform|data|ml|machine learning|site reliability|sre)\b.*"
+                            r"\b(?:engineer|developer|programmer|architect)s?\b|\b(?:developer|programmer)\b", re.I)
+NOT_SOFTWARE = {"Accounts payable", "Reconciliations", "Soldering", "Low voltage", "Hazmat", "Forklift", "Cash handling"}
+
+
 def tags_of(title, blob, company):
     """The skills a posting names, in the order of SKILLS, at most MAX_TAGS. A company's own name in its postings is not a skill
     ("Gong" at Gong), and it is a whole word: the letter C inside "Coinbase" no longer hides the skill C, nor "go" in "Google" Go."""
+    blob = work_text(blob)
+    drop = TECH_ONLY if CLINICAL_TITLE.search(title or "") else NOT_SOFTWARE if SOFTWARE_TITLE.search(title or "") else ()
     co, out, tl, bl = company.lower(), [], title.lower(), blob.lower()
     for s in _SKILL_M:
+        if s.name in drop: continue
         if s.found(*((title, tl) if s.title_only else (blob, bl))) and not s.own.search(co):
             out.append(s.name)
             if len(out) == MAX_TAGS: break
     return out
+
+
+# the data teardown's false skills (26 Nov 2026), each from the text that gave it: none of them may come back
+for _t, _b, _no in (("Policy Analyst Supervisor", "Policy Analyst, MPLS FRB. Supervises analysts.", "BGP"),
+                    ("Dentist - Kenai Alaska", "We are an equal opportunity employer and an ADA compliant agency.", "WCAG"),
+                    ("Medication Technician (Med Tech)", "Respond to fire alarms, evacuations and emergencies.", "Low voltage"),
+                    ("SOS Operations Manager", "Track rework, scrap and on-time delivery.", "Soldering"),
+                    ("Senior Software Engineer - Robotic Controls", "Model friction, cogging, stiffness, slack and backlash in actuators.", "Slack"),
+                    ("Loads & Dynamics Engineering Intern", "Analyse aeroelastic effects such as flutter and buffet.", "Flutter"),
+                    ("Physical Therapy Assistant (PT) - Days", "Send your resume to MemorialTalent@mhs.net today.", ".NET"),
+                    ("Physical Therapy Assistant (PT) - Days", "Dispose of bio hazardous waste.", "Hazmat"),
+                    ("Insurance Follow Up Representative", "Department: CSS-Patient Accounting", "CSS"),
+                    ("Software Engineer, Full-Stack", "Experience with Git or other version control systems.", "Control systems"),
+                    ("Software Engineer, Full-Stack", "Our AI agents automate invoice processing for finance teams.", "Accounts payable"),
+                    ("Registered Nurse", "Our PHP and IOP programs serve adolescents.", "PHP"),
+                    ("Registered Nurse - ICU", "Complete medication reconciliation at admission.", "Reconciliations"),
+                    ("Nurse Extern", "Apply on Workday. Create your Workday candidate profile.", "Workday")):
+    assert _no not in tags_of(_t, _t + "\n" + _b, "Acme"), (_t, _no, tags_of(_t, _t + "\n" + _b, "Acme"))
+for _t, _b, _yes in (("Network Engineer", "Configure BGP and OSPF on MPLS networks.", "BGP"), ("Frontend Engineer", "Build accessible UIs to WCAG 2.1 AA.", "WCAG"),
+                     ("Mobile Engineer", "Ship our Flutter app on iOS and Android with Dart.", "Flutter"), ("Backend Engineer", "Services in C# on ASP.NET Core.", ".NET"),
+                     ("Operations Coordinator", "Tools: Jira, Confluence and Slack.", "Slack"), ("HRIS Analyst", "Hands-on Workday HCM configuration.", "Workday"),
+                     ("Controls Engineer", "Design control systems and PID loops.", "Control systems"), ("Electronics Technician", "Through-hole and SMT soldering.", "Soldering"),
+                     ("Web Developer", "HTML, CSS and JavaScript.", "CSS"), ("Accounts Payable Specialist", "Process invoices; accounts payable experience.", "Accounts payable")):
+    assert _yes in tags_of(_t, _t + "\n" + _b, "Acme"), (_t, _yes, tags_of(_t, _t + "\n" + _b, "Acme"))
 PERKS = [   # (name, page slug, pattern) detected in the posting text
     ("Visa sponsorship", "visa-sponsorship", r"visa sponsorship|sponsor (a |your )?(work )?visas?|sponsorship (is )?available|we (can|will|do) sponsor"),
     ("Relocation support", "relocation", r"relocation (assistance|support|package|bonus|allowance)|(help|support) (you )?(to |with )?relocat"),
