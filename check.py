@@ -220,6 +220,25 @@ else:
     if newest_ and f"Updated {newest_}" not in lt_: fails["llms.txt"][f"not dated {newest_}"] += 1
     for u_ in set(re.findall(re.escape(FULL) + r"(/[^\s)<>\]]*/)(?=[\s)\].,;#]|$)", lt_)):
         if "<" not in u_ and not exists(P + u_): fails["llms.txt"]["names a page that does not exist"] += 1; broken[u_] += 1
+# One set of figures (teardown, 26 Nov 2026: the media kit, /methodology/ and /status/ gave three different accounts of how often jobs are
+# checked). The pages that state it say build.FACTS' line with the same number, and none of them claims "every hour" in its own text
+# (the brand's name, its quoted logo words and the guide's address excepted; the footer is left to its own template).
+FACT_RX = re.compile(r"(\d+)% of open jobs were re-checked on the employer’s own list in the last 24 hours")
+HOURLY_RX = re.compile(r"(?<!Jobs )(?<!“jobs )every hour(?!”)(?!/)", re.I)
+fact_pages = ["about/index.html", "methodology/index.html", "media-kit/index.html", "guides/how-we-check-jobs-every-hour/index.html", "safety/index.html", "llms.txt"]
+counts["one set of figures"] = 0
+seen_pct = set()
+for rel_ in fact_pages:
+    f_ = SITE / rel_
+    if not f_.is_file(): continue
+    counts["one set of figures"] += 1
+    t_ = f_.read_text(encoding="utf-8", errors="replace")
+    body_ = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", NOSCRIPT.sub(" ", t_.split("<footer")[0]))))
+    got_ = set(FACT_RX.findall(body_))
+    if not got_: fails["one set of figures"][f"{rel_}: no re-checked figure"] += 1
+    seen_pct |= got_
+    if HOURLY_RX.search(body_.replace("how-we-check-jobs-every-hour", "")): fails["one set of figures"][f"{rel_}: says every hour"] += 1
+if len(seen_pct) > 1: fails["one set of figures"][f"different re-checked figures: {sorted(seen_pct)}"] += 1
 print(f"checked {len(sample)} pages ({len(others)} non-job pages, {len(sample) - len(others)} job pages sampled" + (", built from records" if STORE else "") + ")")
 for t in sorted(counts):
     bad = fails[t]

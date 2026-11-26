@@ -225,7 +225,7 @@ def salary_groups(jobs):
 
 # ---------------------------------------------------------------- the section
 
-def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skills=(), skill_slug=None, every="every hour"):
+def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skills=(), skill_slug=None, every="around the clock"):
     """Writes the /tools/ hub and every tool page through page(); returns [(path, name, one_line_description), ...] for linking.
     role_skills: [(role slug, role name, postings, [(skill, postings that name it), …]), …], most postings first; skill_slug(skill) is its page under /skills/."""
     today = datetime.date.today()
@@ -247,7 +247,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
         "for-you/": ("Jobs for you", "Pick your skills or paste your resume and see the open roles that fit, best matches first."),
         "post-a-job/": ("Post a job", "Put your vacancy in front of people who are searching for work right now."),
         "widgets/": ("Jobs widget and live badges", "Show live jobs on your own site with one line of code."),
-        "contract/": ("Contract jobs", "Open contract roles, updated hourly."),
+        "contract/": ("Contract jobs", "Open contract roles, updated several times a day."),
         "my-jobs/": ("Application tracker", "Save jobs, mark where each application stands and see which ones have gone quiet."),
         # landing pages for the searches AI job tools answer (25 Nov 2026): what each tool does, a real example and other tools compared
         "resume-tailor/": ("Resume tailor, explained", "How to tailor a resume to one posting for free, on a real example, beside Jobscan, Jobright and Teal."),

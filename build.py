@@ -1901,9 +1901,9 @@ def fit_desc(d):
     d = " ".join(d.split())
     if len(d) < 125:
         base = d.rstrip(".")
-        tails_ = (f". Collected from official company career pages and updated every hour on {SITE}.",
-                  f". From the employer's own career page, updated every hour on {SITE}.", f". Updated every hour on {SITE}.")
-        if re.search(r"every hour|hourly", base, re.I):        # the line already says it (/new/, company lists): "Updated every hour" twice read as a slip
+        tails_ = (f". Collected from official company career pages and updated around the clock on {SITE}.",
+                  f". From the employer's own career page, updated around the clock on {SITE}.", f". Updated around the clock on {SITE}.")
+        if re.search(r"every hour|hourly|around the clock|several times a day", base, re.I):        # the line already says it (/new/, company lists): "Updated every hour" twice read as a slip
             tails_ = ()
         for tail in tails_:
             if len(base + tail) <= 160:
@@ -2229,9 +2229,15 @@ def exact(j):
     it was last published again while its page dates it months earlier, so 8,250 of the 45,847 open jobs with an exact time had one that
     contradicted their date: a crew job posted in July read "3 h" in the home page's Latest jobs and sorted as the newest job."""
     try:
-        return int(datetime.datetime.fromisoformat(j["posted_at"].replace("Z", "+00:00")).timestamp())
+        t = int(datetime.datetime.fromisoformat(j["posted_at"].replace("Z", "+00:00")).timestamp())
     except Exception:
         return 0
+    day = (j.get("posted") or "")[:10]
+    try:
+        if day and abs((datetime.datetime.fromtimestamp(t, datetime.timezone.utc).date() - datetime.date.fromisoformat(day)).days) > 1: return 0
+    except (ValueError, OverflowError, OSError):
+        return 0
+    return t
 
 
 def stamp(j):
@@ -2240,6 +2246,19 @@ def stamp(j):
         return exact(j) or int(datetime.datetime.fromisoformat((j["posted"] or j["first_seen"])[:10] + "T00:00:00+00:00").timestamp())
     except Exception:
         return 0
+
+
+def checked_html(j):
+    """When we last read a job on the employer's own list. The file says "Nov 26, 14:03 UTC"; site.js (freshen, data-ck) turns it into
+    "12 minutes ago" while it is under a day old. Only the day when the record has no time of the reading (before 26 Nov 2026)."""
+    at = str(j.get("checked_at") or "")
+    try:
+        t = int(datetime.datetime.fromisoformat(at.replace("Z", "+00:00")).timestamp())
+    except ValueError:
+        t = 0
+    if t and str(j.get("last_seen") or "")[:10] <= at[:10]:
+        return f'<time datetime="{at}" data-ck="{t}">{fdate(at, False)}, {at[11:16]} UTC</time>'
+    return fdate(j["last_seen"]) if j.get("last_seen") else ""
 
 
 def when(j):
@@ -2257,19 +2276,6 @@ ICON = {
     "cloud": '<path d="M7 18h10a4 4 0 0 0 .6-8A6 6 0 0 0 6.1 9.5 4.3 4.3 0 0 0 7 18z"/>',
     "shield": '<path d="M12 3l8 3v6c0 4.5-3.2 7.9-8 9-4.8-1.1-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/>',
     "board": '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v10"/>',
-def checked_html(j):
-    """When we last read a job on the employer's own list. The file says "Nov 26, 14:03 UTC"; site.js (freshen, data-ck) turns it into
-    "12 minutes ago" while it is under a day old. Only the day when the record has no time of the reading (before 26 Nov 2026)."""
-    at = str(j.get("checked_at") or "")
-    try:
-        t = int(datetime.datetime.fromisoformat(at.replace("Z", "+00:00")).timestamp())
-    except ValueError:
-        t = 0
-    if t and str(j.get("last_seen") or "")[:10] <= at[:10]:
-        return f'<time datetime="{at}" data-ck="{t}">{fdate(at, False)}, {at[11:16]} UTC</time>'
-    return fdate(j["last_seen"]) if j.get("last_seen") else ""
-
-
     "pen": '<path d="M4 20l4-1L19 8l-3-3L5 16l-1 4z"/><path d="M14 7l3 3"/>',
     "megaphone": '<path d="M4 10v4h3l8 4V6L7 10H4z"/><path d="M18 9a4 4 0 0 1 0 6"/>',
     "trend": '<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
@@ -2317,6 +2323,9 @@ def path_icon(path):
 
 def card(j, extra=0):
     b = []
+    # where a job not read from the employer's own hiring system comes from (teardown, 26 Nov 2026: "only from employers' own pages")
+    if j.get("tg"): b.append('<span class="pill" title="A post in a public Telegram job channel, not checked with the employer">Telegram post</span>')
+    elif str(j.get("id") or "").startswith("usajobs-"): b.append('<span class="pill" title="A federal job, read from USAJOBS, the US government’s official job site">USAJOBS</span>')
     if j["featured"]: b.append('<span class="pill acc">Featured</span>')
     if j.get("urgent"): b.append('<span class="pill urg">Urgently hiring</span>')
     if not j["active"]: b.append('<span class="pill">Closed</span>')
@@ -2619,7 +2628,7 @@ def faq_for(label, jobs, first=None, extra=()):
     cap = label[0].upper() + label[1:]
     n_co = len(set(j["company"] for j in jobs))
     qa = [(f"How many {label} are open right now?",
-           f"There are {n_:,} open {label}{f' at {n_co:,} companies' if n_co > 1 else ''} on {SITE} as of {fdate(TODAY)}.{f" {new7:,} of them were posted in the last seven days." if new7 else ""} The list is rebuilt every hour from the employers' own careers pages.")]
+           f"There are {n_:,} open {label}{f' at {n_co:,} companies' if n_co > 1 else ''} on {SITE} as of {fdate(TODAY)}.{f" {new7:,} of them were posted in the last seven days." if new7 else ""} The list is rebuilt several times a day from the employers' own careers pages.")]
     if first: qa.insert(0, first)
     qa[1:1] = list(extra)                       # questions only this page can answer (a company's own hiring, say)
     if len(top) > 1:
@@ -3199,7 +3208,7 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
         tw_l = two_weight(e(list_title)) if list_title else ""
         the_list = ((f'<div class="sec-head lst" id="list"><div class="sec-ttl"><p class="sec-label">Open jobs</p>{f"<h2 class={chr(34)}tw{chr(34)}>{tw_l}</h2>" if tw_l else f"<h2>{e(list_title)}</h2>"}</div></div>'
                      if list_title and n == 1 and chunk else "")
-                    + (f'<ul class="jobs"{live if n == 1 else ""}>{"".join(card(j, x) for j, x in chunk)}</ul>' if chunk else '<p class="lead">Nothing here today. The list is rebuilt every hour.</p>')
+                    + (f'<ul class="jobs"{live if n == 1 else ""}>{"".join(card(j, x) for j, x in chunk)}</ul>' if chunk else '<p class="lead">Nothing here today. The list is rebuilt several times a day.</p>')
                     + pager_html(path, n, pages) + note)
         if pics and n == 1: the_list = f'<div class="lflow"><div class="lpics">{pics}</div><div class="llist">{the_list}</div></div>'
         body = top + (extra if n == 1 else "") + the_list + ((hub + after + kind_row(path) + faq_html + tail) if n == 1 else "")      # questions after what the page shows
@@ -3689,7 +3698,7 @@ def intern_hub(path, h1, yr, ej):
                       + '</table></div><p class="note">The middle of each posting’s hourly range in US dollars, for internship titles with three or more open postings that state one. '
                         'Titles are cut at the first bracket or comma, so “Software Engineering Intern (Summer 2027)” counts as “Software Engineering Intern”.</p>', sid="pay", label="Pay")
               if len(it_rows) >= 3 else "")
-    qa = [("How many internships are open right now?", f"{k:,} at {n_co:,} companies as of {fdate(TODAY)}; {new7:,} were posted in the last seven days. The list is rebuilt every hour from the employers' own careers pages."),
+    qa = [("How many internships are open right now?", f"{k:,} at {n_co:,} companies as of {fdate(TODAY)}; {new7:,} were posted in the last seven days. The list is rebuilt several times a day from the employers' own careers pages."),
           ("Which companies have the most internships?", "Right now: " + ", ".join(f"{c} ({n_:,})" for c, n_ in top5[:-1]) + f" and {top5[-1][0]} ({top5[-1][1]:,})."),
           ("Are there remote internships?", f"{r_:,} of the {k:,} ({round(100 * r_ / k)}%) are listed as remote; most are done on site, so check the place line of each job."),
           ("Do I need to be a student to apply?", "Many internships ask for a current student or a recent graduate, and the posting says so in its requirements. Some are open to career changers and to people returning to work. The requirements line of each job is the only place that decides it."),
@@ -3946,6 +3955,7 @@ def job_page(j, active_by_cat):
     ats = j["id"].split("-", 1)[0]
     if j["active"]:
         rows.append(("Source", (f'A post in the public Telegram channel <a href="https://t.me/{e(j["tg"])}" rel="nofollow noopener">@{e(j["tg"])}</a>; not checked with {e(j["company"])}' if j.get("tg") else
+                                f"{e(j['company'])}’s own posting on USAJOBS, the US government’s official job site, where federal agencies post their jobs" if ats == "usajobs" else
                                 f"{e(j['company'])}’s own posting, read from {SOURCE_NAME[ats]}, the hiring software it uses" if ats in SOURCE_NAME else "Posted here by the employer; the link was checked" if j.get("direct")
                                 else f"{e(j['company'])}’s own posting")))
     meta = "".join(f"<dt>{k}</dt><dd>{v}</dd>" for k, v in rows)
@@ -3953,8 +3963,12 @@ def job_page(j, active_by_cat):
     # where the posting comes from, written into the page: site.js added this pill after load and the row below it jumped 28 px
     # (Lighthouse CLS 0.116 on a job page on a phone, 24 Nov 2026); site.js now finds it and adds nothing
     if j["active"]:
+        # the pill's title says where the posting was read and when we last read it there (it said "re-checked every hour", which was not
+        # true of every job: teardown, 26 Nov 2026)
+        seen_ = f", last checked there on {fdate(j['last_seen'])}" if j.get("last_seen") else ""
         pills.append('<span class="pill src" title="Read from the public page of a Telegram job channel; not checked with the employer">From a Telegram channel</span>' if j.get("tg") else
-                     f'<span class="pill ok src" title="Read from {e(SOURCE_NAME[ats]) + ", the hiring system the employer itself uses" if ats in SOURCE_NAME else "the employer’s own careers site"}, and re-checked every hour">✓ Employer’s own posting</span>')
+                     f'<span class="pill ok src" title="Posted by the agency on USAJOBS, the US government’s official job site{seen_}">✓ Federal job, from USAJOBS</span>' if ats == "usajobs" else
+                     f'<span class="pill ok src" title="Read from {e(SOURCE_NAME[ats]) + ", the hiring system the employer itself uses" if ats in SOURCE_NAME else "the employer’s own careers site"}{seen_}">✓ Employer’s own posting</span>')
     if j.get("urgent"): pills.append('<span class="pill urg">Urgently hiring</span>')
     # (a closed job says so in its label, its facts row and its banner; the "Closed" pill was a fourth time)
     # v4: the pay, the workplace and the level are in the facts row under the title now, not repeated as pills
@@ -4747,6 +4761,8 @@ def main():
     for j_ in jobs:                              # a feed that escaped its text twice ("Health &amp;amp; Safety") showed a literal "&amp;" on the page
         if "&amp;" in (j_.get("desc") or ""): j_["desc"] = DOUBLE_ESC.sub(r"&\1;", j_["desc"])
         if ENTITY_TEXT.search(j_.get("excerpt") or ""): j_["excerpt"] = html.unescape(j_["excerpt"])      # plain text: an entity in it is the same slip
+    jobs = sift(jobs)                            # cold emails, candidate lists, placeholder boards and ATS copies (sift, junk_reason)
+    print("left out as not jobs or not employers: " + (", ".join(f"{k} {v:,}" for k, v in SIFTED.most_common()) or "none"))
     for j_ in jobs:                              # Workday entity codes read as names (CO_RENAME); the old address hands over below
         j_["company"] = CO_RENAME.get(j_.get("company"), j_.get("company"))
     paid_file = ROOT / "paid.json"  # employer-submitted listings, kept in the main branch
@@ -4762,8 +4778,6 @@ def main():
     boost = defaultdict(dict)
     for b in PAID.get("boosts", []):
         if b.get("until", "") >= TODAY: boost[b.get("slug")][b.get("kind")] = b
-    jobs = sift(jobs)                            # cold emails, candidate lists, placeholder boards and ATS copies (sift, junk_reason)
-    print("left out as not jobs or not employers: " + (", ".join(f"{k} {v:,}" for k, v in SIFTED.most_common()) or "none"))
     for j in jobs:
         # What the account sold for this job, each with its last day: a Standard boost ("featured"), a Premium boost (a turn in the top
         # of its lists, the cover picture), the "Urgently hiring" badge, and a bump, which sorts the job as if it was posted when the
@@ -4826,10 +4840,33 @@ def main():
     # live.py on the server reads every board at least once an hour (config.json "live_collector"), so the four-hour rotation of the
     # hourly build no longer limits how often a company is checked
     ROTATING = m_hourly < len({j["company"] for j in active}) and not CFG.get("live_collector")
-    EVERY = "every one to four hours" if ROTATING else "every hour"
     remote = [j for j in active if j["remote"]]
     SALPCT = round(100 * sum(bool(j["salary"]) for j in active) / max(n, 1))
     WEEKNEW = sum(1 for j in active if (j["posted"] or "")[:10] >= (datetime.date.today() - datetime.timedelta(days=7)).isoformat())
+    lap('What the site says about itself: one set of numbers (FACTS)')
+    # What the site says about itself, counted once here and used on every page (teardown, 26 Nov 2026: the media kit said "783 employers
+    # every hour and 5,827 every four hours", /methodology/ "25,194 company feeds every hour", /status/ "44% re-checked today", the home page
+    # "14,137 new today" beside "188 posted today"). How often a board is read is a schedule (EVERY: the server reads boards in turn all
+    # day and night); what was really re-checked is a measure (checked_24h: open jobs read again on the employer's list in the last 24
+    # hours, from collect.py's checked_at, or a last_seen of today for a record written before checked_at existed). "New" and "posted
+    # today" are the employer's own date, never the day we first read a job ("first read by us" is said as such where it is shown).
+    ROTATING = False                    # the "N every hour, the rest every four hours" lines are gone: neither half was measured
+    EVERY = "around the clock"
+    def checked_t(j):
+        try: return int(datetime.datetime.fromisoformat(str(j.get("checked_at") or "").replace("Z", "+00:00")).timestamp())
+        except ValueError: return 0
+    k24_ = sum(1 for j in active if checked_t(j) >= NOW - 86400 or j.get("last_seen") == TODAY)
+    FACTS.clear()
+    FACTS.update(open=n, companies=m, checked_24h=k24_, checked_24h_pct=round(100 * k24_ / max(n, 1)),
+                 posted_today=sum(1 for j in active if (j["posted"] or "")[:10] == TODAY), posted_7d=WEEKNEW,
+                 first_read_today=sum(1 for j in active if j.get("first_seen") == TODAY), left_out=sum(SIFTED.values()),
+                 usajobs=sum(1 for j in active if j["id"].startswith("usajobs-")), telegram=sum(1 for j in active if j.get("tg")))
+    CHECK_LINE[0] = f"{FACTS['checked_24h_pct']}% of open jobs were re-checked on the employer’s own list in the last 24 hours"
+    # where the jobs come from, said the same way everywhere (teardown: "only from employers' own pages" while USAJOBS and Telegram posts
+    # were listed too); the counts are this build's
+    SOURCE_LINE[0] = ("From employers’ own hiring systems" + (f"; {FACTS['usajobs']:,} US federal jobs from USAJOBS, the government’s own job site" if FACTS["usajobs"] else "")
+                      + (f"; {FACTS['telegram']:,} posts from public Telegram job channels, marked as such and not checked with the employer" if FACTS["telegram"] else ""))
+    print("facts: " + ", ".join(f"{k} {v:,}" for k, v in FACTS.items()))
     contact = " or ".join(x for x in [f'Telegram <a href="https://t.me/{e(CFG["contact_telegram"])}">@{e(CFG["contact_telegram"])}</a>' if CFG["contact_telegram"] else "",
                                       f'email <a href="mailto:{e(CFG["contact_email"])}">{e(CFG["contact_email"])}</a>' if CFG["contact_email"] else ""] if x)
     by_place_ = defaultdict(list)                     # one pass over the jobs instead of one per place (100 places x every job)
@@ -4847,11 +4884,17 @@ def main():
         if add_: j["perks"] = list(j.get("perks") or []) + add_
     PERK_OK.update(x for x, k in Counter(x for j in active for x in j.get("perks", [])).items() if k >= 8)
     wk = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
+    wk14 = (datetime.date.today() - datetime.timedelta(days=14)).isoformat()
     for c, js in companies.items():
         opened = sum(1 for j in js if (j["posted"] or "") >= wk)
         closed_ = sum(1 for j in js if not j["active"] and (j.get("closed") or "") >= wk)
         net, base_ = opened - closed_, max(3, OPEN[c] // 10)
         PULSE[c] = (opened, closed_, "Ramping up" if net >= base_ else "Slowing down" if -net >= base_ else "Steady")
+        # two weeks, not one: Bjakcareer closed its 1,548 jobs and put up 1,609 new ones in two batches a week apart
+        op14_ = sum(1 for j in js if (j["posted"] or "") >= wk14) if opened >= CHURN_MIN else 0
+        cl14_ = sum(1 for j in js if not j["active"] and (j.get("closed") or "") >= wk14) if op14_ else 0
+        if min(op14_, cl14_) >= max(CHURN_MIN, OPEN[c] / 2): CHURN.add(c)
+    print(f"boards that repost most of their jobs every week (CHURN): {len(CHURN):,}, {sum(OPEN[c] for c in CHURN):,} open jobs: " + ", ".join(sorted(CHURN, key=lambda c: -OPEN[c])[:10]))
     spans = defaultdict(list)
     for j in archived:
         try:
@@ -4892,11 +4935,6 @@ def main():
     HOURS = [(p_, h_, w_, js_) for p_, h_, rx_, w_ in (
         ("night-shift/", "Night shift jobs", r"night shift|overnight|3rd shift|third shift|graveyard|\bnights\b|2nd shift|second shift|swing shift|evening shift", "evening or night shifts"),
         ("weekend/", "Weekend jobs", r"weekend", "weekend work"),
-        # two weeks, not one: Bjakcareer closed its 1,548 jobs and put up 1,609 new ones in two batches a week apart
-        op14_ = sum(1 for j in js if (j["posted"] or "") >= wk14) if opened >= CHURN_MIN else 0
-        cl14_ = sum(1 for j in js if not j["active"] and (j.get("closed") or "") >= wk14) if op14_ else 0
-        if min(op14_, cl14_) >= max(CHURN_MIN, OPEN[c] / 2): CHURN.add(c)
-    print(f"boards that repost most of their jobs every week (CHURN): {len(CHURN):,}, {sum(OPEN[c] for c in CHURN):,} open jobs: " + ", ".join(sorted(CHURN, key=lambda c: -OPEN[c])[:10]))
         ("summer/", "Summer jobs and internships", r"\bsummer\b", "the summer months"),
         ("temporary/", "Temporary and seasonal jobs", r"seasonal|temporary|\btemp\b|fixed[- ]term", "a fixed term or a season"))
         if len(js_ := [j for j in active if re.search(rx_, HOURS_NOT.get(p_, NO_WORDS).sub(" ", j["title"] + " " + (j["excerpt"] or "")), re.I)]) >= 20]
@@ -5127,7 +5165,7 @@ def main():
     def logo_strip(lead):
         return (f'<div class="klogos"><p>{e(lead)}</p><div class="logorow">'
                 + "".join(f'<a href="{P}/companies/{slugify(c)}/" title="{e(c)}: {sum(j["active"] for j in js):,} open roles">{ava(c)}<span>{e(c)}</span></a>' for c, js in logo_cos)
-                + f'<a class="more" href="{P}/companies/">and {len(companies) - len(logo_cos):,} more</a></div></div>') if logo_cos else ""
+                + f'<a class="more" href="{P}/companies/">and {m - len(logo_cos):,} more</a></div></div>') if logo_cos else ""
     lap('one real, open listing taken apart: what a visitor can read ')
     # one real, open listing taken apart: what a visitor can read on every job page
     aj = next((j for j in latest if not j.get("tg") and j["salary"] and j["remote"] and j.get("years") and j["location"] and len(j["title"]) <= 46 and j.get("usd") and j["cat"] in CATMED
@@ -5236,7 +5274,7 @@ def main():
         pass
     new_today_h = sum(1 for j in active if (j["posted"] or "")[:10] == TODAY)
     closed_today_h = sum(1 for j in archived if j.get("closed") == TODAY)
-    pulse = (f'<p class="pulse"><b>Today so far</b><span>{sum(1 for j in active if j.get("last_seen") == TODAY):,} roles re-checked</span>'
+    pulse = (f'<p class="pulse"><b>Today so far</b><span>{FACTS["checked_24h"]:,} re-checked in 24 hours</span>'
              f'<span>{new_today_h:,} posted today</span><span>{closed_today_h:,} closed by employers (their pages stay, marked closed)</span><a href="{P}/status/">Data status</a></p>')
     board_rows = "".join(
         f'<a href="{P}/job/{j["slug"]}/"><time class="ba" {when(j)}>{age(j["posted"])[0]}</time><span><span class="bt">{e(j["title"])}</span>'
@@ -5288,7 +5326,7 @@ def main():
             '<ul class="kgets"><li><b>30 days</b> in the list and in search</li><li><b>Its own page</b>, readable by Google’s job box</li>'
             '<li><b>A link</b> straight to your application page</li><li><b>Checked</b> before it goes live</li></ul></section>')
     ORG_LD[0] = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/", "logo": FULL + "/brand/icon-512.png",
-        "description": "A job search that reads open jobs every hour from employers’ own career pages, with a free resume builder.",
+        "description": "A job search that reads open jobs around the clock from employers’ own career pages, with a free resume builder.",
         "sameAs": ORG_SAME_AS}, ensure_ascii=False) + "</script>")
     wk_ = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
     co_top = Counter(j["company"] for j in active if j["company"] not in CHURN).most_common(10)
@@ -5321,10 +5359,10 @@ def main():
             "Few remote postings here state that much; the remote jobs page shows pay by kind of work."),
            ("What’s the easiest job to get right now?", ("The kinds of work with the largest share of junior roles and internships today: " + ", ".join(f"{k_} ({100 * sh_:.0f}%, {c_:,} roles)" for sh_, k_, c_ in ent_rank)
             + ". The entry-level page lists them all.") if ent_rank else "The entry-level page lists junior roles and internships."),
-           ("What is the best way to find a job immediately?", f"Start with the newest postings and apply on the employer’s own page. {new_today:,} jobs were added here today and {fresh3:,} in the last three days: "
+           ("What is the best way to find a job immediately?", f"Start with the newest postings and apply on the employer’s own page. {new_today:,} jobs were posted today and {fresh3:,} in the last three days: "
             "the New jobs list shows them newest first, and the Entry-level list holds the roles that ask for little or no experience."),
            ("Where do the jobs come from?", "Straight from the official careers pages of companies. Every listing links to the original posting, and you apply on the employer's own site."),
-           ("How often is the site updated?", EVERY[0].upper() + EVERY[1:] + ". New roles are added. A role the company has closed keeps its page at the same address, marked as closed, and leaves the lists of open jobs."),
+           ("How often is the site updated?", "Around the clock: " + CHECK_LINE[0] + ". New roles are added. A role the company has closed keeps its page at the same address, marked as closed, and leaves the lists of open jobs."),
            ("Is it free?", "Yes. Searching, saving jobs, tracking your applications and applying are free. A paid Plus plan with email alerts and AI resume tools is on the way; no job will be held back for it."),
            ("Do I need an account?", "No. Saved jobs, application statuses and saved searches are kept in your browser."),
            ("Can I see salaries?", "Where the employer publishes a range, we show it, let you filter and sort by it, and use it for the salary pages.")]
@@ -5356,9 +5394,9 @@ def main():
     gps_top = gps_gain.most_common(2)
     gps_rows = "".join(f'<span class="rw"><span>{e(t)}</span><span class="mt"><i style="width:{max(8, round(100 * k / gps_top[0][1]))}%"></i></span><b>+{k:,}</b></span>' for t, k in gps_top)
     FUTURE = [
-        ("Will it still be open next week?", "Every job page estimates the chance the posting is still open in 7 days, from the closings we see every hour, shown as a percentage.", "jobs/",
-         (f'<span class="big">{still7}%<small>still open in 7 days</small></span><span class="ln">A posting 8 to 30 days old, from the closings we see every hour</span>' if still7
-          else '<span class="ln"><b>Still open in 7 days?</b></span><span class="ln">Counted from the closings we see every hour</span>')),
+        ("Will it still be open next week?", "Every job page estimates the chance the posting is still open in 7 days, from the closings we have seen, shown as a percentage.", "jobs/",
+         (f'<span class="big">{still7}%<small>still open in 7 days</small></span><span class="ln">A posting 8 to 30 days old, from the closings we have seen</span>' if still7
+          else '<span class="ln"><b>Still open in 7 days?</b></span><span class="ln">Counted from the closings we have seen</span>')),
         ("Skill GPS: the one skill to learn next", "The resume builder counts, across every open job, which single skill would bring the most jobs within your reach, and what they pay.", "resume/",
          gps_rows + '<span class="ln">more open jobs within reach of a resume with Python and SQL</span>'),
         ("Practise the interview out loud", "On every interview questions page the browser reads a question, listens to your answer and checks its length, the numbers and whether you said what you did.", "interview-questions/",
@@ -5367,8 +5405,8 @@ def main():
          '<span class="ln"><b>Tailor it to the target job</b></span><span class="ln">ChatGPT · Claude · Perplexity</span><span class="sk" style="width:70%"></span>'),
         ("A resume that targets one job", "Open a job, press “Tailor my resume to this job”: the builder shows the match in percent and the missing skills, each one button away.", "resume/",
          '<span class="ln"><b>Match with this job</b></span><span class="ln">Add a skill it asks for and watch the match rise</span><span class="sk" style="width:55%"></span>'),
-        ("Every job straight from the employer", "Each posting is read from the employer’s own hiring system and re-checked every hour; your own browser can ask that system whether the job is still there.", "jobs/",
-         '<span class="ln"><b>✓ Employer’s own posting</b></span><span class="ln">Read from the employer’s hiring system · checked this hour</span>'),
+        ("Every job straight from the employer", "Each posting is read from the employer’s own hiring system and re-checked around the clock; the job page says when it was last checked.", "jobs/",
+         '<span class="ln"><b>✓ Employer’s own posting</b></span><span class="ln">Read from the employer’s hiring system · checked 12 minutes ago</span>'),
     ]
     GO = {"jobs/": "Open a job", "resume/": "Open the resume builder", "interview-questions/": "Pick a role"}
     # The home page after the first screen (17 Nov 2026: it was 14 sections of one weight, 11,500 px on a computer and 26,000 on a
@@ -5392,11 +5430,11 @@ def main():
               + f'<div class="tabp" id="p-loc">{place_top}<p class="tabmore"><a href="{P}/locations/">All {len(places)} locations</a></p></div>'
               + '<div class="tabp" id="p-co"><h3 class="tgroup">Companies hiring the most right now</h3><ul class="tiles">' + "".join(
                   f'<li><a class="tile" href="{P}/companies/{slugify(c_)}/">{ava(c_, "sm")}<span class="n">{e(c_)}</span><span class="c">{k_:,}{" · " + format(co_new[c_], ",") + " new" if co_new.get(c_) else ""}</span></a></li>' for c_, k_ in co12)
-              + f'</ul><p class="note">Open jobs at each company on {fdate(TODAY)}, and how many were added in the last seven days.</p>'
+              + f'</ul><p class="note">Open jobs at each company on {fdate(TODAY)}, and how many it posted in the last seven days.</p>'
               + f'<p class="tabmore"><a href="{P}/companies/">All {m:,} companies</a></p></div></div>')
     ghost = ('<div class="ktwo"><ol class="steps">'
-             f'<li><b>Only the employer’s own page.</b> Every job is read from the company’s careers page or hiring system, never copied from another job board.</li>'
-             f'<li><b>Checked {EVERY}.</b> A job the employer takes down leaves the list at the next check: {closed_today:,} so far today. {new_today:,} new jobs were added today.</li>'
+             f'<li><b>Only the employer’s own page.</b> {SOURCE_LINE[0]}.</li>'
+             f'<li><b>Checked {EVERY}.</b> {CHECK_LINE[0]}. A job the employer takes down leaves the list at the next check: {closed_today:,} so far today; employers posted {FACTS["posted_today"]:,} today.</li>'
              f'<li><b>Old postings are marked.</b> {old90:,} open jobs were posted {LONG_OPEN} or more days ago; their pages say so.</li>'
              '<li><b>Reposts are shown.</b> When a company reposts a role it closed, the job page says when the earlier posting closed.</li>'
              f'<li><b>Scam signs are listed.</b> Requests for money, chat apps or software installs: <a href="{P}/safety/">how to check an offer</a>.</li>'
@@ -5426,7 +5464,7 @@ def main():
                  '<span class="tvr"><em>2D</em>GTM Specialist<span>ZoomInfo</span></span></span>'
                  '<span class="tbody"><b>A live wall for an office screen</b><span>For a TV in the office, a coworking space or a classroom: fresh jobs fill the screen and turn the page every 9 seconds.</span><i><u>Open the wall</u></i></span></a>'
                  f'<a class="tcard" href="{P}/api/"><span class="tprev" aria-hidden="true"><code>GET /api/v1/latest.json\n{{ "total": {n},\n  "jobs": [{{ "title": "…",\n    "company": "…" }}] }}</code></span>'
-                 '<span class="tbody"><b>For programmers</b><span>The whole job list as data that programs can read, refreshed every hour. Free, with nothing to sign up for.</span><i><u>See the API</u></i></span></a>'
+                 '<span class="tbody"><b>For programmers</b><span>The whole job list as data that programs can read, refreshed several times a day. Free, with nothing to sign up for.</span><i><u>See the API</u></i></span></a>'
                  f'</div><p class="tabmore"><a href="{P}/widgets/">Make a widget or a badge</a></p></div></div>')
     FAQ4 = [FAQ[0], FAQ[2], FAQ[9],
             ("Is it free?", "Yes. Searching, saving jobs, tracking your applications, email alerts and applying are free, and none of it needs an account: saved jobs "
@@ -5439,10 +5477,10 @@ def main():
             f'<p class="hmore"><a href="{P}/new/">All new jobs</a><a href="{P}/jobs/">Search all {n:,} jobs</a></p></section>'
             + '<div class="lalert">' + alert_form("new jobs", compact=True, label="Email me new jobs") + "</div>"
             + section(f"Where the jobs come from and how {SITE} works", faq_html
-                      + f'<p class="note">More: <a href="{P}/guides/how-we-check-jobs-every-hour/">how the hourly check works</a> · <a href="{P}/promise/">what we will never do</a></p>', sid="faq"))
-    home_desc = f"Job search without ghost jobs: {n:,} jobs hiring now at {m:,} companies, read from their own career pages {EVERY}. {new_today:,} new today. Free, no account."
+                      + f'<p class="note">More: <a href="{P}/guides/how-we-check-jobs-every-hour/">how the check works</a> · <a href="{P}/promise/">what we will never do</a></p>', sid="faq"))
+    home_desc = f"Job search without ghost jobs: {n:,} jobs hiring now at {m:,} companies, read from their own career pages {EVERY}. {new_today:,} posted today. Free, no account."
     if len(home_desc) > 165: home_desc = home_desc.removesuffix(" Remote and salary filters.")
-    page("", f"Job Search: {n:,} Jobs Hiring Now, Checked Every Hour | {SITE}",
+    page("", f"Job Search: {n:,} Jobs Hiring Now, Checked Around the Clock | {SITE}",
          home_desc, home, hero=hero, cls="kp home",
          head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "WebSite", "name": SITE, "url": FULL + "/",
                "description": f"A job search engine that reads the career pages of {m:,} companies {EVERY} and lists only the jobs that are still open.",
@@ -5522,7 +5560,7 @@ def main():
               # rows of plain selects and then folded into one bar, and the list and everything under it jumped up 190 px (layout shift
               # 0.45 on a phone, most of the page's PageSpeed loss). The script needs only what is above this point.
               + '<script>' + (ROOT / "assets" / "fsel.js").read_text(encoding="utf-8").replace("</", "<\\/") + '</script>'
-              '<div><p class="note srch-promise">Every job opens on the employer’s own page · no account, no phone number · closed jobs leave the list within the hour · '
+              '<div><p class="note srch-promise">Every job opens on the employer’s own page · no account, no phone number · closed jobs leave the list when the employer takes them down · '
               f'<a href="{P}/promise/">what we never do</a></p>'
               '<div class="rbar"><p class="note" id="count">Loading…</p><div class="rtools">'
               '<select id="sort" aria-label="Sort"><option value="new">Newest first</option><option value="rel">Best match</option><option value="sal">Highest salary</option></select>'
@@ -5952,7 +5990,7 @@ def main():
         if s in fields_info.CAT_FIELDS:          # the page for its own search, drawn with the field pages' parts once they exist (below)
             CAT_LATER.append((s, name, js))
         else: listing(f"jobs/{s}/", f"{name} jobs", f"{name} Jobs ({len(js):,} open{pay_c}) | {SITE}",
-                f"{roles(len(js), name + ' job')} at companies. Remote and on-site roles, updated hourly.",
+                f"{roles(len(js), name + ' job')} at companies. Remote and on-site roles, updated several times a day.",
                 js, (f"<strong>{e(name)}</strong>: {e(skills_info.CATEGORIES[s])}. " if s in skills_info.CATEGORIES else "") + intro_for(js, f"{e(name)} ", hub=True), trail=(("All jobs", "jobs/"),), feed=True, stats=True, extra=sponsor_line("category:" + s) + rel(REL["cat:" + s], ("categories/", "All categories"))
                 + labrow("Fields", [f'<a href="{P}/categories/{fs_}/">{e(fn_)} <b>{len(js_f):,}</b></a>' for fs_, fn_, _, _, js_f in fam_rows if fs_ in fields_info.NEAR.get(s, ())]),
                 pics=hub_sections(f"{name} roles", js)[0], faq=f"{name} jobs",
@@ -6015,7 +6053,7 @@ def main():
     REMOTE_SITES = ("we-work-remotely", "himalayas", "remote-ok", "remotive", "remote-co", "working-nomads", "flexjobs")
     rm_qa = [("Which websites are best for remote jobs?",
               f"Remote-only job sites: {vs_names_(REMOTE_SITES)}, each compared below from its own pages; FlexJobs and Remotive charge job seekers for full access. "
-              f"LinkedIn and Indeed list remote roles too. This site has {len(remote):,} remote jobs read every hour from employers’ own careers pages, free and with no account. "
+              f"LinkedIn and Indeed list remote roles too. This site has {len(remote):,} remote jobs read around the clock from employers’ own careers pages, free and with no account. "
               "Remote does not always mean any country: check where the employer accepts applicants.")]
     if best_rm:
         rm_qa.append(("What is the best remote job right now?", "By advertised pay, the remote kinds of work with the highest median today: " + ", ".join(f"{rlow(nm_)} ({money(m_)}, {c_:,} open)" for c_, _, nm_, m_, _ in best_rm)
@@ -6153,7 +6191,7 @@ def main():
             if len(cj) >= 5:
                 row_c, kw_c = list_parts(f"{name} jobs in crypto & web3", cj, proper=True)
                 listing(f"crypto/{s}/", f"{name} jobs in crypto & web3", f"{name} Jobs in Crypto & Web3 ({len(cj):,} open) | {SITE}",
-                        f"{roles(len(cj), name + ' job')} at crypto and web3 companies. Remote and on-site roles, updated hourly.",
+                        f"{roles(len(cj), name + ' job')} at crypto and web3 companies. Remote and on-site roles, updated several times a day.",
                         cj, intro_for(cj, f"{e(name)} ", " at crypto and web3 companies", row=row_c), trail=ctrail, faq=f"{name} jobs in crypto and web3",
                         links=((f"jobs/{s}/", f"All {name} jobs"), ("crypto/", "All crypto jobs")), index_min=INDEX_MIN, **kw_c)
     sal = [j for j in active if j["salary"]]
@@ -6209,7 +6247,7 @@ def main():
                             ("jobs-for-teens", "Jobs for teens"), ("job-levels-explained", "Job levels explained")], "Guides for a first job")
     ent_qa = [("Which sites are best for entry-level jobs?",
                "Handshake for students and new graduates, Snagajob for hourly work, USAJOBS and GovernmentJobs.com for public-sector jobs, and the large general sites Indeed, "
-               f"LinkedIn and ZipRecruiter, each compared below from its own pages. This site lists {len(jr):,} entry-level jobs and internships read every hour from employers’ "
+               f"LinkedIn and ZipRecruiter, each compared below from its own pages. This site lists {len(jr):,} entry-level jobs and internships read around the clock from employers’ "
                "own careers pages, free and with no account; apply on the employer’s page."),
               ("What counts as an entry-level job here?", "A job whose title marks it as an internship or a junior role: intern, junior, graduate, new grad and similar words. Many jobs with no level in the title are open to beginners too "
                "(associate and trainee roles, for example), which is why the kinds of work open to beginners, linked above, count more jobs.")]
@@ -6595,7 +6633,7 @@ def main():
         extra_.append(("Which titles are most common at this level?", f"Today: {lv_titles(js)}."))
         rem_ = [j for j in js if j["remote"]]
         if len(rem_) >= 20: links = tuple(links) + ((path + "remote/", f"Remote {low_}"),)
-        listing(path, h1, f"{tcase(h1).replace('Senior-level', 'Senior Level')} ({len(js):,} open) | {SITE}", f"{roles(len(js), 'open job')} {what}, read from employers’ own careers pages and checked hourly. See who hires, where, and what the level pays.", js,
+        listing(path, h1, f"{tcase(h1).replace('Senior-level', 'Senior Level')} ({len(js):,} open) | {SITE}", f"{roles(len(js), 'open job')} {what}, read from employers’ own careers pages around the clock. See who hires, where, and what the level pays.", js,
                 intro_for(js, "", f" {what}", row=row_), trail=(("All jobs", "jobs/"),), more=more, faq=low_, faq_first=first, faq_extra=extra_, after=alert, links=links, **kw_)
         if len(rem_) >= 20:      # the same level done from home: "remote senior jobs" is its own search
             rh_ = "Remote " + low_
@@ -6604,7 +6642,7 @@ def main():
             rextra_ = [(f"How much do {rh_.lower()} pay?", f"The middle advertised salary of these remote jobs is {rp_} a year, counted from the postings that state pay on {fdate(TODAY)}. Pay is before tax.")] if rp_ else []
             rextra_.append(("Which titles are most common?", f"Today: {lv_titles(rem_)}."))
             listing(path + "remote/", rh_, f"{tcase(rh_).replace('Senior-level', 'Senior Level')} ({len(rem_):,} open) | {SITE}",
-                    f"{roles(len(rem_), 'open remote job')} {what}, done from home, read from employers’ own careers pages and checked hourly.", rem_,
+                    f"{roles(len(rem_), 'open remote job')} {what}, done from home, read from employers’ own careers pages around the clock.", rem_,
                     intro_for(rem_, "remote ", f" {what}", row=rrow_), trail=((h1, path), ("Remote", "remote/")), more=("remote=1&" + more) if more else "remote=1",
                     faq=rh_[0].lower() + rh_[1:], faq_first=first, faq_extra=rextra_, links=((path, h1), ("remote/", "All remote jobs")), **rkw_)
     lv_page("senior-jobs/", "Senior-level jobs", lv_sen, "with “senior” or an equal level in the title",
@@ -6653,7 +6691,7 @@ def main():
     dir_qa = [("How are jobs sorted into categories?", "By the job title. Each kind of work has a list of the titles employers use for it, and a posting whose title matches is listed there. A posting can sit in two categories when its title belongs to both, for example a staff backend engineer."),
               ("Are these only technology jobs?", f"No. The employers are mostly technology, finance, health, space and consumer companies, and they hire for every kind of work: {len(fam_rows)} fields here, from software and data to sales, accounting, law, nursing, warehouses and shops."),
               ("Why is a category missing?", "A kind of work gets a page when at least 20 open jobs match it. Smaller ones are still found through the search."),
-              ("How often are the lists updated?", "Every time the employers’ careers pages are read again, which is every hour. A job that the employer has closed leaves the lists and moves to the archive.")]
+              ("How often are the lists updated?", "Several times a day, from the employers’ careers pages, which are read around the clock. A job that the employer has closed leaves the lists and moves to the archive.")]
     fam_tab = []
     for fs, fn, fd, live, js_ in fam_rows:
         ms_ = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in js_ if j["usd"])
@@ -6728,7 +6766,7 @@ def main():
                                                       (("; ".join(xs[:-1]) + "; and ") if any(" and " in x for x in xs) else (", ".join(xs[:-1]) + " and ")) + xs[-1])
         # the opening answer (40-60 words), the line search engines and assistants quote
         # (the row of figures under it gives the remote share, the employers and the median pay: they are not repeated here)
-        lead = (f"<strong>{n_:,} {e(q_)}</strong> are open today, each read from the employer’s own careers page and checked every hour. "
+        lead = (f"<strong>{n_:,} {e(q_)}</strong> are open today, each read from the employer’s own careers page and re-checked around the clock. "
                 + (f"The most openings are for {and_([f'{e(rlow(nm))} ({c:,})' for _, nm, c in tops_])}, and {ent_:,} of all {e(q_)} here are open to beginners. " if len(tops_) >= 2 else "")
                 + f"The field covers {e(fd)}.")
         top_co = [c for c, _ in co_.most_common(3)]
@@ -7073,7 +7111,7 @@ def main():
                 if sum(1 for j in act_ if (j["posted"] or j["first_seen"])[:10] <= day90) < len(act_) / 4 and c not in CHURN: f_ += 1
         return a_, p_, f_
     mk_a, mk_p, mk_f = mk_counts()
-    mk_rows = [("Actively hiring", "Posted at least 3 roles in the last 7 days.", mk_a),
+    mk_rows = [("Actively hiring", "Posted at least 3 roles in the last 7 days, and did not close and repost most of its jobs in them.", mk_a),
                ("States the pay", "At least half of its open roles state the pay (employers with 5 open roles or more).", mk_p),
                ("Few old postings", f"Fewer than a quarter of its open roles were posted {LONG_OPEN} days ago or more (employers with 5 open roles or more).", mk_f),
                ("Files H-1B", "The US Department of Labor certified at least one of its Labor Condition Applications for H-1B workers in fiscal year 2025 or 2026 "
@@ -7133,12 +7171,12 @@ def main():
         rem_t, ent_t = sum(1 for _, v in hits for j in v if j["remote"]), sum(1 for _, v in hits for j in v if j["entry"])
         qa_t = [(f"Which {h1_[0].lower() + h1_[1:].replace(' hiring now', '').replace('Companies', 'companies')} have the most open jobs?",
                  "Right now: " + ", ".join(f"{c} ({len(v):,})" for c, v in hits[:5]) + f". {len(hits):,} companies with 10 or more open roles qualify today."),
-                ("How is this list made?", f"From each company’s own open postings, read every hour: a company is listed when {rule_}, and it has at least 10 open roles. "
+                ("How is this list made?", f"From each company’s own open postings, read around the clock: a company is listed when {rule_}, and it has at least 10 open roles. "
                  "Nothing here is a label bought or claimed; it changes as the postings change.")]
         ld_t = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa_t]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         page(f"companies/{ts_}/", f"{ttl_}: {len(hits):,} Employers ({datetime.date.fromisoformat(TODAY).strftime('%b %Y')}) | {SITE}",
-             f"{len(hits):,} companies where {rule_}, with {n_jobs:,} open jobs between them, counted from their own careers pages and updated every hour.",
+             f"{len(hits):,} companies where {rule_}, with {n_jobs:,} open jobs between them, counted from their own careers pages and updated several times a day.",
              crumbs(("Companies", "companies/"), (h1_, "")) + f'<h1>{e(h1_)}: <span class="hl">{len(hits):,} employers</span></h1>'
              f'<p class="lead">{len(hits):,} companies where {e(rule_)}, with {n_jobs:,} open jobs between them, counted today from their own careers pages. Largest first.</p>'
              + nums([(f"{n_jobs:,}", "open jobs between them"), (f"{sum(fresh_n.get(c, 0) for c, _ in hits):,}", "posted in the last 7 days"),
@@ -7195,7 +7233,7 @@ def main():
         qa_l = [(f"Which {short_[0].lower() + short_[1:] if ls_ == 'unicorns' else short_} are hiring the most right now?",
                  "Today: " + ", ".join(f"{c} ({len(v):,} open jobs)" for c, v in hits[:5]) + "."),
                 (f"Is every company from {the_} on this page?",
-                 f"No. {len(hits):,} of the {d_.get('members', 0):,} are here: the ones whose own careers pages this site reads every hour and that have open jobs today. "
+                 f"No. {len(hits):,} of the {d_.get('members', 0):,} are here: the ones whose own careers pages this site reads and that have open jobs today. "
                  "The others use hiring systems we do not read yet, or have nothing open."),
                 (f"How many of these jobs are remote or for beginners?", f"Of the {n_jobs:,} open jobs, {rem_:,} can be done from home and {ent_:,} are junior roles or internships."),
                 *([(f"Which {short_[0].lower() + short_[1:] if ls_ == 'unicorns' else short_} hire remotely?",
@@ -7207,9 +7245,9 @@ def main():
             {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in qa_l]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         page(f"companies/{ls_}/", f"{ttl_}: {n_jobs:,} Jobs ({datetime.date.fromisoformat(TODAY).strftime('%b %Y')}) | {SITE}",
              f"{len(hits):,} {short_[0].lower() + short_[1:] if ls_ == 'unicorns' else short_} have {n_jobs:,} open jobs here today: who hires the most"
-             + (f", in which {'industries' if ls_ == 'unicorns' else 'sectors'}" if has_sec else "") + " and what they pay. Updated every hour.",
+             + (f", in which {'industries' if ls_ == 'unicorns' else 'sectors'}" if has_sec else "") + " and what they pay. Updated several times a day.",
              crumbs(("Companies", "companies/"), (short_, "")) + f'<h1>{e(h1_)}: <span class="hl">{n_jobs:,} jobs</span></h1>'
-             f'<p class="lead">{e(what_)} {len(hits):,} of the {d_.get("members", 0):,} companies in {e(the_)} have open jobs on this site today, {n_jobs:,} between them, read from each company’s own careers page every hour. Largest first.</p>'
+             f'<p class="lead">{e(what_)} {len(hits):,} of the {d_.get("members", 0):,} companies in {e(the_)} have open jobs on this site today, {n_jobs:,} between them, read from each company’s own careers page. Largest first.</p>'
              + nums([(f"{len(hits):,}", f"of the {d_.get('members', 0):,} companies are hiring here"), (f"{sum(new_(c) for c, _ in hits):,}", "jobs posted in the last 7 days"),
                      (f"{rem_:,}", "can be done from home"), (f"{ent_:,}", "junior roles and internships")])
              + lists_nav(ls_)
@@ -7329,6 +7367,10 @@ def main():
         TB[c] = tb_
         tbadges = ('<p class="tbadges">' + "".join(f'<span class="tb" title="{e(why)}"><b>✓ {e(nm)}</b> {e(why)}</span>' for nm, why in tb_)
                    + f'<a href="{P}/companies/#marks">What the marks mean</a></p>') if tb_ else ""
+        if c in CHURN:
+            wk14_ = (datetime.date.today() - datetime.timedelta(days=14)).isoformat()
+            tbadges += (f'<p class="note">Reposts often: in the last 14 days it closed {sum(1 for j in js if not j["active"] and (j.get("closed") or "") >= wk14_):,} roles '
+                        f'and posted {sum(1 for j in js if (j["posted"] or "") >= wk14_):,}.</p>')
         if CO_IN.get(c):
             tbadges += '<p class="note colist">Listed in: ' + " · ".join(f'<a href="{P}/companies/{l_}/">{e(n_)}</a>' for l_, n_ in CO_IN[c]) + "</p>"
         cats_txt = [e(name) for name, _ in top_cats if name != OTHER[1]]
@@ -7343,7 +7385,7 @@ def main():
         closed = section(f"Closed jobs at {c}", f'<ul class="jobs">{"".join(card(j) for j in arc[:200])}</ul>', sid="closed") if arc else ""
         careers_link = f'<a href="{FULL}/companies/{slug}/">Open roles at {c}</a>'
         embed = (f'<details class="embed"><summary>Work at {e(c)}? Link your careers page to this list</summary>'
-                 '<p class="note">Three ways, simplest first. Each one stays up to date by itself, because this page is re-read from your careers page every hour.</p>'
+                 '<p class="note">Three ways, simplest first. Each one stays up to date by itself, because this page is re-read from your careers page around the clock.</p>'
                  f'<p class="flabel">1. A plain link for a “Careers” or “We’re hiring” menu item</p><pre><code>{e(careers_link)}</code></pre>'
                  f'<p class="flabel">2. A badge with today’s number of open roles</p><p><img src="{P}/badge/companies/{slug}.svg" alt="{e(c)} is hiring" width="{badge_w(c + " is hiring", roles(len(act), "role"))}" height="28"></p>'
                  f'<pre><code>{badge_code(f"badge/companies/{slug}.svg", c + " is hiring", f"companies/{slug}/")}</code></pre>'
@@ -7368,10 +7410,6 @@ def main():
                         f'<td>{money(mid_) if mid_ else "—"}</td><td class="pcell">{bar}</td></tr>')
             overview += section(f"Pay by field at {c}", sid="pay", inner='<div class="tablewrap"><table><tr><th>Field</th><th>Postings with pay</th><th>Lowest to highest advertised</th><th>Median</th><th>Spread</th></tr>'
                                 + "".join(pay_row(k, v) for k, v in pay_rows) + "</table></div>"
-        if c in CHURN:
-            wk14_ = (datetime.date.today() - datetime.timedelta(days=14)).isoformat()
-            tbadges += (f'<p class="note">Reposts often: in the last 14 days it closed {sum(1 for j in js if not j["active"] and (j.get("closed") or "") >= wk14_):,} roles '
-                        f'and posted {sum(1 for j in js if (j["posted"] or "") >= wk14_):,}.</p>')
                                 f'<p class="note">Pay ranges that {e(c)} printed in its open postings, converted to US dollars. A field needs 3 postings with pay to appear and 15 for a median. The line shows where the range sits; the tick marks the median.</p>')
         # 26 Nov 2026, ChatGPT (temporary chat, search on) "stripe careers: is Stripe hiring right now, how do I apply and what does it pay?":
         # it cited this site for the count (about 770 open) and answered the pay with a table of named postings and their ranges, from the
@@ -7469,7 +7507,7 @@ def main():
         co_qa = list(hire_qa)
         if act:
             co_qa.append((f"Is {c} hiring right now?", f"Yes: {len(act):,} open {'job' if len(act) == 1 else 'jobs'} on its own careers page as of {fdate(TODAY)}; {new7_:,} were added in the last seven days"
-                          + f" and {shut7_:,} closed." + " We re-read the page " + ("every hour." if CFG.get("live_collector") else "several times a day.")))
+                          + f" and {shut7_:,} closed." + " We re-read the page around the clock."))
             if len(act) >= 10:
                 co_qa.append((f"Is it hard to get hired at {c}?", (f"The postings that state experience ask for {yrs_c[len(yrs_c) // 2]} years at the median. " if len(yrs_c) >= 5 else "")
                               + ("Levels named in the titles: " + ", ".join(f"{LVL_NAME.get(k, k)} {v:,}" for k, v in lv_.most_common(4)) + ". " if lv_ else "")
@@ -7574,7 +7612,7 @@ def main():
     for t, fj in new_sk:
         n_co = len({j["company"] for j in fj})
         listing(f"new/skills/{tslug(t)}/", f"New {t} jobs", f"New {t} Jobs: {len(fj):,} Posted in the Last 3 Days | {SITE}",
-                f"{len(fj):,} {t} jobs posted in the last three days at {n_co:,} companies, read from employers’ own careers pages and rebuilt every hour.",
+                f"{len(fj):,} {t} jobs posted in the last three days at {n_co:,} companies, read from employers’ own careers pages and rebuilt several times a day.",
                 fj, (f"<strong>{e(t)}</strong>: {e(skills_info.INFO[t][1])}. " if t in skills_info.INFO else "")
                 + f"{roles(len(fj), 'new role')} asking for {e(t)} {'was' if len(fj) == 1 else 'were'} posted on the employers’ own careers pages in the last three days, as of {fdate(TODAY)}.",
                 trail=(("New jobs", "new/"),), feed=False, more=f"age=3&skills={quote(t)}", stats=True, index_min=INDEX_MIN,
@@ -7584,7 +7622,7 @@ def main():
     for s_, nm_, fj in new_ro:
         low_ = rlow(nm_)
         listing(f"new/roles/{s_}/", f"New {nm_} jobs", f"New {tcase(nm_)} Jobs: {len(fj):,} Posted in the Last 3 Days | {SITE}",
-                f"{len(fj):,} new {low_} jobs posted in the last three days at {len({j['company'] for j in fj}):,} companies, read from employers’ own careers pages and rebuilt every hour.",
+                f"{len(fj):,} new {low_} jobs posted in the last three days at {len({j['company'] for j in fj}):,} companies, read from employers’ own careers pages and rebuilt several times a day.",
                 fj, (f"<strong>{e(nm_)}</strong>: a person in this job {e(roles_info.INFO[s_][1])}. " if s_ in roles_info.INFO and roles_info.INFO[s_][1] else "")
                 + f"{roles(len(fj), 'new role')} for {e(low_)} {'was' if len(fj) == 1 else 'were'} posted on the employers’ own careers pages in the last three days, as of {fdate(TODAY)}.",
                 trail=(("New jobs", "new/"),), feed=False, more=f"age=3&q={quote(nm_)}", stats=True, index_min=INDEX_MIN,
@@ -7610,7 +7648,7 @@ def main():
                + (labrow("By skill, last 3 days", [f'<a href="{P}/new/skills/{tslug(t)}/">{e(t)} · {len(fj):,}</a>' for t, fj in new_sk[:12]]) if len(new_sk) >= 3 else "")
                + (labrow("By kind of work, last 3 days", [f'<a href="{P}/new/roles/{s_}/">{e(nm_)} · {len(fj):,}</a>' for s_, nm_, fj in new_ro[:12]]) if len(new_ro) >= 3 else "")
                + (labrow("Last 24 hours by country", [f'<a href="{P}/jobs/?age=1&amp;where={quote(nm)}">{e(nm)} · {k_:,}</a>' for nm, k_ in by_c]) if len(by_c) >= 3 else ""))
-    new_qa = [("Where can I find jobs posted today?", f"Here: {len(day_):,} jobs were posted in the last 24 hours and {len(fresh):,} in the last three days, newest first. The list is rebuilt every hour, "
+    new_qa = [("Where can I find jobs posted today?", f"Here: {len(day_):,} jobs were posted in the last 24 hours and {len(fresh):,} in the last three days, newest first. The list is rebuilt several times a day, "
                "and new jobs found between rebuilds are added at the top of this page as they come in."),
               ("How often are new jobs added?", f"Every hour. Over the last week about {per_day_:,.0f} new jobs a day were posted on the employers' own careers pages and picked up here."
                + (f" {len(six_):,} were posted in the last 6 hours." if six_ else "")),
@@ -7625,7 +7663,7 @@ def main():
     new_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in new_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
     listing("new/", "New jobs", (f"New Jobs Posted Today: {len(day_):,} in 24 Hours, {len(fresh):,} in 3 Days" if day_ else f"New Jobs: {len(fresh):,} Posted in the Last 3 Days") + f" | {SITE}",
-            f"{len(day_):,} jobs posted in the last 24 hours and {len(fresh):,} in the last three days, dated by the employers’ own careers pages, newest first. Updated every hour.",
+            f"{len(day_):,} jobs posted in the last 24 hours and {len(fresh):,} in the last three days, dated by the employers’ own careers pages, newest first. Updated several times a day.",
             fresh, intro_for(fresh, "", " posted in the last three days", row=list_parts("New jobs", fresh)[0]), feed=True, extra=new_top, **list_parts("New jobs", fresh)[1],
             links=(("jobs-near-me/", "Jobs near me"), ("salaries/", "What each job pays")),       # both unknown to Google or not indexed on 25 Nov 2026; /new/ is indexed
             after=labrow("Jobs by type", [f'<a href="{P}/{u_}">{e(n_)}</a>' for u_, n_ in TYPE_LINKS])      # in the page, not only the footer (Search Console, 25 Nov 2026)
@@ -7840,7 +7878,7 @@ def main():
         sal_qa = [(f"What is the average {label} salary?", f"{money(mean_)} a year on average and {money(median(mids))} at the median, across {len(mids):,} open {label} postings that state pay "
                    f"({MONTH_YEAR}). The median is the better guide: a few very high offers pull the average up."),
                   ("What is the typical range?", f"The middle half of the postings offer {money(pct(.25))} to {money(pct(.75))} a year. A quarter offer less and a quarter offer more."),
-                  ("Where do these figures come from?", "From the pay ranges employers print in their own job postings, read from their careers pages every hour. The midpoint of each range is counted. "
+                  ("Where do these figures come from?", "From the pay ranges employers print in their own job postings, read from their careers pages. The midpoint of each range is counted. "
                    "These are advertised ranges for open roles, mostly in the United States and in US dollars, not what people are actually paid.")]
         # Search check, 18 Nov 2026 ("data analyst salary"): the first results (survey and government figures) show $71K to $99K where
         # this page shows $136K. Both can be right; the page has to say why they differ, or the reader trusts neither.
@@ -8077,7 +8115,7 @@ def main():
                          [(pfl(slug) + e(name.removeprefix("the ")), len(js), f"locations/{slug}/") for name, slug, js in sorted(places, key=lambda x: -len(x[2]))[:8]])
                   + "</div>")
     page("trends/", f"Job Market {TODAY[:4]}: hiring trends from {n:,} open roles | {SITE}",
-         "Hiring trends this week: which skills, companies, roles and cities are hiring most and which are growing, counted from every open job posting and recounted every hour.",
+         "Hiring trends this week: which skills, companies, roles and cities are hiring most and which are growing, counted from every open job posting and recounted several times a day.",
          crumbs(("Hiring trends", "")) + "<h1>Hiring trends</h1>"
          f'<p class="lead">Live numbers from {n:,} open roles at {m:,} companies, recalculated every day. Feel free to quote them with a link to this page.</p>'
          '<p class="plain"><b>In plain words:</b> the job market in numbers, counted from the jobs that are open today: which skills employers ask for, who is hiring, where.</p>'
@@ -8683,7 +8721,7 @@ def main():
             ("Does a large number of openings mean a company is easy to get into?", "No. It means the company has many roles open at once. A large employer can still take few people for each role, and some postings stay open for months; the page on how long postings stay open has the figures."),
             ("How is this list counted?", f"Every hour the site reads the careers pages of {len(co_act):,} employers and counts the postings that are open. A posting listed in several cities is one role. Employers the site does not read are not in the list, so it is not a count of the whole job market.")],
             label="Questions")
-        INS.append(insight("companies-hiring-the-most", "Companies hiring the most right now", f"The {min(50, len(most_co))} employers with the most open jobs today, with new roles this week, remote roles and the field each hires most for. Recounted every hour.",
+        INS.append(insight("companies-hiring-the-most", "Companies hiring the most right now", f"The {min(50, len(most_co))} employers with the most open jobs today, with new roles this week, remote roles and the field each hires most for. Recounted several times a day.",
                            f"{e(c1)} has the most open roles today: {len(j1):,}. Then {e(c2)} ({len(j2):,}) and {e(c3)} ({len(j3):,}).",
                            ["#", "Company", "Open roles", "Posted this week", "Remote", "Hires most for"], m_rows, ("companies/", "All companies"),
                            tail=(section("The largest employers in [[each field]]", ttable(["Field", "Open roles", "Most roles at"], f_rows, "rkt"), sid="fields", label="By field") if len(f_rows) >= 4 else "")
@@ -9506,7 +9544,7 @@ def main():
              + section(f"Free tools to use with your {low} cover letter", '<div class="feats">'
                        f'<a class="feat" href="{P}/resume/examples/{slug_r}/"><h3>The {e(low)} resume example</h3><p>The same results, laid out as a one-page resume you can open in the builder.</p></a>'
                        f'<a class="feat" href="{P}/tools/resume-match/"><h3>Check against a posting</h3><p>See which of the posting’s words your resume and letter are missing.</p></a>'
-                       f'<a class="feat" href="{P}/roles/{slug_r}/"><h3>{len(rj):,} open {e(low)} jobs</h3><p>Read from employers’ own careers pages every hour.</p></a></div>') + role_kit(slug_r, low, "letter"), head=ld_, cls="kw")
+                       f'<a class="feat" href="{P}/roles/{slug_r}/"><h3>{len(rj):,} open {e(low)} jobs</h3><p>Read from employers’ own careers pages around the clock.</p></a></div>') + role_kit(slug_r, low, "letter"), head=ld_, cls="kw")
     cl_n = sum(len(v) for v in cl_dir.values())
     cl_html = kind_dir(cl_dir, "cover-letter-examples", ("job", "jobs"))
     page("cover-letter-examples/", f"Cover Letter Examples for {cl_n} Kinds of Work ({TODAY[:4]}) | {SITE}",
@@ -10048,7 +10086,7 @@ def main():
                        f'<a class="feat" href="{P}/tools/interview-answer-builder/"><h3>Interview answer builder</h3><p>Turn an example into a 60 to 90 second answer, with checks for a number and for “I”.</p></a>'
                        f'<a class="feat" href="{P}/resume/examples/{slug_r}/"><h3>The {e(low)} resume example</h3><p>The results interviewers ask about, written as resume lines.</p></a>'
                        f'<a class="feat" href="{P}/tools/thank-you-email/"><h3>Thank-you email</h3><p>Send it on the day of the interview, written from four fields.</p></a>'
-                       f'<a class="feat" href="{P}/roles/{slug_r}/"><h3>{n_:,} open {e(low)} jobs</h3><p>Read from employers’ own careers pages every hour.</p></a></div>')
+                       f'<a class="feat" href="{P}/roles/{slug_r}/"><h3>{n_:,} open {e(low)} jobs</h3><p>Read from employers’ own careers pages around the clock.</p></a></div>')
              + role_kit(slug_r, low, "iq")
              + f'<p class="note">Counted from the open postings on {fdate(TODAY)}, read from employers’ own careers pages and recounted on every update. The questions are ours; no employer’s interview is copied here.</p>', head=ld_, cls="kw")
     iq_n = sum(len(v) for v in iq_dir.values())
@@ -10704,11 +10742,11 @@ def main():
         ("What is the best job search site?",
          "There is no single best one: it depends on the job. Indeed and LinkedIn are the largest general job sites by their own figures; Glassdoor adds company reviews; "
          "Google for Jobs searches many sites at once. For government jobs use USAJOBS or GovernmentJobs.com, for students Handshake, for tech Dice, Wellfound or Built In, "
-         f"for hourly work Snagajob. {us_} reads {len(active):,} open jobs from {bs_cos:,} companies’ own careers pages every hour, free and with no account."),
+         f"for hourly work Snagajob. {us_} reads {len(active):,} open jobs from {bs_cos:,} companies’ own careers pages around the clock, free and with no account."),
         # Google's "People also ask" for "best job search sites" (gl=us, 25 Nov 2026)
         ("What is the most reliable job search site?",
          "The one whose jobs are still open when you apply. A listing copied from another board can stay up after the job is filled; a site that reads the employer’s own careers page drops it "
-         f"once the employer takes it down. {us_} reads {len(active):,} jobs that way every hour. On any site, check the job on the employer’s own careers page before you apply."),
+         f"once the employer takes it down. {us_} reads {len(active):,} jobs that way, around the clock. On any site, check the job on the employer’s own careers page before you apply."),
         ("Which job site is best for each kind of job?",
          "By what each site says it is for: " + "; ".join(f"{cs_.KINDS[k_].lower()}: {names_(bs_kind(k_))}" for k_ in cs_.KINDS if bs_kind(k_)) + ". The table “Which site for which job” above lists them with links."),
         ("Which job search sites are free for job seekers?",
@@ -10721,9 +10759,9 @@ def main():
          + f"On {us_}, no: every Apply button goes to the employer’s own application page."),
         ("Which job site is best for remote jobs?",
          (f"{names_(bs_remote)} are built for remote work; each one’s own pages are linked from its comparison. " if bs_remote else "")
-         + f"{us_} has {bs_rem:,} open remote jobs today, read from employers’ own careers pages and checked every hour."),
+         + f"{us_} has {bs_rem:,} open remote jobs today, read from employers’ own careers pages and re-checked around the clock."),
         ("How do I avoid ghost jobs on job sites?",
-         "Some listings stay up after the job is filled. A site that reads the employer’s own careers page every hour, as this one does, drops a job at the next reading "
+         "Some listings stay up after the job is filled. A site that reads the employer’s own careers page again and again, as this one does, drops a job at the next reading "
          "after the employer takes it down. On any other site, check that the job is still on the employer’s own careers page before you spend time on it."),
     ]
     bs_qh, bs_ld = qa_sec("Questions about the best job search sites", bs_qa, label="Questions", sid="questions")
@@ -11352,14 +11390,15 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
           "<li><b>Ask the employer’s own page.</b> If the posting is gone there, it is closed, whatever a job site says. On this site the button “Check with the employer right now” does it from your browser.</li>"
           "<li><b>Read the first lines for an invitation.</b> “Join our talent community”, “general application”, “future opportunities” mean there is no opening today.</li>"
           f"<li><b>Count the days.</b> A posting open for {LONG_OPEN} days or more may still be real, and it is fair to ask the recruiter whether the role is being filled now.</li></ol>"
-          f"<h2>What this site does about it</h2><p>Every posting is read from the employer’s own hiring system each hour. When one disappears there, it leaves the lists here and its page is marked closed. Today that happened to {closed_today_h:,} postings; "
+          f"<h2>What this site does about it</h2><p>Every posting is read from the employer’s own hiring system, around the clock. When one disappears there, it leaves the lists here and its page is marked closed. Today that happened to {closed_today_h:,} postings; "
           f"{long_all:,} open ones carry the “open {LONG_OPEN} days or more” mark.</p>",
           '<span class="ln"><b>Still open</b> · confirmed 14:02</span>' + skel,
           (("guides/how-long-jobs-stay-open/", "How long postings stay open"), ("safety/", "How to check that an offer is real"), ("status/", "Is the data fresh?")))
     lap("How the hourly check works: counted from the build's own dat")
     # How the hourly check works: counted from the build's own data, written as a plain account of the method (ROADMAP: engineering-style post).
     ats_name = {"greenhouse": "Greenhouse", "ashby": "Ashby", "lever": "Lever", "workable": "Workable", "workday": "Workday", "personio": "Personio", "recruitee": "Recruitee",
-                "teamtailor": "Teamtailor", "smartrecruiters": "SmartRecruiters", "jazzhr": "JazzHR", "breezy": "Breezy", "bamboohr": "BambooHR", "paylocity": "Paylocity", "pinpoint": "Pinpoint", "gem": "Gem", "trakstar": "Trakstar", "rippling": "Rippling", "icims": "iCIMS"}       # every system collect.py reads; the table shows those with open jobs today
+                "teamtailor": "Teamtailor", "smartrecruiters": "SmartRecruiters", "jazzhr": "JazzHR", "breezy": "Breezy", "bamboohr": "BambooHR", "paylocity": "Paylocity", "pinpoint": "Pinpoint", "gem": "Gem", "trakstar": "Trakstar", "rippling": "Rippling", "icims": "iCIMS",
+                "usajobs": "USAJOBS (US federal jobs)", "tg": "Public Telegram job channels (not checked with the employer)"}       # every source collect.py reads; the table shows those with open jobs today, so it adds up to the total
     ats_jobs, ats_cos = Counter(), defaultdict(set)
     for j_ in active:
         k_ = str(j_.get("id", "")).split("-")[0]
@@ -11368,14 +11407,16 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
             ats_cos[k_].add(j_["company"])
     ats_tab = "".join(f"<tr><td>{ats_name[k_]}</td><td>{ats_cos[k_].__len__():,}</td><td>{v_:,}</td></tr>" for k_, v_ in ats_jobs.most_common())
     n_closed_all = len(archived)
-    guide("how-we-check-jobs-every-hour", f"How we check {n:,} job postings every hour",
-          f"How the hourly check works: where postings are read, how a closed job is told from an unreadable feed, and what the figures cover. Counted from {n:,} open jobs at {m:,} companies.", "Reading postings",
-          f"Every open job on this site is read from the employer’s own hiring system, {m:,} companies in all, " + (f"{m_hourly:,} of them every hour and the rest every four hours." if ROTATING else
-                                                                                    "each of them read by our server around the clock, about once an hour; the lists and counts are rebuilt from the full record several times a day.") +
-          f" This page describes the check step by step, so you can judge how far to trust what the lists say.",
+    # the address keeps its old words (links point to it); the title and the text say what is measured (teardown, 26 Nov 2026)
+    guide("how-we-check-jobs-every-hour", f"How we check {n:,} job postings, around the clock",
+          f"How the check works: where postings are read, how a closed job is told from an unreadable feed, and what the figures cover. {CHECK_LINE[0]}.", "Reading postings",
+          f"{SOURCE_LINE[0]}: {n:,} open jobs at {m:,} companies. Our server reads the companies’ lists in turn, around the clock; {CHECK_LINE[0]}. "
+          "The lists and counts are rebuilt from the full record several times a day. This page describes the check step by step, so you can judge how far to trust what the lists say.",
           '<p class="plain"><b>In plain words:</b> companies publish their open jobs in a hiring system, a program that holds every opening and its application form. '
-          "We read what those systems publish, compare it with what we saw the last time and update the lists. Nothing is typed in by hand and nothing is copied from another job site.</p>"
-          "<h2>Step 1: read the employer’s own list</h2><p>" + (["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"][len(ats_jobs)] if len(ats_jobs) <= 10 else f"{len(ats_jobs)}") + " hiring system" + ("" if len(ats_jobs) == 1 else "s") + " cover" + ("s" if len(ats_jobs) == 1 else "") + " the companies here: " + ", ".join(ats_name[k_] for k_, _ in ats_jobs.most_common()) + ". Each publishes a public list of a company’s open jobs, the same list that feeds the “Careers” page of the company.</p>"
+          "We read what those systems publish, compare it with what we saw the last time and update the lists. Nothing is typed in by hand. Each job page says when we last checked it.</p>"
+          "<h2>Step 1: read the employer’s own list</h2><p>" + (["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"][len(sys_)] if len(sys_ := [k_ for k_, _ in ats_jobs.most_common() if k_ not in ("usajobs", "tg")]) <= 10 else f"{len(sys_)}") + " hiring system" + ("" if len(sys_) == 1 else "s") + " cover" + ("s" if len(sys_) == 1 else "") + " the companies here: " + ", ".join(ats_name[k_] for k_ in sys_) + ". Each publishes a public list of a company’s open jobs, the same list that feeds the “Careers” page of the company."
+          + (f" US federal agencies post on USAJOBS, the government’s own job site, which we read the same way ({ats_jobs['usajobs']:,} jobs)." if ats_jobs.get("usajobs") else "")
+          + (f" {ats_jobs['tg']:,} jobs are posts in public Telegram job channels: each is marked “From a Telegram channel” and is not checked with the employer." if ats_jobs.get("tg") else "") + "</p>"
           '<div class="tablewrap"><table class="t4"><thead><tr><th>Hiring system</th><th>Companies</th><th>Open jobs</th></tr></thead><tbody>' + ats_tab + "</tbody></table></div>"
           "<h2>Step 2: compare with the last reading</h2><p>A job that is in the list and was not there before is new, and its first-seen time is saved. A job that was in the list and is now missing is closed, and the closing date is saved. "
           f"Closed jobs keep their pages: {n_closed_all:,} closed postings are on file, {closed_today_h:,} of them closed today.</p>"
@@ -11385,11 +11426,11 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
           "and those closings stay out of the closing statistics.</p>"
           "<h2>Step 4: read the details by fixed rules</h2><p>Pay, level, skills and remote status are read from the posting by written rules, not guessed. A rule can miss a wording, so “pay not listed” here does not prove the employer hides it. "
           f'The rules are listed on the <a href="{P}/methodology/">methodology page</a>.</p>'
-          f"<h2>What the hourly check does not do</h2><p>It does not check that the role is still being filled, only that the employer still lists it. It does not cover companies that hire only through a recruiter or on a site we do not read. "
+          f"<h2>What the check does not do</h2><p>It does not check that the role is still being filled, only that the employer still lists it. It does not cover companies that hire only through a recruiter or on a site we do not read. "
           f'Of the open postings, {long_all:,} have been listed for {LONG_OPEN} days or more and carry a mark for it; the <a href="{P}/guides/is-this-job-still-open/">guide to old postings</a> says what to do about them.</p>'
           f'<p>The last run, its length and the companies whose lists failed are on the <a href="{P}/status/">data status page</a>. '
           f'How other job search engines that read company career pages describe their own checks: <a href="{P}/job-search-engines/">the comparison, from their own pages</a>.</p>',
-          '<span class="ln"><b>Read from the employer</b> · every hour</span>' + skel,
+          '<span class="ln"><b>Read from the employer</b> · around the clock</span>' + skel,
           (("job-search-engines/", "Job search engines that read career pages"), ("status/", "Is the data fresh?"), ("methodology/", "Methodology"), ("guides/is-this-job-still-open/", "Is this job still open?")))
     guide("how-to-read-a-job-posting", "How to read a job posting: what each part tells you",
           "The six parts of a job posting and what to look for in each: the title, the place, the pay, what you must have, what is nice to have, and how to apply.", "Reading postings",
@@ -11631,7 +11672,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                 ("Do I need an account?", "No. Searching, saving jobs, the tracker, the resume builder and every tool work without one. What you save is kept in your browser."),
                 ("How do I apply for a job?", "Open the job and press “Apply on company site”. You apply on the employer’s own page; this site takes no part in it and charges nothing."),
                 ("Why did a job I saved disappear from the lists?", "The employer closed it. Its page stays at the same address, marked as closed, and stays in “My jobs” so your notes are not lost."),
-                ("How fresh are the jobs?", "The employers’ careers pages are read again every hour. Fresh postings show how many minutes or hours ago the employer posted them."),
+                ("How fresh are the jobs?", f"The employers’ careers pages are read again around the clock: {CHECK_LINE[0]}. Each job shows the date the employer posted it and when we last checked it."),
                 ("How can I be told about new jobs?", "On the “For you” page answer the five questions and press “Tell me when new jobs fit”. Your browser will notify you. No email is needed."),
                 ("Can I search by voice or by plain words?", "Yes. Type or say something like “remote design jobs paying over 100 thousand”: the search reads the place, the pay and the level out of it."),
                 ("Where is my data kept, and how do I delete it?", "In this browser only. “My jobs” has a button that erases everything, and another that saves a backup file.")]),
@@ -11714,13 +11755,13 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     lap('Facts for investors and partners: what exists, in numbers co')
     # Facts for investors and partners: what exists, in numbers counted on this build. No forecasts, no revenue claims.
     n_pages_ = len(URLS)
-    inv_facts = [("Open jobs", f"{n:,}"), ("Employers read every hour", f"{m:,}"), ("Pages", f"{n_pages_:,}"), ("Fields and kinds of work", f"{len(fam_rows)} / {len(by_role)}"), ("Free tools", f"{len(TOOLS) + len(tools_pages.EXTRA)}"), ("People on the payroll", "0")]
+    inv_facts = [("Open jobs", f"{n:,}"), ("Employers read", f"{m:,}"), ("Pages", f"{n_pages_:,}"), ("Fields and kinds of work", f"{len(fam_rows)} / {len(by_role)}"), ("Free tools", f"{len(TOOLS) + len(tools_pages.EXTRA)}"), ("People on the payroll", "0")]
     page("investors/", f"For Investors and Partners: the facts | {SITE}",
          f"{SITE} in numbers counted today: {n:,} open jobs from {m:,} employers, {n_pages_:,} pages, how it is built, how it will earn and what stage it is at.",
          # Sections review, batch 5: the same words and figures; the first screen is one framed panel with the six facts as the
          # row of numbers every page uses, the pictures and the two lists under section headers.
          khero(crumbs(("For investors and partners", "")), "For investors and partners", 'For investors and partners: <span class="hl">the facts</span>',
-               'A job site that reads employers’ own hiring systems every hour, shows only what is still open and runs without staff. The numbers below are counted on this page’s build, not written by hand.',
+               'A job site that reads employers’ own hiring systems around the clock, shows only what is still open and runs without staff. The numbers below are counted on this page’s build, not written by hand.',
                after=nums([(e(v_), e(k_)) for k_, v_ in inv_facts]))
          + section("The job market [[today]]", market_pics, ("insights/", "All rankings and charts"), label="The data")
          + section(f"How {SITE} [[earns]]", '<dl class="qa"><div><dt>Job seekers</dt><dd>Plus: one payment for one, three or twelve months for an AI resume writer, letters, interview preparation and alerts. Jobs and applying stay free.</dd></div>'
@@ -11736,7 +11777,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     stats_file = ROOT / "data" / "stats.json"
     ST = json.loads(stats_file.read_text()) if stats_file.exists() else {}
     if ST.get("date") != TODAY: ST = {}
-    rechecked = sum(1 for j in active if j.get("last_seen") == TODAY)
+    rechecked = FACTS["checked_24h"]             # read again on the employer's list in the last 24 hours (FACTS)
     lap('"posted today" uses the employer\'s own date: the day we firs')
     # "posted today" uses the employer's own date: the day we first saw a job says nothing on the day a company is added
     new_today, closed_today = sum(1 for j in active if (j["posted"] or "")[:10] == TODAY), sum(1 for j in archived if j.get("closed") == TODAY)
@@ -11776,25 +11817,25 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                                  'employer or hiring system was added, so it is not the same as hiring; “Posted” is the date the employer gives. A job counts as open '
                                  'at the end of a day when we had read it by then and it had not closed.</p>', label="Journal", sid="journal")
     page("status/", f"Data Status — how fresh the job listings are today | {SITE}",
-         f"The employers’ career pages are read every hour. What the latest update of {SITE} did: feeds read, roles re-checked, new and closed jobs today.",
+         f"{CHECK_LINE[0]}. What the latest update of {SITE} did: feeds read, roles re-checked, jobs posted and closed today.",
          # Sections review, batch 5: the day's figures stand right under the opening lines (they were under a paragraph of ten
          # lines about the schedule); the schedule follows them.
          crumbs(("Data status", "")) + "<h1>Data status: how fresh the listings are today</h1>"
          '<p class="lead">Every job board says it is updated daily. This page shows what our last update actually did: how many roles were re-checked, how many were added and how many closed.</p>'
          '<p class="plain"><b>In plain words:</b> when we last checked the jobs, and how many were added and closed that day, so you can see for yourself that the list is fresh.</p>'
-         + nums([(fdate(TODAY), "last update" + (", " + e(ST["time"]) if ST else ""))] + feeds + [(pctf(rechecked, n), "of open roles re-checked today"), (f"+{new_today:,}", "posted today"),
+         + nums([(fdate(TODAY), "last update" + (", " + e(ST["time"]) if ST else ""))] + feeds + [(pctf(rechecked, n), "of open jobs re-checked in the last 24 hours"), (f"+{new_today:,}", "posted today (the employer’s date)"),
                  (f"−{closed_today:,}", "closed today")], src=False) +
          # the schedule as it is set in .github/workflows/update.yml; change the two together
-         '<p class="st-sched"><b>Schedule:</b> a program on our own server reads every employer’s careers page around the clock, about once an hour, and the pages that changed '
-         'in the last day every 10 minutes: a new job is usually on the site within the hour and a closed one is marked closed. When that program falls behind or stops, the '
+         '<p class="st-sched"><b>Schedule:</b> a program on our own server reads the employers’ careers pages in turn, around the clock, and the pages that changed '
+         'in the last day more often; the figure above is what it and the rebuilds really re-checked in the last 24 hours. When that program falls behind or stops, the '
          'rebuilds below still read every board, the busiest every time and the others every few rebuilds, so a change can then take a day or two to show. The lists and the counts on the other pages are '
          'rebuilt from the full record several times a day: a rebuild is started at 17 and 47 minutes past each hour (UTC) and takes two to three hours; GitHub, which runs it, '
          'skips or delays many of the starts, so the time of the last rebuild above shows when it really happened. The “Last checked” date on a job page is the last day the '
          'job was found on the employer’s list, by the server or by a rebuild; a board that has not answered keeps the day of its last good reading.</p>'
          + failed_html + journal_html
          + section("How old the [[open listings]] are", ttable(["Measure", "Value"], [
-             trow(["Open roles", f"{n:,}"]), trow(["Posted in the last 7 days", f"{sum(a <= 7 for a in ages):,} ({pctf(sum(a <= 7 for a in ages), n)})"]),
-             trow(["Posted in the last 30 days", f"{sum(a <= 30 for a in ages):,} ({pctf(sum(a <= 30 for a in ages), n)})"]),
+             trow(["Open roles", f"{n:,}"]), trow(["Posted in the last 7 days", f"{WEEKNEW:,} ({pctf(WEEKNEW, n)})"]),            # the employer's date, as everywhere (FACTS["posted_7d"])
+             trow(["Posted in the last 30 days", f"{(m30_ := sum(1 for j in active if (j['posted'] or '')[:10] >= (datetime.date.today() - datetime.timedelta(days=30)).isoformat())):,} ({pctf(m30_, n)})"]),
              trow([f'Open {LONG_OPEN} days or more (<a href="{P}/insights/long-open-roles/">by company</a>)', f"{long_all:,} ({pctf(long_all, n)})"]),
              trow(["Median days since posting", f"{ages[len(ages) // 2] if ages else 0}"])])
              + '<p class="note">The posting date is the one the employer’s hiring system reports. We do not reset it when we re-check a job.</p>', label="Age")
@@ -11857,7 +11898,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          crumbs(("Hiring reports", "")) + "<h1>Hiring reports, month by month</h1>"
          '<p class="lead">One page per month, with the jobs, the pay, the skills and the employers of that month. A month’s page stops changing when the month ends, '
          'so a figure you quote from it stays where you found it. Free to quote with a link.</p>'
-         + (lambda R_, k_: (f'<a class="rep-now" href="{P}/reports/{k_}/"><span class="rep-h"><b>{mlabel(k_)}</b><span>{"so far, updated every hour" if k_ == TODAY[:7] else "final"}</span></span>'
+         + (lambda R_, k_: (f'<a class="rep-now" href="{P}/reports/{k_}/"><span class="rep-h"><b>{mlabel(k_)}</b><span>{"so far, updated several times a day" if k_ == TODAY[:7] else "final"}</span></span>'
                            '<span class="stats3 st4">'
                            f'<span class="st"><span class="st-l">Open jobs</span><b class="st-v">{R_["open"]:,}</b><span class="st-s">at {R_["companies"]:,} companies</span></span>'
                            f'<span class="st"><span class="st-l">Remote</span><b class="st-v">{round(100 * R_["remote"] / max(1, R_["open"]))}%</b><span class="st-s">{R_["remote"]:,} jobs</span></span>'
@@ -11870,7 +11911,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
             '<p class="note">Reports start in November 2026. Each new month gets its own page on the 1st.</p>')
          + section("Studies and tools from [[the same data]]", '<div class="tgrid rep-more">'
                    + "".join(f'<a class="tcard" href="{P}/{u}"><span class="tbody"><b>{e(t_)}</b><span>{e(d_)}</span><i><u>{e(go_)}</u></i></span></a>' for u, t_, d_, go_ in (
-                       ("how-long-job-postings-stay-open/", "How long job postings stay open", "Closings seen every hour, open jobs by age, entry-level jobs and the map.", "Read the study"),
+                       ("how-long-job-postings-stay-open/", "How long job postings stay open", "Closings as we see them, open jobs by age, entry-level jobs and the map.", "Read the study"),
                        ("salaries/explorer/", "Salary explorer", "Pay by role, place, skill and level, with the bands and the counts behind them.", "Open the explorer"),
                        ("jobs-that-pay/", "Jobs by hourly pay", "Open jobs from $20 to $100 an hour or more, with each rate a week, a month and a year.", "See the rates"),
                        ("insights/", "Rankings", "Who hires the most, which skills are asked for, where the pay is highest.", "See the rankings")))
@@ -11895,7 +11936,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                   "is not the company’s own site. Every job on this site links to the employer’s own careers page, so you can see where it comes from."),
                  ("Will a real employer ever ask me to pay?", "No. A real employer does not charge for applying, training, equipment, a background check or a visa. A request for money at any stage of hiring is the clearest sign of a scam."),
                  ("Is it safe to do a take-home test?", "Usually, if it comes through the company’s own hiring process. Do not run code or open files from someone you cannot tie to the company’s official site, and never on a machine that holds your wallets, keys or work credentials."),
-                 (f"Does {SITE} check employers?", f"Every listing on {SITE} is read from the employer’s own hiring system and links to that posting, and it is re-checked every hour. {NO_ANON}. We cannot vouch for what happens after you leave the site, so the checks on this page still apply."),
+                 (f"Does {SITE} check employers?", f"{SOURCE_LINE[0]}. Each listing links to the original posting, and the server reads the lists again around the clock: {CHECK_LINE[0]}. {NO_ANON}. We cannot vouch for what happens after you leave the site, so the checks on this page still apply."),
                  ("What if the recruiter wants to continue in a messenger?", "Ask to continue by email from the company’s domain or through its hiring system. A recruiter who refuses, or whose address does not match the company’s site, is not acting for that company.")]
     safety_faq, safety_ld = qa_block(safety_qa)
     page("safety/", f"How to Spot a Fake Job Offer: Red Flags and Checks | {SITE}",
@@ -11926,13 +11967,13 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                    "<li><b>Forwarding parcels or money.</b> “Receive packages at home and send them on” and “process payments through your account” are how stolen goods and money are moved. The person holding them is the one the police find.</li>"
                    "<li><b>The interview that needs you to install something.</b> A “meeting app”, a “coding test” repository or a script to “fix your microphone” that carries a program stealing passwords and crypto wallets. "
                    "Real companies interview in ordinary video-call tools. Open any test project only on a machine with no wallets and no saved passwords; in an editor such as VS Code keep Restricted Mode on and look for tasks that start by themselves.</li></ol>")
-         + section("What this site checks, and what it cannot", "<p><b>Checked every hour:</b> that each job still exists on the employer’s own hiring system, where it came from, and when it was posted. "
+         + section("What this site checks, and what it cannot", f"<p><b>Checked again and again:</b> that each job still exists on the employer’s own hiring system, where it came from, and when it was posted; {CHECK_LINE[0]}. "
                    "The address the Apply button opens is written under the button on every job page, so you can see where you are going before you click.</p>"
                    "<p><b>Not checked:</b> what happens after you leave this site, how an employer treats applicants, and whether a company can pay. "
                    + (f"<b>How we contact people:</b> we do not. Nobody from {e(SITE)} will ever write to you first, offer you a job, or ask for money, documents or wallet access. Our only contacts are {contact}, and {mail_a("abuse")} for reports of scam jobs and fake recruiters.</p>" if contact else
                       f"<b>How we contact people:</b> we do not. Nobody from {e(SITE)} will ever write to you first, offer you a job, or ask for money, documents or wallet access.</p>")
                    + "<p><b>Something looks wrong?</b> Every job page has a “Report a problem with this listing” link. A report about money, an install request or a move to a chat app is looked at first.</p>")
-         + section(f"What does {SITE} do to keep fake jobs out?", f"<p>Every listing here is read from the employer’s own hiring system (Greenhouse, Lever, Ashby, Workable, Workday and others), links straight to that posting and is checked again every hour; "
+         + section(f"What does {SITE} do to keep fake jobs out?", f"<p>Every listing here is read from the employer’s own hiring system (Greenhouse, Lever, Ashby, Workable, Workday and others) or, for US federal jobs, from USAJOBS, and links straight to that posting; a few are posts in public Telegram job channels, marked as such. {CHECK_LINE[0]}; "
                    f"a role that disappears from the employer’s page is marked closed at the next reading, usually within hours. Each job page names its source and the date of the last check. {NO_ANON}, "
                    f'and we never ask you for money, documents or an account. Details: <a href="{P}/methodology/">how listings are collected</a> and <a href="{P}/status/">today’s data status</a>.</p>')
          + section("What should I do if I already sent money or data?", "<p>Act the same day. Call your bank or card issuer and ask to stop or dispute the payment. Change the passwords of any account you shared, starting with email. "
@@ -12075,7 +12116,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     page("terms/", f"Terms of use | {SITE}", f"Terms of use for {SITE}: what the site is, how accurate listings are, where you apply, how descriptions are used and how to remove a listing.",
          crumbs(("Terms", "")) + "<h1>Terms of use</h1>"
          "<h2 class='h2s'>What this site is</h2><p>A search service for job postings published by companies on their own careers pages. We are not the employer and not a recruitment agency, and we take no part in hiring decisions.</p>"
-         "<h2 class='h2s'>Accuracy</h2><p>Listings are collected automatically every hour. A job may change or close between updates, and details such as salary, perks and location are read from the posting text. Always check the employer's own page before you rely on them.</p>"
+         "<h2 class='h2s'>Accuracy</h2><p>Listings are collected automatically, around the clock. A job may change or close between updates, and details such as salary, perks and location are read from the posting text. Always check the employer's own page before you rely on them.</p>"
          "<h2 class='h2s'>Applying</h2><p>Applications are made on the employer's site. Viewing jobs and applying is free.</p>"
          + ("<h2 class='h2s'>Listings from Telegram channels</h2><p>Some listings are read from public Telegram job channels. Each one names its channel, "
             "links to the original post and shows only the facts of the job and a few lines of the post. They are not checked with the employer. "
@@ -12094,7 +12135,9 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
              "<h2 class='h2s'>Company pages</h2><p>Companies whose jobs we read from their own hiring systems can claim their page here with an account tied to the company’s domain. "
              "A claim we cannot confirm from our records is checked by a person. A claimed page shows the company how many people viewed its jobs here and clicked “Apply”, and lets it post jobs "
              "its hiring system does not list. We may withdraw a claim that turns out to be wrong.</p>"
-             "<h2 class='h2s'>Payments</h2><p>Nothing is sold yet. The terms of paid placements will be published here before anything can be bought.</p>") if CFG["api_url"] else "")
+             # the same fact as /pricing/ (teardown, 26 Nov 2026: "nothing is sold" here while that page listed prices; both were true, neither said so)
+             f"<h2 class='h2s'>Payments</h2><p>The prices of boosts and Plus are on the <a href=\"{P}/pricing/\">pricing page</a>, but payments are not switched on yet, so nothing can be bought "
+             "or charged. The terms of paid placements will be published here before anything can be bought.</p>") if CFG["api_url"] else "")
          + "<h2 class='h2s'>Names and trademarks</h2><p>Company names belong to their owners and are used only to identify who is hiring. A listing here does not mean the company endorses this site.</p>"
          "<h2 class='h2s'>Salary and hiring data</h2><p>Figures on the salary, trends and insights pages are calculated from advertised ranges. They are estimates for information, not an offer or a guarantee.</p>"
          "<h2 class='h2s'>Job descriptions</h2><p>Descriptions are the employers’ own text, read from the hiring feeds they publish for display on other sites. They are shown unchanged, with the employer named and a link to the original posting.</p>"
@@ -12718,10 +12761,10 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                    "<div><dt>Who reads the board</dt><dd>A general board has the most readers and the most applications to sort. A board for remote, startup, tech or crypto jobs has fewer readers, all looking for that kind of work.</dd></div>"
                    "<div><dt>One payment or a renewal</dt><dd>Some sites sell a post for 30 days and stop; some renew it every 30 days until you turn that off. The column “How you pay” says which, where the page said so.</dd></div>"
                    "<div><dt>What the free post does not include</dt><dd>A free post usually sits below the paid ones, runs for a shorter time, or has a cap on applications. The limits are in the column “Free posting”.</dd></div>"
-                   f'<div><dt>Your own careers page first</dt><dd>A posting on your own careers page costs nothing and is what job search engines read. {e(SITE)} reads employers’ careers pages every hour and lists the jobs free.</dd></div></dl>',
+                   f'<div><dt>Your own careers page first</dt><dd>A posting on your own careers page costs nothing and is what job search engines read. {e(SITE)} reads employers’ careers pages around the clock and lists the jobs free.</dd></div></dl>',
                    sid="choose", label="Before you pay")
          + section("Questions about [[posting a job for free]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in js_qa) + "</dl>", label="Questions")
-         + kcta("This site", "Post a job here, [[free for 30 days]]", f'{n:,} open jobs from {m:,} employers are listed here, read from their own careers pages every hour. A standard listing costs nothing; a boost keeps a job above the free ones.',
+         + kcta("This site", "Post a job here, [[free for 30 days]]", f'{n:,} open jobs from {m:,} employers are listed here, read from their own careers pages around the clock. A standard listing costs nothing; a boost keeps a job above the free ones.',
                 go("post-a-job/", "Post a job") + f'<a href="{P}/pricing/#employers">Prices for employers</a>')
          + section("Sources for the job posting sites compared", js_src + f'<p class="note">Read on {js_when}. Plans and prices change: if a fact here is out of date, tell us from the <a href="{P}/about/">About page</a> and it is corrected.</p>', sid="sources", label="Sources"),
          head=js_ld, cls="hub sp frb")
@@ -12738,7 +12781,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     ce_us = {"name": SITE, "url": FULL + "/", "kind": "site",
              "reads": f"The public job lists of {m:,} companies on {ce_sys_txt}",
              "jobs": f"{n:,} on {fdate(TODAY)}",
-             "refresh": (f"{m_hourly:,} companies every hour, the rest every four hours" if ROTATING else "Every hour"),
+             "refresh": "Around the clock: " + CHECK_LINE[0],
              "closed": "Marked closed and taken off the lists; its page stays at the same address",
              "price": "Free; no account needed",
              "apply": "The company’s own page",
@@ -12972,7 +13015,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     # Partners
     partner_qa = [("Is it free to show jobs from this site on my website?", "Yes. The widget, the RSS feeds and the API are free, and nobody has to sign up to use them."),
                   ("Do I need to write code?", "No. You choose what to show in the builder and copy a short piece of code into any place on your site that accepts HTML. For Notion and similar tools that block scripts, the builder offers a different kind of code."),
-                  ("How often does the list change?", "The jobs behind the widget are re-read every hour, so a job that closed is gone from your list within the hour and a new one appears as soon as it is read."),
+                  ("How often does the list change?", "The jobs behind the widget are re-read around the clock, so a job that closed leaves your list once we see it gone and a new one appears as soon as it is read."),
                   ("Do the widget and the feeds link to this site?", f"Yes. The list ends with a link to the full list on {SITE}. Every job opens the employer’s own page, where the person applies."),
                   ("Can I show my own company’s jobs instead?", "Yes, if your company uses Greenhouse, Lever, Ashby, Recruitee, SmartRecruiters or Teamtailor. The widget reads your board from that system, so nobody types jobs in twice.")]
     partner_faq, partner_ld = qa_block(partner_qa)
@@ -12984,7 +13027,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          khero(crumbs(("Partners", "")), "Partners", "Partner with us",
                'If your readers, students or members ask who is hiring, you can show them a live list from this site instead of keeping one by hand. It is free. Here is what we can set up.',
                f'<p class="kact">{go("widgets/", "Build a free job widget")}<a href="#contact">Get in touch</a></p>',
-               after=nums([(f"{n:,}", "open jobs to show, from employers’ own pages"), (f"{m:,}", "employers read every hour"), (f"{n_feeds}", f'<a href="{P}/feeds/">feeds for channels and chats</a>'), ("Free", "the widget, the feeds and the API")])
+               after=nums([(f"{n:,}", "open jobs to show, from employers’ own pages"), (f"{m:,}", "employers read around the clock"), (f"{n_feeds}", f'<a href="{P}/feeds/">feeds for channels and chats</a>'), ("Free", "the widget, the feeds and the API")])
                + '<p class="plain"><b>In plain words:</b> a widget is a small box with a list of jobs that sits on your own web page. A feed is an address that a chat or an app reads to post each new job by itself, and the API is the same list in a form that programmers can use. All three are free, and you do not need to write any code to use the widget.</p>')
          + section("What partners can [[set up]] with us", krows([
              ("Communities and newsletters", "A live jobs widget, feed or weekly list for your niche",
@@ -13053,7 +13096,7 @@ rows.innerHTML=s.map(function(j,i){{return'<div class="r" style="animation-delay
 function tick(){{document.getElementById('clock').textContent=new Date().toLocaleTimeString([],{{hour:'2-digit',minute:'2-digit'}})}}
 var asked=q.get('skill')||q.get('company')||q.get('location')||'',timer;
 function note(html){{rows.innerHTML='<p class="n">'+html+'</p>'}}
-function show(d,miss){{jobs=d.jobs;page=0;document.getElementById('what').textContent=miss?'Latest roles':d.name;document.getElementById('count').innerHTML=(miss?'<span class="m">No board for “'+esc(asked.slice(0,40))+'” · showing the latest</span> · ':'')+Number(d.total).toLocaleString('en-US')+' open roles · updated every hour';draw();play(true)}}
+function show(d,miss){{jobs=d.jobs;page=0;document.getElementById('what').textContent=miss?'Latest roles':d.name;document.getElementById('count').innerHTML=(miss?'<span class="m">No board for “'+esc(asked.slice(0,40))+'” · showing the latest</span> · ':'')+Number(d.total).toLocaleString('en-US')+' open roles · updated around the clock';draw();play(true)}}
 function load(p,miss){{return fetch('{P}/api/v1/'+p+'.json').then(function(r){{if(!r.ok)throw 0;return r.json()}}).then(function(d){{if(!d.jobs||!d.jobs.length)throw 0;show(d,miss)}})}}
 load(path.toLowerCase().replace(/[^a-z0-9/_.+-]/gi,'-'),false).catch(function(){{if(path==='latest')throw 0;return load('latest',true)}}).catch(function(){{note('The board could not load right now. <a href="{P}/jobs/">Open the job list</a>')}});
 tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},3600000)}})();</script></body></html>""", sitemap=False)
@@ -13067,7 +13110,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     wsize = round(len((ROOT / "assets" / "widget.js").read_bytes()) / 1024)
     w_faq = [("Is the job widget free?", "Yes. There is no plan, no account and no limit on page views. The snippet keeps a small link back to this site, which is how the widget stays free."),
              ("Do I need to sign up or get a key?", "No. Choose what to show in the builder on this page, copy the code and paste it into your site."),
-             ("How often do the jobs update?", f"Lists from our index are rebuilt every hour from the career pages of {m:,} companies, each read {EVERY}, so closed roles drop out by themselves. A list of your own company’s jobs is read live from your hiring system every time the page opens."),
+             ("How often do the jobs update?", f"Lists from our index are rebuilt several times a day from the career pages of {m:,} companies, each read {EVERY}, so closed roles drop out by themselves. A list of your own company’s jobs is read live from your hiring system every time the page opens."),
              ("Can I show only my own company’s jobs?", "Yes. If you post jobs through Greenhouse, Lever, Ashby, Recruitee, SmartRecruiters or Teamtailor, pick that system in the builder and type the name of your board. The widget reads your public board directly, with no account and nothing to keep in sync by hand."),
              ("Does it work with WordPress, Webflow, Wix, Squarespace, Shopify and Framer?", "Yes. Anything that lets you paste HTML works with the script version. Builders that strip scripts, such as Notion, take the iframe version. The table on this page says where to paste the code on each platform."),
              ("Will the widget slow my page down?", f"The script is about {wsize} KB, loads asynchronously and draws inside its own container, so it does not block your page and your styles do not leak into it or out of it."),
@@ -13224,7 +13267,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          ["In the builder choose “iframe” as the embed type.", "Copy only the address inside <code>src=\"…\"</code> from the code.", "In Notion type <b>/embed</b>, paste the address and press Embed link. Drag the corner to resize."],
          "Notion removes scripts, so it takes the address of the widget’s own page, not the snippet.",
          [("Why does pasting the snippet into Notion not work?", "Notion does not run scripts or raw HTML. Use an Embed block with the address from the iframe version of the widget."),
-          ("Does the list in Notion stay up to date?", "Yes. The embed loads the widget’s page each time the Notion page opens, and that page is rebuilt every hour.")]),
+          ("Does the list in Notion stay up to date?", "Yes. The embed loads the widget’s page each time the Notion page opens, and that page is rebuilt several times a day.")]),
         ("ghost", "Ghost", "script",
          ["In the editor press the plus sign on an empty line and choose the <b>HTML</b> card.", "Paste the code below.", "Preview the post, then publish or update."],
          "The HTML card also works in newsletters sent from Ghost, but email clients do not run scripts: readers of the email see the link, readers on the site see the list.",
@@ -13264,7 +13307,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     USES = [
         ("remote-jobs", "Remote jobs widget", "Remote jobs widget for your site", "remote", snip_remote, snip_script,
          f"A box on your page that lists remote jobs and keeps itself up to date. Today it holds {len(remote):,} remote jobs, each from a company’s own careers page.",
-         'In plain words: you paste two lines of code once, and your page then shows a list of remote jobs. You do not edit the list. It changes by itself every hour, and a closed job disappears.',
+         'In plain words: you paste two lines of code once, and your page then shows a list of remote jobs. You do not edit the list. It changes by itself several times a day, and a closed job disappears.',
          "Who uses it", ["A blog or newsletter about working from home, with a list of real openings under each article.", "A community or Slack group page, a coding school or a bootcamp that wants its members to see where people are hiring.",
                          "A personal site: a “jobs I would apply for” corner that never needs editing."],
          [("Which jobs does it show?", f"The newest remote jobs from our index, which holds {len(remote):,} of them today. Every job links to its page here, which shows the salary if the employer gave one, the countries it is open to and a button to the employer’s own application page."),
@@ -13359,8 +13402,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     # directly (Arbeitnow); People also ask "Is there any free API to use?". Ours is the same kind, so the page says so in those words.
     api_qa = [("Is there a free job listings API?", f"Yes: this one is free, needs no API key and no sign-up, and serves {n:,} open jobs as JSON, by skill, category, place and company. "
                "It is fine for personal and commercial projects with a link back."),
-              ("Where do the jobs in this API come from?", f"From the careers pages of {m:,} employers, read every hour through their own hiring systems (Greenhouse, Lever, Ashby and others), "
-               "not from other job boards, so every job links to the employer’s own page."),
+              ("Where do the jobs in this API come from?", f"From the careers pages of {m:,} employers, read around the clock through their own hiring systems (Greenhouse, Lever, Ashby and others), "
+               "and US federal jobs from USAJOBS, so every job links to the employer’s own posting."),
               ("Do I need an API key?", "No. Fetch the JSON address you need; CORS is open, so it works from a web page too. Please fetch each feed at most once an hour: it changes hourly."),
               ("Can I show these jobs on my own site?", "Yes, with a link to the job page or to this site wherever you show them. The ready-made widget does it for you without code.")]
     # The hosted MCP connector (/mcp, server/README.md) had no page a person or a directory could link to: only llms.txt named it
@@ -13385,11 +13428,11 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     api_ld = api_ld + ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in api_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
     page("api/", f"Free Job Listings API: JSON, No Key, From Employers | {SITE}",
-         "A free JSON API and MCP connector of open jobs by skill, category, location and company. No API key, CORS enabled, updated hourly.",
+         "A free JSON API and MCP connector of open jobs by skill, category, location and company. No API key, CORS enabled, updated several times a day.",
          # Sections review, batch 5: a framed first screen (what it is, the address that lists every feed as the one action, the
          # page's figures), the plain-words line under it for those who came here by mistake.
          khero(crumbs(("API", "")), "For developers", "Free jobs API",
-               'Collecting jobs yourself means hundreds of career pages and a scraper that breaks every week. Here is the finished result as plain JSON you can fetch from anywhere: a bot, a newsletter script, a side project. No key, no sign-up, CORS enabled, refreshed every hour.',
+               'Collecting jobs yourself means hundreds of career pages and a scraper that breaks every week. Here is the finished result as plain JSON you can fetch from anywhere: a bot, a newsletter script, a side project. No key, no sign-up, CORS enabled, refreshed several times a day.',
                f'<p class="kact">{go("api/v1/index.json", "Open the list of every feed")}<a href="{P}/api/openapi.json">OpenAPI description</a><a href="#mcp">MCP connector</a></p>',
                after=nums([(f"{n:,}", "open jobs served as JSON"), (f"{m:,}", "employers whose careers pages they come from"), ("Free", "for personal and commercial projects, with a link back")])
                + f'<p class="plain"><b>In plain words:</b> this page is for programmers. An API is a way for a program to read our list of jobs by itself. To show jobs on a website without programming, use the <a href="{P}/widgets/">job widget</a>. To look for a job, use the <a href="{P}/jobs/">search</a>.</p>')
@@ -13962,7 +14005,9 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                 ("What if a boost brings no one?", "If a Standard or Premium boost that was paid for gets fewer than 10 clicks on Apply in its first 14 days, it runs for 30 more days at no cost, by itself."),
                 *([("I have a promo code. Where do I enter it?", "In your employer account, under Post a job or Promote: type the code and press Apply, and the lower price shows before you pay. "
                     "A code works once per account, on a payment in crypto (not with credits).")] if app_url else []),
-                ("Can I buy today?", (f"Posting a standard listing is open in the employer account, and paid products are bought from the same account. {PAY_WAIT} " if app_url else
+                ("Can I buy today?", ((f"Posting a standard listing is open in the employer account, and paid products are bought from the same account. {PAY_WAIT} " if CFG.get("payments_live") else
+                                       "Not yet: payments are not switched on, so nothing can be bought or charged. Posting a standard listing is free and open now in the employer account; "
+                                       "the prices above are what the paid products will cost, and this page will say when they can be bought. ") if app_url else
                                       "Not yet. Payments are being connected; until then everything in the Free and Standard columns works as it does today. ")
                  + "Plus and the passes open when the AI service and payments are on.")]
     seek_trust = trust(["One payment, nothing renews", "No card kept on file", "Paid in crypto or credits", "Jobs, alerts and the resume builder stay free"])
@@ -14090,7 +14135,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         if not et and "hiring-immediately/" in KIND_N:
             qa.append(("How do I find jobs hiring immediately near me?", f"{KIND_N['hiring-immediately/'][1]:,} open postings say in their own words that they hire immediately or want someone to start at once; "
                        "they are on the list of jobs hiring immediately, newest first. In the search, put your city in “where” and sort by date: the newest postings are the ones still filling."))
-        qa.append(("How fresh are the jobs?", "Every job is read from the employer’s own careers page every hour. When the employer closes it, it leaves the list within the hour."))
+        qa.append(("How fresh are the jobs?", f"Every job is read from the employer’s own careers page, around the clock: {CHECK_LINE[0]}. When the employer closes it, it leaves the list at the next check."))
         # the opening paragraph and the search line answer with today's figures: where most are, what they pay or what is open most
         top3 = [rlow(HUB["roles"][r][0]) for r, _ in rc_p[:3]]
         most_ = f"{top3[0]}, {top3[1]} and {top3[2]}" if len(top3) == 3 else ""
@@ -14154,7 +14199,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     map_total = sum(map_n.values())
     map_tiles = "".join(f'<li><a class="tile" href="{P}/{map_url(k)}" data-city="{map_keys[k]}"><span class="n">{fl(geo_cities.CITIES[k][1])}{e(geo_cities.CITIES[k][0])}</span><span class="c">{n_:,}</span></a></li>'
                         for k, n_ in map_n.most_common(60))
-    map_qa = [("Where do the jobs on the map come from?", f"From the careers pages of {len(OPEN_C) if 'OPEN_C' in dir() else len({j['company'] for j in active}):,} employers, read every hour. Each dot is a city named in the postings; its size is the number of open jobs there."),
+    map_qa = [("Where do the jobs on the map come from?", f"From the careers pages of {len(OPEN_C) if 'OPEN_C' in dir() else len({j['company'] for j in active}):,} employers, read around the clock. Each dot is a city named in the postings; its size is the number of open jobs there."),
               ("Why are some jobs not on the map?", f"{len(active) - map_total:,} of the {len(active):,} open jobs name no city: most are remote jobs that only name a country or a region. They are all in the search and on the remote jobs page."),
               ("Can I search the map?", "Yes. Type a job, a skill or a company, for example “python” or “nurse”: the dots are counted again for that word, in your browser, and the map moves to where those jobs are."),
               ("Do I apply on this site?", "No. Every job links to the employer’s own posting, and you apply there. This site never stands between you and the employer.")]
@@ -14162,7 +14207,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in map_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>"
         '<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">')
     page("map/", f"Jobs Map: {map_total:,} Open Jobs in {len(map_keys)} Cities | {SITE}",
-         f"Jobs map: {map_total:,} open jobs in {len(map_keys)} cities, read from employers’ own careers pages every hour. Search a job or skill to see where it hires.",
+         f"Jobs map: {map_total:,} open jobs in {len(map_keys)} cities, read from employers’ own careers pages around the clock. Search a job or skill to see where it hires.",
          crumbs(("Jobs map", "")) + '<h1>Jobs on a map: <span class="hl">see where they are hiring</span></h1>'
          f'<p class="lead">{map_total:,} open jobs in {len(map_keys)} cities, each read from the employer’s own careers page within the last hour. '
          'Type a job or a skill to count the dots again; click a dot for the newest jobs there.</p>'
@@ -14358,7 +14403,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              f"How long job postings stay open, from hourly checks of {len({j['company'] for j in active}):,} employers’ careers pages: closings, open jobs by age, entry-level jobs, the map.",
              crumbs(("Hiring reports", "reports/"), ("How long postings stay open", "")) + '<h1>How long job postings stay open</h1>'
              f'<p class="lead">{e(lead_s)}</p>'
-             f'<p class="note">Counted from the careers pages of the employers we read every hour; updated {fdate(TODAY)}. Free to quote with a link.</p>'
+             f'<p class="note">Counted from the careers pages of the employers we read; updated {fdate(TODAY)}. Free to quote with a link.</p>'
              '<div class="stats3 st4">'
              + tile_("Median age at closing", f"{med_cl} days", f"measured: {len(age_cl):,} closings")
              + tile_("Open more than 90 days", pc(old90 / max(1, len(active))), f"measured: {old90:,} of {len(active):,} open jobs")
@@ -14624,7 +14669,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              + section(f"After you hand in your {low_}", '<div class="feats">'
                        f'<a class="feat" href="{P}/tools/last-working-day/"><h3>Last working day calculator</h3><p>Count the notice period from the day you hand in the letter.</p></a>'
                        f'<a class="feat" href="{P}/resume/"><h3>Update your resume</h3><p>Add this job while the results are fresh. Free, no account.</p></a>'
-                       f'<a class="feat" href="{P}/jobs/"><h3>Find the next job</h3><p>{len(active):,} open jobs, read from employers’ own pages every hour.</p></a></div>'), head=ld_, cls="kw")
+                       f'<a class="feat" href="{P}/jobs/"><h3>Find the next job</h3><p>{len(active):,} open jobs, read from employers’ own pages around the clock.</p></a></div>'), head=ld_, cls="kw")
     rl_qa = [("How do I write a resignation letter?", "Say that you are resigning, from which position and company, and give your last working day as a date. Add one sentence of thanks and what you will hand over. Keep it short and leave complaints out."),
              ("How much notice should I give?", "What your contract asks for. In the United States two weeks is the custom; elsewhere a month or more is common. Check the contract before you write the date."),
              ("Should I resign in person or in writing?", "Both: tell your manager in a short conversation, then send the letter or email the same day so the date is on record.")]
@@ -14838,9 +14883,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     # directions and draws every logo file; /brand/ is the guide, /brand/directions/ shows all three (not indexed), and the
     # media kit has the files, the colours, the descriptions and today's numbers for press and partners.
     BD = brand.DIRECTIONS
-    n_hourly = len({s_["name"] for f_ in ("sources.json", "sources_tech.json") if (ROOT / f_).exists() for s_ in json.loads((ROOT / f_).read_text())})
-    n_rot = sum(1 for f_ in ("sources_more.json", "sources_ats.json") if (ROOT / f_).exists() for s_ in json.loads((ROOT / f_).read_text()) if not s_.get("hold"))   # collect.ROTATING
-    read_line = (f"{n_hourly:,} employers’ careers pages are read every hour and {n_rot:,} more every four hours" if n_rot else f"{n_hourly:,} employers’ careers pages are read every hour")
+    read_line = f"The careers pages of {m:,} employers are read in turn, around the clock; {CHECK_LINE[0]}"      # FACTS (teardown, 26 Nov 2026)
     bp50 = (f"{SITE} (jobseveryhour.com) is a free job search site built from employers’ own careers pages. It lists {n:,} open jobs at {m:,} companies today. "
             "A job the employer takes down leaves the list, every listing links to the original posting, and nobody needs an account to search or apply.")
     bp100 = (bp50 + f" {read_line}. Each job page shows the pay when the employer states it, how long the job has been open and when it was last checked. "
@@ -14867,8 +14910,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              f'<div><span class="t3">{n:,} open jobs · {money(med_all)} median · 17 past the hour</span><small>Numbers: Public Sans with figures of equal width, so columns line up</small></div>'
              '<div><span class="t4">GET /api/v1/latest.json</span><small>Code only: JetBrains Mono</small></div></div>'
              '<p class="note">All four typefaces are open source (SIL Open Font License) and served from this site.</p>')
-    brand_qa = [("What does the logo mean?", "The name is the logo: “jobs every hour” in lower case, and the o of “jobs” is a clock face, because every "
-                 "job here is read again from the employer’s own careers page every hour. On its own, the clock-o is the mark: the tab icon and the app icon."),
+    brand_qa = [("What does the logo mean?", "The name is the logo: “jobs every hour” in lower case, and the o of “jobs” is a clock face, because the site "
+                 "reads employers’ own careers pages around the clock and shows when each job was last checked. On its own, the clock-o is the mark: the tab icon and the app icon."),
                 ("Why green?", "Green reads as “open”: the job is still open. It is the color the site has used from the start, for the marker under words "
                  "and the line under links, and it stays small: buttons are ink, and green is never a large fill."),
                 ("Can I use the logo?", "Yes, to link to the site or to write about it. Use the files on this page as they are: do not recolour, stretch, outline or "
@@ -14881,7 +14924,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          + f'<div class="bmark"><div class="bm-l"><img src="{P}/brand/{A_}-logo.svg" alt="{e(SITE)} logo" {wh(A_ + "-logo.svg", 56)}></div><div class="bm-d"><img src="{P}/brand/{A_}-logo-dark.svg" alt="{e(SITE)} logo on a dark background" {wh(A_ + "-logo-dark.svg", 56)}></div></div>'
          + section(f"The {SITE} mark", f'<div class="bgrid"><div><img class="bbig" src="{P}/brand/{A_}-mark.svg" alt="The mark" width="120" height="120"></div>'
                    '<div><p>The name is the logo: <b>“jobs every hour”</b> in lower case, and the <b>o of “jobs” is a clock face</b>. It says the one thing the site '
-                   'promises, that a job here was checked within the hour. On its own the clock-o is the mark: the browser tab, the app icon and the avatar; it still reads as a clock at 16 pixels.</p>'
+                   'is about: fresh jobs, read from employers’ own careers pages around the clock, each with the time it was last checked. On its own the clock-o is the mark: the browser tab, the app icon and the avatar; it still reads as a clock at 16 pixels.</p>'
                    '<ul class="rules"><li>Leave clear space around the mark of at least half its height.</li><li>The smallest mark is 16 px; the smallest logo with the name, 120 px wide.</li>'
                    f'<li>On white use the {BD[A_]["name"].lower()} mark; on dark pages the light one; in one color, ink or white.</li>'
                    '<li>Do not recolour, stretch, rotate, outline or animate it, do not set the name in another typeface, and keep it in lower case.</li></ul></div></div>')
@@ -14977,7 +15020,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                    f'<p class="note">More versions and the rules: <a href="{P}/brand/">brand guide</a>.</p>', ("brand/", "Brand guide"), sid="logo", label="Files")
          + section(f"{SITE} brand colors", f'<div class="swatches">{SWATCHES}</div>', label="Hex codes")
          + (section(f"Screenshots of {SITE}", '<div class="shots">' + "".join(f'<a href="{P}/brand/{f_}" download><img src="{P}/brand/{f_}" alt="{e(l_)}" loading="lazy" width="640" height="400"><span>{e(l_)}</span></a>' for f_, l_ in shots)
-                    + "</div>" f'<p class="note">Taken on {fdate(TODAY)} at 1280 × 800. The site changes every hour; open it for a current picture.</p>', label="Pictures") if shots else "")
+                    + "</div>" f'<p class="note">Taken on {fdate(TODAY)} at 1280 × 800. The site changes through the day; open it for a current picture.</p>', label="Pictures") if shots else "")
          + section("Social banners and [[the share picture]]", '<div class="shots">' + "".join(f'<a href="{P}/brand/{f_}" download><img src="{P}/brand/{f_}" alt="{e(l_)}" loading="lazy" {wh(f_, 200)}><span>{e(l_)}</span></a>' for f_, l_ in banners)
                    + f'<a href="{P}/og.jpg" download><img src="{P}/og.jpg" alt="Share picture" loading="lazy" width="600" height="315"><span>Share picture, 1200 × 630</span></a></div>'
                    '<p class="note">The share picture is what social networks show when a page of the site is shared: white paper, the logo, one headline with a tinted marker, '
@@ -15051,18 +15094,18 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
              {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in hb_faq]}, ensure_ascii=False).replace("</", "<\\/") + "</script>", cls="hub sp hbp")
     org_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/",
-              "logo": FULL + "/brand/icon-512.png", "description": "An hourly-updated index of open jobs collected from companies' official careers pages.", "sameAs": ORG_SAME_AS}) + "</script>")
+              "logo": FULL + "/brand/icon-512.png", "description": "An index of open jobs collected from companies' official careers pages, read around the clock.", "sameAs": ORG_SAME_AS}) + "</script>")
     page("about/", f"About {SITE} — who we are and how the site works", f"What {SITE} is, where its {n:,} job listings come from, how often they are checked and what the site does not do.",
          khero(crumbs(("About", "")), "About", f"About {e(SITE)}",
-               f'{e(SITE)} is an index of open jobs. Every hour it reads the public hiring feeds of {N_FEEDS:,} companies, puts their {n:,} open roles into one searchable list and links each one back to the employer.',
+               f'{e(SITE)} is an index of open jobs. It reads the public hiring feeds of {N_FEEDS:,} companies around the clock, puts their {n:,} open roles into one searchable list and links each one back to the employer.',
                f'<p class="kact">{go("jobs/", "Search the jobs")}<a href="{P}/methodology/">How the jobs are collected</a></p>',
                after=nums([(f"{WEEKNEW:,}", "open jobs posted in the last 7 days"), (f"{len(archived):,}", f'closed jobs kept in the <a href="{P}/archive/">archive</a>'),
                            (f"{len(by_role)}", "kinds of work"), ("$0", "cost to job seekers")]))
          + ask_ai_row()          # moved here from the footer of every page (track "one button", 26 Nov 2026)
          + '<p class="sec-label">How the site works</p><div class="about-grid three"><div>'
-         f'<h2 class="h2s">Where {e(SITE)} gets its jobs</h2><p>From the companies\' own careers systems, not from other job boards. Every listing links to the original posting, and you apply there. '
+         f'<h2 class="h2s">Where {e(SITE)} gets its jobs</h2><p>{SOURCE_LINE[0]}. Every listing links to the original posting, and you apply there. '
          f'The full process is on the <a href="{P}/methodology/">methodology page</a>.</p></div>' '<div>'
-         f'<h2 class="h2s">How often {e(SITE)} is updated</h2><p>Our server reads every company’s careers page around the clock, about once an hour, and the lists and counts are rebuilt from the full record several times a day. Each job page shows the last day the job was found on the employer’s page. Closed jobs are not deleted: they move to the <a href="{P}/archive/">archive</a> and are marked as closed.</p></div>' '<div>'
+         f'<h2 class="h2s">How often {e(SITE)} is updated</h2><p>Our server reads the companies’ careers pages in turn, around the clock: {CHECK_LINE[0]}. The lists and counts are rebuilt from the full record several times a day. Each job page shows when the job was last found on the employer’s page. Closed jobs are not deleted: they move to the <a href="{P}/archive/">archive</a> and are marked as closed.</p></div>' '<div>'
          f'<h2 class="h2s">What {e(SITE)} costs job seekers</h2><p>Nothing. Searching, saving jobs, tracking applications, the resume builder and applying are free and need no account. A paid <a href="{P}/plus/">Plus</a> plan with extra tools is planned.</p></div></div>'
          '<p class="sec-label">Who is behind it</p><div class="about-grid two"><div>'
          f'<h2 class="h2s">Who runs {e(SITE)}</h2><p>An independent small team. We are not a recruitment agency and take no part in hiring decisions. Company names and logos belong to their owners and are shown only to identify the employer.</p></div>'
@@ -15082,11 +15125,11 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          crumbs(("Methodology", "")) + f"<h1>How {e(SITE)} collects and checks jobs</h1>"
          f'<p class="plain"><b>In plain words:</b> where the jobs on this site come from, how we know a job is still open, and what each label and number means. Unfamiliar word? See the <a href="{P}/glossary/">glossary</a>.</p>'
          f'<p class="lead">Last updated {fdate(TODAY)}. This page explains where every number and label on the site comes from, so you can judge how far to trust it.</p>'
-         f'<h2 class="h2s">Where do the job listings come from?</h2><p>From the public hiring feeds that companies publish through their applicant tracking systems. We read {N_FEEDS:,} company feeds every hour. We do not copy listings from other job boards and we do not accept anonymous submissions.</p>'
+         f'<h2 class="h2s">Where do the job listings come from?</h2><p>From the public hiring feeds that companies publish through their applicant tracking systems. We read the feeds of {N_FEEDS:,} companies in turn, around the clock: {CHECK_LINE[0]}. US federal jobs come from USAJOBS, the government’s own job site; ' + (f'{FACTS["telegram"]:,} posts come from public Telegram job channels, marked “From a Telegram channel” and not checked with the employer; ' if FACTS["telegram"] else '') + f'we do not copy listings from other job boards and we do not accept anonymous submissions.</p>'
          '<h2 class="h2s">How do you know a job is still open?</h2><p>A job stays listed as open only while it is present in the employer\'s feed. When it disappears from the feed, it is marked as closed at the next reading of that feed, usually within hours and at most a day or two later, and moved to the archive. '
          'If a company\'s feed cannot be read on a given day, its jobs are left unchanged rather than closed by mistake.</p>'
          '<h2 class="h2s">How are salary, skills, perks and remote status detected?</h2><p>Salary is shown only when the employer publishes a range. We read it from the pay field of the employer\'s hiring system or, failing that, from the posting text when a yearly range stands next to a word such as “salary” or “compensation”. '
-         'Hourly and monthly figures are left out, and a salary written in an unusual way can be missed, so “not listed” on this site does not prove the employer hides it. Skills, perks such as visa sponsorship, seniority and employment type are read from the title and text of the posting by fixed rules, not guessed. '
+         'Pay given by the hour, week or month is shown as the employer writes it, and a salary written in an unusual way can be missed, so “not listed” on this site does not prove the employer hides it. Skills, perks such as visa sponsorship, seniority and employment type are read from the title and text of the posting by fixed rules, not guessed. '
          'A perk is listed only when the posting mentions it, and statements such as “we cannot sponsor visas” are excluded. Rules can miss or misread a posting, so confirm the details on the employer\'s page.</p>'
          '<h2 class="h2s">How are salary medians calculated?</h2><p>From open roles that publish a yearly range in US dollars. For each role we take the midpoint of the range; the median is the middle value of those midpoints. '
          'A median is shown for a list or a company only when at least 15 of its roles publish a yearly range. Rankings and comparisons that set one group against another need 30. '
@@ -15100,7 +15143,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          # the editorial policy (perfect-page standard, 26 Nov 2026: E-E-A-T, reachable from the footer). Only what is true of the site today.
          + f'<h2 class="h2s" id="editorial-policy">Editorial policy: who writes the pages of {e(SITE)} and how they are checked</h2>'
            f'<p>The pages are written by the small independent team that runs this site, as the <a href="{P}/about/">About page</a> says. We name no author who does not exist and print no reviews, quotes or customer logos we did not receive.</p>'
-           '<p>Numbers come from the open postings we read every hour, and each page says the date they were counted. A fact that does not come from the postings names its source and the date it was read: '
+           '<p>Numbers come from the open postings we read, and each page says the date they were counted. A fact that does not come from the postings names its source and the date it was read: '
            'the US Bureau of Labor Statistics for job outlook and government pay figures, the US Department of Labor for H-1B filings, each job site’s own pages for the facts in our comparisons.</p>'
            '<p>Resume and CV examples are written to show the form: the people, employers and numbers in them are invented, and each example says so. Cover letter examples leave names and numbers as blanks to fill in. The figures from postings shown beside them are real.</p>'
            '<p>Pages are rebuilt with each update of the data, and every figure carries the date it was counted. A fact that is wrong is corrected or removed once it is reported, and a listing is taken down when the employer asks.</p>'
@@ -15118,11 +15161,11 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                 if "perks/visa-sponsorship/" in URLS else "")
     write("llms.txt", f"""# {SITE}
 
-> {SITE} is an hourly-updated index of {n:,} open jobs at {m:,} companies, collected from the companies' official careers pages. Every listing links to the employer's own posting. Updated {TODAY}.
+> {SITE} is an index of {n:,} open jobs at {m:,} companies, collected from the companies' official careers pages and read around the clock. Every listing links to the employer's own posting. Updated {TODAY}.
 
 ## The facts in short
-- What it is: a free job search engine. It reads the public job lists that companies publish in their hiring systems ({", ".join(ats_name[k_] for k_, _ in ats_jobs.most_common())}). Nothing is copied from another job board.
-- How often: {("the lists of " + f"{m_hourly:,}" + " companies are read every hour and the rest every four hours") if ROTATING else "every list is read every hour"}.
+- What it is: a free job search engine. It reads the public job lists that companies publish in their hiring systems ({", ".join(ats_name[k_] for k_, _ in ats_jobs.most_common() if k_ not in ("usajobs", "tg"))}). {SOURCE_LINE[0]}.
+- How often: the lists are read in turn, around the clock; {CHECK_LINE[0]} (today's figure: {FULL}/status/).
 - A closed job: when a company takes a job down, it is marked closed in the next reading and leaves the lists of open jobs; its page stays at the same address and says that it is closed.
 - Cost: searching, saving jobs, job alerts, the resume builder and the tools are free, and no account is needed to search or apply. Every "Apply" button opens the employer's own page.
 - For employers: posting a job is free for 30 days; paid boosts are optional.
@@ -15145,7 +15188,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
 - [Free JSON API]({FULL}/api/): {FULL}/api/v1/index.json
 - [Monthly hiring reports]({FULL}/reports/): one dated page per month that stops changing when the month ends
 - [Jobs by hourly pay]({FULL}/jobs-that-pay/): open jobs by the hourly rate they start at, $20 to $100 an hour or more, with each rate a week, a month and a year
-- [How long job postings stay open]({FULL}/how-long-job-postings-stay-open/): closings measured every hour, open jobs by age, entry-level jobs, the jobs map
+- [How long job postings stay open]({FULL}/how-long-job-postings-stay-open/): closings as we see them, open jobs by age, entry-level jobs, the jobs map
 - [Data status]({FULL}/status/): what the latest update did and how old the open listings are
 - [Pay transparency ranking]({FULL}/insights/pay-transparency/) and [long-open roles]({FULL}/insights/long-open-roles/)
 - [Methodology]({FULL}/methodology/): how listings are collected and how figures are calculated
@@ -15213,7 +15256,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         if j["slug"] == base: return 0
         tail = j["slug"][len(base) + 1:]
         return int(tail) if j["slug"].startswith(base + "-") and tail.isdigit() and tail[0] != "0" else j["slug"]
-    rows_ = [[slug_ref(j), j["title"], ci[j["company"]], j["location"], int(j["remote"]) | 2 * int(j["featured"]) | 4 * int(bool(j.get("crypto"))) | 8 * int(bool(j.get("anywhere"))) | 16 * int(j["pool"]) | 32 * int(bool(j.get("hybrid"))) | 64 * int(bool(j.get("urgent"))),
+    rows_ = [[slug_ref(j), j["title"], ci[j["company"]], j["location"], int(j["remote"]) | 2 * int(j["featured"]) | 4 * int(bool(j.get("crypto"))) | 8 * int(bool(j.get("anywhere"))) | 16 * int(j["pool"]) | 32 * int(bool(j.get("hybrid"))) | 64 * int(bool(j.get("urgent")))
+              | 128 * int(bool(j.get("tg"))) | 256 * int(str(j.get("id") or "").startswith("usajobs-")),
               cat_list.index(j["cat"]), lvl_list.index(j["level"]) if j["level"] in lvl_list else 0, [ti[t] for t in j["tags"] if t in ti], j["salary"],
               int((j["posted"] or j["first_seen"]).replace("-", "")[:8] or 0), int(j["usd"][1]) if j["usd"] else 0, [pi[p_] for p_ in j["places"]],
               [perk_list.index(x) for x in j.get("perks", []) if x in perk_list], et_list.index(j.get("etype", "")) if j.get("etype", "") in et_list else 0,

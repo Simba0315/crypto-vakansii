@@ -81,7 +81,7 @@ TERMS = [
     ("Job offer", "The employer’s formal proposal: title, pay, start date and terms. A verbal offer should be followed by a written one.",
      "Do not resign until you have the offer in writing and any checks are complete.", [("tools/offer-check/", "Offer check")]),
     ("Last checked", "The date this site last saw the job on the employer’s own page.",
-     "A job checked today is open today; this site re-reads employers’ pages every hour.", [("status/", "Is the data fresh?")]),
+     "A job checked today is open today; this site re-reads employers’ pages around the clock, and each job page says when it was last checked.", [("status/", "Is the data fresh?")]),
     ("Level", "How much experience the job asks for. Junior means little, senior means several years, and lead, staff or principal are the most experienced people in a team.",
      "Levels differ between companies: compare the duties and the years asked, not only the word in the title.", [("salaries/", "Pay by level")]),
     ("LinkedIn Easy Apply", "Applying through LinkedIn with your profile instead of on the employer’s site.",

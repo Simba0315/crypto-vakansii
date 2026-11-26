@@ -55,7 +55,7 @@ US = {
     "open_jobs": 41187,
     "companies": 732,
     "source": "the employers' own careers pages, read from eight hiring systems (Greenhouse, Lever, Ashby, Workday, Workable, Personio, Recruitee and Teamtailor)",
-    "refresh": "every hour",
+    "refresh": "around the clock",
     "apply": "on the employer's own page",
     "account_needed_to_search": False,
     "account_needed_to_apply": False,
@@ -89,7 +89,7 @@ US_ANSWERS = {
                                 "Personio, Recruitee and Teamtailor).",
     "Where you apply": "On the employer's own page.",
     "Account needed to apply": "No. You can search and apply without an account.",
-    "How fresh the listings are": "Every job is read again from the employer's careers page every hour.",
+    "How fresh the listings are": "Every job is read again from the employer's careers page around the clock.",
     "Kinds of jobs": "The jobs that 732 companies post on their own careers pages (41,187 open jobs). English only.",
     "Payment methods": "Crypto.",
 }
@@ -143,13 +143,13 @@ SITES = [
             "Employers can post today, and a basic post is free for many jobs. Our free posting is open; our paid boosts are not on sale yet.",
         ],
         us_better=[
-            "We read every job again from the employer's careers page every hour. Indeed reads career-site feeds every 6 hours.",
+            "We read every job again from the employer's careers page around the clock. Indeed reads career-site feeds every 6 hours.",
             "Every job sends you to apply on the employer's own page. On Indeed, some jobs take the application on Indeed.",
             "Our employer prices are public: Standard boost $99 and Premium boost $249, each for 30 days. Indeed shows no fixed price for "
             "its paid levels.",
         ],
         pick="Use Indeed if you want the largest general job site and employer tools like Indeed Apply, use Jobs Every Hour "
-             "if you want jobs checked every hour on employers' own careers pages and to apply there directly.",
+             "if you want jobs checked around the clock on employers' own careers pages and to apply there directly.",
         sources=[
             ("[what|them_better 1|pick] Calls itself \"the world's #1 job site\" (Comscore, Total Visits, March 2026) and "
              "reports \"685M Job Seeker Profiles\".",
@@ -210,14 +210,14 @@ SITES = [
             "Many more ways to pay, including cards, PayPal, Apple Pay, Google Pay and local bank methods.",
         ],
         us_better=[
-            "We read every job again from the employer's careers page every hour. LinkedIn reads partner feeds every 6 to 24 "
+            "We read every job again from the employer's careers page around the clock. LinkedIn reads partner feeds every 6 to 24 "
             "hours.",
             "Our prices are on the page: Plus from $9 (not on sale yet), Standard boost $99, Premium boost $249. LinkedIn shows "
             "Premium prices only after sign-in and publishes no job post prices.",
             "Every job sends you to apply on the employer's own page. Easy Apply keeps the application on LinkedIn.",
         ],
         pick="Use LinkedIn Jobs if you want the biggest professional network and Easy Apply, use Jobs Every Hour if you want "
-             "jobs checked every hour on employers' careers pages and to apply on the employer's own page.",
+             "jobs checked around the clock on employers' careers pages and to apply on the employer's own page.",
         sources=[
             ("[what|them_better 1|pick] \"+1.4B Members\", \"71M Companies\"; \"~9K\" job applications are submitted every "
              "minute.",
@@ -332,11 +332,11 @@ SITES = [
         us_better=[
             "A standard listing is free for 30 days, posted in the employer account. On We Work Remotely the base "
             "listing is $299 for 30 days.",
-            "We read every job again from the employer's careers page every hour. A We Work Remotely listing is bought for "
+            "We read every job again from the employer's careers page around the clock. A We Work Remotely listing is bought for "
             "a fixed 30 days.",
         ],
         pick="Use We Work Remotely if you want a board of remote listings that employers pay to post, use Jobs Every Hour if "
-             "you want jobs read every hour from employers' own careers pages.",
+             "you want jobs read around the clock from employers' own careers pages.",
         sources=[
             # PRICING_RESEARCH.md B.9
             ("[what|Who pays|Price to post one job|How fresh the listings are|them_better 1|us_better 1|us_better 2|pick] "
@@ -502,7 +502,7 @@ SITES = [
             "We take payment in crypto. CryptoJobsList offers crypto to selected customers only.",
         ],
         pick="Use CryptoJobsList if you want a long-running board with a large Telegram following, use Jobs Every Hour if you "
-             "want jobs read every hour from employers' careers pages and fixed, low listing prices.",
+             "want jobs read around the clock from employers' careers pages and fixed, low listing prices.",
         sources=[
             # PRICING_RESEARCH.md B.15, COMPANIES_RESEARCH.md C.24
             ("[what|Who pays|Price to post one job|Where the jobs come from|How fresh the listings are|Payment methods|"
@@ -609,13 +609,13 @@ SITES += [
         us_better=[
             "No account needed to apply: every Apply button goes to the employer's own page. ZipRecruiter's 1-Click Apply works only "
             "while you are logged in.",
-            "A job is gone from this site at the next hourly reading once the employer takes it down. ZipRecruiter removes a closed job "
+            "A job is gone from this site at the next reading once the employer takes it down. ZipRecruiter removes a closed job "
             "from partner boards within 24 hours.",
             "Our employer prices are public: a standard listing is free for 30 days, boosts are $99 and $249. ZipRecruiter gives its "
             "prices only as a custom quote.",
         ],
         pick="Use ZipRecruiter if you want one profile and 1-Click Apply across millions of jobs, use Jobs Every Hour if you want jobs "
-             "read every hour from employers' own careers pages and to apply there without an account.",
+             "read around the clock from employers' own careers pages and to apply there without an account.",
         sources=[
             ("[what|Who pays|Price for job seekers|Where the jobs come from|Kinds of jobs|them_better 1|them_better 2|pick] Annual report "
              "for 2025 (Form 10-K, filed 25 Feb 2026): \"Our marketplace is free to job seekers.\" \"ZipRecruiter provides job seekers "
@@ -673,7 +673,7 @@ SITES += [
         us_better=[
             "No account needed to search or apply. Glassdoor's desktop job search steps start with \"Login to Glassdoor\", and Easy Apply "
             "needs an account synced with Indeed.",
-            "Every job here is read from the employer's own careers page and checked every hour. Glassdoor shows the jobs posted on Indeed.",
+            "Every job here is read from the employer's own careers page and checked around the clock. Glassdoor shows the jobs posted on Indeed.",
         ],
         pick="Use Glassdoor if you want company reviews and salaries next to the jobs, use Jobs Every Hour if you want jobs read every "
              "hour from employers' own careers pages and to apply without an account.",
@@ -729,11 +729,11 @@ SITES += [
         ],
         us_better=[
             "No account needed to apply. SimplyHired asks for a free account before you apply.",
-            "Every job here is read again from the employer's careers page every hour and dropped when it closes. SimplyHired says some "
+            "Every job here is read again from the employer's careers page around the clock and dropped when it closes. SimplyHired says some "
             "postings may not update in real time once a role is filled.",
         ],
         pick="Use SimplyHired if you want one search that also covers job boards and agencies, use Jobs Every Hour if you want jobs read "
-             "every hour from employers' own careers pages and to apply without an account.",
+             "around the clock from employers' own careers pages and to apply without an account.",
         sources=[
             ("[what|Who pays|Price for job seekers|Price to post one job|Where the jobs come from|Account needed to apply|"
              "How fresh the listings are|Kinds of jobs|them_better 1|them_better 2|them_better 3|us_better 1|us_better 2|pick] "
@@ -773,7 +773,7 @@ SITES += [
         us_better=[
             "A standard listing is free for 30 days, posted in the employer account. Jooble charges per click or per application and "
             "lists no free option.",
-            "Every job here is read from the employer's own careers page every hour. Jooble gathers its listings from thousands of other "
+            "Every job here is read from the employer's own careers page around the clock. Jooble gathers its listings from thousands of other "
             "websites.",
         ],
         pick="Use Jooble if you want the widest search across many countries and websites, use Jobs Every Hour if you want jobs read every "
@@ -820,10 +820,10 @@ SITES += [
         us_better=[
             "Every Apply button here goes to the employer's own careers page. On Talent.com, Apply often leads to a third-party platform "
             "or publisher rather than the employer.",
-            "Every job is read again from the employer's careers page every hour and dropped when it closes. Talent.com states no refresh "
+            "Every job is read again from the employer's careers page around the clock and dropped when it closes. Talent.com states no refresh "
             "time and asks users to report expired jobs.",
         ],
-        pick="Use Talent.com if you want the widest search across many countries, use Jobs Every Hour if you want jobs read every hour from "
+        pick="Use Talent.com if you want the widest search across many countries, use Jobs Every Hour if you want jobs read around the clock from "
              "employers' own careers pages and to apply there.",
         sources=[
             ("[what|Where the jobs come from|Where you apply|Kinds of jobs|them_better 1|them_better 2] \"We bring together more than 30 "
@@ -873,7 +873,7 @@ SITES += [
             "Our employer prices are public, and a standard listing is free for 30 days. Welcome to the Jungle publishes no price.",
         ],
         pick="Use Welcome to the Jungle if you want to learn about companies from their profiles before you apply, use Jobs Every Hour if "
-             "you want jobs read every hour from careers pages and to apply without an account.",
+             "you want jobs read around the clock from careers pages and to apply without an account.",
         sources=[
             ("[what|Kinds of jobs] Page title \"Welcome To The Jungle UK (formerly Otta)\"; \"over 3,500 top companies and 70,000+ live "
              "jobs\".", "https://uk.welcometothejungle.com/", R24),
@@ -990,7 +990,7 @@ SITES += [
         ],
         us_better=[
             "No account needed to search or apply. Himalayas asks you to create an account and build a profile.",
-            "Every job is read again from the employer's careers page every hour. A Himalayas listing stays up 30 days from publication.",
+            "Every job is read again from the employer's careers page around the clock. A Himalayas listing stays up 30 days from publication.",
             "A boost to stand out costs $99 for 30 days here (not on sale yet). A pinned post on Himalayas is $299.",
         ],
         pick="Use Himalayas if you want remote jobs only and its profile and application tools, use Jobs Every Hour if you want to search "
@@ -1039,7 +1039,7 @@ SITES += [
             "Plus here is one payment that never renews (not on sale yet). Remotive's membership renews automatically.",
         ],
         pick="Use Remotive if you only want fully remote work and will pay for the full list, use Jobs Every Hour if you want to search "
-             "free, read every hour from employers' careers pages.",
+             "free, read around the clock from employers' careers pages.",
         sources=[
             ("[what|Who pays|Where the jobs come from|Kinds of jobs|them_better 1|them_better 2|us_better 1] \"Browse 140,000+ fully remote "
              "jobs from vetted companies\"; \"You're seeing 0.4% of available roles\"; \"See jobs 24 hours early\"; \"Advanced search "
@@ -1078,11 +1078,11 @@ SITES += [
             "Career articles and question-and-answer pages from 108 remote companies about how they work.",
         ],
         us_better=[
-            "Every job here is read from the employer's own careers page every hour and dropped when it closes. On Remote.co, employers "
+            "Every job here is read from the employer's own careers page around the clock and dropped when it closes. On Remote.co, employers "
             "submit postings and its team adds listings it researches.",
             "Every open job a company posts on its careers page is here, on-site ones too. Remote.co lists remote and hybrid jobs.",
         ],
-        pick="Use Remote.co if you want remote and hybrid jobs reviewed by a team, use Jobs Every Hour if you want every job read every hour "
+        pick="Use Remote.co if you want remote and hybrid jobs reviewed by a team, use Jobs Every Hour if you want every job read around the clock "
              "from employers' own careers pages.",
         sources=[
             ("[what|Kinds of jobs|us_better 2] \"Remote.co is a trusted resource for finding remote jobs\"; \"connect job seekers with "
@@ -1123,9 +1123,9 @@ SITES += [
         ],
         us_better=[
             "A standard listing is free for 30 days, posted in the employer account. Working Nomads charges $199 for one 30-day post.",
-            "Every job here is read from the employer's own careers page every hour. Working Nomads curates jobs from around the web.",
+            "Every job here is read from the employer's own careers page around the clock. Working Nomads curates jobs from around the web.",
         ],
-        pick="Use Working Nomads if you want a hand-picked remote-only board, use Jobs Every Hour if you want jobs read every hour from "
+        pick="Use Working Nomads if you want a hand-picked remote-only board, use Jobs Every Hour if you want jobs read around the clock from "
              "employers' own careers pages and to post a job free.",
         sources=[
             ("[what|Who pays|Price for job seekers|Where the jobs come from|Where you apply|Account needed to apply|Kinds of jobs|"
@@ -1277,7 +1277,7 @@ SITES += [
             "Every Apply button goes to the employer's own page, with no sign-up suggested. Idealist suggests signing up and is quickest "
             "when you are logged in.",
         ],
-        pick="Use Idealist if you want nonprofit, volunteer or social-impact work, use Jobs Every Hour if you want jobs read every hour "
+        pick="Use Idealist if you want nonprofit, volunteer or social-impact work, use Jobs Every Hour if you want jobs read around the clock "
              "from employers' careers pages with no account.",
         sources=[
             ("[what|Kinds of jobs|them_better 1|them_better 2] \"Idealist is a 501(c)(3) organization based in New York.\"; \"more than "
@@ -1334,12 +1334,12 @@ SITES += [
             "Job alerts and results shaped by your earlier searches when you are signed in to a Google Account.",
         ],
         us_better=[
-            "Every job here is read from the employer's own careers page every hour and dropped at the next reading once it closes. Google "
+            "Every job here is read from the employer's own careers page around the clock and dropped at the next reading once it closes. Google "
             "relies on each site to mark a closed job expired, and says crawling a new page can take several days.",
             "Every Apply button here goes to the employer's own page. On Google, Apply lists the sites that carry the job, job boards included.",
         ],
         pick="Use Google for Jobs if you want one search across employers and job sites everywhere, use Jobs Every Hour if you want jobs read "
-             "every hour from employers' own careers pages and to apply there.",
+             "around the clock from employers' own careers pages and to apply there.",
         sources=[
             ("[what|Who pays|Price to post one job|Where the jobs come from|Where you apply|Account needed to apply|Kinds of jobs|them_better 1|"
              "them_better 2|them_better 3|us_better 2|pick] \"Jobs come directly from employers and career sites across the web.\" \"Job "
@@ -1387,7 +1387,7 @@ SITES += [
             "Premium.",
             "Plus here is one payment that never renews (not on sale yet). Ladders Premium renews until auto-renew is turned off, with a refund "
             "only within 3 business days.",
-            "Every job here names its employer and is read from its own careers page every hour. Ladders lists some jobs with the company name "
+            "Every job here names its employer and is read from its own careers page around the clock. Ladders lists some jobs with the company name "
             "hidden.",
         ],
         pick="Use Ladders if you want $80K-plus roles only and will pay for Premium and Apply4Me, use Jobs Every Hour if you want full job "
@@ -1449,10 +1449,10 @@ SITES += [
         us_better=[
             "A standard listing is free for 30 days here, posted in the employer account. A craigslist job posting costs $10 to $75 in the US, "
             "by area.",
-            "Every job here is read from the employer's own careers page every hour, and you apply on the employer's own page. On craigslist you "
+            "Every job here is read from the employer's own careers page around the clock, and you apply on the employer's own page. On craigslist you "
             "reply to a posting by email, phone or chat.",
         ],
-        pick="Use Craigslist if you want local jobs and gigs near you, use Jobs Every Hour if you want jobs read every hour from employers' own "
+        pick="Use Craigslist if you want local jobs and gigs near you, use Jobs Every Hour if you want jobs read around the clock from employers' own "
              "careers pages and to apply there.",
         sources=[
             ("[what|Kinds of jobs] \"craigslist currently offers the following types of postings: community, services, housing, for sale, jobs, "
@@ -1505,11 +1505,11 @@ SITES += [
             "Its Talent Pool lets companies come to you with the role and the pay upfront.",
         ],
         us_better=[
-            "Every job here is read from the employer's own careers page every hour and dropped when it closes. The Levels.fyi pages we read "
+            "Every job here is read from the employer's own careers page around the clock and dropped when it closes. The Levels.fyi pages we read "
             "showed listings up to 7 months old.",
             "Every Apply button here goes to the employer's own page. On the Levels.fyi jobs we opened, Apply Now led to a LinkedIn posting.",
         ],
-        pick="Use Levels.fyi if you want pay data by level beside each job, use Jobs Every Hour if you want jobs read every hour from employers' "
+        pick="Use Levels.fyi if you want pay data by level beside each job, use Jobs Every Hour if you want jobs read around the clock from employers' "
              "careers pages and to apply on the employer's own page.",
         sources=[
             ("[what|Who pays|Price for job seekers|Kinds of jobs|them_better 1|them_better 2|them_better 3|pick] \"Levels.fyi is a compensation "
@@ -1557,7 +1557,7 @@ SITES += [
         ],
         us_better=[
             "No account needed to search or apply here. GovernmentJobs.com's application guide starts with creating an account.",
-            "Jobs from thousands of companies' own careers pages, read every hour. GovernmentJobs.com lists public-sector jobs.",
+            "Jobs from thousands of companies' own careers pages, read around the clock. GovernmentJobs.com lists public-sector jobs.",
         ],
         pick="Use GovernmentJobs.com if you want a public-sector job, use Jobs Every Hour if you want jobs at companies, searched and applied for "
              "with no account.",
@@ -1611,11 +1611,11 @@ SITES += [
         us_better=[
             "A standard listing is free for 30 days in an employer account here. HiringCafe has only an \"Add jobs\" form and an employer "
             "contact form, with no price.",
-            "Each job here is read again from the employer's careers page every hour, and a closed job keeps its page, marked closed. "
+            "Each job here is read again from the employer's careers page around the clock, and a closed job keeps its page, marked closed. "
             "HiringCafe says \"in real time\" and states no reading interval.",
         ],
         pick="Use HiringCafe if you want the largest search of jobs from company websites with many filters, use Jobs Every Hour if you want each "
-             "job read every hour from employers' careers pages and closed jobs marked as closed.",
+             "job read around the clock from employers' careers pages and closed jobs marked as closed.",
         sources=[
             ("[what|Who pays|Price for job seekers|Where the jobs come from|How fresh the listings are|them_better 2|them_better 3|us_better 2|"
              "pick] \"We collect jobs directly from company websites in real time and filter out external recruiting agencies and fake "
@@ -1700,12 +1700,12 @@ SITES += [
             "A free online resume profile that verified employers can find and send interview requests to.",
         ],
         us_better=[
-            "A job stays here for as long as the employer keeps it open, read every hour. Drivetube shows only roles posted in the last 3 days, "
+            "A job stays here for as long as the employer keeps it open, read around the clock. Drivetube shows only roles posted in the last 3 days, "
             "so an opening that is older and still open is not there.",
             "Employers can post a standard listing free for 30 days here. Drivetube takes no job posts.",
         ],
         pick="Use Drivetube if you only want jobs posted in the last 3 days, from several countries, use Jobs Every Hour if you want every open "
-             "job on employers' careers pages, however long it has been open, read every hour.",
+             "job on employers' careers pages, however long it has been open, read around the clock.",
         sources=[
             ("[what|Who pays|Price for job seekers|Price to post one job|Where the jobs come from|Where you apply|Account needed to apply|How "
              "fresh the listings are|Kinds of jobs|them_better 1|them_better 2|them_better 3|us_better 1|us_better 2|pick] \"a free verified "

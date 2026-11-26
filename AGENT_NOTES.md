@@ -63,6 +63,31 @@ The owner, 2026-11-13: "it must say when a job was added 30 minutes ago or 20 mi
   old); `expand()` puts it in `j[23]`. `order()` sorts by the exact time, so "newest first" is right within a day.
 - `node fresh_test.js` (labels, no negative ages, the refresh) must end with "0 failed".
 
+## The honest promise (teardown, 26 Nov 2026, track 1)
+
+- Exact times: `build.exact()` uses `posted_at` only when it falls on the employer's day (`posted`) or the day next to it. Paylocity and
+  Breezy list a posting with the time it was last republished; a July posting read "3 h". site.js `card()` and `freshen()` repeat the
+  guard (a row built as "2d", "3w" or "4mo" is never rewritten into hours). collect.py takes their day and time from one field now.
+- "Checked": collect.py writes `checked_at` (the run's reading time) on every job it reads; live.py writes it on new jobs and
+  records.Store.page() raises it to the server's own last full read of the board (`live_checked_at`). The job page shows it in the facts
+  row and in At a glance as `<time data-ck>`, which site.js turns into "12 minutes ago". "New" and "posted today" are always the
+  employer's date; the day we first read a job is called "first read by us" where it is shown at all.
+- FACTS (build.py): what the site says about itself, counted once per build: open jobs, companies, `checked_24h` (open jobs read again
+  on the employer's list in the last 24 hours), posted today, posted in 7 days, USAJOBS and Telegram counts, records left out. `EVERY` is
+  the schedule ("around the clock"), `CHECK_LINE[0]` the measured sentence, `SOURCE_LINE[0]` where the jobs come from. Never write
+  "every hour" or "within the hour" for the jobs again: check.py ("one set of figures") fails a trust page that says it, or that gives
+  a different re-checked figure. The brand name and the guide's address keep their words.
+- `sift()` (build.py) runs first on the record: recruiter cold emails (two COLD_EMAIL phrases), recruiters' candidate lists
+  (CANDIDATE_LIST), hiring-system placeholders as employer names (PLACEHOLDER_CO: "DO NOT USE", "Default", "Test"; a placeholder board
+  that repeats an employer's own board loses its copies by posting id; the ones whose employer we found are renamed in CO_RENAME) and ATS
+  copies ("Copy of …"). live.py asks `junk_reason()` of every new job. The build prints what it left out ("left out as not jobs").
+- CHURN: a company that, in 14 days, posted and closed at least 100 jobs and half its open count (Bjakcareer). Its jobs sort after the
+  fresh ones, it gets no "Actively hiring" or "Few old postings" mark, it is not in the home logos or "hiring the most", and its page
+  says "Reposts often" with the two numbers.
+- iCIMS: many careers sites write datePosted as the moment of the request minus two years (`collect.icims_placeholder`); such a posting
+  takes the sitemap's lastmod day, `posted_from: "lastmod"`, and its page says "Last updated", not "Posted". Records read before the
+  check are mended at their board's next read.
+
 ## Accounts, checkout and automation (`server/`)
 
 - `server/src/worker.js` is the whole API (Cloudflare Worker + D1, no dependencies): accounts, orders, Cryptomus invoices and
@@ -572,9 +597,8 @@ plain HTML, so the page is readable without the map.
 - Media kit pictures (`assets/brand/screen-*.jpg`, `banner-*.png`, the 96 px PNG mark for email signatures) are made with
   Playwright from the built site; redo them after a visible change of the home, search or resume builder pages.
 - Email addresses: plain `mailto:` links through the department helper in `build.py` (`MAIL`); Cloudflare hides them from scrapers.
-- How often pages are read: the boards in `sources.json` and `sources_tech.json` every hour, the ~3,000 in `sources_more.json` every
-  four hours (`HRN_ROTATE`). `build.py` counts both (`m_hourly`, `ROTATING`, `EVERY`) and the home page, media kit, widget answer and
-  dataset description say it exactly. Other pages that say "every hour" (job pages, methodology, status) need the same care.
+- How often pages are read: since 26 Nov 2026 the copy says the schedule ("around the clock", `EVERY`) and the measure (`CHECK_LINE`,
+  from FACTS), never "every hour": see "The honest promise" near the top.
 
 ## Build speed, company lists, the collector on the server (17 Nov 2026)
 

@@ -103,7 +103,7 @@ def _soft(ctx, e, P):
 def _pay(ctx, e, P):
     return (f'<h2>What today’s postings pay</h2><p>{ctx["paid_pct"]}% of the {ctx["n"]:,} open jobs here state a pay range. The median of the yearly US-dollar '
             f'ranges is <b>{ctx["med"]}</b>; the middle half runs from {ctx["p25"]} to {ctx["p75"]}. For your own number, open the '
-            f'<a href="{P}/salaries/">salary page of your role</a>: it is recounted every hour from postings like the one you are applying to.</p>')
+            f'<a href="{P}/salaries/">salary page of your role</a>: it is recounted several times a day from postings like the one you are applying to.</p>')
 
 
 def _open(ctx, e, P):
@@ -268,7 +268,7 @@ ARTICLES += [
      "tool": ("tools/salary-checker/", "Salary checker", "Type a job title and a place: the range from live postings, so your number has a source."),
      "faq": [("Should I give a range or a number for salary expectations?", "A range of about 10 to 15%, with the bottom at or above the figure you would accept. A single number can only go down."),
              ("Is it OK to say “negotiable”?", "Once, as a first answer, with a question back about their range. If they ask again, give a range: “negotiable” twice sounds like you have not done the research."),
-             ("Where do I find the market rate for my job?", "In job postings that state pay for the same title and place. The salary pages here recount them every hour; government statistics and pay surveys are slower but useful."),
+             ("Where do I find the market rate for my job?", "In job postings that state pay for the same title and place. The salary pages here recount them several times a day; government statistics and pay surveys are slower but useful."),
              ("Do I have to tell my current salary?", "Not in places that ban the question, which include California, New York and many other US states. Elsewhere you can still answer with what you are looking for rather than what you earn.")],
      "more": (("guides/negotiate-salary/", "How to negotiate a salary"), ("salaries/", "Salaries by job title"), ("tools/negotiation-email/", "Negotiation email"))},
 ]
@@ -821,7 +821,7 @@ ARTICLES += [
                     "Week 2: apply to the freshest postings of those employers and to a handful of others; set one hour a day for it.",
                     "Week 3: follow up on week 1 and 2 applications, ask two people you know about their companies, practise the interview questions.",
                     "Week 4: look at what happened: if there are no replies, change the resume or the target; if there are interviews, spend the time on them."]),
-               ("Where to look for a job fast", ["Company career pages are the source of every listing. This site reads them every hour, shows each posting’s age and links to the employer’s own application page. "
+               ("Where to look for a job fast", ["Company career pages are the source of every listing. This site reads them around the clock, shows each posting’s age and links to the employer’s own application page. "
                                   "Add people you know: a short message to someone who works at a company you like often leads to a name to write to."]),
                ("How many applications is enough?", ["There is no number that works for everyone. Judge by replies: if ten applications bring no reply, the problem is usually the resume or the target, not the count. "
                                                      "Change one thing and watch the next ten."]),
