@@ -923,6 +923,15 @@ PERK_INFO = {
                             "Ask whether it is paid once or every year, and who keeps the equipment when you leave."),
 }
 PULSE = {}         # company -> (opened in 7 days, closed in 7 days, label)
+# Boards that take down and put up most of their jobs every week (teardown, 26 Nov 2026: Bjakcareer had 1,610 open, 1,609 posted and 1,548
+# closed in 7 days, each with "+22 more locations", and was marked "Actively hiring", shown in the home page's logos and named first on
+# /remote/). A company is one when, in the last 14 days, it both posted and closed at least CHURN_MIN jobs and at least half as many as it
+# has open. Its jobs come after the others in every list, it gets no "Actively hiring" or "Few old postings" mark, and it is not named
+# among the companies hiring most; its page says "Reposts often" with the two numbers.
+CHURN, CHURN_MIN = set(), 100
+FACTS = {}                  # what the site says about itself, counted once per build in main() (open jobs, companies, re-checked in 24 h ...)
+CHECK_LINE = [""]           # "61% of open jobs were re-checked on the employer's own list in the last 24 hours"
+SOURCE_LINE = [""]          # where the jobs come from, with the USAJOBS and Telegram counts
 CLOSE_DAYS = {}    # category slug -> median days a role stayed open (from closed roles)
 CO_CLOSE = {}      # company -> (closed roles counted, median days they stayed open); only with 5 or more closed roles
 REPOST = {}        # (company, title, location) -> date an earlier posting of the same role closed
@@ -2440,12 +2449,13 @@ def stale(j):
 
 
 def order(jobs):
-    """Paid first, then the newest; roles open 90+ days and talent pools after all the others (stale()). Premium jobs lead and take turns: their order changes with every build (the seed is the day and
+    """Paid first, then the newest; roles open 90+ days, talent pools and the jobs of boards that repost most of their jobs every week
+    (CHURN) after all the others (stale()). Premium jobs lead and take turns: their order changes with every build (the seed is the day and
     the number of open jobs, so one build and the records made from it agree), which is the "turn in the top 3" a Premium boost
     promises when a list holds more than three of them. A bumped job is as new as its bump."""
     seed = f"{TODAY}-{ALL_OPEN[0]}-"
     return sorted(jobs, key=lambda j: (not j.get("premium"), hashlib.md5((seed + j["slug"]).encode()).hexdigest() if j.get("premium") else "", not j.get("pinned"), not j["featured"],
-                                       stale(j), -max(j.get("ts") or stamp(j), j.get("bump") or 0)))
+                                       stale(j) or j["company"] in CHURN, -max(j.get("ts") or stamp(j), j.get("bump") or 0)))
 
 
 def diverse(jobs, k, per=2):
@@ -2986,7 +2996,89 @@ def tidy_list_desc(desc, jobs):
 # brought searchers; Avis Budget Group, its owner since 2013, posts on its own board): an empty brand page points to the parent's jobs
 CO_PARENT = {"Zipcar": "Avis Budget Group"}
 CO_RENAME = {"United States 7  Zipcar": "Zipcar", "1US0 PerkinElmer U.S": "PerkinElmer", "253B AllianceBernstein": "AllianceBernstein",
-             "ICH0102 InnovaCare Management Services": "InnovaCare Management Services", "3II MPM Innovation": "MPM Innovation", "Arktura BV 1": "Arktura"}
+             "ICH0102 InnovaCare Management Services": "InnovaCare Management Services", "3II MPM Innovation": "MPM Innovation", "Arktura BV 1": "Arktura",
+             # Teardown, 26 Nov 2026: a board named after a hiring system's folder ("Z. Do Not Use", "Default - DO NOT USE") or cut at a
+             # preposition ("Law Society of"). The employer is the one its own postings name (Paylocity's hiringOrganization and page title,
+             # BambooHR's text, the board's own title), read on 26 Nov 2026. A placeholder board that repeats an employer's own board loses
+             # its copies first (sift()); one whose employer could not be told ("DO NOT USE", "Test") is left out.
+             "Z. Do Not Use": "Catholic Diocese of Orlando", "Select Where to Post - DO NOT USE": "In-Shape Fitness", "Default - DO NOT USE": "CompQsoft",
+             "ALL JOBS - DO NOT USE": "MaxxSouth Broadband", "ALL JOB POSTINGS": "Louisiana Cat", "Default": "Freeman Jet Center",
+             "DO NOT USE - ALL JOB POSTINGS": "DOXA Insurance", "All Job's Default Page": "RAFTRx", "All Jobs Default Page": "JDA Worldwide",
+             "Tulsa Community Foundation Default": "Tulsa Community Foundation", "PeopleFund Default": "PeopleFund",
+             "Default GeBBS Healthcare Solutions": "GeBBS Healthcare Solutions", "Doran Companies- Default": "Doran Companies",
+             "Young Womens Christian Association of the City of": "YWCA of the City of New York", "R.L.K. And": "R.L.K. and Company",
+             "Champlain Valley Office of Economic Opportunity In": "Champlain Valley Office of Economic Opportunity",
+             "South Carolina Baptist Ministries For The Aging In": "South Carolina Baptist Ministries for the Aging",
+             "German Marshall Fund Of The": "German Marshall Fund of the United States", "Haynie and": "Haynie and Company",
+             "Asia Pacific Foundation of": "Asia Pacific Foundation of Canada", "Law Society of": "Law Society of Ireland", "Davidson and": "Davidson & Company",
+             "Mitchell and": "Mitchell and Company", "Frank Rimerman and": "Frank, Rimerman + Co.", "G C School of": "G C School of Careers",
+             "Integral De": "Integral Group"}
+
+# Records that are not job openings, or not from an employer (teardown, 26 Nov 2026). A recruiter's cold email posted as a job ("TiffanyKnaul",
+# $650K-$900K, first in the home page's "Highest paid") and a recruiter's own list of candidates ("Elyse Murphy Candidates", "Scott Wilson's
+# Candidates") were shown as jobs with "✓ Employer's own posting"; a hiring system's folder stood in for the employer's name.
+PLACEHOLDER_CO = re.compile(r"(?i)\bdo not use\b|^default\b|\bdefault(?: page)?$|^test$|^select where to post\b|^all jobs?\b|^all job postings$|\bdefault career page\b")
+CANDIDATE_LIST = (re.compile(r"(?i)^[\w.-]+(?: [\w.-]+)?\s*['’]s candidates?$"),        # "Michelle’s candidates", "Scott Wilson's Candidates"
+                  re.compile(r"^[A-Z][a-z]+ [A-Z][a-z]+ [Cc]andidates$"))               # "Elyse Murphy Candidates"
+COLD_EMAIL = (re.compile(r"(?i)\b(?:profile|background)\b[^.?!]{0,30}\bsimilar to yours\b"),
+              re.compile(r"(?i)\bwould you have (?:some )?time for a (?:brief|quick|short) (?:call|chat|conversation)\b"),
+              re.compile(r"(?i)\b(?:came across|reviewed|was impressed by) your (?:profile|resume|background|linkedin)\b"),
+              re.compile(r"(?i)\bthought it would make sense to (?:connect|reach out|introduce myself)\b"))
+COPY_OF = re.compile(r"(?i)^\s*copy of\s+")
+
+
+def junk_reason(j):
+    """Why a record is not a job to list (one of SIFTED's keys), or "" for a job. A cold email needs two of COLD_EMAIL's phrases: one alone
+    can be an ordinary sentence. live.py asks the same of every job it finds, so a record left out here never comes back from the server."""
+    co = j.get("company") or ""
+    if PLACEHOLDER_CO.search(co) and co not in CO_RENAME: return "placeholder"
+    t = (j.get("title") or "").strip()
+    if any(rx.search(t) for rx in CANDIDATE_LIST): return "candidates"
+    text = (j.get("excerpt") or "") + " " + (j.get("desc") or "")
+    if sum(1 for rx in COLD_EMAIL if rx.search(text)) >= 2: return "cold_email"
+    return ""
+
+
+SIFTED = Counter()        # what sift() left out in this build, by reason; FACTS and the methodology page say it
+
+
+def sift(jobs):
+    """The records the site lists, before anything else reads them. Leaves out what junk_reason() names, the copies of a placeholder board
+    that repeats an employer's own board (the same posting id on both: Paylocity's "ALL JOB POSTINGS" held 47 of Louisiana Cat's 48 jobs),
+    and an ATS copy ("Copy of Graphic Designer") of a job the employer also lists under its real title; other "Copy of" titles lose the words."""
+    own = set()
+    for j in jobs:
+        co = j.get("company") or ""
+        if not PLACEHOLDER_CO.search(co):
+            ats = j["id"].split("-", 1)[0]
+            own.add((ats, j["id"][len(ats) + len(slugify(co)) + 2:]))
+    keys = {(j.get("company"), (j.get("title") or "").strip().lower(), (j.get("location") or "").strip().lower()) for j in jobs if not COPY_OF.match(j.get("title") or "")}
+    out = []
+    for j in jobs:
+        co = j.get("company") or ""
+        if PLACEHOLDER_CO.search(co):
+            ats = j["id"].split("-", 1)[0]
+            if (ats, j["id"][len(ats) + len(slugify(co)) + 2:]) in own:
+                SIFTED["placeholder_copy"] += 1; continue
+        why = junk_reason(j)
+        if why:
+            SIFTED[why] += 1; continue
+        if COPY_OF.match(j.get("title") or ""):
+            plain = COPY_OF.sub("", j["title"]).strip()
+            if (co, plain.lower(), (j.get("location") or "").strip().lower()) in keys:
+                SIFTED["copy"] += 1; continue
+            j["title"] = plain
+            SIFTED["copy_renamed"] += 1
+        out.append(j)
+    return out
+
+
+assert junk_reason({"company": "Business Contract Technologies", "title": "TiffanyKnaul", "excerpt": "We are currently partnered with a boutique restructuring and turnaround advisory firm that is seeking someone with a profile very similar to yours. Would you have time for a brief conversation tomorrow or later this week?"}) == "cold_email"
+assert [junk_reason({"company": "X", "title": t}) for t in ("Elyse Murphy Candidates", "Michelle’s candidates", "Rebecca's Candidate", "Scott Wilson's Candidates")] == ["candidates"] * 4
+assert not any(junk_reason({"company": "X", "title": t}) for t in ("Astronaut Candidate", "CPA Candidate", "Candidate Experience Coordinator", "General Laborer - Apprentice Candidate", "Senior Recruiter"))
+assert junk_reason({"company": "Z. Do Not Use", "title": "Groundskeeper"}) == "" and junk_reason({"company": "DO NOT USE", "title": "Lifeguard"}) == "placeholder" and junk_reason({"company": "Test", "title": "Electrician"}) == "placeholder"
+assert not any(PLACEHOLDER_CO.search(c) for c in ("Testa Produce", "Contest Freight", "Attest Group", "Allstate"))
+assert junk_reason({"company": "Acme", "title": "Account Executive", "excerpt": "Would you have time for a brief conversation? We sell to teams like yours."}) == ""
 
 
 def focus_list(x):
@@ -3684,7 +3776,7 @@ def intro_for(jobs, pre="", post="", hub=False, row=False):
     open and who has the most, in that order, with the other figures left to the row (listing(stats="rest"))."""
     if not jobs: return ""
     r = sum(j["remote"] for j in jobs)
-    names = [c for c, _ in Counter(j["company"] for j in jobs).most_common(5)]
+    names = [c for c, _ in (Counter(j["company"] for j in jobs if j["company"] not in CHURN) or Counter(j["company"] for j in jobs)).most_common(5)]
     # the sentence starts with the first name: "the Agency, Jet Direct Mortgage … have the most" (26 Nov 2026, the Florida marketing
     # automation list); "eBay" or "iCIMS" keep their own spelling
     if names and names[0].startswith("the "): names[0] = "The" + names[0][3:]
@@ -4669,6 +4761,8 @@ def main():
     boost = defaultdict(dict)
     for b in PAID.get("boosts", []):
         if b.get("until", "") >= TODAY: boost[b.get("slug")][b.get("kind")] = b
+    jobs = sift(jobs)                            # cold emails, candidate lists, placeholder boards and ATS copies (sift, junk_reason)
+    print("left out as not jobs or not employers: " + (", ".join(f"{k} {v:,}" for k, v in SIFTED.most_common()) or "none"))
     for j in jobs:
         # What the account sold for this job, each with its last day: a Standard boost ("featured"), a Premium boost (a turn in the top
         # of its lists, the cover picture), the "Urgently hiring" badge, and a bump, which sorts the job as if it was posted when the
@@ -4797,6 +4891,11 @@ def main():
     HOURS = [(p_, h_, w_, js_) for p_, h_, rx_, w_ in (
         ("night-shift/", "Night shift jobs", r"night shift|overnight|3rd shift|third shift|graveyard|\bnights\b|2nd shift|second shift|swing shift|evening shift", "evening or night shifts"),
         ("weekend/", "Weekend jobs", r"weekend", "weekend work"),
+        # two weeks, not one: Bjakcareer closed its 1,548 jobs and put up 1,609 new ones in two batches a week apart
+        op14_ = sum(1 for j in js if (j["posted"] or "") >= wk14) if opened >= CHURN_MIN else 0
+        cl14_ = sum(1 for j in js if not j["active"] and (j.get("closed") or "") >= wk14) if op14_ else 0
+        if min(op14_, cl14_) >= max(CHURN_MIN, OPEN[c] / 2): CHURN.add(c)
+    print(f"boards that repost most of their jobs every week (CHURN): {len(CHURN):,}, {sum(OPEN[c] for c in CHURN):,} open jobs: " + ", ".join(sorted(CHURN, key=lambda c: -OPEN[c])[:10]))
         ("summer/", "Summer jobs and internships", r"\bsummer\b", "the summer months"),
         ("temporary/", "Temporary and seasonal jobs", r"seasonal|temporary|\btemp\b|fixed[- ]term", "a fixed term or a season"))
         if len(js_ := [j for j in active if re.search(rx_, HOURS_NOT.get(p_, NO_WORDS).sub(" ", j["title"] + " " + (j["excerpt"] or "")), re.I)]) >= 20]
@@ -5022,7 +5121,7 @@ def main():
     place_top = "".join(f'<h3 class="tgroup">{t_}</h3><ul class="tiles">' + "".join(tile(f"locations/{slug}/", name.removeprefix("the "), len(js)) for name, slug, js in xs[:k_]) + "</ul>"
                         for t_, xs, k_ in p_groups if xs)
     fresh3 = sum(1 for j in active if age(j["posted"])[1])
-    logo_cos = [(c, js) for c, js in comp_items if slugify(c) in LOGOS][:10]
+    logo_cos = [(c, js) for c, js in comp_items if slugify(c) in LOGOS and c not in CHURN][:10]
     # v4 (design night, 25 Nov 2026): dLocal's strip of customer logos under the first panel, done with the companies whose jobs we list
     def logo_strip(lead):
         return (f'<div class="klogos"><p>{e(lead)}</p><div class="logorow">'
@@ -5191,9 +5290,9 @@ def main():
         "description": "A job search that reads open jobs every hour from employers’ own career pages, with a free resume builder.",
         "sameAs": ORG_SAME_AS}, ensure_ascii=False) + "</script>")
     wk_ = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
-    co_top = Counter(j["company"] for j in active).most_common(10)
-    co_new = Counter(j["company"] for j in active if (j.get("first_seen") or "") >= wk_)
-    new_today = sum(1 for j in active if j.get("first_seen") == TODAY)
+    co_top = Counter(j["company"] for j in active if j["company"] not in CHURN).most_common(10)
+    co_new = Counter(j["company"] for j in active if (j.get("posted") or "")[:10] >= wk_)       # "new": the employer's date (FACTS), not our first reading
+    new_today = FACTS["posted_today"]       # "new" is the employer's date (FACTS): the day we first read a job is not news to a job seeker
     closed_today = sum(1 for j in jobs if not j["active"] and j.get("closed") == TODAY)
     def age_(j):
         try: return (datetime.date.today() - datetime.date.fromisoformat((j.get("posted") or j.get("first_seen") or TODAY)[:10])).days
@@ -5278,7 +5377,7 @@ def main():
     # Every list is still in the page (the tabs only fold them); three tool cards became links in the row under the first three.
     future_cards = ('<div class="tgrid">' + "".join(
         f'<a class="tcard" href="{P}/{u}"><span class="tprev" aria-hidden="true">{scr}</span><span class="tbody"><b>{e(t_)}</b><span>{e(d_)}</span><i><u>{GO.get(u, "Open")}</u></i></span></a>' for t_, d_, u, scr in FUTURE[:3]) + "</div>")
-    co12 = Counter(j["company"] for j in active).most_common(12)
+    co12 = Counter(j["company"] for j in active if j["company"] not in CHURN).most_common(12)
     n_tools = len(TOOLS) + len(tools_pages.EXTRA)
     browse = ('<div class="tabs2 ktabs">'
               '<input type="radio" name="dir" id="dir-cat" checked><label for="dir-cat">By field</label>'
@@ -6959,7 +7058,7 @@ def main():
     co_field_n = Counter((Counter(j["cat"] for j in js if j["active"]).most_common(1) or [("", 0)])[0][0] for _, js in comp_items)
     co_field_sel = ('<select id="cfield" aria-label="The field a company hires for most"><option value="">Every field</option>'
                     + "".join(f'<option value="{k_}">{e(CAT[k_])} ({v_:,})</option>' for k_, v_ in sorted(co_field_n.items(), key=lambda kv: CAT.get(kv[0], "")) if k_ in CAT) + "</select>")
-    top_open = [(c, sum(j["active"] for j in js)) for c, js in comp_items[:3]]
+    top_open = [(c, sum(j["active"] for j in js)) for c, js in [x for x in comp_items if x[0] not in CHURN][:3]]
     top_new = [(c, n) for c, n in sorted(fresh_n.items(), key=lambda kv: -kv[1])[:3] if n]
     names = lambda xs: " and ".join(filter(None, [", ".join(f"{e(c)} ({n:,})" for c, n in xs[:-1]), f"{e(xs[-1][0])} ({xs[-1][1]:,})"])) if xs else ""
     day90 = (datetime.date.today() - datetime.timedelta(days=LONG_OPEN)).isoformat()
@@ -6967,10 +7066,10 @@ def main():
         a_ = p_ = f_ = 0
         for c, js in comp_items:
             act_ = [j for j in js if j["active"]]
-            if fresh_n[c] >= 3: a_ += 1
+            if fresh_n[c] >= 3 and c not in CHURN: a_ += 1
             if len(act_) >= 5:
                 if sum(bool(j["salary"]) for j in act_) >= len(act_) / 2: p_ += 1
-                if sum(1 for j in act_ if (j["posted"] or j["first_seen"])[:10] <= day90) < len(act_) / 4: f_ += 1
+                if sum(1 for j in act_ if (j["posted"] or j["first_seen"])[:10] <= day90) < len(act_) / 4 and c not in CHURN: f_ += 1
         return a_, p_, f_
     mk_a, mk_p, mk_f = mk_counts()
     mk_rows = [("Actively hiring", "Posted at least 3 roles in the last 7 days.", mk_a),
@@ -7219,12 +7318,12 @@ def main():
         chips = [f"<div><dt>{e(k)}</dt><dd>{e(v)}</dd></div>" for k, v in facts]
         # Trust marks (Upwork shows them on clients): each says the rule and the number behind it, counted from the open postings
         tb_ = []
-        if fresh_n.get(c, 0) >= 3: tb_.append(("Actively hiring", f"{fresh_n[c]:,} roles posted in the last 7 days"))
+        if fresh_n.get(c, 0) >= 3 and c not in CHURN: tb_.append(("Actively hiring", f"{fresh_n[c]:,} roles posted in the last 7 days"))
         if len(act) >= 5:
             pay_s = sum(bool(j["salary"]) for j in act)
             old5 = sum(1 for j in act if (j["posted"] or j["first_seen"])[:10] <= (datetime.date.today() - datetime.timedelta(days=LONG_OPEN)).isoformat())
             if pay_s >= len(act) / 2: tb_.append(("States the pay", f"{round(100 * pay_s / len(act))}% of its open roles state it"))
-            if old5 < len(act) / 4: tb_.append(("Few old postings", f"{round(100 * old5 / len(act))}% open {LONG_OPEN} days or more"))
+            if old5 < len(act) / 4 and c not in CHURN: tb_.append(("Few old postings", f"{round(100 * old5 / len(act))}% open {LONG_OPEN} days or more"))
         if (h1b_m := h1b_mark(slug)): tb_.append(h1b_m)        # certified H-1B filings (data/h1b.json), with the year and the count
         TB[c] = tb_
         tbadges = ('<p class="tbadges">' + "".join(f'<span class="tb" title="{e(why)}"><b>✓ {e(nm)}</b> {e(why)}</span>' for nm, why in tb_)
@@ -7268,6 +7367,10 @@ def main():
                         f'<td>{money(mid_) if mid_ else "—"}</td><td class="pcell">{bar}</td></tr>')
             overview += section(f"Pay by field at {c}", sid="pay", inner='<div class="tablewrap"><table><tr><th>Field</th><th>Postings with pay</th><th>Lowest to highest advertised</th><th>Median</th><th>Spread</th></tr>'
                                 + "".join(pay_row(k, v) for k, v in pay_rows) + "</table></div>"
+        if c in CHURN:
+            wk14_ = (datetime.date.today() - datetime.timedelta(days=14)).isoformat()
+            tbadges += (f'<p class="note">Reposts often: in the last 14 days it closed {sum(1 for j in js if not j["active"] and (j.get("closed") or "") >= wk14_):,} roles '
+                        f'and posted {sum(1 for j in js if (j["posted"] or "") >= wk14_):,}.</p>')
                                 f'<p class="note">Pay ranges that {e(c)} printed in its open postings, converted to US dollars. A field needs 3 postings with pay to appear and 15 for a median. The line shows where the range sits; the tick marks the median.</p>')
         # 26 Nov 2026, ChatGPT (temporary chat, search on) "stripe careers: is Stripe hiring right now, how do I apply and what does it pay?":
         # it cited this site for the count (about 770 open) and answered the pay with a table of named postings and their ranges, from the

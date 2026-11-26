@@ -333,6 +333,11 @@ class Live:
             if j["id"] in self.known or j["id"] in live_ids:
                 if j.get("desc"): keep.append((j["id"], name, j["desc"]))      # a text skip_known asked for
                 continue
+            # not a job, or not an employer's name (build.sift, teardown 26 Nov 2026): the hourly record leaves these out, so they would
+            # otherwise come back here as "new" on every read; a placeholder board known to be an employer's takes the employer's name
+            if build.junk_reason(j): continue
+            j["company"] = build.CO_RENAME.get(j["company"], j["company"])
+            if build.COPY_OF.match(j["title"]): j["title"] = build.COPY_OF.sub("", j["title"]).strip() or j["title"]
             ats = j["id"].split("-", 1)[0]
             if any(m.get("id") != j["id"] and (m.get("id", "").split("-", 1)[0] != ats or m["why"] == "the same link to apply")
                    for m in self.idx.find(j["company"], j["title"], j["location"], j["remote"], j["url"], limit=3)):
