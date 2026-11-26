@@ -1404,7 +1404,12 @@
   // The worker is registered under the build's version, so a new build is a new address. Under the bare /sw.js the CDN kept the
   // copy of 14 Nov 2026 for 30 days (the address ends in .js) and no browser ever received a newer worker.
   var swVer = ((document.querySelector('script[src*="/site.js?v="]') || {}).src || '').match(/[?&]v=([a-f0-9]+)/);
-  if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register(P + '/sw.js' + (swVer ? '?v=' + swVer[1] : '')).catch(function () {});
+  // Registered once the page has loaded (26 Nov 2026): installing it fetches the offline page and My jobs to keep, about 40 KB, which
+  // came in while a phone was still loading the page's own fonts and scripts.
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    var swReg = function () { navigator.serviceWorker.register(P + '/sw.js' + (swVer ? '?v=' + swVer[1] : '')).catch(function () {}); };
+    if (document.readyState === 'complete') swReg(); else window.addEventListener('load', swReg);
+  }
   var warmed = {};
   if (!specOk) document.addEventListener('mouseover', function (ev) {
     var a = ev.target.closest && ev.target.closest('.job > a');
