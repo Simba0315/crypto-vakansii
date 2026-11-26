@@ -5556,3 +5556,11 @@ table.adm-log td:last-child{min-width:280px}
   .job>a:has(>.jr>.jp.none+.pills:empty)>.jr,.shot .job>a:has(>.jr>.jp.none):not(:has(.pill.ok,.pill.sal))>.jr{grid-column:3;grid-row:2;align-self:baseline}
   .job>a:has(>.jr>.jp.none+.pills:empty)>.jr>.pills,.shot .job>a:has(>.jr>.jp.none):not(:has(.pill.ok,.pill.sal))>.jr>.pills{display:none}
 }
+
+/* ---- the menu on a phone or tablet: the page under the open drawer is dimmed, and a tap on it closes the drawer (the tap went through to
+   whatever link lay under the finger, and the drawer stayed open over a page that looked as if nothing had happened) ---- */
+@media(max-width:1040px){
+  header.site.open::after{content:"";position:absolute;left:0;right:0;top:100%;height:100vh;z-index:-1;background:rgba(14,14,12,.34);cursor:pointer}
+  :root[data-theme=dark] header.site.open::after{background:rgba(0,0,0,.55)}
+}
+@media(max-width:1040px) and (prefers-color-scheme:dark){:root:not([data-theme=light]) header.site.open::after{background:rgba(0,0,0,.55)}}

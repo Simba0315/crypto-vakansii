@@ -521,6 +521,11 @@
     var open = header.classList.toggle('open');
     menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
+  // a tap on the dimmed page under the open drawer (header.site.open::after, 26 Nov 2026) closes it instead of opening what lay under the finger
+  if (menuBtn && header) header.addEventListener('click', function (ev) {
+    if (ev.target !== header || !header.classList.contains('open')) return;
+    header.classList.remove('open'); menuBtn.setAttribute('aria-expanded', 'false');
+  });
   /* ---------- job page on a phone: the sticky Apply bar only while the page's own Apply button is out of view (24 Nov 2026: since the
      button moved to the top on phones, both showed at once on the first screen) ---------- */
   (function () {
