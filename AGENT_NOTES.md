@@ -165,6 +165,13 @@ the titles it catches (the test loop is in the commit that added the file). The 
 Logos: a company without an official logo is shown with no picture at all (`.ava:not(.has)` in `style.css`); never bring the
 letter squares back.
 
+A job's field (`cat`) comes from `collect.CATS` (the first generic word of the title wins, then the department, then `CATS_LATE`) and is
+mended by `build.job_field()`: `FIELD_FIX` (a trap word and the fields it wrongly sends titles to: "technician" -> Manufacturing for a
+Patient Care Technician, "counsel" -> Legal for a counselor) and `TITLE_NOISE` (pay rates, incentives, towns filed again without them).
+live.py calls the same function. Mend a field there, never in `collect.CATS`/`RULES` (a change re-reads every posting in the hourly run),
+and add the real titles it moves and must leave to the assertions under it. A role pattern that catches another trade gets a leading
+`^(?!...)` exclusion in `roles_info.py` (`NOT_ABA`, `NOT_CLINICIAN`), kept JavaScript-compatible: assets/site.js reads the patterns too.
+
 Field pages since 25 Nov 2026 (the owner asked four times for each field to be its own page): `fields_info.py` holds, per field, the words
 of its search (title key, heading), the /jobs/<category>/ lists that are the same field (they name the field page as canonical and every
 link to them is rewritten to it in `finish_html`, see `CAT_HOME`), the BLS occupation groups and occupations (Occupational Outlook

@@ -18,6 +18,23 @@ import re
 # "Account Executive, Insurance"); such titles are left out, so the page lists the people who do the work itself.
 NOT_TECH = (r"engineer|developer|architect|product manager|product design|product marketing|account executive|account manager|data scientist|research scientist|"
             r"\bsales\b|customer success|solutions|recruiter|machine learning|\bswe\b|member of technical staff")
+# Titles a role's generic word takes from another trade (audit of the live site, 26 Nov 2026), kept out at the start of the pattern so the
+# role page and the "For you" picker (assets/site.js reads these patterns) agree. Board certified behaviour analysts (ABA therapy) are
+# not analysts; "User Behavior Analyst" and "Behavioral Data Analyst" are.
+NOT_ABA = (r"^(?!.*\b(?:bcba|bcaba)\b)(?!(?!.*\b(?:user|customer|consumer|shopper|buyer|market(?:ing)?|fraud|threat|insider|network|cyber|security|player|trading|"
+           r"credit|data|digital|online|web|product|financial)\s+behaviou?r).*\bbehaviou?r(?:al)?\s+analy)")
+# recruiters, sellers and lawyers of a clinical trade ("Nurse Recruiter", "Medical Device Sales") are not its clinicians
+NOT_CLINICIAN = (r"^(?!.*\b(?:recruit(?:er|ers|ing)|recruitment (?:specialist|coordinator|manager|partner|consultant|lead|advisor|marketing)|sourcer|talent acquisition|"
+                 r"sales|account (?:executive|manager)|marketing|attorney|paralegal)\b)")
+# a camp, admissions, college, career, money or security counselor gives no therapy (unless the title says so)
+NOT_THERAPY_COUNSELOR = (r"(?!(?=.*\bcounsel+or)(?!.*\b(?:mental|behaviou?ral|substance|addiction|crisis|clinical|licensed|therap\w*|psych\w*|lpc|lmhc|lcsw|trauma|grief)\b)"
+                         r"(?=.*\b(?:camp|admissions?|enrol+ment|college|academic|career|financial|debt|credit|mortgage|loan|retirement|security|child ?watch|before|"
+                         r"after[- ]?school|summer|sales|leasing|beauty|travel|benefits)\b))")
+# a role about equipment ("builds, installs, repairs and maintains equipment by hand") is not a behaviour, pharmacy or clinic technician
+NOT_ABA_TECH = (NOT_ABA + r"(?!.*\b(?:behaviou?r(?:al)?|rbt|pharmacy|veterinary|vet|medical|patient care|surgical|surgery|scrub|sterile processing|dialysis|ekg|ecg|eeg|"
+                r"telemetry|psychiatric|mental health|ophthalmic|optometric|emergency room|er|ed|anesthesia|radiology|radiologic|x-?ray|mri|cardiovascular|cardiac|"
+                r"orthopa?edic|histology|phlebotomy|animal care|medication|rehab\w*|physical therapy|occupational therapy|respiratory|ultrasound|sonography|endoscopy|"
+                r"nail|dental|lab(?:oratory)?|research|clinical|nursing|monitor|optical|eye|sleep|polysomnograph\w*|neurodiagnostic)\s+tech)(?!.*\b(?:rbt|bcba)\b)")
 MORE_ROLES = [
     # software
     ("Web developer", "web-developer", r"web (developer|engineer|designer|design|master|producer)|wordpress|webflow|shopify (developer|engineer|expert)|html|javascript (developer|engineer)|php (developer|engineer)|website",
@@ -39,7 +56,7 @@ MORE_ROLES = [
      "graphics engineers", "makes computers draw: 3D scenes, effects, simulations, virtual reality"),
     ("Game developer", "game-developer", r"game(play)? (developer|engineer|programmer|designer|producer|artist|director)|unity (developer|engineer)|unreal|level designer|technical artist|game (design|economy)|concept artist|3d artist|character artist|environment artist",
      "game developers", "designs, draws and programs video games"),
-    ("Architect (software and systems)", "software-architect", r"\barchitect\b", "software and systems architects", "decides how a large system is put together, so that many teams can build parts that fit"),
+    ("Architect (software and systems)", "software-architect", r"^(?!.*\b(?:licensed|registered|landscape|interior|naval|project|aia)\s+architect)(?!.*\b(?:revit|autocad|ncarb|architectural)\b).*\barchitect\b", "software and systems architects", "decides how a large system is put together, so that many teams can build parts that fit"),
     ("Solutions architect", "solutions-architect", r"solutions? architect|solution architecture", "solutions architects", "designs how a customer’s systems and the product fit together before a deal and after it"),
     ("Sales engineer", "sales-engineer", r"sales engineer|pre-?sales|solutions? engineer|solutions? consultant|technical sales|demo engineer",
      "sales engineers", "is the technical person in a sales team: runs the demo, answers the hard questions, proves the product works for this customer"),
@@ -76,7 +93,7 @@ MORE_ROLES = [
      "research scientists", "runs experiments and publishes or ships new methods, most often in AI"),
     ("AI trainer and data annotation", "ai-trainer", r"ai (trainer|tutor)|data annotat|annotat(or|ion)|labell?(er|ing)|ai (content|data) (specialist|reviewer|writer)|model evaluat|human data",
      "AI trainers and data annotators", "checks, labels and writes examples that AI models learn from; often contract work done from home"),
-    ("Business analyst", "business-analyst", r"business (systems )?analyst|systems analyst|business intelligence|process analyst|operations analyst|insights (analyst|manager|lead)|\banalyst\b$",
+    ("Business analyst", "business-analyst", NOT_ABA + r".*(?:business (systems )?analyst|systems analyst|business intelligence|process analyst|operations analyst|insights (analyst|manager|lead)|\banalyst\b$)",
      "business analysts", "studies how a business works, in numbers and in processes, and says what to change"),
     ("Quantitative researcher", "quant", r"quant(itative)? (research|develop|trad|analyst|engineer|strateg)|\bquant\b",
      "quants", "uses maths and code to find and test trading strategies or to price risk"),
@@ -101,7 +118,10 @@ MORE_ROLES = [
     ("Strategy and business operations", "business-operations", r"business operations|bizops|strategy (and|&) operations|strategic (planning|initiatives|operations|programs|projects)|corporate strategy|strategy (manager|lead|associate|analyst|director)|head of strategy",
      "strategy and business operations staff", "works on the questions that belong to no single team: where to grow, what to fix, how to measure it"),
     ("Chief of staff", "chief-of-staff", r"chief of staff", "chiefs of staff", "is the right hand of an executive: runs priorities, meetings and special projects"),
-    ("Consulting", "consulting", r"consultant|consulting|advisory|advisor\b", "consultants", "advises customers, as an outside expert, on how to solve a problem or use a product"),
+    ("Consulting", "consulting", r"^(?!.*\b(?:sales|wine|beauty|customer|service|parts|showroom|home comfort|financial|wealth|insurance|banking|bank|mortgage|loan|lending|investment|"
+     r"leasing|admissions?|academic|enrol+ment|student|career|travel|fashion|style|retail|store|treatment|residential|youth|family|benefits|lactation|real estate|property|rental|"
+     r"energy|mattress|furniture|bridal|cosmetics?|skin ?care|makeup|jewel\w*|fragrance|camping|merchant|member|client)\s+(?:\w+\s+)?(?:consultants?|advisors?|advisers?)\b)"
+     r"(?!.*\b(?:advisory agent|consultant pharmacist)\b).*(?:consultant|consulting|advisory|advisor\b)", "consultants", "advises customers, as an outside expert, on how to solve a problem or use a product"),
     # design and creative
     ("UX and market researcher", "ux-researcher", r"(ux|user|design|product|customer|market|consumer) research|researcher,? (ux|design|product)|research operations",
      "UX and market researchers", "interviews and observes people to find out what they need and where a product confuses them"),
@@ -115,7 +135,7 @@ MORE_ROLES = [
     ("Product marketing manager", "product-marketing", r"product marketing", "product marketing managers", "explains what a product is for and why it is better: positioning, launches, sales materials"),
     ("Growth and performance marketing", "growth-marketing", r"growth (marketing|marketer)|performance market|paid (media|social|acquisition|marketing)|user acquisition|lifecycle market|crm market|email market|demand gen|marketing (ops|operations|automation|analyst|analytics|technolog)|acquisition market|digital market",
      "growth and performance marketers", "brings in customers through ads, email and experiments, and measures what each channel returns"),
-    ("Content writer and editor", "content-writer", r"content (marketing|marketer|writer|manager|lead|creator|editor|specialist|producer)|copywrit|\beditor\b|editorial|\bwriter\b|journalist|reporter",
+    ("Content writer and editor", "content-writer", r"^(?!.*\bservice (?:clerk/)?writer)(?!.*\banalyst reporter).*(?:content (marketing|marketer|writer|manager|lead|creator|editor|specialist|producer)|copywrit|\beditor\b|editorial|\bwriter\b|journalist|reporter)",
      "content writers and editors", "writes and edits articles, guides, newsletters and web copy"),
     ("SEO and paid search", "seo", r"\bseo\b|search engine (optimi|market)|\bsem\b|paid search|\bppc\b|organic growth|\baeo\b", "SEO and paid search specialists", "gets a site found in Google, through better pages or through search ads"),
     ("Advertising and ad operations", "advertising", r"\bad (operations|ops|sales|tech|product|platform)|\bads\b|advertising|media (buyer|planner|planning|buying)|campaign (manager|specialist)|programmatic",
@@ -145,19 +165,19 @@ MORE_ROLES = [
     ("Retail and store", "retail", r"retail|store (manager|associate|lead|leader|supervisor)|key holder|sales floor|brand ambassador|cashier|boutique|showroom",
      "retail and store staff", "works in a shop or showroom: serves customers, runs the floor, opens and closes the store"),
     # support
-    ("Customer support", "customer-support", r"customer (support|service|care|experience|advocate|happiness|operations)|support (specialist|agent|associate|representative|analyst|advisor|lead|manager|operations|team)|help ?cent(er|re)|call cent(er|re)|contact cent(er|re)|client (support|service)|service (desk|advisor)",
+    ("Customer support", "customer-support", r"^(?!.*\b(?:peer|direct|family|community|behaviou?r(?:al)?|clinical|recovery|disability|personal|residential|housing|nursing|mental health|individual)\s+support\b).*(?:customer (support|service|care|experience|advocate|happiness|operations)|support (specialist|agent|associate|representative|analyst|advisor|lead|manager|operations|team)|help ?cent(er|re)|call cent(er|re)|contact cent(er|re)|client (support|service)|service (desk|advisor))",
      "customer support specialists", "answers customers by chat, email or phone and solves their problems with the product"),
     ("Implementation and onboarding", "implementation", r"implementation|onboarding (manager|specialist|consultant|lead|associate)|professional services|deployment (manager|specialist|engineer)|customer (onboarding|implementation)",
      "implementation and onboarding specialists", "gets a new customer set up: connects their systems, moves their data, trains their people"),
     # finance
-    ("Accounting", "accounting", r"accountant|accounting|accounts (payable|receivable)|bookkeep|controller|general ledger|\bcpa\b|financial reporting|revenue (accountant|recognition)|billing (specialist|analyst|manager|operations)|reconciliation",
+    ("Accounting", "accounting", r"^(?!.*\b(?:document|inventory|stock|traffic|production|materials?|security|cctv|alarm|game|access|flight|quality|motion|robot|plc|logic)\s+controllers?\b).*(?:accountant|accounting|accounts (payable|receivable)|bookkeep|controller|general ledger|\bcpa\b|financial reporting|revenue (accountant|recognition)|billing (specialist|analyst|manager|operations)|reconciliation)",
      "accountants", "keeps a company’s books: records what is earned and spent, closes each month, prepares the reports", "nt"),
     ("Financial analyst (FP&A)", "financial-analyst", r"financial (analyst|planning|analysis)|fp&a|finance (manager|analyst|business partner|associate|lead|director|partner|operations|systems|specialist|coordinator|transformation)|strategic finance|corporate finance|head of finance|\bcfo\b|vp,? (of )?finance",
      "financial analysts", "plans the money: budgets, forecasts, and what each decision will cost or earn", "nt"),
     ("Tax", "tax", r"\btax\b", "tax specialists", "works out what a company owes in taxes in each country and files the returns", "nt"),
     ("Treasury", "treasury", r"treasury|cash management|liquidity (manager|analyst)", "treasury specialists", "manages a company’s cash: where it is held, how it moves, and the risk on currencies and interest", "nt"),
     ("Payroll", "payroll", r"payroll", "payroll specialists", "makes sure every employee is paid the right amount on time, with the right taxes withheld", "nt"),
-    ("Internal audit", "audit", r"\baudit", "auditors", "checks that a company’s numbers and controls can be trusted", "nt"),
+    ("Internal audit", "audit", r"^(?!.*\b(?:night|hotel|energy|recycling|inventory)\s+audit).*\baudit", "auditors", "checks that a company’s numbers and controls can be trusted", "nt"),
     ("Investment and corporate development", "investment", r"investment|m&a|corporate development|venture|private equity|portfolio (manager|analyst|management)|investor relations|capital markets|asset management|wealth|fund (accountant|manager|operations)",
      "investment and corporate development staff", "decides where money is invested: buying companies, managing funds, talking to investors", "nt"),
     ("Trader", "trader", r"\btrader\b|trading (analyst|associate|operations|desk|strategist|support)|market mak|execution (trader|specialist)|\botc\b",
@@ -166,10 +186,10 @@ MORE_ROLES = [
      "underwriters, actuaries and claims staff", "prices insurance risk and settles claims", "nt"),
     ("Lending and mortgage", "lending", r"mortgage|loan (officer|processor|specialist|originat|servic|operations|closer)|lending|credit (analyst|underwrit|operations|manager)|collections",
      "lending and mortgage staff", "checks borrowers, prepares loans and looks after them until they are repaid", "nt"),
-    ("Procurement", "procurement", r"procurement|purchasing|\bbuyer\b|sourcing (manager|specialist|lead|analyst)|category manager|vendor manag|supplier (manager|development)|commodity manager|supply manager",
+    ("Procurement", "procurement", r"^(?!.*\b(?:media|digital|programmatic|tv|ad|advertising|paid social|paid search)\s+buy).*(?:procurement|purchasing|\bbuyer\b|sourcing (manager|specialist|lead|analyst)|category manager|vendor manag|supplier (manager|development)|commodity manager|supply manager)",
      "procurement specialists", "buys what a company needs, from laptops to components, and negotiates with suppliers"),
     # legal, compliance, policy
-    ("Legal counsel", "legal-counsel", r"counsel|attorney|lawyer|legal (director|manager|lead|officer|advisor)|solicitor|head of legal",
+    ("Legal counsel", "legal-counsel", r"\bcounsel\b|attorney|lawyer|legal (director|manager|lead|officer|advisor)|solicitor|head of legal",
      "lawyers and legal counsel", "advises a company on the law: contracts, products, disputes, regulators"),
     ("Paralegal and legal operations", "paralegal", r"paralegal|legal (assistant|operations|ops|analyst|specialist|coordinator|associate|intern|secretary|engineer|project|program)|contracts? (manager|specialist|administrator|analyst)",
      "paralegals and legal operations staff", "supports lawyers: prepares documents, tracks contracts and deadlines, runs the legal team’s tools"),
@@ -184,7 +204,7 @@ MORE_ROLES = [
     ("Human resources", "human-resources", r"human resources|\bhr\b|\bhrbp\b|people (operations|partner|business partner|experience|programs|manager|lead|team|analytics|ops)|employee (relations|experience)|head of people|chief people|people & culture|people and culture",
      "HR specialists", "looks after a company’s employees: contracts, policies, disputes, and how people are managed", "nt"),
     ("Compensation and benefits", "compensation-benefits", r"compensation|benefits|total rewards|equity (administrator|analyst|operations)", "compensation and benefits specialists", "decides how pay, bonuses, shares and benefits are set and keeps them fair", "nt"),
-    ("Training and enablement", "training", r"learning (and|&) development|\bl&d\b|learning (designer|experience|program|specialist|partner)|instructional design|training (manager|specialist|coordinator|lead|program)|enablement|\btrainer\b|curriculum|facilitator",
+    ("Training and enablement", "training", r"^(?!.*\b(?:dog|pet|canine|k-?9|animal|horse|equine|athletic|personal|fitness|strength|yoga|pilates|gym|ai|stretch|sports|swim|boxing|golf|tennis|driving|cdl)\s+trainers?\b).*(?:learning (and|&) development|\bl&d\b|learning (designer|experience|program|specialist|partner)|instructional design|training (manager|specialist|coordinator|lead|program)|enablement|\btrainer\b|curriculum|facilitator)",
      "trainers and enablement specialists", "teaches employees or customers how to do their work or use a product, and builds the courses for it"),
     # operations and administration
     ("Operations manager", "operations-manager", r"operations (manager|lead|associate|specialist|analyst|coordinator|director|supervisor|partner)|head of operations|\bcoo\b|general manager|director,? (of )?operations",
@@ -226,14 +246,14 @@ MORE_ROLES = [
      "test and validation engineers", "proves that hardware works as designed, under heat, vibration and long use"),
     ("Aerospace engineer", "aerospace", r"aerospace|propulsion|avionics|\bgnc\b|flight (software|dynamics|test|controls|operations|safety)|spacecraft|satellite|launch (engineer|operations|vehicle)|aerodynamic|orbital|mission (operations|manager)",
      "aerospace engineers", "designs and operates aircraft, rockets and satellites"),
-    ("Technician", "technician", r"technician|\btech\b (i|ii|iii|1|2|3)\b|mechanic\b|electrician|\bhvac\b|maintenance|installer",
+    ("Technician", "technician", NOT_ABA_TECH + r".*(?:technician|\btech\b (i|ii|iii|1|2|3)\b|mechanic\b|electrician|\bhvac\b|maintenance|installer)",
      "technicians", "builds, installs, repairs and maintains equipment by hand"),
     ("Field service and operations", "field-service", r"field (service|technician|engineer|operations|support|application|applications)|service (technician|engineer)|site (manager|lead|leader|supervisor|operations|engineer)|commissioning|applications? engineer",
      "field service staff", "works at customer sites: installs, starts up and repairs equipment where it is used"),
     # science, health, education, hospitality
     ("Life sciences and lab", "life-sciences", r"biolog|chemist|bioinformat|computational (biology|chemistry)|lab(oratory)? (technician|manager|assistant|operations|associate)|research associate|genomic|protein|assay|immunolog|physicist|cell (culture|line|therapy)|molecular|pharmacolog",
      "life scientists and lab staff", "does laboratory research in biology, chemistry or physics", "nt"),
-    ("Healthcare and clinical", "healthcare", r"nurse|\brn\b|physician|clinical|medical (director|assistant|scribe|coder|writer|science|affairs|device|officer)|therapist|pharmac|(?<!customer )care (coordinator|manager|navigator|advocate|team|partner)|health coach|dietitian|psychiatr|psycholog|counselor|patient|veterinar|dental|optometr|caregiver",
+    ("Healthcare and clinical", "healthcare", NOT_CLINICIAN + NOT_THERAPY_COUNSELOR + r".*(?:nurse|\brn\b|physician|clinical|medical (director|assistant|scribe|coder|writer|science|affairs|device|officer)|therapist|pharmac|(?<!customer )care (coordinator|manager|navigator|advocate|team|partner)|health coach|dietitian|psychiatr|psycholog|counselor|patient|veterinar|dental|optometr|caregiver)",
      "healthcare and clinical staff", "treats patients or supports those who do, at health-tech and biotech companies"),
     ("Teaching and education", "education", r"teacher|\btutor\b|instructor|professor|lecturer|education (specialist|manager|consultant|lead|program)|academic|teaching",
      "teachers and education specialists", "teaches or builds teaching materials, often for online courses and education products"),
@@ -253,7 +273,7 @@ MORE_ROLES = [
     # added after comparing with the category lists of the big job sites
     ("System administrator and IT operations", "system-administrator", r"systems? administrator|sysadmin|system admin|linux (administrator|engineer)|windows (administrator|engineer)|it (administrator|engineer|operations|infrastructure|manager|director)|identity (and|&) access|\biam\b|endpoint",
      "system administrators", "runs a company’s own servers, accounts and devices, and decides who may open what"),
-    ("Analyst", "analyst", r"\banalyst\b", "analysts", "studies numbers or documents in one area, such as finance, risk, operations or data, and reports what they show"),
+    ("Analyst", "analyst", NOT_ABA + r".*\banalyst\b", "analysts", "studies numbers or documents in one area, such as finance, risk, operations or data, and reports what they show"),
     ("Coordinator", "coordinator", r"\bcoordinator\b", "coordinators", "keeps a team’s schedules, orders, events and paperwork in order; often a first office job"),
     ("Growth", "growth", r"\bgrowth\b", "growth specialists", "finds ways to get more users or revenue, across marketing, product and sales, and tests them one by one"),
     ("Payments", "payments", r"payments?\b|settlement|card (operations|network|issuing)|acquiring|money movement", "payments specialists", "works on how money moves between people, shops and banks: cards, transfers, settlement"),
@@ -263,10 +283,11 @@ MORE_ROLES = [
     ("Energy and sustainability", "energy", r"sustainab|climate|carbon|renewable|solar|\bwind\b|energy|\besg\b|battery storage|\bgrid\b|utility|power (generation|plant|systems|delivery)|nuclear|turbine",
      "energy and sustainability staff", "works on power: generating it, storing it, and using less of it"),
     ("Audio and music", "audio", r"\bmusic\b|\baudio\b|sound (design|engineer)|composer", "audio and music specialists", "records, designs and programs sound, for games, video and music products"),
-    ("Operator and driver", "operators", r"operator\b|\bdriver\b(?! (monitoring|response|experience|assist))|porter|courier|delivery (associate|driver)|forklift|crane",
+    ("Operator and driver", "operators", r"operator\b|\bdriver\b(?! (monitoring|response|experience|assist))|\bporter|courier|delivery (associate|driver)|forklift|crane",
      "operators and drivers", "runs machines, vehicles or a control room, usually in shifts", "nt"),
-    ("Nursing", "nursing", r"nurse|\brn\b|\blpn\b|nursing", "nurses", "cares for patients, in person or by video, and coordinates their treatment"),
-    ("Mental health and therapy", "mental-health", r"therapist|psychiatr|psycholog|counselor|\bmental health|behavioral health|social worker|\blcsw\b|\blmft\b",
+    ("Nursing", "nursing", NOT_CLINICIAN + r"(?!.*\bnursing (?:home|facility|center|and rehab)\b(?!.*\b(?:nurses?|rn|lpn|lvn|cna|nursing assistants?|director of nursing)\b)).*(?:nurse|\brn\b|\blpn\b|nursing)", "nurses", "cares for patients, in person or by video, and coordinates their treatment"),
+    ("Mental health and therapy", "mental-health", r"^(?!.*\b(?:physical|occupational|respiratory|speech|massage|recreation(?:al)?|radiation|athletic|infusion|vision|dental|manual|hand|pelvic|aquatic|sports)\s+therap)"
+     + NOT_THERAPY_COUNSELOR + r".*(?:therapist|psychiatr|psycholog|counselor|\bmental health|behavioral health|social worker|\blcsw\b|\blmft\b|\bpeer (?:support|recovery))",
      "therapists and mental health professionals", "treats people for anxiety, depression and other conditions, often online"),
     ("Clinical research and medical affairs", "clinical-research", r"clinical (research|trial|operations|data|science|development|program)|medical (affairs|science liaison|writer|director)|regulatory affairs|pharmacovigilance|biostat|drug (safety|discovery|development)",
      "clinical research staff", "runs the studies that test whether a treatment works and is safe, and deals with the regulators"),

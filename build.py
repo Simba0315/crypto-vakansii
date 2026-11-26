@@ -5,9 +5,11 @@ Closed jobs keep their pages forever (archive); only the JobPosting markup and t
 import datetime, hashlib, html, json, os, re, shutil, time
 from urllib.parse import quote, unquote, urlparse
 from collections import Counter, defaultdict
+from functools import lru_cache
 from email.utils import format_datetime
 from pathlib import Path
 from collect import CATS, OTHER, PERKS, SKILLS, slugify
+import collect
 import jobsdb
 # Perks read here from the posting text, beside collect.PERKS (whose list is part of the collector's rules, collect.RULES, so a new perk
 # there would make the collector parse every posting again). LinkedIn has collections for both (checked 20 Nov 2026).
@@ -303,6 +305,30 @@ ROLE_NT = {r[0] for r in roles_info.MORE_ROLES if len(r) > 5}       # fields of 
 NOT_TECH = re.compile(roles_info.NOT_TECH, re.I)
 ROLE_RX = {nm: re.compile(rx, re.I) for nm, _, rx in ROLES}
 role_hit = lambda nm, rx, title: bool(ROLE_RX[nm].search(title)) and (nm in ROLE_OWN or not ROLE_OTHER.search(title)) and not (nm in ROLE_NT and NOT_TECH.search(title))
+_role_of = {s_: nm for nm, s_, _ in ROLES}
+# Role pages that a generic word filled with another trade (audit of the live site, 26 Nov 2026; the patterns are in roles_info.py):
+# (title, role pages it is on, role pages it must not be on)
+for _t, _on, _off in (
+        ("Board Certified Behavior Analyst (BCBA)", (), ("analyst", "business-analyst")), ("Behavior Analyst", (), ("analyst", "business-analyst")),
+        ("BCBA - Clinic Supervisor", (), ("analyst",)), ("Data Analyst", ("analyst", "business-analyst"), ()), ("User Behavior Analyst", ("analyst",), ()),
+        ("Behavioral Data Analyst", ("analyst",), ()), ("Senior Business Analyst", ("analyst", "business-analyst"), ()),
+        ("Registered Behavior Technician (RBT)", (), ("technician",)), ("Pharmacy Technician", (), ("technician",)), ("Veterinary Technician", (), ("technician",)),
+        ("Patient Care Technician", (), ("technician",)), ("Maintenance Technician", ("technician",), ()), ("HVAC Tech II", ("technician",), ()), ("Electrician", ("technician",), ()),
+        ("Physical Therapist", ("healthcare",), ("mental-health",)), ("Occupational Therapist", (), ("mental-health",)), ("Mental Health Therapist", ("mental-health",), ()),
+        ("Camp Counselor", (), ("mental-health", "healthcare", "legal-counsel")), ("Security Counselor", (), ("mental-health", "legal-counsel")),
+        ("Licensed Mental Health Counselor", ("mental-health", "healthcare"), ("legal-counsel",)), ("Peer Support Specialist", ("mental-health",), ("customer-support",)),
+        ("General Counsel", ("legal-counsel",), ()), ("Associate General Counsel", ("legal-counsel",), ()),
+        ("Nurse Recruiter", ("recruiter",), ("nursing", "healthcare")), ("Cook - Nursing Home", (), ("nursing",)), ("RN - Nursing Home", ("healthcare",), ()),
+        ("Registered Nurse", ("nursing", "healthcare"), ()), ("Medical Device Sales Representative", (), ("healthcare",)),
+        ("Wine Consultant", (), ("consulting",)), ("Customer Advisor", (), ("consulting",)), ("Financial Advisor", (), ("consulting",)), ("Management Consultant", ("consulting",), ()),
+        ("Dog Trainer", (), ("training",)), ("Athletic Trainer", (), ("training",)), ("Personal Trainer", (), ("training",)), ("Corporate Trainer", ("training",), ()),
+        ("Media Buyer", (), ("procurement",)), ("Buyer", ("procurement",), ()), ("Document Controller", (), ("accounting",)), ("Financial Controller", ("accounting",), ()),
+        ("Night Auditor", (), ("audit",)), ("Internal Auditor", ("audit",), ()), ("Licensed Architect", (), ("software-architect",)), ("Software Architect", ("software-architect",), ()),
+        ("Service Writer", (), ("content-writer",)), ("Content Writer", ("content-writer",), ()), ("Target Analyst Reporter", (), ("operators", "content-writer")),
+        ("Porter", ("operators",), ()), ("Customer Support Specialist", ("customer-support",), ()), ("Direct Support Professional", (), ("customer-support",)),
+        ("Sales Engineer", ("sales-engineer",), ()), ("", (), ("analyst", "nursing"))):
+    for s_ in _on: assert role_hit(_role_of[s_], None, _t), (_t, s_)
+    for s_ in _off: assert not role_hit(_role_of[s_], None, _t), (_t, s_)
 
 
 def same_case(c):
@@ -495,6 +521,15 @@ def one_page_per_query():
         if len(paths) < 2: continue
         paths.sort(key=lambda p_: (rank[p_.split("/", 1)[0]], len(p_), p_))
         for p_ in paths[1:]: moved[p_] = paths[0]
+    # The page that keeps a search may hand it on in turn: /roles/supply-chain/ ("Supply Chain and Logistics Jobs") gave it to
+    # /jobs/supply-chain/, which names /categories/logistics-transport/ (26 Nov 2026, a canonical that pointed at a page with another
+    # canonical, on the live site too). The page at the end of the chain keeps it.
+    def last(k_, p_):
+        seen = {p_}
+        while k_.rstrip("/") in CAT_HOME and k_ not in seen and (OUT / CAT_HOME[k_.rstrip("/")] / "index.html").exists():
+            seen.add(k_); k_ = CAT_HOME[k_.rstrip("/")]
+        return k_
+    moved = {p_: k_ for p_, k_ in ((p_, last(k_, p_)) for p_, k_ in moved.items()) if k_ != p_}
     late = {p_: k_ for p_, k_ in moved.items() if CAT_HOME.get(p_.rstrip("/")) != k_}
     if late:
         print("one page per query: links mended after the build, name these where the pages are made: " + ", ".join(f"/{p_} -> /{k_}" for p_, k_ in sorted(late.items())))
@@ -3521,13 +3556,213 @@ ASSOC_SENIOR = re.compile(r"(?i)associate (?:rvp|avp|svp|evp|regional vice presi
 ABA_ROLE = re.compile(r"(?i)\bbcba(?:-d)?\b|\bbcaba\b|\brbt\b|\bboard[- ]certified (?:assistant )?behaviou?r(?:al)? analyst|\bregistered behaviou?r(?:al)? tech|"
                       r"\bapplied behaviou?r analy|\bbehaviou?r(?:al)? (?:analyst|technician|tech\b|intervention(?:al)?ist|health tech)")
 NOT_ABA = re.compile(r"(?i)\b(?:user|customer|consumer|shopper|buyer|market(?:ing)?|fraud|threat|insider|network|cyber|security|player|trading|credit|data|digital|online|web|product|financial)\s+behaviou?r")
-ABA_FROM = ("data-research", "manufacturing", OTHER[0])
+ABA_FROM = ("data-research", "manufacturing", "support", OTHER[0])
+# More titles collect.CATS files by a generic word of another trade (audit of the live site, 26 Nov 2026: a few hundred titles of every field
+# and the most frequent ones, then each trap counted on the live rows). Each rule moves a title only out of the fields named, the ones
+# the trap word sends it to, so a title the rules gave its own field keeps it; the first rule that fits wins.
+_r = lambda p: re.compile("(?i)" + p)
+NOT_CLINICAL = _r(r"recruit(?:er|ers|ing)\b|recruitment (?:specialist|coordinator|manager|partner|consultant|lead|advisor|marketing)|talent acquisition|sourcer|\bsales\b|"
+                  r"marketing|\bbilling\b|\bcod(?:er|ing)\b|liaison|schedul|outreach|relations\b|\baccount (?:executive|manager|director)|attorney|\bcounsel\b|paralegal|"
+                  r"software|engineer|developer|\bdata\b|insurance|claims|underwrit|teacher|professor|instructor|faculty|educator|lecturer|trainer|\bwriter\b|editor|\bit\b|"
+                  r"financial (?:reporting|analyst|planning|manager)|\bfinance\b|accounting|accountant|\baudit|revenue cycle|\brep\b|representative|"
+                  r"\bnatal\b|mossor[oó]|parnamirim|promotor|vendedor|auxiliar|atendente|operador")      # "(RN)": Rio Grande do Norte in a Brazilian title
+MED_TECH = _r(r"\b(?:patient care|surgical|surgery|scrub|sterile processing|spd|central (?:sterile|service|processing)|dialysis|hemodialysis|ekg|ecg|eeg|telemetry|cardiac monitor|"
+              r"psychiatric|mental health|ophthalmic|emergency (?:room|department|care|medical)|er|ed|anesthesia|radiology|radiologic|x-?ray|mri|ct|cardiovascular|cardiac|"
+              r"cath(?:eterization)? lab|orthopa?edic|histology|cytology|phlebotomy|vet|animal care|medication|rehabilitation|rehab|physical therapy|occupational therapy|"
+              r"respiratory|ultrasound|sonography|endoscopy|neurodiagnostic|polysomnograph(?:ic|y)|sleep|autopsy|morgue|pharmacy)\s+tech(?:nician)?s?\b|\bmonitor tech(?:nician)?s?\b|"
+              r"\bhisto ?tech|\b(?:surgical|radiolog\w*|x-?ray|mri|ct|mammograph\w*|ultrasound|sonograph\w*|nuclear medicine|cardiovascular|vascular|echo\w*|cath lab|histo|"
+              r"polysomnograph\w*|neurodiagnostic|interventional|imaging|medical) technologists?\b|\bmed(?:ication)? aides?\b|\bmed tech\b")
+NOT_MED_TECH = _r(r"\b(?:alarm|environmental|security|well|air|water|emission|network|it|software|field service|biomedical equipment|sales)\b")
+HC_STRONG = _r(r"\b(?:gastroenterolog|urolog|otolaryngolog|neurolog|nephrolog|endocrinolog|rheumatolog|pulmonolog|hematolog|gynecolog|obstetric|ophthalmolog|neonatolog|"
+               r"hospitalist|intensivist|internist|periodontist|orthodontist|endodontist|prosthodontist|podiatr|audiolog|optician|orthotist|prosthetist|chiropract|midwi(?:fe|ves)|"
+               r"dietitian|\bphysicians?\b|\bsurgeons?\b|psychiatr|psychologists?\b|phlebotom|\b(?:rn|lpn|lvn|aprn|crna|pmhnp|fnp|cna)\b|\bnurses?\b|nurse practitioner|"
+               r"advanced practice (?:provider|clinician|nurse|registered nurse)|\bhome (?:health|care) aides?\b|direct care (?:worker|staff|professional|associate|aide)|\bpsw\b|"
+               r"personal (?:support|care) (?:worker|aide|assistant|attendant)|\bcaregivers?\b|certified nursing assistant|medical assistant|dental (?:assistant|hygienist)|"
+               r"pharmacist|veterinarian|sonographer|paramedic|\bemt\b|clinician|neuropsycholog)")
+COUNSELOR = r"^(?=.*\bcounsel+(?:or|ors|ing)\b)"
+NOT_LAW = (r"\bcounsel\b|attorney|\blaw\b|legal|lawyer|paralegal|immigration|compliance")
+MH_CUE = (r"mental|behaviou?ral|substance|addiction|\bsud\b|\baod\b|alcohol|drug|crisis|clinical|licensed|\blpc|\blmhc|\blcsw|\bladc|\blac\b|therap|rehabilitation|"
+            r"recovery|detox|shelter|trauma|grief|genetic|psych|outpatient|inpatient|residential|family|marriage|wellness")
+EDU_CUE = r"(?=.*\b(?:camp|school|college|universit|admissions?|enrol+ment|academic|career|employment|guidance|after[- ]?school|before|childwatch|child watch|youth|student|summer|education)\w*)"
+PUBLIC_SAFETY = _r(r"\b(?:police|sheriff'?s?|correction(?:s|al)|detention|jail|probation|parole|patrol|public safety|peace|law enforcement|campus safety|court security|"
+                   r"juvenile (?:justice|corrections?|detention)|parking enforcement|code enforcement)\s+(?:\w+\s+)?(?:officers?|deput(?:y|ies)|sergeants?|lieutenants?|captains?|"
+                   r"recruits?|cadets?|trainees?|agents?|specialists?|counsel+ors?|investigators?|detectives?|supervisors?|dispatchers?)\b|\bdeputy sheriff|\bsheriff'?s? deput|"
+                   r"\btroopers?\b|\bfirefighters?\b|\b(?:911|e-?911|emergency|police|fire|public safety|sheriff'?s?)\s+(?:communications?\s+)?(?:dispatchers?|telecommunicators?|"
+                   r"call takers?|communications? (?:officer|operator|specialist))\b|\btelecommunicators?\b")
+FIN_ROLE = _r(r"\b(?:wealth|wealth management|investment|private wealth|private client|affluent client|portfolio|mortgage|loan|lending|banking|branch banking|retirement|"
+              r"personal banking|premier banking|priority banking)\s+(?:management\s+)?(?:advisors?|advisers?|consultants?|planners?|bankers?|associates?|specialists?)\b|"
+              r"\bbranch banking\b|\b(?:wealth|estate|retirement|succession) planners?\b|\b(?:retail|relationship|personal|universal|associate|premier|private|business|"
+              r"small business|phone|branch) bankers?\b|\bbank(?:ing)? (?:tellers?|associates?)\b|\btellers?\b(?!.*\b(?:casino|cage|fortune)\b)|\bunderwrit")
+FIELD_FIX = [
+    ("healthcare", ABA_ROLE, NOT_ABA, ABA_FROM),
+    # "office" stands in "officer" (Operations), "recruit" in "Police Recruit" (HR), nothing in "Correctional Officer" (Other): the Security
+    # field holds physical security and public safety; the dispatchers of 911 fell into Supply Chain by "dispatcher"
+    ("security", PUBLIC_SAFETY, _r(r"\b(?:instructor|professor|teacher|faculty|adjunct|lecturer|recruiter|recruiting)\b"),
+     ("operations", "people", "other", "compliance-legal", "supply-chain", "support", "marketing", "education")),
+    ("finance", _r(r"\b(?:loan|mortgage|lending|credit|commercial lending|consumer loan)\s+officers?\b"), _r(r"fair lending|compliance|\bcra\b"), ("operations",)),
+    ("healthcare", _r(r"\b(?:chief )?(?:medical|nursing|clinical) officers?\b"), None, ("operations",)),
+    ("education", _r(r"\badmissions? officers?\b"), None, ("operations",)),
+    # "technician" is Manufacturing & Trades, "technologist" no field: "Patient Care Technician", "Surgical Technologist", "ER Technician"
+    ("healthcare", MED_TECH, NOT_MED_TECH, ("manufacturing", "other", "engineering", "support", "data-research", "operations", "marketing")),
+    # a clinical title the department or a weak word of another field had placed ("Physician Scientist/Clinician Investigator" in Legal,
+    # "Gastroenterologist" in Other, "RN - School" in Education), unless the title is about selling, hiring, billing or teaching it
+    ("healthcare", HC_STRONG, NOT_CLINICAL, ("other", "operations", "support", "marketing", "compliance-legal", "finance", "data-research", "consulting", "education",
+                                            "retail", "supply-chain", "manufacturing")),
+    # "counsel" stands in "counselor": a camp, school or admissions counselor is Education, a debt or mortgage one Finance, the rest Healthcare
+    ("education", _r(COUNSELOR + r"(?=.*\b(?:professor|faculty|lecturer|instructor|teacher))"), _r(NOT_LAW), ("compliance-legal", OTHER[0])),
+    ("education", _r(COUNSELOR + EDU_CUE), _r(NOT_LAW + "|" + MH_CUE), ("compliance-legal", OTHER[0])),
+    ("finance", _r(COUNSELOR + r"(?=.*\b(?:financial|debt|credit|mortgage|loan|retirement plan|tax|money|investment|wealth)\b)"), _r(NOT_LAW + "|" + MH_CUE), ("compliance-legal", OTHER[0])),
+    ("healthcare", _r(COUNSELOR), _r(NOT_LAW), ("compliance-legal", OTHER[0])),
+    ("retail", _r(r"\bnight (?:audit|auditor)s?\b|\b(?:hotel|front desk|front office) (?:night )?auditors?\b"), None, ("compliance-legal",)),
+    # Supply Chain by "transport" and "planner": hospital porters, discharge, media and event planners, wealth planners, pile drivers
+    ("healthcare", _r(r"\bpatient transport|\bdischarge plann"), None, ("supply-chain",)),
+    ("marketing", _r(r"\bmedia (?:buyer|planner|buying|planning)|\b(?:digital|programmatic|paid|social|tv|broadcast|advertising|ad) (?:buyer|planner)s?\b|"
+                     r"\b(?:event|events|meeting|meetings|wedding|conference|party) planners?\b"), None, ("supply-chain",)),
+    ("finance", FIN_ROLE, _r(r"\bproduct (?:owner|manager|lead|director)\b|engineer|developer|software|data scientist|recruit(?:er|ing)\b"),
+     ("supply-chain", "consulting", "retail", OTHER[0], "manufacturing", "product", "operations", "data-research")),
+    ("manufacturing", _r(r"\bpile[- ]?driv"), None, ("supply-chain",)),
+    # "administrat" is Operations: a systems, network or database administrator is IT, a benefits one HR, a school one Education
+    ("engineering", _r(r"\b(?:systems?|network|database|linux|unix|windows|server|it|cloud|infrastructure|vmware|storage|citrix|sharepoint|m365|o365|microsoft 365|"
+                       r"active directory|sql|mainframe|backup|exchange|identity|devops)\s+(?:systems?\s+)?(?:administrators?|admins?)\b|\bsys ?admins?\b|"
+                       r"\b(?:oracle|sql|sql server|postgres(?:ql)?|mysql|mongodb|db2|senior|sr\.?|lead|junior|principal|staff)\s+dba\b|^dba\b"), None, ("operations",)),
+    ("people", _r(r"\b(?:benefits?|hris|leave|compensation|human resources?)\s+administrators?\b"), None, ("operations",)),
+    ("education", _r(r"\b(?:school|academic|education|educational|college|university|campus|district|student)\s+administrators?\b"), None, ("operations",)),
+    # "data", "analyst", "research", "quant" are Data & Research
+    ("operations", _r(r"\bdata entry\b"), None, ("data-research",)),
+    ("support", _r(r"\bhelp ?desk\b|\bservice desk\b|\bdesktop support\b|\bdeskside\b|\bend[- ]user (?:support|computing)\b|\b(?:it|pc|computer|desktop) (?:support )?tech(?:nician)?s?\b"),
+     None, ("data-research", "manufacturing")),
+    ("manufacturing", _r(r"\bdata ?cent(?:er|re)s?\b.*\b(?:technicians?|techs?|electricians?|mechanics?|facilit\w*)\b|\bquantity surveyors?\b"), None, ("data-research",)),
+    ("healthcare", _r(r"\b(?:medical|clinical|biomedical) lab(?:oratory)? scientists?\b|\bbiomedical scientists?\b"), None, ("data-research",)),
+    ("finance", _r(r"\b(?:credit|investment|budget|budgetary|actuarial|loan|lending|mortgage|underwriting|equity|fixed income|portfolio|valuation|m&a|fund|cost|banking|"
+                   r"wealth|fp&a)\s+(?:research\s+)?analysts?\b|\bequity research\b|\binvestment research\b"), None, ("data-research",)),
+    ("people", _r(r"\b(?:compensation|benefits?|total rewards|hris|people operations)\s+analysts?\b"), None, ("data-research",)),
+    ("supply-chain", _r(r"\b(?:logistics|supply chain|demand plann\w*|supply plann\w*|procurement|purchasing|sourcing|inventory|transportation|warehouse|fulfil+ment|"
+                        r"materials?)\s+(?:planning\s+)?analysts?\b"), None, ("data-research",)),
+    # CATS knows "security" but not "cyber" alone ("Cyber Analyst", "Cyber Consultant"), nor incident response or penetration testing
+    ("security", _r(r"\bcyber\b|\bincident response\b|\bpenetration test|\bred team(?:er)?s?\b|\bthreat hunt|\bsoc analyst|\bvulnerability (?:analyst|management|researcher)"),
+     _r(r"counsel|attorney|lawyer|legal|paralegal|insurance|underwrit|claims|\bsales\b|recruit|cyber[- ]physical|account (?:executive|manager|director)|customer success|"
+        r"business development|marketing"),
+     ("data-research", "consulting", "compliance-legal", "operations", OTHER[0], "support", "engineering")),
+    # "engineer" and "architect" are Engineering: a sales engineer sells (the role page Sales engineer keeps them), "Account Executive - Architecture"
+    ("sales-bd", _r(r"\b(?:pre-?\s?sales|sales) engineer(?:ing)?s?\b|^(?:(?:senior|sr\.?|lead|principal|regional|enterprise|strategic|major|global|federal|named|commercial|"
+                    r"mid-?market|smb|territory|key)\s+)*(?:account executive|account manager|sales (?:representative|manager|director|executive|specialist|lead))\b"),
+     _r(r"\b(?:software|backend|frontend|full[- ]?stack|data|platform|machine learning|ml|devops|site reliability|qa|test) engineer"), ("engineering",)),
+    ("manufacturing", _r(r"\bqa(?:/qc)? (?:technicians?|techs?|inspectors?)\b|\b(?:qa/qc|qc/qa)\b(?!.*\bengineer)|\b(?:stationary|building|hotel(?: maintenance)?|boiler|operating) engineers?\b"),
+     None, ("engineering",)),
+    # "designer" and "developer": an instructional designer or a curriculum developer teaches, a mechanical or PCB designer is an engineer
+    ("education", _r(r"\binstructional design|\blearning (?:experience |and development |& development )?design|\bcurriculum (?:designer|developer|writer|specialist)|"
+                     r"\b(?:course|courseware|e-?learning|training) (?:designer|developer)s?\b|\bassessment design"), None, ("design", "engineering")),
+    ("engineering", _r(r"\b(?:mechanical|electrical|electronic|civil|structural|plumbing|piping|hvac|mep|fire (?:sprinkler|protection|alarm)|sprinkler|substation|transmission|"
+                       r"utility|telecom|fiber|pcb|analog layout|ic layout|mask layout|ic|asic|chip|circuit|analog|rf|nand|memory|physical|silicon|soc|fpga|vlsi|logic|cad|autocad|"
+                       r"bim|revit|cable|wire harness|tool(?:ing)?|mold|die|roadway|highway|bridge|geotechnical|instrumentation|controls?|hardware|electromechanical|photonics?)"
+                       r"\s+(?:cad\s+)?design(?:er|ers)?\b|\bdesign verification\b|\bdraft(?:er|ers|sman|sperson)\b"), None, ("design",)),
+    ("retail", _r(r"\bflor(?:al|ist)\b|\bcake (?:designer|decorator)s?\b|\bbakery\b"), None, ("design",)),
+    # "sales" is Sales & Business Development: a shop floor assistant is Retail, sales tax is Finance
+    ("retail", _r(r"\bretail sales (?:associate|assistant|advisor|adviser|consultant|specialist|representative|clerk|person|team member)s?\b|"
+                  r"\b(?:in-?store|store|boutique|showroom|wireless retail)\s+sales (?:associate|assistant|consultant|specialist|representative|advisor)s?\b|"
+                  r"\bsales (?:floor|associate)\b.*\b(?:store|key ?holder|keyholder)\b"), None, ("sales-bd",)),
+    ("finance", _r(r"\bsales (?:and|&) use tax\b|\bsales tax\b|\bindirect tax"), None, ("sales-bd",)),
+    # "community", "content", "social" and "writer" are Marketing: community health workers and apartment community managers are not;
+    # a compliance or regulatory affairs role about advertising is Compliance & Legal
+    ("compliance-legal", _r(r"\bcompliance\b|\bregulatory affairs\b"), _r(r"\bmarketing (?:manager|director|lead|specialist|coordinator|operations)\b"), ("marketing",)),
+    ("healthcare", _r(r"\bcommunity (?:health|support|mental health|living|residence|residential|treatment|care|paramedic|integration|based (?:therapist|services|care|clinician))\b|"
+                      r"\blife skills\b|\bsocial services?\b|\bsocial work|\b(?:lsw|lcsw|lmsw|msw)\b|\bpeer (?:support|specialist|recovery)"),
+     _r(r"analytic|analyst|\bdata\b|engineer|software|product|platform|marketing"), ("marketing",)),
+    ("operations", _r(r"\bassistant community manager\b|\bcommunity association manager\b|\bhoa\b|\bcommunity (?:manager|director|leader|associate)\b.*\b(?:apartments?|affordable|"
+                      r"lease[- ]?up|housing|residences?|residential|property|properties|manufactured|rv park|senior living|condo\w*)\b|\b(?:apartments?|affordable|lease[- ]?up|"
+                      r"property|manufactured housing|senior living)\b.*\bcommunity (?:manager|director)\b"), None, ("marketing",)),
+    ("manufacturing", _r(r"\b(?:maintenance|technicians?|porters?|groundskeepers?|janitors?|custodians?|painters?|make[- ]ready|hvac|electricians?|plumbers?)\b|"
+                         r"\bcontents\b(?=.*\b(?:technicians?|techs?|inspectors?|manager|specialist|supervisor|packers?|coordinator|estimator|field|restoration|pack-?out|cleaning)\b)"),
+     _r(r"marketing|\bcontent\b|brand|media|editor|writer|producer|\bseo\b|growth|campaign|creative|communications? (?:manager|specialist|director|coordinator|lead)|\bpr\b|"
+        r"public relations|community manager|pharmacy|clinical|medical|dental|veterinary|behaviou?r|patient"), ("marketing",)),
+    ("support", _r(r"\bservice (?:advisors?|advisers?|writers?)\b|\bparts (?:advisor|consultant)s?\b|\bbody shop advisor"), None, ("marketing", "consulting")),
+    ("education", _r(r"\bteachers?\b|\bparaprofessionals?\b|\bpara-?educators?\b|\bprofessors?\b|\blecturers?\b|\bteaching assistants?\b|\beducational assistants?\b|"
+                     r"\binstructional (?:assistant|aide)s?\b|\bspecial education\b|\bpreschool\b|\bearly childhood\b"),
+     _r(r"\b(?:desktop|it|technical|tech|help ?desk|computer|technology|software|systems?|drivers?)\b"), ("marketing", "supply-chain", "support")),
+    # "support" is Customer Service & Support: direct support professionals and support workers care for people
+    ("healthcare", _r(r"\bdirect (?:support|care)\b|\b(?:personal|disability|disabilities|care|family|housing|residential|community|peer|recovery|individual|clinical|nursing|"
+                      r"mental health|health ?care|home|in-home|independent living|day program)\s+support (?:workers?|professionals?|specialists?|associates?|staff|providers?|"
+                      r"technicians?|techs?|assistants?|aides?|coordinators?|counsel+ors?|partners?|navigators?)\b|\bdsp\b|\bsupport workers?\b|\bpeer support\b|\bpeer recovery\b|"
+                      r"\bmedical support\b|\bclinical support\b"), None, ("support",)),
+    # "advisor" and "consultant" are Consulting: a customer advisor serves customers, a beauty or wine consultant sells in a shop
+    ("retail", _r(r"\bcustomer (?:advisor|adviser)s?\b(?=.*\b(?:checkouts?|stock|store|shop|tills?|sales floor|trade counter)\b)|\b(?:beauty|showroom|travel|wine|camping|"
+                  r"fashion|style|jewel(?:le)?ry|watch|fragrance|cosmetics?|skin ?care|makeup|retail|store|boutique|furniture|mattress|bridal)\s+(?:advisors?|advisers?|consultants?)\b"),
+     None, ("consulting",)),
+    ("support", _r(r"\bcustomer (?:advisors?|advisers?|consultants?)\b"), None, ("consulting",)),
+    ("education", _r(r"\b(?:academic|admissions?|enrol+ment|student|career|college|financial aid|transfer|graduate|undergraduate|school|guidance|university)\s+(?:success\s+)?"
+                     r"(?:advisors?|advisers?|consultants?|coaches?)\b|\bcareer (?:center|centre|services) (?:consultant|advisor|coordinator)s?\b"), None, ("consulting", OTHER[0])),
+    ("sales-bd", _r(r"\bleasing (?:consultants?|agents?|specialists?|professionals?|associates?)\b"), None, ("consulting", OTHER[0])),
+    # Healthcare by "pharmac", "medical", "nursing": the factory, the driver, the kitchen and the boiler room of a hospital or a drug maker
+    ("manufacturing", _r(r"\bpharmaceutical (?:manufacturing|production|packaging|operators?|technicians?|process|plant|assembl)|\bmedical device (?:assembl|manufacturing|production|"
+                         r"technician|operator|machinist|inspector)|\b(?:assemblers?|machine operators?|production operators?|machinists?|production associates?|manufacturing (?:associates?|"
+                         r"technicians?|operators?)|production (?:technicians?|supervisor|manager)|packaging (?:operators?|technicians?))\b|\bmaintenance (?:technicians?|techs?|workers?|"
+                         r"mechanics?|supervisor|director|engineers?|assistants?)\b|\bhvac\b|\belectricians?\b|\bplumbers?\b|\bgroundskeepers?\b|\bjanitors?\b|\bcustodians?\b"),
+     None, ("healthcare",)),
+    ("supply-chain", _r(r"\b(?:medical|pharmacy|lab(?:oratory)?|specimen|clinical) (?:couriers?|drivers?|delivery drivers?)\b|\bcouriers?\b|\bdrivers?\b"),
+     _r(r"\bemt\b|paramedic|ambulance|caregiver|\bcna\b|\baide\b|nurse|phlebotom|home (?:care|health)"), ("healthcare",)),
+    ("retail", _r(r"\b(?:cooks?|chefs?|dishwashers?|dietary aides?|food service|servers?|cafeteria|kitchen|housekeep\w*)\b"),
+     _r(r"cook county|cook children|\b(?:lcsw|lcpc|lpc|therapist|clinician|counsel\w*|nurse|rn|physician|psych\w*|caregiver)\b"), ("healthcare",)),
+    ("sales-bd", _r(r"\b(?:territory|device|sales)\s+(?:reps?|representatives?)\b|\bterritory (?:managers?|specialists?)\b"), None, ("healthcare",)),
+    # Manufacturing by "technician", "operator", "production": an education technician, a bus operator, a forklift driver, a TV production assistant
+    ("education", _r(r"\beducation(?:al)? (?:technician|tech|aide|assistant)s?\b"), None, ("manufacturing",)),
+    ("supply-chain", _r(r"\b(?:bus|truck|van|delivery|shuttle|transit|route|tow|cdl[- ]?a?b?)\s+(?:drivers?|operators?)\b|\bowner[- ]operators?\b|\bforklift|\breach truck|"
+                        r"\border pickers?\b"), _r(r"technician|mechanic|\btech\b|repair|service"), ("manufacturing",)),
+    ("design", _r(r"\bproduction artists?\b"), None, ("manufacturing",)),
+    ("marketing", _r(r"\b(?:video|film|tv|television|broadcast|post|media|photo|music|event|creative|content|animation|podcast|audio|studio)\s+production\b|"
+                     r"\bproduction (?:assistant|coordinator)s?\b(?=.*\b(?:video|film|tv|television|studio|media|broadcast|creative|content|photo|animation|music|events?)\b)"),
+     None, ("manufacturing",)),
+    # Finance by "controller": a document controller keeps papers, an inventory controller stock
+    ("operations", _r(r"\bdocument control(?:ler)?s?\b"), None, ("finance",)),
+    ("supply-chain", _r(r"\b(?:inventory|stock|materials?) controllers?\b|\bair traffic control"), None, ("finance",)),
+    ("manufacturing", _r(r"\bproduction controllers?\b"), None, ("finance",)),
+    # HR by "talent": a voice talent records voices
+    ("marketing", _r(r"\bvoice (?:talent|actor|over|artist)s?\b"), None, ("people",)),
+    # Other: titles with a field's own word that collect.CATS_LATE does not know
+    ("retail", _r(r"\bhost(?:ess)?(?:es|s)?\b"), _r(r"podcast|show|\btv\b|radio|webinar|community|stream|youtube|talk|server|cloud|game|event|\bon[- ]air|presenter|development|digital|commerce|\blive\b|online|"
+                                         r"virtual|airbnb|property|\bhome\b|broadcast|program|host home"), (OTHER[0],)),
+    ("retail", _r(r"\bfood runners?\b|\bbussers?\b|\bline ?cooks?\b|"
+                  r"\bculinary\b|\bsandwich artist|\broom attendants?\b|\bhouse ?persons?\b|\blaundry attendants?\b|\bgroomers?\b|\bbathers?\b|\bkennel\b|\bstylists?\b|\bsalon\b|"
+                  r"\bbarbers?\b|\bnail tech|\bestheticians?\b|\bcosmetolog|\blifeguards?\b|\bbanquet\b|\bbell ?(?:person|man|hop)s?\b"), None, (OTHER[0],)),
+    ("compliance-legal", _r(r"\b(?:litigation|transactional|m&a|securities|antitrust|bankruptcy|patent|intellectual property|trusts? (?:and|&) estates|insurance defense|"
+                            r"personal injury|immigration|family law|labou?r (?:and|&) employment|employment litigation)\s+(?:law\s+)?associates?\b|\blaw clerks?\b|\bjudicial clerk"),
+     None, (OTHER[0],)),
+    ("supply-chain", _r(r"\b(?:order )?pickers?\b|\bpackers?\b|\bpick(?:er)? (?:and|&) pack|\bfreight handlers?\b|\bpackage handlers?\b|\bdistribution (?:center |centre )?(?:associates?|"
+                        r"workers?|clerks?)\b|\bstoreroom clerk|\bstock ?keepers?\b|\bmagazynier"), None, (OTHER[0],)),
+    ("sales-bd", _r(r"\broute sales|\bsales ?(?:person|people|man|woman)\b"), None, (OTHER[0],)),
+    ("manufacturing", _r(r"\bmillwrights?\b|\bdetailers?\b|\bhandym[ae]n\b|\bdismantlers?\b|\bgeneral labou?r(?:ers?)?\b|\bline associates?\b|\bproduction line\b"), None, (OTHER[0],)),
+    ("education", _r(r"\bclassroom (?:assistant|aide)s?\b|\bchild ?care (?:aides?|assistants?|workers?|teachers?)\b|\bstudent assistants?\b|\byouth development|\bearly years practitioner|"
+                     r"\bnursery (?:practitioner|assistant)s?\b|\bdaycare\b"), None, (OTHER[0],)),
+]
+FIELD_FIX = [(to, rx, no, frozenset(frm)) for to, rx, no, frm in FIELD_FIX]
+FIX_OF = {c_: [(to, rx, no) for to, rx, no, frm in FIELD_FIX if c_ in frm] for c_ in {c_ for *_, frm in FIELD_FIX for c_ in frm}}     # the rules for each field, in order
+# A title also lands in the wrong field by words that are not the job: the pay ("$18/HR" is "hr", HR & Recruiting), a VA incentive
+# ("Physician - Recruitment Incentive/EDRP": "recruit"), a programme ("Data Center Technician (Early Talent)": "talent"), a Puerto Rico
+# town ("Technical Support (San Juan, PR)": "pr", Marketing), a word that holds another ("Event Promotions Representative": "motion", Design).
+# The title without them is filed again.
+TITLE_NOISE = _r(r"\$\s?\d[\d.,]*\+?\s*(?:(?:-|–|to)\s*\$?\s?\d[\d.,]*\s*)?(?:/|per\s+|p/|an?\s+)?\s*hrs?\b|\d\+?\s*(?:/|per\s+|p/)\s*hrs?\b|\bper\s+hrs?\b|"
+                 r"\brecruitment\s*(?:/|and|&)?\s*(?:relocation\s*)?(?:incentives?|bonus)\b|\bedrp\b|[\(\[]\s*early (?:talent|careers?)\s*[\)\]]|"
+                 r"\b(?:san juan|aguadilla|ponce|mayag[uü]ez|bayam[oó]n|caguas|carolina|humacao|arecibo|guaynabo|dorado|fajardo)\W{1,3}PR\b")
+DESIGN_NOISE = _r(TITLE_NOISE.pattern[4:] + r"|\b\w*(?:promot|emotion)\w*")     # Design's "motion" in "Promotions Manager", "Social Emotional Learning"
+NOISE_AS = lambda m: " marketing " if "promot" in m.group().lower() else " "    # a promotion is marketing; the rest of the noise is nothing
 
 
 def job_field(title, cat):
-    """The job's field (collect.CATS slug), with behaviour analysts and technicians moved to Healthcare (ABA_ROLE)."""
+    """The job's field (collect.CATS slug), with the titles a generic word filed in another trade moved to their own (FIELD_FIX,
+    TITLE_NOISE). Empty or missing values: no title keeps the field, no field is Other."""
     title, cat = title or "", cat or OTHER[0]
-    return "healthcare" if cat in ABA_FROM and ABA_ROLE.search(title) and not NOT_ABA.search(title) else cat
+    return _job_field(title, cat) if title else cat
+
+
+@lru_cache(maxsize=1 << 17)            # titles repeat ("Registered Nurse", one per city): 34 us a title without it, 775,000 jobs a build
+def _job_field(title, cat):
+    noise = DESIGN_NOISE if cat == "design" else TITLE_NOISE
+    if cat != OTHER[0] and noise.search(title):
+        clean = re.sub(r"\s{2,}", " ", noise.sub(NOISE_AS, title)).strip()
+        if clean and collect.classify_title(title) == cat and collect.classify_title(clean) != cat:
+            return job_field(clean, collect.classify(clean))
+    for to, rx, no in FIX_OF.get(cat, ()):
+        if rx.search(title) and not (no is not None and no.search(title)): return to
+    return cat
 
 
 for _t, _c, _want in (("Board Certified Behavior Analyst (BCBA)", "data-research", "healthcare"), ("BCBA - Clinic Supervisor", "other", "healthcare"),
@@ -3541,6 +3776,138 @@ for _t, _c, _want in (("Board Certified Behavior Analyst (BCBA)", "data-research
                       ("Senior FEA Analyst – Nuclear Fuel Behavior & Operations", "data-research", "data-research"), ("Fraud Behavior Analyst", "data-research", "data-research"),
                       ("Maintenance Technician", "manufacturing", "manufacturing"), ("School BCBA", "education", "education"), ("Behavior Analyst", "", "healthcare"),
                       ("", "data-research", "data-research"), (None, None, "other")):
+    assert job_field(_t, _c) == _want, (_t, _c, job_field(_t, _c))
+# Real titles from the live site (26 Nov 2026) for every rule above: (title, field the rules gave, field it must have). Each rule has
+# titles it moves and titles of the same words it must leave where they are.
+for _t, _c, _want in (
+        # pay, incentives, programmes and Puerto Rico towns are not HR or PR
+        ("*Premium Pay $75/hr* Registered Nurse, Neuro Stepdown, Day or Night Shift", "people", "healthcare"), ("Dishwasher (Lavaplatos) - starting at $18/HR", "people", "retail"),
+        ("Bartender (15-20 per hr)", "people", "retail"), ("Maintenance Mechanic - Weekends $38.26/HR - Plus $4 shift premium", "people", "manufacturing"),
+        ("Child Care Worker $15/hr part time not eligible for benefits", "people", "education"), ("Physician (Anesthesiology)-Recruitment Incentive/EDRP", "people", "healthcare"),
+        ("Data Center Technician (Early Talent)", "people", "manufacturing"), ("Technical Support (San Juan, PR - ON SITE)", "marketing", "support"),
+        ("HR Generalist - $30/hr", "people", "people"), ("Payroll/HR Specialist", "people", "people"), ("Recruiter - $25/hr", "people", "people"), ("Early Talent Recruiter", "people", "people"),
+        ("PR Manager", "marketing", "marketing"), ("Tier 2 HR Support", "people", "people"),
+        # public safety
+        ("Police Officer", "operations", "security"), ("Part Time Police/Public Safety Officer", "operations", "security"), ("Correctional Officer", "other", "security"),
+        ("Police Officer Recruit", "people", "security"), ("Probation and Parole Officer 1", "operations", "security"), ("911 Dispatcher", "supply-chain", "security"),
+        ("Juvenile Detention Counselor", "compliance-legal", "security"), ("Firefighter/EMT", "other", "security"), ("Emergency Communications Officer", "marketing", "security"),
+        ("Police Department Recruiter", "people", "people"), ("Truck Dispatcher", "supply-chain", "supply-chain"), ("Office Manager", "operations", "operations"),
+        ("Mortgage Loan Officer", "operations", "finance"), ("Chief Medical Officer", "operations", "healthcare"), ("Admissions Officer", "operations", "education"),
+        ("Chief Operating Officer", "operations", "operations"), ("Program Officer", "operations", "operations"),
+        # medical technicians and technologists
+        ("Patient Care Technician", "manufacturing", "healthcare"), ("Surgical Technologist", "other", "healthcare"), ("ER Technician - Nights", "manufacturing", "healthcare"),
+        ("Sterile Processing Technician", "manufacturing", "healthcare"), ("Ophthalmic Technician", "manufacturing", "healthcare"), ("Medication Technician in Memory Care", "manufacturing", "healthcare"),
+        ("CT Technologist", "other", "healthcare"), ("Vet Tech", "manufacturing", "healthcare"), ("Monitor Technician", "manufacturing", "healthcare"), ("EEG Technician", "manufacturing", "healthcare"),
+        ("Maintenance Technician", "manufacturing", "manufacturing"), ("HVAC Technician", "manufacturing", "manufacturing"), ("Lab Technician", "manufacturing", "manufacturing"),
+        ("Environmental Monitor Technician", "manufacturing", "manufacturing"), ("Network Technician", "manufacturing", "manufacturing"), ("Optical Technician", "manufacturing", "manufacturing"),
+        ("Imaging Technician", "manufacturing", "manufacturing"), ("Sterilization Technician", "manufacturing", "manufacturing"), ("Biomedical Equipment Technician", "manufacturing", "manufacturing"),
+        # clinical titles a weak word or the department placed
+        ("Gastroenterologist", "other", "healthcare"), ("RN - Main OR", "other", "healthcare"), ("Physician Scientist/Clinician Investigator, Cancer Signaling", "compliance-legal", "healthcare"),
+        ("Part-Time On-site Phlebotomist (UK)", "operations", "healthcare"), ("Concierge RN", "retail", "healthcare"), ("School Nurse (RN)", "education", "healthcare"),
+        ("Clinical Research Nurse", "data-research", "healthcare"), ("Nurse Manager - Operations", "operations", "healthcare"), ("Dispensing Optician", "other", "healthcare"),
+        ("Physician Billing Specialist", "finance", "finance"), ("Nurse Recruiter", "people", "people"), ("Physician Liaison", "marketing", "marketing"), ("Clinical Data Analyst", "data-research", "data-research"),
+        ("Nursing Instructor", "education", "education"), ("Medical Device Sales Representative", "sales-bd", "sales-bd"), ("Software Engineer, Nurse Scheduling", "engineering", "engineering"),
+        ("Caregiver Recruiter", "people", "people"), ("Community Pharmacy Technician - Full-Time", "marketing", "healthcare"),
+        ("Data Entry Pharmacy Technician", "data-research", "healthcare"), ("Manager, Financial Reporting - Physician Practice Clients", "finance", "finance"),
+        ("Physician Support Rep III", "support", "support"), ("Adjunct Instructor, Firefighter", "education", "education"),
+        ("Senior Product Owner, Underwriting Innovation", "product", "product"), ("Preschool Van Driver", "supply-chain", "supply-chain"),
+        ("Home Care Caregiver - Driver", "healthcare", "healthcare"), ("Behavioral Health Specialist (LCPC / LCSW) - Hybrid Cook County", "healthcare", "healthcare"),
+        ("Forklift Technician", "manufacturing", "manufacturing"), ("Behavioral Health Cook", "healthcare", "retail"), ("RN - Recruitment Incentive", "other", "healthcare"), ("Nurse Recruiter", "other", "other"), ("RN Case Manager - Insurance Claims", "finance", "finance"), ("Dental Office Manager", "operations", "operations"),
+        # counselors
+        ("Licensed Mental Health Counselor", "compliance-legal", "healthcare"), ("Substance Use Counselor", "compliance-legal", "healthcare"), ("Counselor", "compliance-legal", "healthcare"),
+        ("Camp Counselor (Summer)", "compliance-legal", "education"), ("Admissions Counselor", "compliance-legal", "education"), ("College Counselor", "compliance-legal", "education"),
+        ("ChildWatch Counselor - Evenings", "compliance-legal", "education"), ("Assistant Professor - Counseling Psychology", "compliance-legal", "education"),
+        ("Financial Counselor", "compliance-legal", "finance"), ("Investment Counsellor", "compliance-legal", "finance"), ("Employment Counsellor", "compliance-legal", "education"),
+        ("Host Home Provider", "other", "other"), ("Debt Counselor", "compliance-legal", "finance"), ("School-Based Therapist/Counselor (Licensed)", "compliance-legal", "healthcare"),
+        ("Youth Substance Abuse Counselor", "compliance-legal", "healthcare"), ("Corporate Counsel", "compliance-legal", "compliance-legal"), ("Immigration Counselor", "compliance-legal", "compliance-legal"),
+        ("Counsel, Litigation", "compliance-legal", "compliance-legal"), ("Compliance Counselor", "compliance-legal", "compliance-legal"),
+        ("Night Auditor", "compliance-legal", "retail"), ("Hotel Night Auditor - Full Time", "compliance-legal", "retail"), ("Internal Auditor", "compliance-legal", "compliance-legal"),
+        # supply chain
+        ("Patient Transporter", "supply-chain", "healthcare"), ("Discharge Planner RN", "supply-chain", "healthcare"), ("Media Buyer", "supply-chain", "marketing"), ("Event Planner", "supply-chain", "marketing"),
+        ("Wealth Planner", "supply-chain", "finance"), ("Pile Driver Foreman", "supply-chain", "manufacturing"), ("Buyer", "supply-chain", "supply-chain"), ("Production Planner", "supply-chain", "supply-chain"),
+        ("Delivery Driver", "supply-chain", "supply-chain"), ("Transportation Planner", "supply-chain", "supply-chain"),
+        # finance titles
+        ("Wealth Management Advisor", "consulting", "finance"), ("Branch Banking Client Consultant II", "consulting", "finance"), ("Retail Banker", "retail", "finance"),
+        ("Universal Banker", "other", "finance"), ("Bank Teller", "other", "finance"), ("Production Underwriter", "manufacturing", "finance"), ("Residential Mortgage Loan Underwriter", "product", "finance"),
+        ("Cage Teller - Casino", "other", "other"), ("Business Consultant", "consulting", "consulting"), ("Management Consultant", "consulting", "consulting"),
+        # administrators
+        ("Systems Administrator", "operations", "engineering"), ("Senior Oracle DBA", "operations", "engineering"),
+        ("Office Manager - Superior Inc. dba Brown Design Group", "operations", "operations"), ("Linux Systems Administrator", "operations", "engineering"), ("Database Administrator", "operations", "engineering"),
+        ("Benefits Administrator", "operations", "people"), ("School Administrator", "operations", "education"), ("Office Administrator", "operations", "operations"),
+        ("Contract Administrator", "operations", "operations"), ("Nursing Home Administrator", "operations", "operations"),
+        # data and research
+        ("Data Entry Clerk", "data-research", "operations"), ("Help Desk Analyst", "data-research", "support"), ("Service Desk Analyst II", "data-research", "support"),
+        ("IT Technician", "manufacturing", "support"), ("Data Center Technician", "data-research", "manufacturing"), ("Quantity Surveyor", "data-research", "manufacturing"),
+        ("Medical Laboratory Scientist", "data-research", "healthcare"), ("Credit Analyst", "data-research", "finance"), ("Budget Analyst", "data-research", "finance"),
+        ("Compensation Analyst", "data-research", "people"), ("Logistics Analyst", "data-research", "supply-chain"), ("Demand Planning Analyst", "data-research", "supply-chain"),
+        ("Data Analyst", "data-research", "data-research"), ("Data Scientist", "data-research", "data-research"), ("Research Scientist", "data-research", "data-research"),
+        ("Data Center Operations Analyst", "data-research", "data-research"), ("Data Entry Specialist", "operations", "operations"), ("Business Intelligence Analyst", "data-research", "data-research"),
+        # cyber
+        ("Sr. Cyber Analyst", "data-research", "security"), ("Incident Response Consultant", "consulting", "security"), ("Penetration Tester", "operations", "security"),
+        ("Cyber Engineer", "engineering", "security"), ("Cyber Insurance Underwriter", "compliance-legal", "compliance-legal"), ("Cyber Counsel", "compliance-legal", "compliance-legal"),
+        ("Cyber-Physical Systems Engineer", "engineering", "engineering"), ("Software Engineer", "engineering", "engineering"),
+        # engineering
+        ("Sales Engineer", "engineering", "sales-bd"), ("Senior Pre-Sales Engineer", "engineering", "sales-bd"), ("Director, Sales Engineering (Southern Europe)", "engineering", "sales-bd"),
+        ("Account Executive - Architecture", "engineering", "sales-bd"), ("Software Engineer, Sales Engineering Tools", "engineering", "engineering"),
+        ("Solutions Engineer", "engineering", "engineering"), ("Field Service Engineer", "engineering", "engineering"), ("Data Engineer, Sales Analytics", "engineering", "engineering"),
+        ("QA Technician - 2nd Shift", "engineering", "manufacturing"), ("QA/QC Inspector (Civil/Structural)", "engineering", "manufacturing"), ("Stationary Engineer", "engineering", "manufacturing"),
+        ("Hotel Maintenance Engineer", "engineering", "manufacturing"), ("QA Engineer", "engineering", "engineering"), ("QA/QC Engineer", "engineering", "engineering"), ("QA Tester", "engineering", "engineering"),
+        ("Maintenance Engineer", "engineering", "engineering"),
+        # designers and developers
+        ("Instructional Designer", "design", "education"), ("Learning Experience Designer", "design", "education"), ("Curriculum Developer", "engineering", "education"),
+        ("Mechanical Designer", "design", "engineering"), ("PCB Designer", "design", "engineering"), ("Fire Sprinkler Designer", "design", "engineering"), ("Design Verification Engineer", "design", "engineering"),
+        ("Floral Designer", "design", "retail"), ("Bakery Cake Designer", "design", "retail"), ("Event Promotions Representative", "design", "marketing"),
+        ("Product Designer", "design", "design"), ("Graphic Designer", "design", "design"), ("Digital Designer", "design", "design"), ("Interior Designer", "design", "design"),
+        ("Promotions Graphic Designer", "design", "design"), ("Director, Advertising and Promotion Compliance", "design", "compliance-legal"),
+        ("Social Emotional Learning Specialist", "design", "education"), ("Promotor de Merchandising - Natal (RN)", "retail", "retail"),
+        ("Direct Support Professional: Promoting Independence", "support", "healthcare"), ("Motion Designer", "design", "design"), ("Marketing Compliance Manager", "marketing", "compliance-legal"),
+        ("Marketing Manager, Compliance Solutions", "marketing", "marketing"), ("Account Director, Cyber", "other", "other"), ("Live E-Commerce Digital Host", "other", "other"),
+        ("Lead Advanced Analytics, Community Support", "marketing", "marketing"), ("CRA & Fair Lending Officer", "operations", "operations"), ("Software Developer", "engineering", "engineering"), ("Content Designer", "design", "design"),
+        # sales
+        ("Retail Sales Assistant", "sales-bd", "retail"), ("Wireless Retail Sales Associate", "sales-bd", "retail"), ("Sales Associate - Key Holder", "sales-bd", "retail"),
+        ("Sales Tax Analyst", "sales-bd", "finance"), ("Sales Associate", "sales-bd", "sales-bd"), ("Retail Sales Manager", "sales-bd", "sales-bd"), ("Account Executive", "sales-bd", "sales-bd"),
+        # marketing
+        ("Community Health Worker", "marketing", "healthcare"), ("Director of Social Services", "marketing", "healthcare"), ("Life Skills Coach/Community Support Associate", "marketing", "healthcare"),
+        ("Assistant Community Manager - Alta Grandway", "marketing", "operations"), ("Community Manager - Affordable Housing", "marketing", "operations"),
+        ("Apartment Community Maintenance Technician", "marketing", "manufacturing"), ("Contents Technician - Denver, CO", "marketing", "manufacturing"), ("Service Writer", "marketing", "support"),
+        ("Special Education Teacher - Extended Content Standards", "marketing", "education"), ("Community Manager", "marketing", "marketing"), ("Social Media Manager", "marketing", "marketing"),
+        ("Content Marketing Manager", "marketing", "marketing"), ("Community Manager - Montage Southside", "marketing", "marketing"), ("Marketing Technician", "marketing", "marketing"),
+        ("Brand Content Producer", "marketing", "marketing"),
+        # support
+        ("Direct Support Professional (DSP)", "support", "healthcare"), ("Peer Support Specialist", "support", "healthcare"), ("Personal Support Worker", "support", "healthcare"),
+        ("Medical Support Assistant", "support", "healthcare"), ("Educational Assistant (EA IV) - Student Specific (1:1 Support)", "support", "education"),
+        ("Middle School Special Education Paraprofessional, High Needs Support", "support", "education"), ("Customer Support Specialist", "support", "support"),
+        ("IT Support Specialist", "support", "support"), ("Desktop Support Officer - Education", "support", "support"), ("Instructional Assistant (IT Support)", "support", "support"),
+        ("Patient Support Coordinator", "support", "support"), ("Technical Support Engineer", "support", "support"),
+        # advisors and consultants
+        ("Customer Advisor", "consulting", "support"), ("Customer Advisor - Checkouts", "consulting", "retail"), ("Wine Consultant", "consulting", "retail"), ("Seasonal Beauty Advisor", "consulting", "retail"),
+        ("Automotive Service Advisor", "consulting", "support"), ("Academic Advisor", "consulting", "education"), ("Admissions Advisor", "consulting", "education"), ("Leasing Consultant", "consulting", "sales-bd"),
+        ("Solutions Consultant", "consulting", "consulting"), ("Technical Advisor", "consulting", "consulting"), ("Implementation Consultant", "consulting", "consulting"),
+        # healthcare out
+        ("Pharmaceutical Production Technician", "healthcare", "manufacturing"), ("Medical Device Assembler", "healthcare", "manufacturing"), ("Maintenance Technician - Nursing Home", "healthcare", "manufacturing"),
+        ("Medical Courier", "healthcare", "supply-chain"), ("Cook - Skilled Nursing", "healthcare", "retail"), ("Medical Territory Device Rep", "healthcare", "sales-bd"),
+        ("Pharmacy Technician", "healthcare", "healthcare"), ("Pharmacist", "healthcare", "healthcare"), ("EMT Driver", "healthcare", "healthcare"), ("Clinical Dietitian", "healthcare", "healthcare"),
+        ("Medical Assistant", "healthcare", "healthcare"), ("Registered Nurse", "healthcare", "healthcare"),
+        # manufacturing out
+        ("Federal Education Technician", "manufacturing", "education"), ("Bus Operator", "manufacturing", "supply-chain"), ("Owner Operator CDL", "manufacturing", "supply-chain"),
+        ("Forklift Operator", "manufacturing", "supply-chain"), ("Corporate Production Artist", "manufacturing", "design"), ("Video Production Assistant", "manufacturing", "marketing"),
+        ("Production Assistant - Film", "manufacturing", "marketing"), ("Machine Operator", "manufacturing", "manufacturing"), ("Production Assistant", "manufacturing", "manufacturing"),
+        ("Diesel Mechanic", "manufacturing", "manufacturing"), ("CNC Operator", "manufacturing", "manufacturing"),
+        # finance out, HR out
+        ("Document Controller", "finance", "operations"), ("Inventory Controller", "finance", "supply-chain"), ("Air Traffic Controller", "finance", "supply-chain"),
+        ("Production Controller", "finance", "manufacturing"), ("Financial Controller", "finance", "finance"), ("Credit Controller", "finance", "finance"),
+        ("Voice Talent Required - Greek (female) - Remote", "people", "marketing"), ("Talent Acquisition Partner", "people", "people"),
+        # Other in
+        ("Food Runner", "other", "retail"), ("Host", "other", "retail"), ("Dog Groomer", "other", "retail"), ("Employment Litigation Associate", "other", "compliance-legal"),
+        ("Distribution Center Associate", "other", "supply-chain"), ("Route Salesperson", "other", "sales-bd"), ("Millwright", "other", "manufacturing"), ("Childcare Aide", "other", "education"),
+        ("Podcast Host", "other", "other"), ("Associate", "other", "other"), ("Manager", "other", "other"), ("Case Manager", "other", "other"), ("Real Estate Associate", "other", "other"),
+        # the behaviour analysts of bef05cc, and what stays
+        ("Board Certified Behavior Analyst (BCBA)", "data-research", "healthcare"), ("Independent BCBA", "support", "healthcare"), ("User Behavior Analyst", "data-research", "data-research"),
+        ("Behavioral Data Analyst", "data-research", "data-research"), ("School BCBA", "education", "education"),
+        # empty and missing values
+        ("", "data-research", "data-research"), (None, None, "other"), ("", None, "other"), ("Registered Nurse", None, "healthcare"), (None, "manufacturing", "manufacturing"),
+        ("Patient Care Technician", "", "healthcare"),
+):
     assert job_field(_t, _c) == _want, (_t, _c, job_field(_t, _c))
 FOR_JUNIORS = re.compile(r"(?i)\b(?:early[- ]career|university|campus|graduate|new grad|intern(?:ship)?)s?\b[^,]*?\b(?:recruit\w*|sourcer|program manager|programs? lead|coordinator|talent partner)\b")
 REQ_CODE = [re.compile(r"\s*[\(\[]\s*(?:R|JR|REQ|Req|req|ID|Job ID|Requisition(?: ID)?)\s*[-#:_ ]?\s*\d{3,}\s*[\)\]]"),   # "(R6043)", "[REQ-12345]"
