@@ -5282,3 +5282,13 @@ table.adm-log td:last-child{min-width:280px}
   #adm .tablewrap .rkt td.adm-who{word-break:break-all}
   #adm .rkt tr{background:var(--bg)}
 }
+
+/* ================= Phones, 26 Nov 2026 (day). The live site looked at on a phone, 390 and 360 wide, light and dark, the first three
+   screens of every kind of page, beside dlocal.com and ashbyhq.com on the same screen (most visitors come on a phone). Style only:
+   every page of a kind changes at once. ================= */
+
+/* grids with a fixed column minimum wider than a 360 px phone's text (320 px): the cards ran 10-40 px past the screen's edge and were
+   cut there (the tools hub's "Templates and examples", the kinds of work on a field page, two-column question lists) */
+@media(max-width:720px){
+  .qa,.feats,.hubgrid,.gloss,.pics,.pics.two,.tiers,.faq2,.types,.rbc-asks,.shots,.tgrid,#ex-out .pics.two,main.hub #clist,.tl-grid.wide,.tl-faq,.acc-grid,#acc .acc-grid{grid-template-columns:minmax(0,1fr)}
+}
