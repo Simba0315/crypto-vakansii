@@ -5292,3 +5292,29 @@ table.adm-log td:last-child{min-width:280px}
 @media(max-width:720px){
   .qa,.feats,.hubgrid,.gloss,.pics,.pics.two,.tiers,.faq2,.types,.rbc-asks,.shots,.tgrid,#ex-out .pics.two,main.hub #clist,.tl-grid.wide,.tl-faq,.acc-grid,#acc .acc-grid{grid-template-columns:minmax(0,1fr)}
 }
+
+/* ---- taps: every control a thumb uses is at least 44 px high (the pill rows were 38-40, the header's buttons 36-40, the small
+   buttons 37, the resume builder's steps 35, the tools' row 35, a company page's anchors 30) ---- */
+@media(max-width:720px){
+  .hsign{height:44px;padding:0 15px;border-radius:999px}
+  header.site .icon{width:44px;height:44px;border-radius:999px}
+  .pillrow a,.pillrow span,.hero.v2 .popular a,main .tsub a,.chipbtn,.tabs2>label,.rb-tabs button,.khero .pswitch .tab{min-height:44px;display:inline-flex;align-items:center}
+  main.srch #fwrap .morefilters .chipbtn{min-height:44px}
+  .tabs .tab,.shot-tabs a{min-height:44px;display:inline-flex;align-items:center}
+  .btn.sm{min-height:44px;padding:0 18px;font-size:15px;display:inline-flex;align-items:center;justify-content:center}
+  .lact a.btn.primary.sm{padding:5px 5px 5px 18px}
+  .tablewrap select,main select,main input[type=text],main input[type=search],main input[type=email],main input[type=number],main input[type=url],main input[type=tel],main input:not([type]){min-height:44px}
+  main .anch,main.lp .anch{gap:4px 22px;padding:0 20px;margin-left:-20px;margin-right:-20px;border-bottom:1px solid var(--line)}
+  .anch a{display:inline-flex;align-items:center;min-height:44px}
+  .hero.v2 .logorow a{min-height:44px}
+  .rb-actions .btn,.rb-setb .linkbtn,#acc .acc-seg button{min-height:44px}
+  /* links that stand alone on their line: the reachable area grows to 44 px, the look does not */
+  .crumbs a,.nums-src a,.lact>a:not(.btn),p.tbadges>a,.pills>a.pill,.js a{position:relative}
+  .crumbs a::after,.nums-src a::after,.lact>a:not(.btn)::after,p.tbadges>a::after,.pills>a.pill::after{content:"";position:absolute;left:-4px;right:-4px;top:50%;height:44px;transform:translateY(-50%)}
+}
+/* the sticky rows under the header: the header is 57 px on a phone (56 and its line), they stood at 61 and the page showed through
+   the 4 px between them */
+@media(max-width:560px){.anch,.pt thead{top:57px}}
+
+/* ---- a button whose words are longer than a 360 px screen wraps instead of running past it ---- */
+@media(max-width:560px){.adv-jobs .btn,.lact .btn{max-width:100%;white-space:normal;text-align:left}}
