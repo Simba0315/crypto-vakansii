@@ -5471,3 +5471,10 @@ table.adm-log td:last-child{min-width:280px}
   .tb{flex-wrap:wrap;border-radius:14px;gap:2px 6px;font-size:14px}
   .tb b{white-space:nowrap}
 }
+
+/* ---- a tool's first screen on a phone (/tools/<tool>/): the opening paragraph at body size and "In plain words" a tighter card, so the
+   form starts about 80 px higher ---- */
+@media(max-width:560px){
+  main:has(>.tl) .phero .lead{font-size:16px;line-height:1.5}
+  main:has(>.tl) .phero .plain{margin-top:18px;padding:14px 16px;font-size:15px;line-height:1.5}
+}
