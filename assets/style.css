@@ -5391,6 +5391,12 @@ table.adm-log td:last-child{min-width:280px}
   main.hub #clist .tile:not(:has(.h1bt)):not(:has(.up)) .n{grid-row:1/3}
 }
 
+/* ---- /jobs/ with "All filters" open: the five filters stay one row that scrolls sideways, as when the panel is closed (they wrapped
+   into three uneven rows, two cells, two cells and one) ---- */
+@media(max-width:860px){
+  main.srch #fwrap:has(.morefilters[open])>.fx-bar{flex-wrap:nowrap}
+}
+
 /* ---- a button whose words are longer than a 360 px screen wraps instead of running past it ---- */
 @media(max-width:560px){.adv-jobs .btn,.lact .btn{max-width:100%;white-space:normal;text-align:left}}
 
