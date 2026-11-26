@@ -8219,14 +8219,16 @@ def main():
                  ("remotetype", "Fully remote or Hybrid remote."),
                  ("expirationdate", "YYYY-MM-DD, the same date as validThrough in the job page’s markup. A job that closes leaves the feed with the next update."),
                  ("updated", "YYYY-MM-DD, the day we last found the job on the employer’s careers page.")]
-    jf_html = (f'<p>Every open job that shows its full description and names a country: {JFEED["jobs"]:,} today. The files follow the XML format Indeed describes: '
+    jf_html = (f'<p>The open jobs posted in the last 14 days (the employer’s own date) and the jobs employers post here, each with its full description and a '
+               f'place that names its country: {JFEED["jobs"]:,} today. The files follow the XML format Indeed describes: '
                '<code>&lt;source&gt;</code> with <code>&lt;publisher&gt;</code>, <code>&lt;publisherurl&gt;</code> and <code>&lt;lastBuildDate&gt;</code>, then one '
                f'<code>&lt;job&gt;</code> per posting with every value in CDATA. The jobs are split into files of at most {job_feed.PART:,}, the newest first, and each '
                f'file is also there gzipped, at the same address with <code>.gz</code> at the end. All of them are at <code>{FULL}/feeds/</code> and are rebuilt with '
                'every update of the site.</p>' + jf_files
                + '<h3>The fields of a job</h3><dl class="qa one">' + "".join(f"<div><dt><code>{e(k_)}</code></dt><dd>{e(v_)}</dd></div>" for k_, v_ in jf_fields) + "</dl>"
                + '<p class="note">A field the posting does not give is left out, never guessed. Not in the files: posts read from Telegram channels, talent pools, and jobs '
-               'without their full description or a country. Job search engines may read the files once an hour and must link each job to its page on this site.</p>')
+               'without a country. Older postings are on the site with their full text, which our server keeps apart from the hourly record; they are not in these '
+               'files yet. Job search engines may read the files once an hour and must link each job to its page on this site.</p>')
 
     lap('Feeds: every list as an address a bot can read. Channel owne')
     # Feeds: every list as an address a bot can read. Channel owners in Telegram, Slack and Discord plug these into their own bots,
@@ -12603,7 +12605,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          + "<div>" + section("Example", f"<pre><code>{e(js_example)}</code></pre>")
          + section("Fair use", '<p>Free for personal and commercial projects. Two requests: link back to the job page or to this site wherever you show the data, and fetch each feed no more than once an hour (it changes once an hour).</p>'
                    f'<p>Also available: <a href="{P}/feed.xml">RSS feeds</a>, CSV downloads on the <a href="{P}/trends/">trends page</a>, a ready-made <a href="{P}/widgets/">widget</a>, '
-                   f'and <a href="{P}/feeds/#xml">XML files for job search engines</a> with every open job and its full description.</p>') + "</div></div>" + api_faq, head=api_ld, cls="kp sp api")
+                   f'and <a href="{P}/feeds/#xml">XML files for job search engines</a> with the jobs of the last 14 days and their full descriptions.</p>') + "</div></div>" + api_faq, head=api_ld, cls="kp sp api")
 
     lap('---- Prices: /plus/, /post-a-job/ and /pricing/. The product')
     # ---- Prices: /plus/, /post-a-job/ and /pricing/. The product line is the owner's of 15 Nov 2026. Every price is read from config.json
@@ -14344,7 +14346,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
   checked against the employer's careers page. A job that has closed says so at the top of its page.
 - Please link to the job page when you mention a job: applications always go to the employer's own site from there, free of charge.
 - The feeds list every address that exists: {FULL}/api/v1/index.json
-- Every open job with its full description, in Indeed's XML format for job search engines: {FULL}/feeds/index.xml lists the files (fields: {FULL}/feeds/#xml)
+- The open jobs of the last 14 days with their full descriptions, in Indeed's XML format for job search engines: {FULL}/feeds/index.xml lists the files (fields: {FULL}/feeds/#xml)
 - "How do I become a <person>?" {FULL}/how-to-become/<role>/ : the training, licenses and exams the work needs, checked for US rules, with today's beginner jobs and pay.
 - "Interview questions for <role>" {FULL}/interview-questions/<role>/ : about 20 questions of that trade with what each checks, what a good answer shows and a sample answer, plus the skill questions today's postings point to.
 - "<role> resume example" {FULL}/resume/examples/<role>/ (also /cv-examples/<role>/ and /cover-letter-examples/<role>/): an invented example with beginner and senior lines, next to the skills postings ask for.

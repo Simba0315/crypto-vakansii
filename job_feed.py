@@ -1,8 +1,11 @@
 """The XML feed for job search engines (Careerjet, Jobisjob, Adzuna, Jobrapido, Talent.com, Trovit), in the shape Indeed describes:
 <source> with <publisher>, <publisherurl>, <lastBuildDate>, then one <job> per posting, every value in CDATA.
 
-What goes in (26 Nov 2026, AGGREGATORS_RESEARCH.md and the owner's list): every open job whose page shows its full description and
-whose place names a country. Left out: posts read from Telegram channels, talent pools (a standing invitation, not an opening; Indeed
+What goes in (26 Nov 2026, AGGREGATORS_RESEARCH.md and the owner's list): every open job of the hourly record that has its full
+description and whose place names a country. The record keeps the text only of postings of the last 14 days (collect.DESC_SINCE)
+and of jobs employers post here; the texts of older postings are only on our server (texts.py, texts.db), so on the first full run
+(26 Nov 2026) the files held 177,665 of 777,901 open jobs, 1,044 MiB (243 MiB gzipped), written in 38 s. All open jobs would need
+the files to be written on the server, from data/jobs.db and texts.db. Left out: posts read from Telegram channels, talent pools (a standing invitation, not an opening; Indeed
 asks to hide them, Jora does not take them) and a second job with the same page address. Jobs employers post in their account are
 in only once they are live: the API exports no job that waits for review.
 

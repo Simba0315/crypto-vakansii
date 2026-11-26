@@ -439,7 +439,8 @@ left out as companies already read under another board or name).
   of work from the same functions as the job page (`page_desc()`, `job_addresses()`, `etype_ld()`): change those and both change. Files
   of 50,000 jobs (`feeds/jobs-N.xml` and `.xml.gz`), `feeds/index.xml`, and `feeds/jobs.xml` = part 1. On the full record it is several
   GB and a few minutes of the build: keep the per-job work cheap (word tests before patterns) and never build a part in memory.
-  `python3 job_feed.py --test` must pass; check.py reads every file back.
+  `python3 job_feed.py --test` must pass; check.py reads every file back. The build has the full text only of postings of the last
+  14 days (collect.DESC_SINCE): 177,665 of 777,901 open jobs on 26 Nov 2026. The rest have their text only in the server's texts.db.
 
 
 
