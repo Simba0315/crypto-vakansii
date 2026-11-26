@@ -2125,6 +2125,95 @@ def direct_and_paid(db, used_slugs, indexed, stats):
 # (the company stopped hiring or moved its board, and its jobs close); many boards of one system at once is not.
 DOWN_MIN, DOWN_SHARE = 5, 0.1
 
+# Boards that no longer exist (26 Nov 2026 audit of the live site). A reader gives None both when a board's list did not answer and
+# when the hiring system says there is no such board (the company left that system or renamed its board), and None keeps every job of
+# the company open, with an Apply button that leads to a "page not found". On 26 Nov 2026 Klaviyo's Ashby board had answered 404
+# since 16 Nov and its 149 jobs were still listed as open; Headout (19, since 17 Nov), Norm Ai (28), Kunai, SHEIN, Oso, AI Squared and
+# others the same. A board that failed is now asked once more, plainly, whether it exists (board_gone), but only when none of the
+# company's open jobs was seen on a read in the last GONE_DAYS days. When its hiring system answers that the board does not exist, its
+# jobs close. Any other answer (a timeout, a 403, a 500, a page that is not a list) changes nothing, as before; so does a hiring system
+# that says "no such board" for many boards in one run (DOWN_MIN, DOWN_SHARE: a fault on its side).
+GONE_DAYS = 2
+
+
+def board_gone(src):
+    """True only when the board's hiring system answers that the board does not exist: HTTP 404 from its list (Workday: 404 with its own
+    error code), or the address sent on to the hiring system's own home or "not found" page (BambooHR, JazzHR, Paylocity; BambooHR also to
+    the page of a suspended or expired account), or Trakstar's "Invalid client name". False on every other answer, on no answer, and for systems without a clear "no such board"."""
+    ats, tok = src.get("ats"), str(src.get("token") or "")
+    if not tok or ("/" in tok and ats != "workday"): return False
+    data, key = None, ats
+    if ats == "greenhouse": url = f"https://boards-api.greenhouse.io/v1/boards/{tok}/jobs"
+    elif ats == "lever": url = f"https://api.lever.co/v0/postings/{tok}?mode=json&limit=1"
+    elif ats == "ashby": url = f"https://api.ashbyhq.com/posting-api/job-board/{tok}"
+    elif ats == "workable": url = f"https://apply.workable.com/api/v1/widget/accounts/{tok}"
+    elif ats == "recruitee" and "." not in tok: url = f"https://{tok}.recruitee.com/api/offers/"
+    elif ats == "teamtailor" and "." not in tok: url = f"https://{tok}.teamtailor.com/jobs.rss"
+    elif ats == "personio" and "." not in tok: url = f"https://{tok}.jobs.personio.de/xml?language=en"
+    elif ats == "breezy": url = f"https://{tok}.breezy.hr/json"
+    elif ats == "pinpoint": url = f"https://{tok}.pinpointhq.com/postings.json"
+    elif ats == "gem": url = f"https://api.gem.com/job_board/v0/{tok}/job_posts/"
+    elif ats == "rippling": url = f"{RIPPLING}{tok}/jobs"
+    elif ats == "icims": url = f"https://{tok}.icims.com/sitemap.xml"
+    elif ats == "bamboohr": url = f"https://{tok}.bamboohr.com/careers/list"
+    elif ats == "jazzhr": url = f"https://{tok}.applytojob.com/apply"
+    elif ats == "paylocity": url = f"{PAYLOCITY}{tok}/jobs"
+    elif ats == "trakstar": url = f"https://jsapi.recruiterbox.com/v1/openings?client_name={tok}&limit=1&offset=0"
+    elif ats == "workday" and "/" in tok:
+        host, site = tok.split("/", 1)
+        url, key = f"https://{host}.myworkdayjobs.com/wday/cxs/{host.split('.')[0]}/{site}/jobs", f"workday:{host}"
+        data = {"appliedFacets": {}, "limit": 1, "offset": 0, "searchText": ""}
+    else:
+        return False
+    polite(key)
+    got = _net.probe(url, 20, data)
+    if not got: return False
+    code, final, text = got
+    import urllib.parse
+    asked, landed = url.split("/")[2].lower(), (final.split("/")[2].lower() if final.count("/") >= 2 else "")
+    if ats == "bamboohr": return landed in ("www.bamboohr.com", "bamboohr.com") or (landed == asked and re.search(r"/settings/account/(suspended|expired)", urllib.parse.unquote(final)) is not None)
+    if ats == "jazzhr": return landed in ("www.jazzhr.com", "jazzhr.com")
+    if ats == "paylocity": return landed == asked and "/jobs/jobnotfound" in final.lower()
+    if ats == "trakstar": return code == 400 and "invalid client name" in text.lower()
+    if ats == "workday": return code == 404 and '"errorCode"' in text
+    if ats == "icims": return code == 404 and landed == asked and "gone:" in text.lower()
+    return code == 404 and landed == asked
+
+
+def close_gone(db, sources, failed, open_by_co, stats, gone=board_gone, today=None):
+    """Closes the open jobs of boards that failed this run, have shown none of those jobs on a read for GONE_DAYS days and that their
+    hiring system says no longer exist (gone). Moves such a board from stats["failed"] to stats["gone"] ("name (jobs closed)").
+    Returns how many jobs it closed."""
+    today = today or TODAY
+    cutoff = (datetime.date.fromisoformat(today) - datetime.timedelta(days=GONE_DAYS)).isoformat()
+    by_name = {s["name"]: s for s in sources}
+    ask = []
+    for name in dict.fromkeys(failed):
+        ids = [jid for jid in open_by_co.get(name, ()) if (db.get(jid) or {}).get("active") and not db[jid].get("direct") and not db[jid].get("tg")]
+        if not ids or name not in by_name: continue
+        if max(str(db[jid].get("last_seen") or "") for jid in ids) > cutoff: continue       # read in the last GONE_DAYS days: a failure, not yet a sign
+        ask.append((by_name[name], ids))
+    if not ask: return 0
+    with cf.ThreadPoolExecutor(4) as ex:
+        said = list(ex.map(lambda a: bool(gone(a[0])), ask))
+    found = [(s, ids) for (s, ids), g in zip(ask, said) if g]
+    per, boards = defaultdict(int), defaultdict(int)
+    for s, _ in found: per[s.get("ats", "")] += 1
+    for s in sources:
+        if open_by_co.get(s["name"]): boards[s.get("ats", "")] += 1
+    held = {a for a, n in per.items() if n >= DOWN_MIN and n >= DOWN_SHARE * boards[a]}
+    if held: print("HIRING SYSTEMS THAT SAY MANY BOARDS DO NOT EXIST (nothing closed for them):", ", ".join(f"{a} ({per[a]} boards)" for a in sorted(held)))
+    closed = 0
+    for s, ids in found:
+        if s.get("ats", "") in held: continue
+        for jid in ids: db[jid].update(active=False, closed=today)
+        closed += len(ids)
+        stats.setdefault("gone", []).append(f"{s['name']} ({len(ids)})")
+        if s["name"] in stats.get("failed", []): stats["failed"].remove(s["name"])
+    stats["closed"] = stats.get("closed", 0) + closed
+    if stats.get("gone"): print("boards that no longer exist (their jobs closed):", ", ".join(stats["gone"]))
+    return closed
+
 
 def guard_systems(results, sources, open_by_co, late, stats):
     """Boards with at least 5 open jobs that came back empty, counted per hiring system. When one system has DOWN_MIN or more such
@@ -2282,6 +2371,10 @@ def main():
             old.update(active=False, closed=TODAY); stats["closed"] += 1
         if not jobs and len(gone) >= 20:
             stats["emptied"].append(name)                   # the whole board went empty at once: often a move to another hiring system
+    try:                                                    # boards whose hiring system says they no longer exist (close_gone)
+        close_gone(db, sources, list(stats["failed"]), open_by_co, stats)
+    except Exception as ex:                                 # never a reason to stop the hourly run: they stay as they were
+        print(f"gone boards: not checked this run: {type(ex).__name__}: {ex}")
     known = {s["name"] for s in sources} | resting             # a company we no longer read cannot keep "open" jobs forever; one resting this hour can
     for old in db.values():
         if old["active"] and not old.get("direct") and not old.get("tg") and old["company"] not in known:
@@ -2302,7 +2395,7 @@ def main():
     print(f"active {active}, archived {len(db) - active}, new {stats['new']}, closed {stats['closed']}")
     # what this run did, shown on the site's data status page
     (ROOT / "data" / "stats.json").write_text(json.dumps({"date": TODAY, "time": datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M UTC"), "sources": len(sources),
-                                                          "failed": stats["failed"], "emptied": stats["emptied"], "down": stats.get("down", []),
+                                                          "failed": stats["failed"], "emptied": stats["emptied"], "down": stats.get("down", []), "gone": stats.get("gone", []),
                                                           "new": stats["new"], "closed": stats["closed"], "active": active}, ensure_ascii=False))
     print("failed:", ", ".join(stats["failed"]) or "-")
     print("boards that went empty (check whether the company moved its job board):", ", ".join(stats["emptied"]) or "-")

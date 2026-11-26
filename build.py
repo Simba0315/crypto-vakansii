@@ -10660,7 +10660,8 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     n_closed_all = len(archived)
     guide("how-we-check-jobs-every-hour", f"How we check {n:,} job postings every hour",
           f"How the hourly check works: where postings are read, how a closed job is told from an unreadable feed, and what the figures cover. Counted from {n:,} open jobs at {m:,} companies.", "Reading postings",
-          f"Every open job on this site is read from the employer’s own hiring system, {m:,} companies in all, " + (f"{m_hourly:,} of them every hour and the rest every four hours." if ROTATING else "each of them every hour.") +
+          f"Every open job on this site is read from the employer’s own hiring system, {m:,} companies in all, " + (f"{m_hourly:,} of them every hour and the rest every four hours." if ROTATING else
+                                                                                    "each of them read by our server around the clock, about once an hour; the lists and counts are rebuilt from the full record several times a day.") +
           f" This page describes the check step by step, so you can judge how far to trust what the lists say.",
           '<p class="plain"><b>In plain words:</b> companies publish their open jobs in a hiring system, a program that holds every opening and its application form. '
           "We read what those systems publish, compare it with what we saw the last time and update the lists. Nothing is typed in by hand and nothing is copied from another job site.</p>"
@@ -10668,8 +10669,9 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
           '<div class="tablewrap"><table class="t4"><thead><tr><th>Hiring system</th><th>Companies</th><th>Open jobs</th></tr></thead><tbody>' + ats_tab + "</tbody></table></div>"
           "<h2>Step 2: compare with the last reading</h2><p>A job that is in the list and was not there before is new, and its first-seen time is saved. A job that was in the list and is now missing is closed, and the closing date is saved. "
           f"Closed jobs keep their pages: {n_closed_all:,} closed postings are on file, {closed_today_h:,} of them closed today.</p>"
-          "<h2>Step 3: tell a closed job from a list that could not be read</h2><p>If an employer’s list does not load at all, the jobs of that company are left as they were until the next hour. "
-          "A job is marked closed only when the list was read and the job was not in it. When a company’s whole list empties at once (20 jobs or more), it is flagged as a probable move to another hiring system rather than as filled jobs, "
+          "<h2>Step 3: tell a closed job from a list that could not be read</h2><p>If an employer’s list does not load at all, the jobs of that company are left as they were until the next reading. "
+          "A job is marked closed when the list was read and the job was not in it, or when the hiring system answers that the whole board no longer exists and none of its jobs has been seen for two days. "
+          "When a company’s whole list empties at once (20 jobs or more), it is flagged as a probable move to another hiring system rather than as filled jobs, "
           "and those closings stay out of the closing statistics.</p>"
           "<h2>Step 4: read the details by fixed rules</h2><p>Pay, level, skills and remote status are read from the posting by written rules, not guessed. A rule can miss a wording, so “pay not listed” here does not prove the employer hides it. "
           f'The rules are listed on the <a href="{P}/methodology/">methodology page</a>.</p>'
@@ -11031,7 +11033,12 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     ages = sorted(age_days(j) for j in active)
     feeds = ([(f'{ST["sources"] - len(ST["failed"]):,} of {ST["sources"]:,}', "employer feeds answered")] if ST else [])
     failed_html = (section("Feeds that did not answer in the last run", "<p>" + ", ".join(e(x) for x in ST["failed"]) + ".</p>"
-                           '<p class="note">Their listings are left exactly as they were and are read again in the next run. Nothing is marked closed on a failed read.</p>') if ST.get("failed") else "")
+                           '<p class="note">Their listings are left exactly as they were and are read again in the next run: a list that does not answer closes nothing. '
+                           'Only when the hiring system itself answers that a board no longer exists, and none of its jobs has been seen for two days, do its jobs close (below).</p>') if ST.get("failed") else "")
+    # boards whose hiring system says they no longer exist (collect.close_gone, 26 Nov 2026): until then they stood in the list above for good
+    failed_html += (section("Job boards that no longer exist", "<p>" + ", ".join(e(x) for x in ST["gone"]) + ".</p>"
+                            '<p class="note">The hiring system answered that these boards do not exist (the company left it or renamed its board), and none of their jobs '
+                            'had been seen for two days or more, so the jobs, with the number in brackets, are marked closed: their Apply links lead to a “page not found” or to the hiring system’s own home page.</p>') if ST.get("gone") else "")
     failed_html += (section("Hiring systems that looked broken in the last run", "<p>" + "; ".join(e(x) for x in ST["down"]) + ".</p>"
                             '<p class="note">Many boards of one hiring system came back empty at once. That is a fault on their side or a change in how they publish, '
                             'not a wave of hiring stops, so the jobs on those boards are left open and read again in the next run.</p>') if ST.get("down") else "")
@@ -11068,10 +11075,12 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          + nums([(fdate(TODAY), "last update" + (", " + e(ST["time"]) if ST else ""))] + feeds + [(pctf(rechecked, n), "of open roles re-checked today"), (f"+{new_today:,}", "posted today"),
                  (f"−{closed_today:,}", "closed today")], src=False) +
          # the schedule as it is set in .github/workflows/update.yml; change the two together
-         '<p class="st-sched"><b>Schedule:</b> a program on our own server reads every employer’s careers page at least once an hour, around the clock, and the pages that changed '
-         'in the last day every 10 minutes: a new job is on the site within minutes and a closed one is marked closed. The lists and the counts on the other pages are '
-         'rebuilt from the full record several times a day: a rebuild is started at 17 and 47 minutes past each hour (UTC) and takes about 40 minutes; GitHub, which runs it, '
-         'skips or delays many of the starts, so the time of the last rebuild above shows when it really happened.</p>'
+         '<p class="st-sched"><b>Schedule:</b> a program on our own server reads every employer’s careers page around the clock, about once an hour, and the pages that changed '
+         'in the last day every 10 minutes: a new job is usually on the site within the hour and a closed one is marked closed. When that program falls behind or stops, the '
+         'rebuilds below still read every board, the busiest every time and the others every few rebuilds, so a change can then take a day or two to show. The lists and the counts on the other pages are '
+         'rebuilt from the full record several times a day: a rebuild is started at 17 and 47 minutes past each hour (UTC) and takes two to three hours; GitHub, which runs it, '
+         'skips or delays many of the starts, so the time of the last rebuild above shows when it really happened. The “Last checked” date on a job page is the last day the '
+         'job was found on the employer’s list, by the server or by a rebuild; a board that has not answered keeps the day of its last good reading.</p>'
          + failed_html + journal_html
          + section("How old the [[open listings]] are", ttable(["Measure", "Value"], [
              trow(["Open roles", f"{n:,}"]), trow(["Posted in the last 7 days", f"{sum(a <= 7 for a in ages):,} ({pctf(sum(a <= 7 for a in ages), n)})"]),
@@ -11079,7 +11088,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
              trow([f'Open {LONG_OPEN} days or more (<a href="{P}/insights/long-open-roles/">by company</a>)', f"{long_all:,} ({pctf(long_all, n)})"]),
              trow(["Median days since posting", f"{ages[len(ages) // 2] if ages else 0}"])])
              + '<p class="note">The posting date is the one the employer’s hiring system reports. We do not reset it when we re-check a job.</p>', label="Age")
-         + section("What happens when [[a role closes]]", f'<p>When a posting disappears from the employer’s careers page, it is marked closed on the same day and moved to the <a href="{P}/archive/">archive</a>, '
+         + section("What happens when [[a role closes]]", f'<p>When a posting disappears from the employer’s careers page, it is marked closed at the next reading of that page, usually within hours and at most a day or two later, and moved to the <a href="{P}/archive/">archive</a>, '
                    f'which holds {len(archived):,} closed roles. A closed job keeps its page and says so at the top. How everything is collected: <a href="{P}/methodology/">methodology</a>.</p>', label="Closed jobs")
          + cite("status/", "Data status"), cls="hub sp status")
 
@@ -11214,7 +11223,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
                       f"<b>How we contact people:</b> we do not. Nobody from {e(SITE)} will ever write to you first, offer you a job, or ask for money, documents or wallet access.</p>")
                    + "<p><b>Something looks wrong?</b> Every job page has a “Report a problem with this listing” link. A report about money, an install request or a move to a chat app is looked at first.</p>")
          + section(f"What does {SITE} do to keep fake jobs out?", f"<p>Every listing here is read from the employer’s own hiring system (Greenhouse, Lever, Ashby, Workable, Workday and others), links straight to that posting and is checked again every hour; "
-                   f"a role that disappears from the employer’s page is marked closed the same day. Each job page names its source and the date of the last check. {NO_ANON}, "
+                   f"a role that disappears from the employer’s page is marked closed at the next reading, usually within hours. Each job page names its source and the date of the last check. {NO_ANON}, "
                    f'and we never ask you for money, documents or an account. Details: <a href="{P}/methodology/">how listings are collected</a> and <a href="{P}/status/">today’s data status</a>.</p>')
          + section("What should I do if I already sent money or data?", "<p>Act the same day. Call your bank or card issuer and ask to stop or dispute the payment. Change the passwords of any account you shared, starting with email. "
                    "If a seed phrase or key was exposed, move the funds to a new wallet at once. If you deposited a check from the “employer”, tell your bank and spend none of it: it can bounce days after the money shows. "
@@ -14323,7 +14332,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          + '<p class="sec-label">How the site works</p><div class="about-grid three"><div>'
          f'<h2 class="h2s">Where {e(SITE)} gets its jobs</h2><p>From the companies\' own careers systems, not from other job boards. Every listing links to the original posting, and you apply there. '
          f'The full process is on the <a href="{P}/methodology/">methodology page</a>.</p></div>' '<div>'
-         f'<h2 class="h2s">How often {e(SITE)} is updated</h2><p>Every hour. The date of the last check is shown on every job page. Closed jobs are not deleted: they move to the <a href="{P}/archive/">archive</a> and are marked as closed.</p></div>' '<div>'
+         f'<h2 class="h2s">How often {e(SITE)} is updated</h2><p>Our server reads every company’s careers page around the clock, about once an hour, and the lists and counts are rebuilt from the full record several times a day. Each job page shows the last day the job was found on the employer’s page. Closed jobs are not deleted: they move to the <a href="{P}/archive/">archive</a> and are marked as closed.</p></div>' '<div>'
          f'<h2 class="h2s">What {e(SITE)} costs job seekers</h2><p>Nothing. Searching, saving jobs, tracking applications, the resume builder and applying are free and need no account. A paid <a href="{P}/plus/">Plus</a> plan with extra tools is planned.</p></div></div>'
          '<p class="sec-label">Who is behind it</p><div class="about-grid two"><div>'
          f'<h2 class="h2s">Who runs {e(SITE)}</h2><p>An independent small team. We are not a recruitment agency and take no part in hiring decisions. Company names and logos belong to their owners and are shown only to identify the employer.</p></div>'
@@ -14344,7 +14353,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          f'<p class="plain"><b>In plain words:</b> where the jobs on this site come from, how we know a job is still open, and what each label and number means. Unfamiliar word? See the <a href="{P}/glossary/">glossary</a>.</p>'
          f'<p class="lead">Last updated {fdate(TODAY)}. This page explains where every number and label on the site comes from, so you can judge how far to trust it.</p>'
          f'<h2 class="h2s">Where do the job listings come from?</h2><p>From the public hiring feeds that companies publish through their applicant tracking systems. We read {N_FEEDS:,} company feeds every hour. We do not copy listings from other job boards and we do not accept anonymous submissions.</p>'
-         '<h2 class="h2s">How do you know a job is still open?</h2><p>A job stays listed as open only while it is present in the employer\'s feed. When it disappears from the feed, it is marked as closed the same day and moved to the archive. '
+         '<h2 class="h2s">How do you know a job is still open?</h2><p>A job stays listed as open only while it is present in the employer\'s feed. When it disappears from the feed, it is marked as closed at the next reading of that feed, usually within hours and at most a day or two later, and moved to the archive. '
          'If a company\'s feed cannot be read on a given day, its jobs are left unchanged rather than closed by mistake.</p>'
          '<h2 class="h2s">How are salary, skills, perks and remote status detected?</h2><p>Salary is shown only when the employer publishes a range. We read it from the pay field of the employer\'s hiring system or, failing that, from the posting text when a yearly range stands next to a word such as “salary” or “compensation”. '
          'Hourly and monthly figures are left out, and a salary written in an unusual way can be missed, so “not listed” on this site does not prove the employer hides it. Skills, perks such as visa sponsorship, seniority and employment type are read from the title and text of the posting by fixed rules, not guessed. '

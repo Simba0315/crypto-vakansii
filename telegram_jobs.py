@@ -409,8 +409,8 @@ def collect(db, used_slugs, indexed, stats, norm, slugify, excerpt, classify, le
     for j in db.values():
         if j.get("tg") and j["active"] and ((j.get("posted") or today) < oldest or j["tg"].lower() not in on):
             j.update(active=False, closed=today); closed += 1; stats["closed"] += 1
-        elif j.get("tg") and j["active"]:
-            j["last_seen"] = today
+    # last_seen stays the day the post was read (26 Nov 2026): a post is never read again, so "Last checked" on its page and "re-checked
+    # today" on /status/ must not move every hour as if it were (they did, even in a run where the channel did not answer).
     live = sum(1 for j in db.values() if j.get("tg") and j["active"])
     print(f"telegram: {len(on)} channels, {failed} did not answer, {added} new jobs, {closed} closed, {live} open")
 

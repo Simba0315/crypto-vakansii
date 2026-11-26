@@ -107,6 +107,15 @@ def live_row(sql, args):
         con.close()
 
 
+def live_checked(company):
+    """The day live.py last read the company's board to the end (live.py, table read_ok), or "" when it has not, or there is no live store."""
+    got = live_row("SELECT at FROM read_ok WHERE company = ?", (company or "",))
+    try:
+        return datetime.date.fromtimestamp(float(got[0][0])).isoformat() if got and got[0][0] else ""
+    except (TypeError, ValueError, OverflowError, OSError):
+        return ""
+
+
 class Cards:
     """The other open jobs of the same company in the same field, for the "similar jobs" block of a job page: read from the records
     when a page asks for them. (18 Nov 2026: they were held in memory as whole records, up to four for every company and field, about
@@ -246,6 +255,11 @@ class Store:
             if text: j["desc"] = text
             if live and live[0][2] and j.get("active"):  # live.py saw it leave its board: closed now, not at the next upload
                 j.update(active=False, closed=live[0][2])
+            if self.live and j.get("active") and not j.get("tg"):
+                # live.py read the company's whole board later than the hourly record did, and this job was on it (one that had left it
+                # would be closed just above): "Last checked" is that day, not the day of the last full rebuild
+                day = live_checked(j.get("company"))
+                if day > str(j.get("last_seen") or ""): j["last_seen"] = day
             b, out = self.b, {}
             if self.live:
                 b.NOW = int(time.time())

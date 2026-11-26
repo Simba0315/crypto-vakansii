@@ -119,6 +119,10 @@ CREATE INDEX IF NOT EXISTS live_company ON live (company, closed);
 CREATE INDEX IF NOT EXISTS live_new ON live (closed, seen_at);
 CREATE TABLE IF NOT EXISTS moved (slug TEXT PRIMARY KEY, to_slug TEXT);
 CREATE TABLE IF NOT EXISTS boards (key TEXT PRIMARY KEY, next_due REAL, last_change REAL DEFAULT 0, fails INTEGER DEFAULT 0);
+-- when a company's board was last read to the end here: every job that had left it closed, the others still on it. A job page shows
+-- this day as "Last checked" when it is later than the hourly record's (records.Store.page; 26 Nov 2026: the pages showed the day of
+-- the last full rebuild, one to eight days back for 70% of the open jobs, while this program read the boards around the clock)
+CREATE TABLE IF NOT EXISTS read_ok (company TEXT PRIMARY KEY, at REAL);
 """
 
 
@@ -130,15 +134,20 @@ DIRECT_EVERY = 120          # seconds between reads of the jobs employers posted
 
 
 def sources():
-    """Every board the hourly collector reads (all sources*.json but the candidate list), each once."""
-    seen, out = set(), []
+    """Every board the hourly collector reads (all sources*.json but the candidate list), each once, and one board for each company
+    name: the one collect.main reads, its files taken in its order. (26 Nov 2026: four companies had two boards here, Aurelian on Ashby
+    and on Gem among them. A read of one closed the other's jobs, which belong to the same company, and the next read of the other
+    opened them again as new, around the clock; the hourly record reads only the first board of a name.)"""
+    seen, names, out = set(), set(), []
     crypto = {s["name"] for s in json.loads((ROOT / "sources.json").read_text())} if (ROOT / "sources.json").exists() else set()
-    for f in sorted(ROOT.glob("sources*.json")):
+    first = ["sources.json", "sources_tech.json", *collect.ROTATING]
+    files = [ROOT / f for f in first if (ROOT / f).exists()] + [f for f in sorted(ROOT.glob("sources*.json")) if f.name not in first]
+    for f in files:
         if "candidates" in f.name: continue
         for s in json.loads(f.read_text()):
             k = (s.get("ats"), s.get("token"))
-            if not s.get("token") or not s.get("name") or k in seen or s["name"] in collect.EXCLUDE or s.get("hold"): continue
-            seen.add(k)
+            if not s.get("token") or not s.get("name") or k in seen or str(s["name"]).lower() in names or s["name"] in collect.EXCLUDE or s.get("hold"): continue
+            seen.add(k); names.add(str(s["name"]).lower())
             out.append(dict(s, crypto=s["name"] in crypto))
     return out
 
@@ -191,9 +200,18 @@ class Live:
                 self.con.execute("DELETE FROM live WHERE id = ?", (jid,))
                 dropped += 1
             else:
-                r = json.loads(self.con.execute("SELECT rec FROM live WHERE id = ?", (jid,)).fetchone()[0])
+                try: r = json.loads(self.con.execute("SELECT rec FROM live WHERE id = ?", (jid,)).fetchone()[0])
+                except (TypeError, ValueError): r = None
+                if not isinstance(r, dict) or r.get("closed_only") or not r.get("title"):
+                    # A closing noted here for a job the hourly record no longer has at all (its company was renamed, which changes its
+                    # id, or the record dropped it): there is no page left to mark closed. Kept, such a row ("closed_only", no title)
+                    # stopped this program at every start: from the upload of 25 Nov 2026 21:02 UTC on, 176 restarts in a row with
+                    # "KeyError: 'title'" here, and no board was read live for over six hours.
+                    self.con.execute("DELETE FROM live WHERE id = ?", (jid,))
+                    dropped += 1
+                    continue
                 self.slugs.add(slug)
-                idx.add(slug, r["company"], r["title"], r.get("location", ""), r.get("remote", False), r.get("url", ""), {"id": jid})
+                idx.add(slug, r.get("company") or "", r["title"], r.get("location") or "", bool(r.get("remote")), r.get("url") or "", {"id": jid})
         idx.done()
         if self.write:
             try:
@@ -350,6 +368,7 @@ class Live:
                 self.search_put({"slug": slug}, "", today)
                 for nm in (name, src.get("was")): self.by_co.get(nm, set()).discard(jid)
                 closed += 1
+            if self.write: self.con.execute("INSERT OR REPLACE INTO read_ok VALUES (?, ?)", (name, now))
         return new, closed, dup
 
     def reopen(self, name, ids):
@@ -521,6 +540,18 @@ def test():
     """The scheduler, with boards that answer at once and nothing written: the slow systems together never hold more than HEAVY_MAX
     threads, the quick boards are all read while the slow ones are busy, and the longest overdue board goes first."""
     global sources
+    # one board per company name, the one collect.main reads (it takes a name once, in the order of its files)
+    got, taken, want = sources(), set(), {}
+    for f in ["sources.json", "sources_tech.json", *collect.ROTATING]:
+        for s in (json.loads((ROOT / f).read_text()) if (ROOT / f).exists() else []):
+            if s.get("hold") or not s.get("token") or not s.get("name") or s["name"] in collect.EXCLUDE: continue
+            if (s["ats"], s["token"]) in taken or s["name"].lower() in taken: continue
+            taken |= {(s["ats"], s["token"]), s["name"].lower()}
+            want[s["name"].lower()] = (s["ats"], s["token"])
+    names = [s["name"].lower() for s in got]
+    assert len(names) == len(set(names)), [n for n, c in collections.Counter(names).items() if c > 1][:5]
+    assert all(want.get(s["name"].lower(), (s["ats"], s["token"])) == (s["ats"], s["token"]) for s in got)
+    assert set(want) <= set(names), sorted(set(want) - set(names))[:5]
     import threading
     srcs = [{"name": f"{a}{i}", "ats": a, "token": f"{a}{i}"} for a, n in (("workday", 60), ("jazzhr", 20), ("breezy", 20), ("paylocity", 20), ("greenhouse", 80))
             for i in range(n)]
