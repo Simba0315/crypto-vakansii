@@ -36,7 +36,10 @@
   var f0 = H.parse(location.search.slice(1));
   q.value = f0.q; cat.value = f0.cat; lvl.value = f0.lvl; loc.value = f0.loc; city.value = f0.city || ''; sal.value = f0.sal ? String(f0.sal) : ''; age.value = f0.age ? String(f0.age) : ''; sort.value = f0.sort;
   fRemote.checked = f0.remote; fEntry.checked = f0.entry; fCrypto.checked = f0.crypto; fAny.checked = f0.any; perk.value = f0.perk; etype.value = f0.etype;
-  if (fReal) fReal.checked = f0.real;
+  // "Leave out roles open 90+ days and talent pools" is on unless the address says old=1 (teardown, 26 Nov 2026: with it off by default
+  // the first results of "nurse" and "customer service" were postings from 2021-2023 labelled "Hiring now")
+  if (fReal) fReal.checked = f0.real || !new URLSearchParams(location.search).has('old');
+  var oldOn = { get checked() { return !!(fReal && !fReal.checked); } };       // the visitor asked to see the old ones too
   if (fHybrid) fHybrid.checked = f0.hybrid;
   xlBoxes.forEach(function (b) { b.checked = f0.xl.indexOf(b.value) >= 0; });
   if (fTi) fTi.checked = f0.titles;
@@ -70,7 +73,7 @@
     if (fEntry.checked) p.set('entry', '1');
     if (fCrypto.checked) p.set('crypto', '1');
     if (fAny.checked) p.set('any', '1');
-    if (fReal && fReal.checked) p.set('real', '1');
+    if (fReal && !fReal.checked) p.set('old', '1');
     if (fTi && fTi.checked) p.set('ti', '1');
     if (fNosal && fNosal.checked && Number(sal.value) > 1) p.set('nosal', '1');
     if (perk.value) p.set('perk', perk.value);
@@ -86,7 +89,7 @@
     [cat, lvl, loc, age, sal, perk, etype].forEach(function (el) { if (el.value) parts.push(text(el)); });
     if (city.value.trim()) parts.push('in ' + city.value.trim());
     if (fAny.checked) parts.push('Work from anywhere');
-    if (fReal && fReal.checked) parts.push('Fresh openings only');
+    if (oldOn.checked) parts.push('With roles open 90+ days');
     if (fRemote.checked) parts.push('Remote');
     if (fHybrid && fHybrid.checked) parts.push('Hybrid');
     if (xlOf().length) parts.push('No ' + xlOf().join(', ').toLowerCase());
@@ -114,6 +117,7 @@
     keys.sort().forEach(function (k) { var v = p.get(k); out.set(k, k === 'q' ? v.toLowerCase().replace(/\s+/g, ' ').trim() : v); });
     Object.keys(H.mute.c).sort().forEach(function (c) { out.append('xc', c); });
     H.mute.w.slice().sort().forEach(function (w) { out.append('xw', w); });
+    if (!p.has('old')) out.set('real', '1');                 // fresh openings only, the default (the page's address stays clean)
     if (offset) out.set('offset', String(offset));
     if (offset + PAGE > DEEPEST) out.set('limit', String(Math.max(1, DEEPEST - offset)));     // the last page ends at the engine's limit
     return H.base + '/api/search?' + out.toString();
@@ -206,13 +210,13 @@
   if (down) down.addEventListener('click', function (ev) { if (ev.target.getAttribute && ev.target.getAttribute('data-retry')) run(); });
   var run = function () {
     var qs = query();
-    var active = [cat, lvl, loc, city, sal, age, perk, etype].filter(function (el) { return el.value; }).length + [fRemote, fHybrid, fEntry, fCrypto, fAny, fReal].filter(function (el) { return el && el.checked; }).length + (xlOf().length ? 1 : 0) + skills.length;
+    var active = [cat, lvl, loc, city, sal, age, perk, etype].filter(function (el) { return el.value; }).length + [fRemote, fHybrid, fEntry, fCrypto, fAny, oldOn].filter(function (el) { return el && el.checked; }).length + (xlOf().length ? 1 : 0) + skills.length;
     if (ftoggle) ftoggle.textContent = 'Filters' + (active ? ' (' + active + ')' : '');
     if (fwrap) {                                  // the filter bar: a chosen filter is a filled pill, "Clear all" shows only when one is chosen,
       fwrap.classList.toggle('has-on', active > 0);  // and "All filters" counts the chosen ones it hides
       [cat, lvl, loc, city, sal, age, perk, etype].forEach(function (el) { el.classList.toggle('on', !!el.value); });
       var mfs = fwrap.querySelector('.morefilters summary');
-      var hid = [perk, etype].filter(function (el) { return el.value; }).length + [fReal, fTi].filter(function (el) { return el && el.checked; }).length + (xlOf().length ? 1 : 0) + skills.length;
+      var hid = [perk, etype].filter(function (el) { return el.value; }).length + [oldOn, fTi].filter(function (el) { return el && el.checked; }).length + (xlOf().length ? 1 : 0) + skills.length;
       if (mfs) mfs.setAttribute('data-n', hid ? String(hid) : '');
     }
     history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
@@ -237,7 +241,7 @@
     if (q.value.trim()) items.push(['q', '“' + q.value.trim() + '”']);
     [['cat', cat], ['lvl', lvl], ['loc', loc], ['sal', sal], ['age', age], ['perk', perk], ['etype', etype]].forEach(function (x) { if (x[1].value) items.push([x[0], text(x[1])]); });
     if (city.value.trim()) items.push(['city', city.value.trim()]);
-    [['remote', fRemote, 'Remote'], ['hybrid', fHybrid, 'Hybrid'], ['entry', fEntry, 'Entry-level'], ['crypto', fCrypto, 'Crypto'], ['any', fAny, 'Work from anywhere'], ['real', fReal, 'Fresh openings only']].forEach(function (x) { if (x[1] && x[1].checked) items.push([x[0], x[2]]); });
+    [['remote', fRemote, 'Remote'], ['hybrid', fHybrid, 'Hybrid'], ['entry', fEntry, 'Entry-level'], ['crypto', fCrypto, 'Crypto'], ['any', fAny, 'Work from anywhere'], ['old', oldOn, 'With roles open 90+ days']].forEach(function (x) { if (x[1] && x[1].checked) items.push([x[0], x[2]]); });
     if (xlOf().length) items.push(['xl', 'No ' + xlOf().join(', ').toLowerCase()]);
     skills.forEach(function (s) { items.push(['skill:' + s, s]); });
     applied.innerHTML = items.map(function (x) { return '<button class="achip" type="button" data-rm="' + H.esc(x[0]) + '" aria-label="Remove filter: ' + H.esc(x[1]) + '">' + H.esc(x[1]) + '<span aria-hidden="true">×</span></button>'; }).join('') +
@@ -249,7 +253,8 @@
     var k = b.getAttribute('data-rm');
     var boxes = { remote: fRemote, hybrid: fHybrid, entry: fEntry, crypto: fCrypto, any: fAny, real: fReal }, sels = { cat: cat, lvl: lvl, loc: loc, city: city, sal: sal, age: age, perk: perk, etype: etype };
     if (k === 'xl' || k === '*') xlBoxes.forEach(function (x) { x.checked = false; });
-    if (k === '*') { q.value = ''; skills = []; Object.keys(boxes).forEach(function (n) { if (boxes[n]) boxes[n].checked = false; }); Object.keys(sels).forEach(function (n) { sels[n].value = ''; }); if (!sortTouched) sort.value = 'new'; }
+    if (k === '*' || k === 'old') { if (fReal) fReal.checked = true; }
+    if (k === '*') { q.value = ''; skills = []; Object.keys(boxes).forEach(function (n) { if (boxes[n] && n !== 'real') boxes[n].checked = false; }); Object.keys(sels).forEach(function (n) { sels[n].value = ''; }); if (!sortTouched) sort.value = 'new'; }
     else if (k === 'q') { q.value = ''; if (!sortTouched) sort.value = 'new'; }
     else if (k.indexOf('skill:') === 0) skills = skills.filter(function (s) { return s !== k.slice(6); });
     else if (boxes[k]) boxes[k].checked = false; else if (sels[k]) sels[k].value = '';
@@ -266,7 +271,7 @@
     }
     if (total || !d.without) return;
     var names = { q: 'the words “' + words + '”', cat: text(cat), lvl: text(lvl), loc: text(loc), city: city.value.trim(), sal: text(sal), age: text(age), perk: text(perk), etype: text(etype),
-      remote: 'Remote', hybrid: 'Hybrid', xl: 'the levels left out', entry: 'Entry-level', crypto: 'Crypto', any: 'Work from anywhere', real: 'Fresh openings only', skills: skills.join(' + ') };
+      remote: 'Remote', hybrid: 'Hybrid', xl: 'the levels left out', entry: 'Entry-level', crypto: 'Crypto', any: 'Work from anywhere', real: 'the 90-day freshness limit', skills: skills.join(' + ') };
     var out = Object.keys(d.without).filter(function (k) { return names[k] && d.without[k] > 0; }).map(function (k) { return [d.without[k], k, names[k]]; });
     if (!out.length) return;
     out.sort(function (a, b) { return b[0] - a[0]; });
@@ -328,7 +333,8 @@
   var clearBtn = $('fclear');
   if (clearBtn) clearBtn.addEventListener('click', function () {
     [cat, lvl, loc, city, sal, age, perk, etype].forEach(function (el) { el.value = ''; });
-    [fRemote, fHybrid, fEntry, fCrypto, fAny, fReal].concat(xlBoxes).forEach(function (el) { if (el) el.checked = false; });
+    [fRemote, fHybrid, fEntry, fCrypto, fAny].concat(xlBoxes).forEach(function (el) { if (el) el.checked = false; });
+    if (fReal) fReal.checked = true;
     skills = []; paintChips(); run();
   });
 

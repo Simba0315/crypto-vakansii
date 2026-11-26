@@ -2224,13 +2224,30 @@ def bump_stamp(at):
         return 0
 
 
+STALE_DAY = (datetime.date.today() - datetime.timedelta(days=LONG_OPEN)).isoformat()
+
+
+def month_of(day):
+    """'2023-01-31' -> 'Jan 2023' (the day itself when it is not a date)."""
+    try: return datetime.date.fromisoformat(day[:10]).strftime("%b %Y")
+    except Exception: return day
+
+
+def stale(j):
+    """A talent pool, or a posting its employer dated LONG_OPEN (90) or more days ago. Lists show these after every fresh opening, the
+    search leaves them out unless asked (assets/app.js, old=1), and their page does not say "Hiring now". Teardown, 26 Nov 2026: the
+    newest-first order went by the hour we first read a job, so a board read for the first time this week put its postings from 2021-2023
+    at the top of "nurse" and "customer service" with "Hiring now" and "Open for 2,073 days"."""
+    return bool(j.get("pool")) or bool(j.get("posted")) and j["posted"][:10] < STALE_DAY
+
+
 def order(jobs):
-    """Paid first, then the newest. Premium jobs lead and take turns: their order changes with every build (the seed is the day and
+    """Paid first, then the newest; roles open 90+ days and talent pools after all the others (stale()). Premium jobs lead and take turns: their order changes with every build (the seed is the day and
     the number of open jobs, so one build and the records made from it agree), which is the "turn in the top 3" a Premium boost
     promises when a list holds more than three of them. A bumped job is as new as its bump."""
     seed = f"{TODAY}-{ALL_OPEN[0]}-"
     return sorted(jobs, key=lambda j: (not j.get("premium"), hashlib.md5((seed + j["slug"]).encode()).hexdigest() if j.get("premium") else "", not j.get("pinned"), not j["featured"],
-                                       -max(j.get("ts") or stamp(j), j.get("bump") or 0)))
+                                       stale(j), -max(j.get("ts") or stamp(j), j.get("bump") or 0)))
 
 
 def diverse(jobs, k, per=2):
@@ -3778,7 +3795,9 @@ def job_page(j, active_by_cat):
     facts_row = '<dl class="jfrow">' + "".join(f'<div><dt>{k}</dt><dd{" class=" + chr(34) + "nd" + chr(34) if v == "Not listed" else ""}>{v}</dd></div>' for k, v in facts_) + "</dl>"
     two_ = (f'<div class="jtwo"><a class="btn ghost" href="{P}/resume/?job={j["slug"]}">Tailor my resume</a>'
             f'<a class="btn ghost" href="{P}/tools/cover-letter/?job={j["slug"]}" title="Write a cover letter for this job">Cover letter</a></div>' if j["active"] and not j.get("tg") else "")
-    eyebrow = (f'<p class="sec-label">{"Hiring now" if j["active"] else "Closed"}'
+    # "Hiring now" only for a fresh opening: a talent pool says so, a posting dated 90+ days ago gives its month (stale())
+    live_ = ("Talent pool" if j.get("pool") else ("Posted " + month_of(j["posted"]))) if stale(j) else "Hiring now"
+    eyebrow = (f'<p class="sec-label">{live_ if j["active"] else "Closed"}'
                + (f' · {e(CAT[j["cat"]])}' if j["cat"] != OTHER[0] else "") + "</p>")
     sideact = save_btn.split("</div>", 1)[0] + "</div>" if '<div class="sideact">' in save_btn else ""
     side_rest = save_btn.split("</div>", 1)[1] if '<div class="sideact">' in save_btn else save_btn
@@ -5037,6 +5056,7 @@ def main():
     # the first page of results, as the server would answer it with no filter: the newest 50 roles, each with its other postings
     same_n, first_rows, seen_ = Counter((j["company"], j["title"]) for j in active), [], set()
     for j in order(active):
+        if stale(j): continue                   # the search leaves them out by default (old=1 brings them back); order() puts them last
         if (j["company"], j["title"]) in seen_: continue
         seen_.add((j["company"], j["title"]))
         first_rows.append(search_engine.row(search_engine.doc(j, "", PLACE_CODE, TODAY), same_n[(j["company"], j["title"])] - 1, slugify(j["company"]) in LOGOS, NOW))
@@ -5062,7 +5082,7 @@ def main():
                                     '<label><input type="checkbox" id="f-entry"> Entry-level</label><label><input type="checkbox" id="f-crypto"> Crypto &amp; web3</label></div>', "f-work")
               + '<details class="morefilters"><summary data-n="">All filters</summary><div class="mf">'
               + group("Search in", '<div class="filters"><label><input type="checkbox" id="f-ti"> Job titles only</label></div>')
-              + group("Leave out", '<div class="filters"><label><input type="checkbox" id="f-real"> Roles open 90+ days and talent pools</label></div>'
+              + group("Leave out", '<div class="filters"><label><input type="checkbox" id="f-real" checked> Roles open 90+ days and talent pools</label></div>'
                                    '<div class="filters"><label><input type="checkbox" id="f-ha"> Jobs I already applied to</label></div>'
                                    '<div class="filters xlv"><span class="note">Levels:</span>' + "".join(f'<label><input type="checkbox" class="f-xl" value="{x}"> {LVL_NAME[x]}</label>' for x in ("Intern", "Junior", "Senior", "Lead")) + '</div>'
                                    '<input type="text" id="xwords" class="xin" placeholder="Words in the title, e.g. senior, sales" aria-label="Words to leave out of results" autocomplete="off">'
@@ -5094,7 +5114,7 @@ def main():
               # the first screen comes with the page: the newest jobs, one row per role, in the rows the server answers searches with
               # (search_engine.row). Filters and words go to the server (/api/search?list=1); no list of every job is downloaded.
               # "deepest": the engine lists no further than this many rows, so app.js stops "Show more" there and says so (26 Nov 2026)
-              + '<script type="application/json" id="srch-first">' + json.dumps({"total": n, "deepest": search_engine.DEEPEST, "jobs": first_rows}, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/") + '</script>'
+              + '<script type="application/json" id="srch-first">' + json.dumps({"total": sum(1 for j in active if not stale(j)), "deepest": search_engine.DEEPEST, "jobs": first_rows}, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/") + '</script>'
               + f'<script src="{P}/app.js?v={V}" defer></script>')
     page("jobs/", f"All Jobs: {n:,} Open Roles, Filter by Title, Place and Pay | {SITE}",
          "Search jobs by title, skill or company. Filter by level, location, salary and remote, sort by pay, and save your searches.", search, cls="srch")
