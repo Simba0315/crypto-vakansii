@@ -207,7 +207,7 @@ def render(a, fig, e, P, when, have, n_all, nums=None):
           + "".join(e(EXTRA[k]["note"]) + " " for k in fig["extras"]) + f'Counted {when} from employers’ own careers pages and recounted on every update.</p>')
     h += cuts(a, fig, e, P)
     if fig.get("skills") or fig.get("quals"):
-        h += '<h2>What these postings ask for</h2>'
+        h += f'<h2>What {e(a["about"]) if a["group"] != "degree" else "jobs for " + e(a["about"])} ask for</h2>'
         if fig.get("quals"):
             h += (f'<p>In the {fig["full"]:,} of these postings held here in full, the share that names each quality in the usual words:</p><ul class="ticks">'
                   + "".join(f"<li><b>{e(nm)}</b>: {pc}% of postings</li>" for nm, pc in fig["quals"]) + "</ul>")
@@ -215,7 +215,7 @@ def render(a, fig, e, P, when, have, n_all, nums=None):
             h += ('<p>The skills named most often across all of them:</p><p class="rel chips">'
                   + "".join(f'<span>{e(t)} · {k:,}</span>' for t, k in fig["skills"]) + "</p>")
         h += '<p class="note">Counted from today’s postings for these kinds of work, not from a list of traits: a posting that asks for a quality in other words is not counted.</p>'
-    h += '<h2>What to check before you apply</h2><ul class="ticks">' + "".join(f"<li>{e(c)}</li>" for c in a["check"]) + "</ul>"
+    h += f'<h2>What to check before you apply {"to " + e(a["about"]) if a["group"] != "degree" else "with " + e(a["about"])}</h2><ul class="ticks">' + "".join(f"<li>{e(c)}</li>" for c in a["check"]) + "</ul>"
     h += f'<h2>Questions about {e(a["about"])}</h2><dl class="qa">' + "".join(f"<div><dt>{e(q)}</dt><dd>{e(x)}</dd></div>" for q, x in faq(a, fig)) + "</dl>"
     links = [(u, t) for u, t in a["more"] if u in have] + [("jobs-for/", "All lists by situation and by degree")]
     h += '<p class="rel chips">' + "".join(f'<a href="{P}/{u}">{e(t)}</a>' for u, t in links) + "</p>"

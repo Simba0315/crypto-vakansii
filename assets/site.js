@@ -956,7 +956,7 @@
   if (dirfilter) dirfilter.addEventListener('input', function () {
     var q = dirfilter.value.trim().toLowerCase(), shown = 0;
     document.querySelectorAll('#dir .dirb').forEach(function (b) {
-      var any = 0, head = (b.querySelector('h2') || b).textContent.toLowerCase(), whole = !q || head.indexOf(q) >= 0;
+      var any = 0, head = (b.querySelector('h2,h3') || b).textContent.toLowerCase(), whole = !q || head.indexOf(q) >= 0;
       b.querySelectorAll('li').forEach(function (li) {
         var n = li.getAttribute('data-n'), hit = whole || (n != null && n.indexOf(q) >= 0);
         li.hidden = !hit; if (hit) any++;

@@ -2396,7 +2396,7 @@ main.hub:has(#dirfilter:not(:placeholder-shown)) #all,main.hub:has(#dirfilter:no
 .tgrp{margin:20px 0 8px;font-size:13.5px;font-weight:600;color:var(--muted)}
 .tgrp:first-child{margin-top:0}
 /* the places directory: the name of a part of the world is a heading, not a count */
-.dirb h2 b{font:inherit;color:var(--text)}
+.dirb h2 b,.dirb h3 b{font:inherit;color:var(--text)}
 /* the companies directory: filter and order on one line above the grid */
 .cbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;margin:0 0 16px}
 .cbar #cfield{min-height:48px;max-width:100%;padding:0 16px;border:1px solid var(--line2);border-radius:999px;background:var(--card);color:var(--text);font:inherit;font-size:15px}
@@ -2835,7 +2835,7 @@ main.kw .vp-h b{font:700 19px/1.25 var(--display);letter-spacing:-.02em}
 main.kw .vp-row .btn{min-height:40px}
 
 /* the seven directories: a field's icon and name on one line, a long name wrapping beside the icon */
-main.hub .dirb h2 b{display:flex;align-items:center;min-width:0}
+main.hub .dirb h2 b,main.hub .dirb h3 b{display:flex;align-items:center;min-width:0}
 
 /* the dark theme: the tick of a passed check is paper, not green type on black */
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]) .vp-checks li.ok::before{color:var(--text)}}
@@ -4267,7 +4267,7 @@ footer .fcols a{color:var(--muted)}
 footer .fcols a:hover,footer .pop a:hover,footer .fask a:hover{color:var(--ac)}
 footer .pop span{color:var(--faint)}
 footer .pop a,footer .fask a{color:var(--muted)}
-footer .fask b{color:var(--text)}
+footer .fask{color:var(--muted)}footer .fask b{color:var(--text)}
 footer .fine{border-top-color:var(--line);color:var(--faint)}
 footer.mini a{color:var(--muted)}
 /* ---- the filter bar (owner, 24 Nov 2026: "фильтры до сих пор уебищно некрасиво сделаны"): the five menus in one white card, each a small

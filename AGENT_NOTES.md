@@ -19,6 +19,11 @@ it from there. After a change of name or palette: `python3 brand.py`, `python3 o
 - `build.py` generates the whole site into `site/` from `data/jobs.json`, `config.json`, `assets/`.
 - `check.py` checks the built site against the page standard (one H1, title/description length, self-canonical,
   heading order, alt on images, internal links). It must print OK for every template before a push.
+  Since 26 Nov 2026 it also runs `standard2()` on every page: duplicate ids, aria-*/label ids that do not exist, buttons, links and
+  form fields without a name, an FAQPage question not visible on the page, a bare H2 (`BARE_H2`: "Sources", "About the role",
+  "Related tools"... every H2 names the page's key or asks a question), an `<img>` without width and height, the footer's About,
+  Contact, Editorial policy, Privacy and Terms links, a top-level Organization without logo and sameAs (`ORG_SAME_AS` in build.py),
+  and llms.txt (dated with the build, every page it names exists). New sections: give the heading the page's key.
 - `.github/workflows/update.yml` runs daily (03:17 UTC) and on every push: restore the jobs database from the one-commit
   `data` branch, collect, save it back, build, deploy to Pages. `data/` and `site/` are not in `main`.
 - `logos.py` finds each company's own site and saves its icon to `assets/logos/`. Only trusted addresses are used

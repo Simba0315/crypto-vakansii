@@ -28,27 +28,47 @@ FAQ_H = {
 ARTICLES = []
 
 
+def topic_of(a):
+    """What an article is about, for its plain headings ("Writing a resume: mistakes to avoid"): from its own questions heading
+    (FAQ_H, "Questions about writing a resume") or else from its title before the first colon or comma (perfect-page standard,
+    26 Nov 2026: every H2 carries the page's key, never a bare "Mistakes to avoid" or "Examples")."""
+    q = a.get("faq_h") or FAQ_H.get(a.get("slug", ""), "")
+    t = q[len("Questions about "):] if q.startswith("Questions about ") else re.split(r"[:,]", a.get("title") or "Job search")[0].strip()
+    return (t[:1].upper() + t[1:]) if t else "Job search"
+
+
+BARE = {"examples", "example answers", "what to say", "what to write", "the order", "three parts", "how to choose", "where to look", "how to use this",
+        "two sentences", "three steps", "four parts", "seven steps", "eight ways", "the checklist", "source", "sources", "what goes in it",
+        "the order that works", "the order that saves time", "how to answer, step by step", "what to bring",
+        "during the interview", "how to read the list", "make it fit the job", "the usual timeline"}
+
+
+def keyed(h2, a):
+    """An article's own heading, with its topic in front when the heading alone names nothing ("Salary expectations: what to say")."""
+    return f"{topic_of(a)}: {h2[0].lower() + h2[1:]}" if h2.strip().lower() in BARE else h2
+
+
 def render(a, ctx, e, P):
     """The body of one article as HTML. ctx: today's figures (build.py advice_ctx)."""
     h = f'<div class="adv-short"><span>Short answer</span><p>{e(a["short"])}</p></div>'
     if a.get("formula"):
-        h += f'<h2>{e(a["formula_h"])}</h2><ol class="adv-steps">' + "".join(f"<li><b>{e(t)}</b> {e(x)}</li>" for t, x in a["formula"]) + "</ol>"
+        h += f'<h2>{e(keyed(a["formula_h"], a))}</h2><ol class="adv-steps">' + "".join(f"<li><b>{e(t)}</b> {e(x)}</li>" for t, x in a["formula"]) + "</ol>"
     for h2, paras in a.get("before", ()):
-        h += f"<h2>{e(h2)}</h2>" + "".join(f"<p>{e(p_)}</p>" for p_ in paras)
+        h += f"<h2>{e(keyed(h2, a))}</h2>" + "".join(f"<p>{e(p_)}</p>" for p_ in paras)
     if a.get("data") and a["data"] in DATA:
         h += DATA[a["data"]](ctx, e, P)
     if a.get("links"):
         h += f'<h2>{e(a["links_h"])}</h2><ul class="adv-list">' + "".join(f'<li><a href="{P}/{u}">{e(t)}</a>{" " + e(x) if x else ""}</li>' for u, t, x in a["links"]) + "</ul>"
     if a.get("examples"):
-        h += f'<h2>{e(a.get("examples_h", "Examples"))}</h2><div class="adv-ex">' + "".join(
+        h += f'<h2>{e(keyed(a.get("examples_h") or "Examples", a))}</h2><div class="adv-ex">' + "".join(
             f'<figure><figcaption>{e(who)}</figcaption><blockquote>{e(txt)}</blockquote></figure>' for who, txt in a["examples"]) + "</div>"
     for h2, paras in a.get("after", ()):
         if all(p_.rstrip().endswith("?") for p_ in paras) or len(paras) > 4:      # a list of questions or of short answers reads better as a list
-            h += f'<h2>{e(h2)}</h2><ul class="adv-list">' + "".join(f"<li>{e(p_)}</li>" for p_ in paras) + "</ul>"
+            h += f'<h2>{e(keyed(h2, a))}</h2><ul class="adv-list">' + "".join(f"<li>{e(p_)}</li>" for p_ in paras) + "</ul>"
         else:
-            h += f"<h2>{e(h2)}</h2>" + "".join(f"<p>{e(p_)}</p>" for p_ in paras)
+            h += f"<h2>{e(keyed(h2, a))}</h2>" + "".join(f"<p>{e(p_)}</p>" for p_ in paras)
     if a.get("mistakes"):
-        h += '<h2>Mistakes to avoid</h2><ul class="crosses">' + "".join(f"<li>{e(m)}</li>" for m in a["mistakes"]) + "</ul>"
+        h += f'<h2>{e(topic_of(a))}: mistakes to avoid</h2><ul class="crosses">' + "".join(f"<li>{e(m)}</li>" for m in a["mistakes"]) + "</ul>"
     if a.get("tool"):
         u, name, why = a["tool"]
         h += f'<div class="adv-tool"><div><b>{e(name)}</b><p>{e(why)}</p></div><a class="btn primary go" href="{P}/{u}">Open it, free<i aria-hidden="true"></i></a></div>'
@@ -108,7 +128,7 @@ ARTICLES += [
              "summary that shows you fit this job. Here is a formula, examples for different kinds of work, and what today’s postings ask for, so you know which words to use.",
      "short": "Answer in 60 to 90 seconds, in three parts: what you do now, one result that shows you do it well, and why this job is the next step. "
               "Leave out your childhood, your personal life and anything negative about your current employer.",
-     "formula_h": "The formula: now, proof, next",
+     "formula_h": "The “Tell me about yourself” formula: now, proof, next",
      "formula": [("Now:", "your current role or situation in one sentence, with the kind of work and the level. “I’m a data analyst at a logistics company, the one the sales team asks for numbers.”"),
                  ("Proof:", "one or two results with a number. “Last year I built the weekly report that replaced six spreadsheets; it saves the team about a day a week.”"),
                  ("Next:", "why this job, in words from the posting. “You are looking for someone to own reporting for a growing sales team, which is the part of my work I enjoy most.”")],
@@ -195,21 +215,21 @@ ARTICLES += [
              "tell you whether you want it. Here are 25, grouped by what they find out, and a few that today’s postings make worth asking.",
      "short": "Ask two or three questions the interview has not answered yet: about the work itself, how success is measured, the team, and the next steps. "
               "Do not ask about anything the posting or the website already says.",
-     "formula_h": "How to choose",
+     "formula_h": "How to choose questions to ask in an interview",
      "formula": [("Prepare eight to ten.", "Several will be answered during the interview; you need a few left."),
                  ("Ask about the work first.", "What you will do every day and how it is judged matter more than perks."),
                  ("End with the next steps.", "It tells you when to expect an answer and when to follow up.")],
      "data": "open",
-     "after": [("About the work", ["What does a normal week in this role look like?", "What would you want the person in this role to have done after three months? After a year?",
+     "after": [("Questions to ask about the work", ["What does a normal week in this role look like?", "What would you want the person in this role to have done after three months? After a year?",
                                    "What is the hardest part of this job?", "Which project would I start on?", "How much of the work is new projects, and how much is keeping things running?",
                                    "Is this a new role, or am I replacing someone? What did they move on to?"]),
-               ("About success and growth", ["How do you measure success in this role?", "How are reviews and raises decided, and how often?", "What have people in this role gone on to do?",
+               ("Questions to ask about success and growth", ["How do you measure success in this role?", "How are reviews and raises decided, and how often?", "What have people in this role gone on to do?",
                                              "Is there a budget or time for courses and conferences?"]),
-               ("About the team and the manager", ["Who would I work with most?", "How does the team decide what to work on?", "How do you give feedback, and how often?",
+               ("Questions to ask about the team and the manager", ["Who would I work with most?", "How does the team decide what to work on?", "How do you give feedback, and how often?",
                                                    "How long have people on the team been here?", "What do you like most about working here?"]),
-               ("About the company", ["What is the company’s biggest challenge this year?", "How has the team changed in the last year?", "What would make you leave a job like this?",
+               ("Questions to ask about the company", ["What is the company’s biggest challenge this year?", "How has the team changed in the last year?", "What would make you leave a job like this?",
                                       "How are people working now: in the office, at home, or both? Is that likely to change?"]),
-               ("About the next steps", ["What are the next steps, and when should I expect to hear from you?", "Is there anything in my background that makes you hesitate? I’d like the chance to answer it.",
+               ("Questions to ask about the next steps", ["What are the next steps, and when should I expect to hear from you?", "Is there anything in my background that makes you hesitate? I’d like the chance to answer it.",
                                          "Who else will I meet in the process?"]),
                ("Questions our figures make worth asking", ["How long has this role been open? Postings that stay open for months are common; the answer tells you whether the role is urgent, hard to fill or paused.",
                                                             "What is the pay range? A growing share of postings state it, and in several US states the employer must tell you.",
@@ -291,7 +311,7 @@ ARTICLES += [
              "minutes of reading to prepare. Here is what to read, how to put it together, and examples.",
      "short": "Name something specific about the company (its product, customers or a recent change), what this role lets you do that you want to do, "
               "and what you bring that fits. Avoid answers that would be true of any employer, such as pay or “a great company”.",
-     "formula_h": "Three parts",
+     "formula_h": "Three parts of a “Why do you want to work here?” answer",
      "formula": [("The company:", "one specific fact you found: a product you use, the customers it serves, a launch, its growth, how it works."),
                  ("The role:", "the part of the job you want to do, in the posting’s words."),
                  ("You:", "why you will be good at it, with one piece of proof.")],
@@ -324,7 +344,7 @@ ARTICLES += [
              "You do not need a five-year plan, only a direction this role is the first step on.",
      "short": "Describe the skills and responsibility you want to grow into, in a direction this job leads to, and connect it to the company. "
               "Avoid naming another employer, a different career, or the interviewer’s own job.",
-     "formula_h": "Three parts",
+     "formula_h": "Three parts of a “Where do you see yourself in 5 years?” answer",
      "formula": [("What you want to be good at:", "a skill or kind of problem, not a title."),
                  ("What responsibility you want:", "leading a project, a team, an area."),
                  ("Why here:", "how this role and company get you there.")],
@@ -633,13 +653,13 @@ ARTICLES += [
              "and each has a polite form that keeps the door open.",
      "short": "Thank them, ask for the offer in writing and for a day or two to read it. Check pay, bonus, start date, hours, place of work, leave and notice. "
               "Then accept in writing, counter once with a figure and a reason, or decline briefly and kindly.",
-     "formula_h": "The order",
+     "formula_h": "The order to accept or decline a job offer",
      "formula": [("Thank them and ask for it in writing.", "“Thank you, I’m delighted. Could you send the offer in writing so I can read the details?”"),
                  ("Ask for time.", "One to three working days is normal. Give a date and keep it."),
                  ("Check the whole package.", "Base pay, bonus and how it is earned, equity, start date, hours, remote days, leave, probation and notice."),
                  ("Decide: accept, counter or decline.", "One counter, with a number and a reason. Then a clear yes or no.")],
      "data": "pay",
-     "examples_h": "What to write",
+     "examples_h": "What to write when you accept or decline a job offer",
      "examples": [("Asking for time", "Thank you for the offer; I’m excited about the role. Could I have until Thursday to read through the details and come back to you?"),
                   ("Accepting", "I’m pleased to accept the offer for the Operations Analyst role at a salary of $72,000, starting on 3 March. Thank you; I’m looking forward to joining the team. Please let me know the next steps."),
                   ("Countering", "Thank you for the offer. I’m keen to join. Given the range advertised for similar roles here and my four years in the field, would $78,000 be possible? I’m ready to accept at that figure."),
@@ -664,7 +684,7 @@ ARTICLES += [
              "Phone and video calls have their own checklist.",
      "short": "Read the posting again and match three of your results to what it asks; prepare short answers to the questions every interview asks; dress a step smarter than the team "
               "dresses day to day; bring copies of your resume, your questions and a pen; arrive ten minutes early; send a thank-you email the same day.",
-     "formula_h": "How to prepare, step by step",
+     "formula_h": "How to prepare for a job interview, step by step",
      "formula": [("Read the posting twice.", "Mark the skills and duties it names: the questions will test those. Use its words in your answers."),
                  ("Learn the company in twenty minutes.", "What it sells and to whom, one recent piece of news, and the profile of the person you will meet."),
                  ("Prepare five short stories.", "A success, a problem you solved, a disagreement, a mistake you learned from, and a time you helped or led others. Tell each with the STAR method in under two minutes."),
@@ -801,13 +821,13 @@ ARTICLES += [
                     "Week 2: apply to the freshest postings of those employers and to a handful of others; set one hour a day for it.",
                     "Week 3: follow up on week 1 and 2 applications, ask two people you know about their companies, practise the interview questions.",
                     "Week 4: look at what happened: if there are no replies, change the resume or the target; if there are interviews, spend the time on them."]),
-               ("Where to look", ["Company career pages are the source of every listing. This site reads them every hour, shows each posting’s age and links to the employer’s own application page. "
+               ("Where to look for a job fast", ["Company career pages are the source of every listing. This site reads them every hour, shows each posting’s age and links to the employer’s own application page. "
                                   "Add people you know: a short message to someone who works at a company you like often leads to a name to write to."]),
                ("How many applications is enough?", ["There is no number that works for everyone. Judge by replies: if ten applications bring no reply, the problem is usually the resume or the target, not the count. "
                                                      "Change one thing and watch the next ten."]),
                ("If you are looking while you have a job", ["Search outside work hours and on your own device, and keep your current employer out of your references until there is an offer. "
                                                            "Tell only people who will not repeat it."])],
-     "links_h": "Tools for each step",
+     "links_h": "Tools for each step of a fast job search",
      "links": [("resume/", "Resume builder", "(free, one clean page that software can read)"),
                ("for-you/", "For you: jobs that match your answers", "(five questions, nothing leaves your browser)"),
                ("jobs/", "Search all open jobs", "(each one shows its age)"),

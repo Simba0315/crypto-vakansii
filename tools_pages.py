@@ -2598,7 +2598,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
                 + '<div class="tl-after">' + extra
                 + section(t["how_title"], f'<div class="tl-how">{t["how"]}</div>')
                 + section(f"Questions about the {t['name'][0].lower() + t['name'][1:]}", faq_html)
-                + section("Related tools", cards(related), ("tools/", "All free tools")) + "</div>")
+                + section(f"Free tools related to the {t['name'][0].lower() + t['name'][1:]}", cards(related), ("tools/", "All free tools")) + "</div>")
         page(path, t["title"], t["desc"], body, head=assets + app_ld + faq_ld + crumbs_ld([("Tools", "tools/"), (t["name"], "")]))
 
     # ------------------------------------------------------------ one paycheck calculator per state ("paycheck calculator texas")
@@ -2642,7 +2642,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
                 + section(f"How {name} taxes wages", f'<div class="tl-how">{how}</div>')
                 + section(f"Questions about paychecks in {name}", faq_html)
                 + section("Paycheck calculators for other states", others, ("tools/take-home-pay/", "All states"))
-                + section("Related tools", cards(th_rel), ("tools/", "All free tools")) + "</div>")
+                + section(f"Free tools related to the {name} paycheck calculator", cards(th_rel), ("tools/", "All free tools")) + "</div>")
         page(path, title + brand, f"{name} paycheck calculator for 2026: take-home pay after federal tax, Social Security, Medicare" + (f" and {name} income tax" if has_tax else "") + f". {name} has {says}. Free, no sign-up.",
              body, head=assets + faq_ld + crumbs_ld([("Tools", "tools/"), (th["name"], "tools/take-home-pay/"), (name, "")]))
 
@@ -2856,8 +2856,8 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
     rest = [t["slug"] for t in TOOLS if t["group"] == "seekers" and t["slug"] not in named]
     grid = lambda slugs: '<div class="tgrid">' + "".join(found(s_) for s_ in slugs if s_ in by_slug) + "</div>"
     have = lambda slugs: sum(1 for s_ in slugs if s_ in by_slug)
-    seekers = "".join(part(h_, grid(ss), sid_, have(ss)) for h_, sid_, ss in HUB if have(ss)) + (part("More for job seekers", grid(rest), "more", len(rest)) if rest else "")
-    jump = [("Start here", "start")] + [(h_, sid_) for h_, sid_, ss in HUB if have(ss)] + ([("More for job seekers", "more")] if rest else []) + [("For employers and recruiters", "employers")]
+    seekers = "".join(part(h_, grid(ss), sid_, have(ss)) for h_, sid_, ss in HUB if have(ss)) + (part("More free tools for job seekers", grid(rest), "more", len(rest)) if rest else "")
+    jump = [("Start here", "start")] + [(h_, sid_) for h_, sid_, ss in HUB if have(ss)] + ([("More free tools for job seekers", "more")] if rest else []) + [("For employers and recruiters", "employers")]
     hub_faq = [("Are these tools free?", "Yes. Every tool on this page is free, needs no account and can be used as often as you like."),
                ("Do the tools store or upload what I type?",
                 "No. All calculations and text checks run in your browser. What you type is saved only in this browser’s storage so a tool remembers it next time, and every tool has a Clear button that erases it."),
@@ -2902,7 +2902,7 @@ def build_tools(page, section, crumbs, e, P, FULL, SITE, V, jobs, CAT, role_skil
                    f'<div class="feat"><h3>The salary figures have a source</h3><p>They come from {n_paid:,} open roles that publish a yearly US-dollar range. No figure is shown for fewer than {MIN_SAMPLE} postings.</p></div>'
                    '<div class="feat"><h3>The method is on the page</h3><p>Arithmetic and fill-in templates, not AI. Under each tool you can read how its result is calculated.</p></div></div>')
          + section("Questions about the tools", faq_html)
-         + section("More [[on this site]]", cards([(u, SITE_PAGES[u][0], SITE_PAGES[u][1]) for u in ("jobs/", "salaries/", "resume/", "for-you/", "post-a-job/", "widgets/")]), label="More"),
+         + section("More free job search help [[on this site]]", cards([(u, SITE_PAGES[u][0], SITE_PAGES[u][1]) for u in ("jobs/", "salaries/", "resume/", "for-you/", "post-a-job/", "widgets/")]), label="More"),
          head=assets + list_ld + faq_ld + crumbs_ld([("Tools", "")]), cls="hub tlhub")
 
     return [(f"tools/{t['slug']}/", t["name"], t["card"]) for t in TOOLS]
