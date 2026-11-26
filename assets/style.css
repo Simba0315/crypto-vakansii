@@ -5670,3 +5670,15 @@ main.lp ul.jobs#list{margin-top:0}
 main.lp .sec-head.lst{margin:14px 0 10px}
 main.lp .sec-head.lst h2{margin:0;font-size:clamp(19px,1.9vw,23px);font-weight:700;letter-spacing:-.02em}
 .lsave-n{flex:1 1 220px;font-size:13px;line-height:1.45;color:var(--muted)}
+
+/* ---- the job page: Apply first in its card, Save and Mark as applied, Tailor my resume and Cover letter under it, then "Email me jobs
+   like this" in one line, then the pay; every action in sight (job_page in build.py) ---- */
+.jdec .jtwo+.alertf.alert1,.jdec .sideact+.alertf.alert1,.jdec #apply-hint+.alertf.alert1{margin:14px 0 0}
+.jdec .alertf.alert1{padding:12px 0 0;border-top:1px solid var(--line)}
+.jdec .alert1-l{font-size:14px;white-space:normal}
+.jdec .alert1-f{flex-basis:100%;max-width:none}
+.jdec .alert1-f input[type=email]{flex:1 1 0;width:0;min-width:0}
+.jdec .alert1-f select{padding:0 6px}
+.jdec .alertf.alert1 .btn{flex:none;width:auto;min-height:42px;margin:0;padding:0 14px;font-size:14px}
+.jdec .alertf.alert1+.paybar{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.jdec #apply+.note.goes{margin-bottom:4px}

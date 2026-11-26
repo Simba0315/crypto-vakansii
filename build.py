@@ -4064,7 +4064,9 @@ def job_page(j, active_by_cat):
         apply_btn = (f'<a class="btn primary lg go" id="apply" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">{"Open the post in Telegram" if j.get("tg") else "Apply on company site"}<i aria-hidden="true"></i></a>'
                      + (f'<p class="note goes">Opens <b>{e(host_)}</b></p>' if host_ and "/" not in host_ and " " not in host_ else ""))
         # Rezi's best-converting box, done our way: no account, the posting goes straight into the checker
-        help_box = ('<div class="jcard jhelp"><p class="jcard-h">Before you apply</p>'
+        # "Prepare to apply" (27 Nov 2026, was "Before you apply"): the resume check, and site.js adds the live check with the employer,
+        # listen, remind me, the skills in plain words, how well it fits and ask an AI to it
+        help_box = ('<div class="jcard jhelp"><p class="jcard-h">Prepare to apply</p>'
                     f'<a class="rmbox" href="{P}/tools/resume-match/?job={j["slug"]}"><b>Check my resume for this job</b><span>See which of its words your resume is missing</span></a></div>')
         banner = ""
     else:
@@ -4191,6 +4193,12 @@ def job_page(j, active_by_cat):
     live_ = ("Talent pool" if j.get("pool") else ("Posted " + month_of(j["posted"]))) if stale(j) else "Hiring now"
     eyebrow = (f'<p class="sec-label">{live_ if j["active"] else "Closed"}'
                + (f' · {e(CAT[j["cat"]])}' if j["cat"] != OTHER[0] else "") + "</p>")
+    # "Email me jobs like this": an alert for the job's field in its city or country (the most exact place page it is on), or remote
+    pl_ = j.get("places") or (places_of(j["location"]) if j["location"] else [])
+    loc_a = next((x_ for x_ in pl_ if PLACE_KIND.get(x_) == "city"), next((x_ for x_ in pl_ if PLACE_KIND.get(x_) == "country"), "")) if not j["remote"] else ""
+    like_ = (alert_form(f"new {CAT[j['cat']]} jobs" + (f" in {PLACE_TITLE[loc_a]}" if loc_a in PLACE_TITLE else " (remote)" if j["remote"] else ""),
+                        cat=j["cat"] if j["cat"] != OTHER[0] else "", loc=loc_a, remote=bool(j["remote"]), compact=True, label="Email me jobs like this")
+             if not j.get("tg") else "")
     sideact = save_btn.split("</div>", 1)[0] + "</div>" if '<div class="sideact">' in save_btn else ""
     side_rest = save_btn.split("</div>", 1)[1] if '<div class="sideact">' in save_btn else save_btn
     stick = (f'<div class="jstick off"><p><b>{e(j["title"])}</b><span>{e(j["company"])}</span></p><a class="btn primary go" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">'
@@ -4200,8 +4208,12 @@ def job_page(j, active_by_cat):
             + f'<div class="pills">{"".join(pills)}</div>'
             + (f'<p class="note" id="match" data-tags="{e("|".join(j["tags"]))}" hidden></p>' if j["tags"] and j["active"] else "") + f"</div></div>{facts_row}</div>{banner}</div>"
             + (f'<p class="jcover"><img src="{e(j["cover"])}" alt="{e(j["company"])}" width="1200" height="400" style="height:auto"></p>' if j.get("cover") and j["active"] else "")
-            + f'<div class="cols"><article><div class="jpost">{about}</div>{sim}</article><aside class="side jside"><div class="jcard jdec">{paybar}{thline}{apply_btn}{two_}{sideact}'
-            + ('<p class="note" id="apply-hint" hidden>Applied? Press “Mark as applied” to keep track of it in My jobs.</p>' if j["active"] else "") + f'</div>{help_box}'
+            # Apply first in its card (27 Nov 2026; design critic: it began at 849 px of a 900 px screen, under the pay and the tax): Apply,
+            # then Save and Mark as applied, Tailor my resume and Cover letter, the alert for jobs like this one, then the pay on its scale and
+            # what it leaves after tax. Every action stays in sight.
+            + f'<div class="cols"><article><div class="jpost">{about}</div>{sim}</article><aside class="side jside"><div class="jcard jdec">{apply_btn}{sideact}{two_}'
+            + ('<p class="note" id="apply-hint" hidden>Applied? Press “Mark as applied” to keep track of it in My jobs.</p>' if j["active"] else "")
+            + f'{like_}{paybar}{thline}</div>{help_box}'
             + f'<div class="jcard jfacts"><p class="jcard-h">At a glance</p><dl class="meta">{meta}</dl></div><div class="jfoot">{side_rest}</div>{stick}</aside></div>'
             + (f'<div class="mbar off"><a class="btn primary" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">{"Open the post in Telegram" if j.get("tg") else "Apply on company site"}</a></div>' if j["active"] else ""))
     where = j["location"] or ("Remote" if j["remote"] else "")
