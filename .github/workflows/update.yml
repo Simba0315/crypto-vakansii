@@ -213,16 +213,39 @@ jobs:
         continue-on-error: true
         uses: actions/deploy-pages@v4
       # IndexNow: tells Bing (and the AI assistants that search through it) which pages are new or changed.
-      # Once a day (DAILY): sending the same addresses every hour is what IndexNow asks sites not to do. The list from build.py
-      # holds the jobs first seen or closed yesterday and today, so nothing found between two daily runs is left out.
+      # Once a day: sending the same addresses every hour is what IndexNow asks sites not to do. The list from build.py holds the main
+      # pages (their counts change every day) and the jobs first seen or closed yesterday and today.
+      # Until 26 Nov 2026 it went only with the 03:17 scheduled run (DAILY). On busy nights every push cancelled that run while it
+      # waited, and Bing got nothing from 24 to 26 Nov. Now the first deploy of each UTC day that uploads sends it; a cache entry
+      # named after the day records the send, so later runs that day skip it, and a run cancelled before sending leaves no entry.
+      - name: Day of the IndexNow list
+        id: inday
+        run: echo "d=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+      - name: Was today's IndexNow list sent
+        id: insent
+        uses: actions/cache/restore@v4
+        with:
+          path: .indexnow-sent
+          key: indexnow-${{ steps.inday.outputs.d }}
+          lookup-only: true
       - name: Tell search engines which pages changed
-        if: env.DAILY == 'true' && ((env.SWITCHED == '1' && steps.upload.outcome == 'success') || (env.SWITCHED != '1' && steps.deploy.outcome == 'success'))
+        id: indexnow
+        if: steps.insent.outputs.cache-hit != 'true' && ((env.SWITCHED == '1' && steps.upload.outcome == 'success') || (env.SWITCHED != '1' && steps.deploy.outcome == 'success'))
         continue-on-error: true
         run: |
           if [ -s data/indexnow.json ]; then
-            curl -s -o /dev/null -w "IndexNow answered %{http_code}\n" -X POST "https://api.indexnow.org/indexnow" \
-              -H "Content-Type: application/json; charset=utf-8" --data-binary @data/indexnow.json
+            code=$(curl -s -o /dev/null -w "%{http_code}" -X POST "https://api.indexnow.org/indexnow" \
+              -H "Content-Type: application/json; charset=utf-8" --data-binary @data/indexnow.json)
+            echo "IndexNow answered $code"
+            if [ "$code" = "200" ] || [ "$code" = "202" ]; then mkdir -p .indexnow-sent && date -u > .indexnow-sent/day && echo "ok=1" >> "$GITHUB_OUTPUT"; fi
           fi
+      - name: Remember that today's IndexNow list was sent
+        if: steps.indexnow.outputs.ok == '1'
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: .indexnow-sent
+          key: indexnow-${{ steps.inday.outputs.d }}
       # Google's Indexing API, the fast way it offers for job pages: the best 20 jobs new in this run (indexing.py), after the upload so
       # that each address opens. Google allows 200 a day by default; at "quota exceeded" the script stops. The owner keeps the service
       # account's key as the secret GOOGLE_INDEXING_KEY (added 20 Nov 2026 on); without it the step sends nothing.

@@ -14604,7 +14604,8 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     if _gc.exists() and re.fullmatch(r"glama_claim_[\w-]+", (_gct := _gc.read_text().strip())):
         (OUT / ".well-known").mkdir(parents=True, exist_ok=True)
         (OUT / ".well-known" / "glama.json").write_text(json.dumps({"$schema": "https://glama.ai/mcp/schemas/connector.json", "claim": _gct}, indent=2) + "\n", encoding="utf-8")
-    write("robots.txt", "User-agent: *\nAllow: /\n\n# AI assistants and AI search may read, quote and link to every page. A guide for them: "
+    # ShapBot (26 Nov 2026): a scraper that read the site at about 15 requests a second on 25 Nov and raised the server's load; it sends no visitors.
+    write("robots.txt", "User-agent: *\nAllow: /\n\nUser-agent: ShapBot\nDisallow: /\n\n# AI assistants and AI search may read, quote and link to every page. A guide for them: "
           f"{FULL}/llms.txt\n" + "".join(f"User-agent: {b}\n" for b in ai_bots) + f"Allow: /\n\nSitemap: {FULL}/sitemap.xml\n", sitemap=False)
     lap('IndexNow: the key file, and the list of pages that changed f')
     # IndexNow: the key file, and the list of pages that changed for the workflow to send (Bing, and the assistants that search through it).
@@ -14613,10 +14614,10 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
         write(f'{CFG["indexnow_key"]}.txt', CFG["indexnow_key"], sitemap=False)
         YDAY = (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
         changed = ["", "jobs/", "new/", "remote/", "trends/", "salaries/", "companies/"]
-        # Mondays also the main pages of sitemaps/core.xml (about 700). Why (24 Nov 2026): Bing had indexed 1 page of the site in four days;
-        # it crawls a new site from what IndexNow tells it, and the daily list named only jobs. Their counts and lists change every day.
-        if datetime.date.today().weekday() == 0:
-            changed += [u for u in core_urls if u not in changed]
+        # Every day also the main pages of sitemaps/core.xml (about 700). Why (24 Nov 2026): Bing had indexed 1 page of the site in four days;
+        # it crawls a new site from what IndexNow tells it, and the daily list named only jobs. Their counts and lists change every day,
+        # so they are changed pages each day (until 26 Nov 2026 they went on Mondays only; Bing still had /entry-level/ "discovered but not crawled").
+        changed += [u for u in core_urls if u not in changed]
         changed += [f"job/{j['slug']}/" for j in jobs if j.get("first_seen") in (YDAY, TODAY) or j.get("closed") in (YDAY, TODAY)]
         (ROOT / "data" / "indexnow.json").write_text(json.dumps({"host": BASE.split("//", 1)[-1], "key": CFG["indexnow_key"], "keyLocation": f'{FULL}/{CFG["indexnow_key"]}.txt',
                                                                  "urlList": [f"{FULL}/{u}" for u in changed[:10000]]}))
