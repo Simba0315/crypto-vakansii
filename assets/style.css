@@ -5364,6 +5364,33 @@ table.adm-log td:last-child{min-width:280px}
   main.lp .lrow>div a,main.hub .lrow>div a{min-height:44px;display:inline-flex;align-items:center}
 }
 
+/* ---- the companies directory (/companies/) ---- */
+@media(max-width:700px){
+  /* the rows of lists that scroll sideways: separate pills, not one white card cut by both edges of the screen */
+  .tiles.hsc{padding:2px 20px 6px;background:none;border:0;border-radius:0;box-shadow:none}
+  .tiles.hsc li,.tiles.hsc li:hover{border:1px solid var(--line2);border-radius:999px;background:var(--card)}
+  .tiles.hsc .tile{min-height:44px;padding:4px 6px 4px 16px;gap:10px}
+  /* the box and the field choice each take the whole line (the choice was narrower than the box above it); the order is one row
+     that scrolls sideways (A–Z stood alone on a second line) */
+  .cbar #cfilter,.cbar #cfield{flex:1 1 100%;max-width:none}
+  .cbar .csort{flex:1 1 100%;flex-wrap:nowrap;margin:0 -20px;padding:0 20px;overflow-x:auto;scrollbar-width:none}
+  .cbar .csort::-webkit-scrollbar{display:none}
+  .cbar .csort .tab{flex:none}
+}
+@media(max-width:560px){
+  /* a company's row: the name has the line to itself and the marks go under it (names broke inside words: "Departm of…",
+     "Abercroml & Fitch", "Universit of Miami") */
+  main.hub #clist{padding:4px 18px}
+  main.hub #clist .tile{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;column-gap:8px;row-gap:3px;align-items:center;padding:12px 0}
+  main.hub #clist .tile .ava{grid-column:1;grid-row:1/3;margin-right:4px}
+  main.hub #clist .tile .n{grid-column:2/4;grid-row:1}
+  main.hub #clist .tile .c{grid-column:4;grid-row:1/3}
+  main.hub #clist .tile .h1bt{grid-column:2;grid-row:2;justify-self:start}
+  main.hub #clist .tile .up{grid-column:3;grid-row:2;justify-self:start}
+  main.hub #clist .tile:not(:has(.h1bt)) .up{grid-column:2}
+  main.hub #clist .tile:not(:has(.h1bt)):not(:has(.up)) .n{grid-row:1/3}
+}
+
 /* ---- a button whose words are longer than a 360 px screen wraps instead of running past it ---- */
 @media(max-width:560px){.adv-jobs .btn,.lact .btn{max-width:100%;white-space:normal;text-align:left}}
 
