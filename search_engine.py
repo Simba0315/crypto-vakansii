@@ -196,6 +196,101 @@ def split_words(q):
     return [w for w in words if w.lower() != "remote" and w.lower() not in SKIP], said_remote
 
 
+# ---- Places, hours and level in the words typed (data teardown, 26 Nov 2026) ---------------------------------------------------------
+# "software engineer new york" looked for the words "new" and "york" anywhere, so "Software Engineer, New Grad" outranked the engineers in
+# New York (11 of the first 20 wrong); "part time" matched "full-time" and "part of our team" in 95,590 postings. A place, the hours and
+# "entry level" in the words are filters now, as the page's own smart search (assets/app.js, smart()) has made them in the visitor's
+# browser since 13 Nov; this does the same for every address that sends words (the API, a shared link, the assistants' connector).
+PLACE_ALIAS = {"united-states": ("usa", "united states", "u.s.", "america"), "united-kingdom": ("uk", "britain", "england", "united kingdom"),
+               "san-francisco": ("san francisco", "bay area", "sf bay area"), "new-york": ("nyc", "new york city", "new york"), "washington-dc": ("washington dc", "washington d.c."),
+               "uae": ("dubai", "uae", "emirates"), "raleigh-durham": ("raleigh", "durham"), "los-angeles": ("los angeles",)}
+_GEO = {}
+
+
+def geo():
+    """The place names a query can name ("new york", "dallas", "texas", "uk") with their place pages, the US cities that pages and the jobs
+    map know, and the states, read once from build.PLACES and geo_cities (serve.py has both in memory already)."""
+    if _GEO: return _GEO
+    try:
+        import build
+        places, place_state, states = build.PLACES, build.PLACE_STATE, build.US_STATE_CODE
+    except Exception:                                       # never stop a search for it: without them the words are words
+        places, place_state, states = [], {}, {}
+    try:
+        import geo_cities
+        cities = {v[0].lower() for v in geo_cities.CITIES.values() if v[1] == "US"} | {k.lower() for k, v in getattr(geo_cities, "ALIAS", {}).items()
+                                                                                         if geo_cities.CITIES.get(v, ("", ""))[1] == "US"}
+    except Exception:
+        cities = set()
+    names, city_slug = {}, {}
+    for name, slug, rule in places:
+        t = name.lower().removeprefix("the ")
+        cands = {t} | {x.strip().removeprefix("the ") for x in t.split(" & ")} | set(PLACE_ALIAS.get(slug, ()))
+        m = re.fullmatch(r"(.+?), ([a-z]{2})", t)
+        if m and m.group(1) != "washington": cands.add(m.group(1))
+        for c in cands:
+            if len(c) > 2 or c == "uk": names.setdefault(c, slug)
+        if slug in place_state:
+            for c in cands:
+                if c not in {"texas", "california", "florida"} and "," not in c: city_slug[c] = slug
+    by_len = sorted(names, key=len, reverse=True)
+    _GEO.update(names=names, city_slug=city_slug, place_state=place_state, states=states, codes=set(states.values()), cities=cities | set(city_slug),
+                rx=re.compile(r"(?:\b(?:in|near|at|around)\s+)?(?<![\w-])(?<!new )(" + "|".join(re.escape(n) for n in by_len) + r")(?![\w-])", re.I) if by_len else None,
+                state_rx=re.compile(r"(?:,\s*|\s+)(" + "|".join(sorted((re.escape(n) for n in states), key=len, reverse=True)) + r"|[a-z]{2})\s*$", re.I) if states else None,
+                name_of={v: k for k, v in states.items()})
+    return _GEO
+
+
+def state_of(word):
+    """The two-letter code of a US state written as its code or its name ("tx", "Texas"), or ""."""
+    g, w = geo(), (word or "").strip().lower()
+    if w.upper() in g["codes"]: return w.upper()
+    return g["states"].get(w, "")
+
+
+def city_clause(city):
+    """The filter for a city typed by the visitor, which must agree with its state when one is written: "Dallas, TX" is the Dallas place
+    page (Dallas, Plano and Fort Worth in Texas, never Dallas, Oregon, or "GA - Dallas"), "Albany, NY" an Albany line that names New York."""
+    g = geo()
+    c = " ".join((city or "").lower().replace(",", " , ").split()).strip(" ,")
+    name, st = c, ""
+    m = g["state_rx"].search(c) if g["state_rx"] else None
+    if m and state_of(m.group(1)) and c[:m.start()].strip(" ,"):
+        name, st = c[:m.start()].strip(" ,"), state_of(m.group(1))
+    slug = g["city_slug"].get(name)
+    if slug and (not st or g["place_state"].get(slug) == st): return {"term": {"places": slug}}
+    if not st: return {"match_phrase": {"place": name}}
+    return {"bool": {"must": [{"match_phrase": {"place": name}}],
+                     "should": [{"match": {"place": st.lower()}}, {"match_phrase": {"place": g["name_of"].get(st, st.lower())}}], "minimum_should_match": 1}}
+
+
+def read_query(q):
+    """What the words typed say besides the words: {"words", "remote", "place" (a place page's slug), "city" ("dallas, tx"), "etype"
+    ("Part-time", "Full-time"), "entry"}. A place is taken only when other words remain ("new york" alone is still searched as words)."""
+    text, out = " " + (q or "").lower() + " ", {"place": "", "city": "", "etype": "", "entry": False}
+    for rx, k, v in ((r"\bentry[- ]level\b", "entry", True), (r"\bpart[- ]?time\b", "etype", "Part-time"), (r"\bfull[- ]?time\b", "etype", "Full-time")):
+        if re.search(rx, text) and not out[k]: out[k] = v; text = re.sub(rx, " ", text)
+    g = geo()
+    m = g["state_rx"].search(text.rstrip()) if g["state_rx"] else None
+    if m and state_of(m.group(1)):                        # "nurse dallas tx", "teacher in albany, new york": a US city and its state at the end
+        head = re.sub(r"\s+(?:in|near|at|around)\s*$", " ", text.rstrip()[:m.start()]).split()
+        prep = max((i for i, w in enumerate(head) if w in ("in", "near", "at", "around")), default=-1)
+        for k in range(min(3, len(head) - 1), 0, -1):
+            # a city the site knows, or the one or two words after "in" ("nurse in albany ny")
+            if " ".join(head[-k:]).strip(",") in g["cities"] or (prep >= 1 and len(head) - prep - 1 == k and k <= 2):
+                out["city"] = " ".join(head[-k:]).strip(",") + ", " + state_of(m.group(1)).lower()
+                text = " " + " ".join(head[:prep if prep >= 1 and len(head) - prep - 1 == k else -k]) + " "
+                break
+    if not out["city"] and g["rx"]:
+        hits = [x for x in g["rx"].finditer(text)]
+        if hits:
+            h = max(hits, key=lambda x: len(x.group(1)))
+            rest = text[:h.start()] + " " + text[h.end():]
+            if split_words(rest)[0]: out["place"], text = g["names"][h.group(1).lower()], rest
+    out["words"], out["remote"] = split_words(text)
+    return out
+
+
 def must_words(words, fuzzy=False, fields=FIELDS):
     """Every word must be found, in any of the fields; fuzzy forgives a typo (none in C++, C#, .NET)."""
     return [{"multi_match": {"query": w, "fields": fields, "type": "best_fields", "fuzziness": "AUTO:5,9" if fuzzy and w.isalpha() else 0,
@@ -314,27 +409,43 @@ def too_deep(qs):
     return v.isdigit() and int(v) >= DEEPEST
 
 
-def list_filters(p, today, drop="", said_remote=False):
-    """(filter, must_not) clauses for the page's filters, without the one named drop. The same tests as match() in assets/site.js."""
+REGION_LANDS = {"europe": {"GB", "DE", "FR", "IE", "NL", "ES", "PT", "PL", "SE", "CH", "AT", "IT", "DK", "NO", "FI", "BE", "CZ", "RO", "UA", "EE", "LT", "GR", "BG", "HU", "RS",
+                           "LV", "CY", "ME", "MD"},
+                "asia-pacific": {"IN", "SG", "HK", "JP", "KR", "TW", "CN", "AU", "NZ", "MY", "PH", "ID", "TH", "VN", "PK", "BD"},
+                "latin-america": {"BR", "MX", "AR", "CO", "CL", "CR", "PR"}, "africa": {"ZA", "NG", "KE", "EG"}}     # build.REGIONS, read without the build
+
+
+def list_filters(p, today, drop="", said_remote=False, read=None):
+    """(filter, must_not) clauses for the page's filters, without the one named drop. The same tests as match() in assets/site.js.
+    read: what the words say besides the words (read_query): a place, a city with its state, the hours, entry level."""
     f, no = [{"term": {"active": True}}], []
     on = lambda k: k != drop and p.get(k)
+    read = read or {}
     if on("cat"): f.append({"terms": {"cat": p["cat"]}})
     if on("lvl"): f.append({"term": {"exec": True}} if p["lvl"] == "Exec" else {"term": {"level": p["lvl"]}})
     if on("loc"): f.append({"term": {"places": p["loc"]}})
-    if on("city"): f.append({"match_phrase": {"place": p["city"]}})          # a city typed by the visitor, in the posting's own place line
+    elif read.get("place") and drop != "q": f.append({"term": {"places": read["place"]}})
+    if on("city"): f.append(city_clause(p["city"]))                          # a city typed by the visitor, in the posting's own place line, in its own state
+    elif read.get("city") and drop != "q": f.append(city_clause(read["city"]))
     if p.get("rc"):                                                          # remote, but only for other countries
         no.append({"bool": {"filter": [{"term": {"remote": True}}, {"exists": {"field": "cc"}}],
                             "must_not": [{"term": {"anywhere": True}}, {"term": {"cc": p["rc"]}}]}})
+        # and remote for a part of the world the country is not in ("Latin America", "EMEA", "APAC"), with no country of its own named
+        # (teardown, 26 Nov 2026: with rc=US the list still began with Dhaka, Costa Rica and Latin America)
+        far = sorted(r for r, lands in REGION_LANDS.items() if p["rc"] not in lands)
+        if far: no.append({"bool": {"filter": [{"term": {"remote": True}}, {"terms": {"places": far}}],
+                                    "must_not": [{"term": {"anywhere": True}}, {"term": {"cc": p["rc"]}}]}})
     remote = drop != "remote" and (p.get("remote") or said_remote)
     if remote or on("hybrid"):                                               # both ticked: either kind
         f.append({"bool": {"should": ([{"term": {"remote": True}}] if remote else []) + ([{"term": {"hybrid": True}}] if on("hybrid") else []),
                            "minimum_should_match": 1}})
     if on("xl"): no.append({"terms": {"level": p["xl"]}})
-    if on("entry"): f.append({"terms": {"level": ["Intern", "Junior"]}})
+    if on("entry") or (read.get("entry") and drop not in ("q", "entry")): f.append({"terms": {"level": ["Intern", "Junior"]}})
     if on("crypto"): f.append({"term": {"crypto": True}})
     if on("any"): f += [{"term": {"anywhere": True}}, {"term": {"remote": True}}]
     if on("perk"): f.append({"term": {"perks": p["perk"]}})
     if on("etype"): f.append({"term": {"etype": p["etype"]}})
+    elif read.get("etype") and drop not in ("q", "etype"): f.append({"term": {"etype": read["etype"]}})
     if on("age"): f.append({"range": {"posted": {"gte": (today - datetime.timedelta(days=p["age"])).isoformat()}}})
     if on("real"):                                                           # fresh openings only: no talent pools, nothing open 90+ days
         f.append({"range": {"posted": {"gte": (today - datetime.timedelta(days=90)).isoformat()}}}); no.append({"term": {"pool": True}})
@@ -356,17 +467,43 @@ def list_filters(p, today, drop="", said_remote=False):
     return f, no
 
 
+TIER = 100            # "Best match": every word in the title or the skills counts this much more than any other match
+FRESH = [{"weight": 0.3}, {"exp": {"posted": {"origin": "", "scale": "30d", "offset": "7d", "decay": 0.5}}, "weight": 0.7}]
+
+
+def in_title(words, fuzzy=False):
+    """Every word in the title or the skills: a job about the words, not one whose text mentions them."""
+    return {"bool": {"must": must_words(words, fuzzy, ["title^2", "tags"])}}
+
+
 def list_body(p, today, fuzzy=False, drop="", count=False):
-    """The request for one page of the list (count=True: only how many jobs match)."""
-    words, said_remote = split_words(p["q"]) if drop != "q" else ([], False)
-    f, no = list_filters(p, today, drop, said_remote)
+    """The request for one page of the list (count=True: only how many jobs match).
+    With words typed (data teardown, 26 Nov 2026), every order lists first the jobs that have every word in the title or the skills:
+    "Newest first" for "customer support" began with a Partner Development Manager whose text named the words once. "Best match" ranks
+    them first too, and a posting's age counts: a match loses half its weight by 37 days, and keeps at least 30% (postings 90 days old
+    and more are already left out by default, real=1)."""
+    read = read_query(p["q"]) if drop != "q" else {"words": [], "remote": False}
+    words, said_remote = read["words"], read["remote"]
+    f, no = list_filters(p, today, drop, said_remote, read)
     q = {"bool": {"filter": f}}
     if no: q["bool"]["must_not"] = no
-    if words: q["bool"].update(must=must_words(words, fuzzy, ["title"] if p.get("ti") else FIELDS), should=rank_words(words))
+    fields = ["title"] if p.get("ti") else FIELDS
+    if words and p["sort"] == "rel" and not (count or p.get("count") or p.get("ids")):
+        q["bool"].update(must=must_words(words, fuzzy, fields), should=rank_words(words) + [{"constant_score": {"filter": in_title(words, fuzzy), "boost": TIER}}])
+        fresh = json.loads(json.dumps(FRESH)); fresh[1]["exp"]["posted"]["origin"] = today.isoformat()
+        q = {"function_score": {"query": q, "functions": fresh, "score_mode": "sum", "boost_mode": "multiply"}}
+    elif words and not (count or p.get("count") or p.get("ids")):
+        # the words are a filter; the score is 1 for a job with every word in its title or skills and 0 for the rest
+        q["bool"]["filter"] = f + must_words(words, fuzzy, fields)
+        q["bool"]["should"] = [{"constant_score": {"filter": in_title(words, fuzzy), "boost": 1}}]
+    elif words:
+        q["bool"].update(must=must_words(words, fuzzy, fields), should=rank_words(words))
     if count or p.get("count"): return {"size": 0, "track_total_hits": True, "query": q}
     if p.get("ids"): return {"size": len(p["ids"]), "_source": SRC, "query": q}
     sort = (["_score", {"ts": "desc"}, {"slug": "asc"}] if p["sort"] == "rel" and words else
-            [{"pay_hi": {"order": "desc", "missing": "_last"}}] + NEWEST if p["sort"] == "sal" else NEWEST)
+            ["_score", {"pay_hi": {"order": "desc", "missing": "_last"}}] + NEWEST if p["sort"] == "sal" and words else
+            [{"pay_hi": {"order": "desc", "missing": "_last"}}] + NEWEST if p["sort"] == "sal" else
+            NEWEST[:4] + ["_score"] + NEWEST[4:] if words else NEWEST)
     body = {"size": p["limit"], "from": p["offset"], "_source": SRC, "track_total_hits": True, "query": q, "sort": sort,
             "collapse": {"field": "ckey", "inner_hits": {"name": "same", "size": 0}}}     # one row per role, "+N more locations"
     if p.get("sum") and not p["offset"]:
@@ -393,7 +530,7 @@ def listing(p, today=None, timeout=2.5):
     r = call("POST", f"/{ALIAS}/_search", list_body(p, today), timeout=timeout)
     total, fuzzy, exact, without = r["hits"]["total"]["value"], False, 0, {}
     if p["count"]: return {"total": total, "hits": [], "fuzzy": False, "exact": 0, "without": {}, "more": False}
-    words, _ = split_words(p["q"])
+    words = read_query(p["q"])["words"]
     if words and total < FEW and not p["ids"]:
         # Few or none: is it a typo? Decided on the words alone, as the search box always did ("cashier" in Boise is not a typo when
         # thousands of jobs say cashier elsewhere); the list forgiving typos comes in the same round trip.
@@ -403,7 +540,7 @@ def listing(p, today=None, timeout=2.5):
             r, fuzzy, exact = rf, True, a["hits"]["total"]["value"]
             total = r["hits"]["total"]["value"]
     if total == 0 and not p["ids"]:
-        keys = [k for k in RELAX if p.get(k) or (k == "remote" and split_words(p["q"])[1])]
+        keys = [k for k in RELAX if p.get(k) or (k == "remote" and read_query(p["q"])["remote"])]
         if keys:
             got = msearch([list_body(p, today, drop=k, count=True) for k in keys], timeout)
             without = {k: x["hits"]["total"]["value"] for k, x in zip(keys, got) if x["hits"]["total"]["value"]}
@@ -493,8 +630,9 @@ def _test():
     assert "texas" not in flat(f) and '"remote": true' in flat(f)
     body = list_body(P("q=python+remote&sort=rel"), day)
     assert body["sort"][0] == "_score" and body["collapse"]["field"] == "ckey" and '"remote": true' in flat(body["query"])
-    assert [m["multi_match"]["query"] for m in body["query"]["bool"]["must"]] == ["python"]
-    assert list_body(P("q=python&ti=1"), day)["query"]["bool"]["must"][0]["multi_match"]["fields"] == ["title"]
+    assert [m["multi_match"]["query"] for m in body["query"]["function_score"]["query"]["bool"]["must"]] == ["python"]
+    assert list_body(P("q=python&ti=1&sort=rel"), day)["query"]["function_score"]["query"]["bool"]["must"][0]["multi_match"]["fields"] == ["title"]
+    assert any(m.get("multi_match", {}).get("fields") == ["title"] for m in list_body(P("q=python&ti=1"), day)["query"]["bool"]["filter"])
     assert list_body(P("sort=rel"), day)["sort"] == NEWEST and list_body(P("sort=sal"), day)["sort"][0]["pay_hi"]["order"] == "desc"
     assert list_body(P("loc=texas"), day, count=True)["size"] == 0 and "collapse" not in list_body(P("ids=a"), day)
     assert "texas" not in flat(list_body(P("loc=texas&q=nurse"), day, drop="loc")) and "nurse" not in flat(list_body(P("loc=texas&q=nurse"), day, drop="q"))
@@ -512,6 +650,56 @@ def _test():
     assert '{"terms": {"tags.raw": ["Go", "Rust"]}}' in flat(f) and '{"term": {"company.raw": "Acme"}}' in flat(f) and '"gt": "2026-11-20"' in flat(f)
     assert '{"term": {"pool": true}}' in flat(no) and '{"term": {"remote": true}}' in flat(no) and P("after=123")["after"] == 0
     assert list_body(P("count=1&loc=texas"), day)["size"] == 0 and "aggs" in list_body(P("sum=1"), day) and "aggs" not in list_body(P("sum=1&offset=50"), day)
+    # ---- the data teardown of 26 Nov 2026, one check per fix ----
+    # an hourly rate counts as pay and passes the pay filter at 2,080 hours a year ("$20/h+" is sal=41600)
+    h = doc({"slug": "w", "active": True, "title": "Warehouse Associate", "salary": "$20 - $23 an hour", "usd_h": [20, 23], "posted": "2026-11-20"}, "")
+    assert h["has_pay"] and h["pay_hi"] == 23 * HOURS and h["pay_mid"] == 21.5 * HOURS
+    assert doc({"slug": "w", "active": True, "title": "T", "salary": "$90K - $120K", "usd": [90000, 120000], "usd_h": [1, 2]}, "")["pay_hi"] == 120000
+    assert P("sal=41600")["sal"] == 41600 and '{"range": {"pay_hi": {"gte": 31200}}}' in flat(list_filters(P("sal=31200"), day)[0])
+    # one row per role: the store, mall, cinema or town at the end of a title is not the role
+    for t_, pl_, k_ in (("Seasonal Key Holder - Oak Park Mall", "Overland Park, KS", "seasonal key holder"), ("Seasonal Sales Associate - The Mall at Robinson", "", "seasonal sales associate"),
+                        ("Crew Member(Country Club Cinema)", "", "crew member"), ("Sales Associate - Dedham, MA", "Dedham, MA", "sales associate"),
+                        ("Part-Time Assistant Manager - Level 2 - Dimond Center", "", "part time assistant manager level 2"), ("Software Engineer - Backend", "", "software engineer backend"),
+                        ("Software Engineer, Backend", "", "software engineer backend"), ("Nurse - ICU", "", "nurse icu"), ("Maintenance Technician (Atlanta, GA)", "Atlanta, Georgia", "maintenance technician")):
+        assert role_key(t_, pl_) == k_, (t_, role_key(t_, pl_))
+    assert doc({"slug": "b", "title": "Seasonal Key Holder - Concord Mills", "company": "Boxlunch"}, "")["ckey"] == doc({"slug": "c", "title": "Seasonal Key Holder", "company": "Boxlunch"}, "")["ckey"]
+    if geo()["names"]:                     # the places come from build.py; without it the words stay words (checked below)
+        # a place in the words is a filter, not two words ("New" matched "New Grad"); "entry level" and "part time" are filters too
+        r_ = read_query("software engineer new york")
+        assert r_["words"] == ["software", "engineer"] and r_["place"] == "new-york", r_
+        assert read_query("nurse dallas tx")["city"] == "dallas, tx" and read_query("nurse dallas tx")["words"] == ["nurse"]
+        assert read_query("nurse in albany ny")["city"] == "albany, ny" and read_query("data analyst in london")["place"] == "london"
+        assert read_query("part time cashier") == {"place": "", "city": "", "etype": "Part-time", "entry": False, "words": ["cashier"], "remote": False}
+        assert read_query("entry level marketing")["entry"] and read_query("entry level marketing")["words"] == ["marketing"]
+        assert read_query("new york")["words"] == ["new", "york"] and not read_query("new york")["place"]     # a place alone is still searched as words
+        assert read_query("warehouse new mexico")["place"] == "" and read_query("python developer uk")["place"] == "united-kingdom"
+        b_ = flat(list_body(P("q=software+engineer+new+york&sort=rel"), day))
+        assert '{"term": {"places": "new-york"}}' in b_ and '"query": "new"' not in b_ and '"query": "york"' not in b_
+        assert '{"term": {"etype": "Part-time"}}' in flat(list_body(P("q=part+time+cashier"), day)) and '"query": "time"' not in flat(list_body(P("q=part+time+cashier"), day))
+        assert '{"term": {"etype": "Part-time"}}' not in flat(list_body(P("q=part+time+cashier"), day, drop="q"))
+        # a typed city agrees with its state: "Dallas, TX" is the Dallas page (never Dallas, Oregon), "Albany, NY" needs New York
+        assert city_clause("Dallas, TX") == city_clause("dallas tx") == city_clause("Dallas") == {"term": {"places": "dallas"}}
+        a_ = flat(city_clause("Albany, NY"))
+        assert '"match_phrase": {"place": "albany"}' in a_ and '{"match": {"place": "ny"}}' in a_ and '"new york"' in a_ and '"minimum_should_match": 1' in a_
+        assert flat(city_clause("Portland, ME")).count("maine") == 1 and city_clause("Leeds") == {"match_phrase": {"place": "leeds"}}
+        assert '{"term": {"places": "dallas"}}' in flat(list_filters(P("city=Dallas%2C%20TX"), day)[0])
+    else:
+        assert read_query("software engineer new york")["words"] == ["software", "engineer", "new", "york"]
+    # "Best match": every word in the title or the skills first, and freshness weighs
+    rb = list_body(P("q=customer+support&sort=rel"), day)["query"]["function_score"]
+    assert rb["boost_mode"] == "multiply" and rb["functions"][1]["exp"]["posted"]["origin"] == "2026-11-25" and rb["functions"][0] == {"weight": 0.3}
+    assert any(c.get("constant_score", {}).get("boost") == TIER for c in rb["query"]["bool"]["should"])
+    # "Newest first" with words: the jobs with the words in the title or the skills come first, then the newest
+    nb = list_body(P("q=customer+support"), day)
+    assert nb["sort"][:5] == NEWEST[:4] + ["_score"] and nb["query"]["bool"]["should"][0]["constant_score"]["boost"] == 1
+    assert [m["multi_match"]["fields"] for m in nb["query"]["bool"]["should"][0]["constant_score"]["filter"]["bool"]["must"]] == [["title^2", "tags"]] * 2
+    assert "must" not in nb["query"]["bool"] and list_body(P("q=customer+support&sort=sal"), day)["sort"][0] == "_score"
+    assert list_body(P("sort=new"), day)["sort"] == NEWEST and list_body(P("q=nurse"), day, count=True)["size"] == 0
+    # remote open to my country: not the remote jobs of another part of the world either (Latin America, EMEA, APAC)
+    f, no = list_filters(P("remote=1&rc=US"), day)
+    assert '{"terms": {"places": ["africa", "asia-pacific", "europe", "latin-america"]}}' in flat(no)
+    f, no = list_filters(P("remote=1&rc=DE"), day)
+    assert '"europe"' not in flat(no) and '"latin-america"' in flat(no)
     print("search_engine: query builder checks passed")
 
 

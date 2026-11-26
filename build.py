@@ -5379,9 +5379,13 @@ def main():
                       '<input type="search" id="city" list="city-list" placeholder="Any city, e.g. Leeds" aria-label="City" autocomplete="off"></div>'
                       f'<datalist id="city-list">{city_opts}</datalist>'
                       '<label class="check" id="f-rc-w" hidden style="margin-top:8px"><input type="checkbox" id="f-rc"> <span id="f-rc-l">Hide remote jobs closed to my country</span></label>', "f-loc")
-              + group("Salary", '<select id="sal" aria-label="Salary"><option value="">Any salary</option><option value="1">Salary listed</option><option value="100000">$100K+</option>'
+              # by the hour too (teardown, 26 Nov 2026: "nurse near Dallas from $35 an hour" could not be asked; the list started at $100K): an hourly
+              # option is the same pay over a year of 2,080 hours (search_engine.HOURS), so jobs paid by the hour and by the year both answer it
+              + group("Salary", '<select id="sal" aria-label="Salary"><option value="">Any salary</option><option value="1">Salary listed</option>'
+                                '<optgroup label="By the hour">' + "".join(f'<option value="{h_ * search_engine.HOURS}" data-h="{h_}">${h_}/h+</option>' for h_ in (15, 20, 25, 35)) + '</optgroup>'
+                                '<optgroup label="By the year"><option value="100000">$100K+</option>'
                                 '<option value="120000">$120K+</option><option value="150000">$150K+</option><option value="180000">$180K+</option><option value="200000">$200K+</option>'
-                                '<option value="250000">$250K+</option><option value="300000">$300K+</option></select>'
+                                '<option value="250000">$250K+</option><option value="300000">$300K+</option></optgroup></select>'
                                 '<div class="filters" style="margin-top:8px"><label hidden><input type="checkbox" id="f-nosal"> Also show jobs that do not state pay</label></div>')
               + group("Work style", '<div class="filters"><label><input type="checkbox" id="f-remote"> Remote</label><label><input type="checkbox" id="f-hybrid"> Hybrid</label><label><input type="checkbox" id="f-any"> Work from anywhere</label>'
                                     '<label><input type="checkbox" id="f-entry"> Entry-level</label><label><input type="checkbox" id="f-crypto"> Crypto &amp; web3</label></div>', "f-work")

@@ -15,8 +15,12 @@
   var city = $('city') || { value: '', addEventListener: function () {} };      // a city typed by the visitor (any city in a posting's place line)
   var fRemote = $('f-remote'), fEntry = $('f-entry'), fCrypto = $('f-crypto'), fAny = $('f-any'), perk = $('perk'), etype = $('etype');
   var fHa = $('f-ha'); if (fHa) { fHa.checked = !!H.get('hrn_hide_applied', false); fHa.addEventListener('change', function () { H.set('hrn_hide_applied', fHa.checked); run(); }); }
-  var fRc = $('f-rc'), rcCC = (new URLSearchParams(location.search).get('rc') || '').toUpperCase();
-  if (fRc) { fRc.checked = !!rcCC; if (rcCC) $('f-rc-w').hidden = false; }
+  // "Remote" means remote open to the visitor's country when the page knows it (teardown, 26 Nov 2026: Remote for a visitor in Texas began
+  // with Canada, the Philippines and Dhaka). The country comes from an earlier visit or the time zone (geo.json below); the address carries
+  // rc only when the visitor chose another country (rc=XX) or turned it off (rc=0), and the request to the server carries it always.
+  var rcQ = new URLSearchParams(location.search).get('rc') || '', rcOff = rcQ === '0', rcSaid = /^[A-Za-z]{2}$/.test(rcQ);
+  var fRc = $('f-rc'), rcCC = rcSaid ? rcQ.toUpperCase() : (H.get('hrn_cc', '') || ''), rcName = rcSaid ? '' : (H.get('hrn_ccn', '') || '');
+  if (fRc) { fRc.checked = !!rcCC && !rcOff; if (rcCC) $('f-rc-w').hidden = false; if (rcName) $('f-rc-l').textContent = 'Remote open to ' + rcName; }
   var lastQ = H.get('hrn_lastq', null);
   if (lastQ && lastQ.qs && !location.search) {          // back on the search page with no filters: one tap brings the last search back
     var lq = document.createElement('p'); lq.className = 'lastq note';
@@ -64,7 +68,8 @@
     if (lvl.value) p.set('lvl', lvl.value);
     if (loc.value) p.set('loc', loc.value);
     if (city.value.trim()) p.set('city', city.value.trim());
-    if (fRc && fRc.checked && rcCC) p.set('rc', rcCC);
+    if (fRc && rcCC && rcSaid && fRc.checked) p.set('rc', rcCC);          // a country the address named
+    else if (fRc && rcCC && !fRc.checked) p.set('rc', '0');                  // the visitor turned "remote open to my country" off
     if (sal.value) p.set('sal', sal.value);
     if (age.value) p.set('age', age.value);
     if (fRemote.checked) p.set('remote', '1');
@@ -118,6 +123,8 @@
     Object.keys(H.mute.c).sort().forEach(function (c) { out.append('xc', c); });
     H.mute.w.slice().sort().forEach(function (w) { out.append('xw', w); });
     if (!p.has('old')) out.set('real', '1');                 // fresh openings only, the default (the page's address stays clean)
+    if (!p.has('rc') && fRc && fRc.checked && rcCC) out.set('rc', rcCC);      // remote open to the visitor's country, the default
+    if (out.get('rc') === '0') out.delete('rc');
     if (offset) out.set('offset', String(offset));
     if (offset + PAGE > DEEPEST) out.set('limit', String(Math.max(1, DEEPEST - offset)));     // the last page ends at the engine's limit
     return H.base + '/api/search?' + out.toString();
@@ -241,7 +248,7 @@
     if (q.value.trim()) items.push(['q', '“' + q.value.trim() + '”']);
     [['cat', cat], ['lvl', lvl], ['loc', loc], ['sal', sal], ['age', age], ['perk', perk], ['etype', etype]].forEach(function (x) { if (x[1].value) items.push([x[0], text(x[1])]); });
     if (city.value.trim()) items.push(['city', city.value.trim()]);
-    [['remote', fRemote, 'Remote'], ['hybrid', fHybrid, 'Hybrid'], ['entry', fEntry, 'Entry-level'], ['crypto', fCrypto, 'Crypto'], ['any', fAny, 'Work from anywhere'], ['old', oldOn, 'With roles open 90+ days']].forEach(function (x) { if (x[1] && x[1].checked) items.push([x[0], x[2]]); });
+    [['remote', fRemote, fRc && fRc.checked && rcCC && rcName ? 'Remote, open to ' + rcName : 'Remote'], ['hybrid', fHybrid, 'Hybrid'], ['entry', fEntry, 'Entry-level'], ['crypto', fCrypto, 'Crypto'], ['any', fAny, 'Work from anywhere'], ['old', oldOn, 'With roles open 90+ days']].forEach(function (x) { if (x[1] && x[1].checked) items.push([x[0], x[2]]); });
     if (xlOf().length) items.push(['xl', 'No ' + xlOf().join(', ').toLowerCase()]);
     skills.forEach(function (s) { items.push(['skill:' + s, s]); });
     applied.innerHTML = items.map(function (x) { return '<button class="achip" type="button" data-rm="' + H.esc(x[0]) + '" aria-label="Remove filter: ' + H.esc(x[1]) + '">' + H.esc(x[1]) + '<span aria-hidden="true">×</span></button>'; }).join('') +
@@ -294,7 +301,7 @@
   q.addEventListener('input', function () { if (!sortTouched) sort.value = q.value.trim() ? 'rel' : 'new'; clearTimeout(timer); timer = setTimeout(run, 300); });
   sort.addEventListener('change', function () { sortTouched = true; });
   var ctimer; city.addEventListener('input', function () { clearTimeout(ctimer); ctimer = setTimeout(run, 400); });
-  [cat, lvl, loc, sal, age, perk, etype, sort, fRemote, fHybrid, fEntry, fCrypto, fAny, fReal, fTi, fNosal].concat(xlBoxes).forEach(function (el) { if (el) el.addEventListener('change', run); });
+  [cat, lvl, loc, sal, age, perk, etype, sort, fRemote, fHybrid, fEntry, fCrypto, fAny, fReal, fTi, fNosal, fRc].concat(xlBoxes).forEach(function (el) { if (el) el.addEventListener('change', run); });
   // words and companies the visitor never wants to see: remembered in this browser, applied to every list
   var drawMuted = function () {
     if (!xcos) return;
@@ -424,11 +431,19 @@
       take(/\b(?:junior|jr\.?)(?=\s)/i, function () { lvl.value = 'Junior'; });
       take(/\b(?:senior|sr\.?)(?=\s)/i, function () { lvl.value = 'Senior'; });
     }
+    if (!sal.value) {                // "$20 an hour", "over $25/hr": the hourly options (data-h, the dollars an hour)
+      var mh = text.match(/(?:\b(?:over|above|from|min(?:imum)?|at least)\s+)?\$\s?(\d{1,3}(?:\.\d{1,2})?)\s*(?:\/\s*(?:hour|hr|h)\b|(?:an|per|a)\s+hour\b|hourly\b)\+?/i);
+      if (mh) {
+        var wantH = Number(mh[1]), bestH = '';
+        Array.prototype.forEach.call(sal.options, function (o) { var h = Number(o.getAttribute('data-h')); if (h && h <= wantH) bestH = o.value; });
+        if (bestH) { sal.value = bestH; text = text.replace(mh[0], ' '); took = true; }
+      }
+    }
     if (!sal.value) {
       var m = text.match(/(?:\b(?:over|above|from|min(?:imum)?|at least)\s+)?\$?\s?(\d{2,3})\s?k\b\+?|\$\s?(\d{2,3}),?000\b\+?/i);
       if (m) {
         var want = Number(m[1] || m[2]) * 1000, best = '';
-        Array.prototype.forEach.call(sal.options, function (o) { var v = Number(o.value); if (v >= 1000 && v <= want) best = o.value; });
+        Array.prototype.forEach.call(sal.options, function (o) { var v = Number(o.value); if (v >= 1000 && v <= want && !o.getAttribute('data-h')) best = o.value; });
         if (best) { sal.value = best; text = text.replace(m[0], ' '); took = true; }
       }
     }
@@ -464,11 +479,13 @@
   fetch(H.base + '/data/geo.json').then(function (r) { return r.json(); }).then(function (G) {
     var tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
     var cc0 = H.get('hrn_place', '') || G.tz[tz] || '', c = G.c[cc0];
-    if (fRc && cc0 && G.c[cc0]) {        // "hide remote jobs closed to my country": the label names the country
+    if (fRc && cc0 && G.c[cc0]) {        // "hide remote jobs closed to my country": on by default, and the label names the country
+      var fresh = !rcCC;
       if (!rcCC) rcCC = cc0;
+      if (!rcSaid) { H.set('hrn_cc', cc0); H.set('hrn_ccn', G.c[cc0][0]); rcName = G.c[cc0][0]; }
       $('f-rc-l').textContent = 'Remote open to ' + (G.c[rcCC] || G.c[cc0])[0]; $('f-rc-w').title = 'Hide remote jobs that are closed to this country';
       $('f-rc-w').hidden = false;
-      fRc.addEventListener('change', run);
+      if (fresh && !rcOff) { fRc.checked = true; run(); }               // first visit: the list again, now for this country
     }
     if (!c || !c[1] || !c[2] || !Array.prototype.some.call(loc.options, function (o) { return o.value === c[1]; })) return;
     var b = document.createElement('button'); b.type = 'button'; b.className = 'linkbtn nearbtn';

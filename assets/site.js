@@ -109,13 +109,40 @@
     Object.keys(mine).forEach(function (k) { if (mine[k] && mine[k].st && mine[k].st !== 'saved') o[k] = 1; });
     return o;
   }
+  // A city typed with its state must be in that state: "Dallas, TX" is not Dallas, Oregon, nor "GA - Dallas" (teardown, 26 Nov 2026; the
+  // same rule as search_engine.city_clause on the server)
+  var ST = { alabama: 'AL', alaska: 'AK', arizona: 'AZ', arkansas: 'AR', california: 'CA', colorado: 'CO', connecticut: 'CT', delaware: 'DE', florida: 'FL', georgia: 'GA',
+    hawaii: 'HI', idaho: 'ID', illinois: 'IL', indiana: 'IN', iowa: 'IA', kansas: 'KS', kentucky: 'KY', louisiana: 'LA', maine: 'ME', maryland: 'MD', massachusetts: 'MA',
+    michigan: 'MI', minnesota: 'MN', mississippi: 'MS', missouri: 'MO', montana: 'MT', nebraska: 'NE', nevada: 'NV', 'new hampshire': 'NH', 'new jersey': 'NJ',
+    'new mexico': 'NM', 'new york': 'NY', 'north carolina': 'NC', 'north dakota': 'ND', ohio: 'OH', oklahoma: 'OK', oregon: 'OR', pennsylvania: 'PA', 'rhode island': 'RI',
+    'south carolina': 'SC', 'south dakota': 'SD', tennessee: 'TN', texas: 'TX', utah: 'UT', vermont: 'VT', virginia: 'VA', washington: 'WA', 'west virginia': 'WV',
+    wisconsin: 'WI', wyoming: 'WY', 'district of columbia': 'DC' };
+  var stOf = function (w) {
+    w = (w || '').trim().toLowerCase();
+    if (ST[w]) return ST[w];
+    for (var k in ST) if (ST[k].toLowerCase() === w) return ST[k];
+    return '';
+  };
+  var rxEsc = function (x) { return x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); };
+  function citySplit(c) {
+    var m = (c || '').match(/^(.+?)\s*,?\s+([a-z]{2}|[a-z][a-z ]+[a-z])\s*$/i);
+    return m && stOf(m[2]) ? [m[1].replace(/[\s,]+$/, ''), stOf(m[2])] : [c, ''];
+  }
+  function cityRx(c) { return c ? new RegExp('(^|[^a-z])' + rxEsc(citySplit(c)[0].toLowerCase()), 'i') : null; }
+  function cityState(c) {
+    var st = c ? citySplit(c)[1] : '';
+    if (!st) return null;
+    var name = Object.keys(ST).filter(function (k) { return ST[k] === st; })[0] || '';
+    var code = new RegExp('(^|[^A-Za-z])' + st + '([^A-Za-z]|$)'), full = name ? new RegExp('\\b' + rxEsc(name) + '\\b', 'i') : null;     // "TX" as written, "Texas" in any case
+    return { test: function (x) { return code.test(x) || !!(full && full.test(x)); } };
+  }
   function parse(qs) {
     var p = new URLSearchParams(qs || '');
     var sal = p.get('sal') ? Number(p.get('sal')) : (p.has('salary') ? 1 : 0), age = Number(p.get('age')) || 0;
     return {
       q: p.get('q') || '', words: (p.get('q') || '').toLowerCase().split(/\s+/).filter(Boolean),
       cat: p.get('cat') || '', lvl: p.get('lvl') || '', loc: p.get('loc') || '', sal: sal || 0, age: age, since: age ? since(age) : 0,
-      rc: (p.get('rc') || '').toUpperCase(), city: (p.get('city') || '').trim(), cityRx: (p.get('city') || '').trim() ? new RegExp('(^|[^a-z])' + (p.get('city') || '').trim().toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') : null,
+      rc: (p.get('rc') || '').toUpperCase(), city: (p.get('city') || '').trim(), cityRx: cityRx((p.get('city') || '').trim()), cityStRx: cityState((p.get('city') || '').trim()),
       remote: p.has('remote'), hybrid: p.has('hybrid'), xl: (p.get('xl') || '').split(',').filter(Boolean), entry: p.has('entry'), crypto: p.has('crypto'), any: p.has('any'), perk: p.get('perk') || '', etype: p.get('etype') || '',
       skills: (p.get('skills') || '').split(',').filter(Boolean), sort: p.get('sort') || 'new',
       titles: p.has('ti'), nosal: p.has('nosal'), real: p.has('real'), realSince: since(90),         // "fresh openings only": no talent pools, nothing open 90+ days
@@ -143,6 +170,7 @@
     if (f.lvl && (f.lvl === 'Exec' ? !EXEC.test(j[1]) : j[6] !== f.lvl)) return false;
     if (f.loc && j[14].indexOf(f.loc) < 0) return false;
     if (f.cityRx && !f.cityRx.test(j[3] || '')) return false;
+    if (f.cityStRx && !f.cityStRx.test(j[3] || '')) return false;
     if (f.rc && j[4] && !j[20] && j[24] && j[24].length && j[24].indexOf(f.rc) < 0) return false;    // remote, but only for other countries                                        // a city typed by the visitor, matched in the posting's own place line
     if ((f.remote || f.hybrid) && !((f.remote && j[4]) || (f.hybrid && j[25]))) return false;     // both ticked: either kind
     if (f.xl && f.xl.length && f.xl.indexOf(j[6]) >= 0) return false;                             // levels the visitor leaves out
