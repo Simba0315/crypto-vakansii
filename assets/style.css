@@ -5517,6 +5517,7 @@ table.adm-log td:last-child{min-width:280px}
    Terms, the language and the theme stay in sight. A wider screen keeps its columns, as before: the row names are not shown there ---- */
 .fgrp>summary,.ftrust,.flang{display:none}
 @media(max-width:720px){
+  footer:not(.mini){contain-intrinsic-size:auto 960px}      /* the place it holds until it is laid out (content-visibility, above): its folded height */
   footer .fcols{display:block}
   footer .fcols>div:first-child{margin:0 0 22px}
   footer .fcols>div:first-child p{max-width:40ch;margin:12px 0 0}
