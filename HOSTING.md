@@ -255,6 +255,37 @@ of it so confirmation links always go. When alerts outgrow it, a sending service
 `SMTP_USER`, `SMTP_PASS` and a higher cap: the code does not change. DKIM: when Beget's panel shows the record, add it in Cloudflare DNS
 and move DMARC to `p=quarantine` (see Email above).
 
+## 26 Nov 2026: a slow serve.py must not take hypestkey down
+
+What happened (reported by the hypestkey session, ~07:20 UTC): serve.py listened with Python's default queue of 5 and fell behind; nginx
+held ~1,300 half-open connections to 127.0.0.1:8790, hit its own limit (`worker_connections 768`, 1,024 open files) and TLS handshakes of
+every site on this nginx failed: hypestkey.com answered Cloudflare 525. live.py took ~48% of the two processors, serve.py ~35%.
+
+What the repository now does (checked with nginx 1.24 against a backend that never answers: 32 requests reach it, the rest get 502 in
+0.03 s or the kept copy of the page, the 32 end after 15 s, no half-open connections):
+- `serve.py`: a listen queue of 128 (`Server` in serve.py).
+- `nginx-hrn.conf`: `upstream hrn_site` (serve.py, 32 at once) and `upstream hrn_api` (the API, 64), with a shared zone so the caps count
+  across nginx workers; 2 s to connect, 15 s to answer (75 s for the API), no retry; kept copies served on errors and timeouts
+  (`/api/latest` and `/api/search` also while one request refreshes them); at most 300 connections for the whole site (503 for this
+  site only); static files and `/api/latest` are not written to the access log, the rest in 64 KB batches; the error log at `error`.
+- `hrn-live.service`: `CPUQuota=40%` (was 60%).
+
+To apply on the server (root; the order matters little, each step stands alone):
+
+```
+cd <a checkout of main with this change> && sudo bash server/hosting/api-setup.sh      # nginx hrn.conf and the API snippet from the repository, nginx -t, taken back if refused
+sudo install -m 644 server/hosting/hrn-live.service /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl restart hrn-live
+sudo install -o hrn -g hrn -m 644 serve.py /srv/hrn/app/serve.py      # or wait for the hourly upload; serve.py restarts itself when its code changes
+sudo sed -i 's/^\(\s*\)worker_connections .*/\1worker_connections 4096;/' /etc/nginx/nginx.conf
+grep -q '^worker_rlimit_nofile' /etc/nginx/nginx.conf || sudo sed -i '/^worker_processes/a worker_rlimit_nofile 8192;' /etc/nginx/nginx.conf
+sudo nginx -t && sudo systemctl reload nginx
+ss -tn state syn-sent | wc -l                                           # about 0
+curl -sI https://hypestkey.com/windows-11-pro-key/ | head -1             # HTTP/2 200
+```
+
+The two `nginx.conf` lines change the shared nginx for both sites (more connections and open files per worker); hypestkey's own files
+(`sites-available/hypestkey.com`, `snippets/hk-*`) are not touched. The lasting fix is the owner's plan: jobseveryhour on a server of its own.
+
 ## Later on the same server
 
 - Payments: `PAYMENTS_LIVE=1` and the gateway keys in `/etc/hrn-api/api.env` (the owner, last, when everything else is right).

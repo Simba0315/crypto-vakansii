@@ -310,6 +310,14 @@ def watch(seen):
             os._exit(3)
 
 
+class Server(ThreadingHTTPServer):
+    """Python's threaded server with a listen queue of 128 instead of its default 5. With 5, a burst of requests found the queue full,
+    nginx's connections waited half-open (1,300 of them on 26 Nov 2026), nginx ran out of connections and the other site on this
+    server (hypestkey) failed its TLS handshakes. nginx now also lets at most 32 requests reach this program at once (nginx-hrn.conf)."""
+    request_queue_size = 128
+    daemon_threads = True
+
+
 def main():
     host, port = os.environ.get("HOST", "127.0.0.1"), int(os.environ.get("PORT", "8790"))
     STORE.page("")                                       # opens the records once, so the first visitor does not wait for it
@@ -317,7 +325,7 @@ def main():
     print(f"{STORE.count:,} job records; site on http://{host}:{port}{P}/", flush=True)
     if os.environ.get("HRN_WATCH") == "1":
         threading.Thread(target=watch, args=([f.stat().st_mtime_ns for f in CODE],), daemon=True).start()
-    ThreadingHTTPServer((host, port), Handler).serve_forever()
+    Server((host, port), Handler).serve_forever()
 
 
 if __name__ == "__main__":

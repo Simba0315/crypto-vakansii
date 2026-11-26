@@ -16,7 +16,7 @@ Restart=always
 RestartSec=5
 # the server is shared with hypestkey: a ceiling on memory and processor, and the lowest priority
 MemoryMax=1500M
-CPUQuota=60%
+CPUQuota=40%                 # 26 Nov 2026: 2 processors shared with hypestkey; with serve.py at 60% this leaves room for the other site
 Nice=10
 
 [Install]
