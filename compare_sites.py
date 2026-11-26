@@ -675,8 +675,8 @@ SITES += [
             "needs an account synced with Indeed.",
             "Every job here is read from the employer's own careers page and checked around the clock. Glassdoor shows the jobs posted on Indeed.",
         ],
-        pick="Use Glassdoor if you want company reviews and salaries next to the jobs, use Jobs Every Hour if you want jobs read every "
-             "hour from employers' own careers pages and to apply without an account.",
+        pick="Use Glassdoor if you want company reviews and salaries next to the jobs, use Jobs Every Hour if you want jobs read around "
+             "the clock from employers' own careers pages and to apply without an account.",
         sources=[
             ("[what|Price for job seekers|Account needed to apply|them_better 1] \"Create a free Glassdoor account to access job "
              "listings, community discussions, salary insights, company reviews, benefits details, and interview tips.\" \"As of "
@@ -776,8 +776,8 @@ SITES += [
             "Every job here is read from the employer's own careers page around the clock. Jooble gathers its listings from thousands of other "
             "websites.",
         ],
-        pick="Use Jooble if you want the widest search across many countries and websites, use Jobs Every Hour if you want jobs read every "
-             "hour from employers' own careers pages.",
+        pick="Use Jooble if you want the widest search across many countries and websites, use Jobs Every Hour if you want jobs read around "
+             "the clock from employers' own careers pages.",
         sources=[
             ("[what|Kinds of jobs|them_better 1] \"Jooble — 2.583.000+ current vacancies — Jobs in USA\"; \"More than 2582800 vacancies "
              "across 5840 websites\"; \"66 countries\".", "https://jooble.org/", R24),

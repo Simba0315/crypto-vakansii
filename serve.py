@@ -104,7 +104,7 @@ def brief_card(j):
 MCP_VERSIONS = ("2025-06-18", "2025-03-26", "2024-11-05")
 MCP_TOOLS = [
     {"name": "search_jobs", "title": "Search open jobs",
-     "description": "Search the open tech jobs on " + build.SITE + ": every job is read from the employer's own careers page and re-checked every hour. "
+     "description": "Search the open tech jobs on " + build.SITE + ": every job is read from the employer's own careers page, and the lists are read again around the clock. "
                     "Words are matched in the title, company, skills, place and text of each posting, best match first. Add 'remote' for remote jobs only.",
      "inputSchema": {"type": "object", "properties": {
          "query": {"type": "string", "description": "Words to look for, e.g. 'senior python engineer berlin' or 'solidity remote'"},
@@ -152,7 +152,7 @@ def mcp(msg):
         want = prm.get("protocolVersion")
         return ok({"protocolVersion": want if want in MCP_VERSIONS else MCP_VERSIONS[0], "capabilities": {"tools": {"listChanged": False}},
                    "serverInfo": {"name": "jobs", "title": build.SITE, "version": "1.0"},
-                   "instructions": f"Open tech jobs from {build.SITE}, read from employers' own careers pages every hour. search_jobs finds jobs; get_job reads one. "
+                   "instructions": f"Open tech jobs from {build.SITE}, read from employers' own careers pages around the clock. search_jobs finds jobs; get_job reads one. "
                                    "Always give the person the job's page or apply link; you apply on the employer's site."})
     if method == "ping": return ok({})
     if method == "tools/list": return ok({"tools": MCP_TOOLS})

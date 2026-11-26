@@ -31,8 +31,8 @@ FONTS = {   # family, file in assets/fonts (OFL-1.1, from Fontsource), weight us
 DIRECTIONS = {
     "green": {
         "name": "Evergreen", "applied": True, "shape": "clocko", "word": "outfit",
-        "idea": "The name is the logo: “jobs every hour” in lower case, and the o of “jobs” is a clock face, because every job here is "
-                "checked again every hour. The green is the colour the site has used from the start: the marker under words and the line "
+        "idea": "The name is the logo: “jobs every hour” in lower case, and the o of “jobs” is a clock face, because the site reads "
+                "employers’ careers pages around the clock and shows when each job was last checked. The green is the colour the site has used from the start: the marker under words and the line "
                 "under links. Green reads as “open”: the job is still open. Buttons stay ink, so the green is never a large fill and never "
                 "a green block on black. Chosen by the owner on 15 Nov 2026 from eight designs.",
         "mark": "#1F9D55", "ui": "#15803D", "ui_hover": "#116932", "ui_dark": "#5FD486", "ui_dark_hover": "#A3F0B8", "tint": "#B7EEC3", "tint_dark": "#12301D",
