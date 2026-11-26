@@ -5445,6 +5445,13 @@ table.adm-log td:last-child{min-width:280px}
   .klogos .logorow a{flex:none;min-height:44px;white-space:nowrap}
 }
 
+/* ---- the sign-in page (/account/): the panel stands 10 px from the screen's edges like every other first panel (it stood at 20, so the
+   form inside two frames was 40 px narrower than the screen allows) ---- */
+@media(max-width:560px){
+  #acc .acc-gate{margin-left:-10px;margin-right:-10px;padding:24px 16px}
+  #acc .acc-gate .acc-auth{padding:22px 18px}
+}
+
 /* ---- a company's marks ("States the pay 86% of its open roles state it", "Files H-1B 205 certified filings…") in a job's "Hiring at"
    card: a mark too long for one line becomes a card with its name on one line, not a pill broken in four ---- */
 @media(max-width:560px){
