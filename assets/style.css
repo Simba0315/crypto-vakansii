@@ -5601,3 +5601,15 @@ table.adm-log td:last-child{min-width:280px}
   .dirb li a{padding:12px 0}
   .dirb li span{font-size:13px}
 }
+
+/* ---- the first panel of a list page on a phone (perks, kinds of work, places, skills, remote, the companies hub…): "Save this list"
+   stood under the four figures, at the very bottom of the first screen or below it when the opening sentence was long (/perks/
+   visa-sponsorship/ at 390×844). On a phone the row of actions comes straight after the opening, and the figures follow it ---- */
+@media(max-width:720px){
+  .lhero{display:flex;flex-direction:column}
+  .lhero>*{order:3}
+  .lhero>.khero-t{order:0}
+  main .lhero>.lact,main .lhero>.lsave{order:1;margin:16px 0 0}
+  .lhero>.nums{order:2;margin-top:22px}
+  .lhero>.nums-src{order:3}
+}
