@@ -1528,3 +1528,7 @@ Before it goes to main: `HRN_RECORDS=both python3 build.py`, check.py, records_t
 | job pages in the sitemaps | 864,491 | less the word-for-word repeats (0.6% of open jobs in the sample) |
 | lastmod = the day of the build | 100% of non-job pages, 26% of job pages | lists: the day of their newest job; other pages: the day their text changed |
 | noindex pages in the sitemaps | 0 | 0 (check.py now tests it) |
+
+### 26 Nov 2026, later: the twins by address are live in the code
+
+`/skills/<skill>/new/` and `/roles/<role>/new/` name `/new/skills/<skill>/` and `/new/roles/<role>/` as canonical (build.py, `one_page_per_query()`), leave the sitemaps, and links lead to the /new/ page. The other parts of the `bing-quality` fix (thin narrow lists, word-for-word job repeats, lastmod) are still open.

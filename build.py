@@ -544,6 +544,14 @@ def one_page_per_query():
         if len(paths) < 2: continue
         paths.sort(key=lambda p_: (rank[p_.split("/", 1)[0]], len(p_), p_))
         for p_ in paths[1:]: moved[p_] = paths[0]
+    # Twins by address (26 Nov 2026): the same jobs of the last three days stand at /skills/<skill>/new/ and at /new/skills/<skill>/ (and the
+    # same for a kind of work). Their titles differ, so the words above do not catch them; the /new/ list, with its own rows and links, keeps the search.
+    for sec_ in ("skills", "roles"):
+        d_ = OUT / sec_
+        if not d_.is_dir(): continue
+        for x_ in sorted(d_.iterdir()):
+            if (x_ / "new" / "index.html").exists() and (OUT / "new" / sec_ / x_.name / "index.html").exists():
+                moved[f"{sec_}/{x_.name}/new/"] = f"new/{sec_}/{x_.name}/"
     # The page that keeps a search may hand it on in turn: /roles/supply-chain/ ("Supply Chain and Logistics Jobs") gave it to
     # /jobs/supply-chain/, which names /categories/logistics-transport/ (26 Nov 2026, a canonical that pointed at a page with another
     # canonical, on the live site too). The page at the end of the chain keeps it.
