@@ -121,6 +121,8 @@ def doc(rec, descr, codes=None, day=""):
     """The searchable part of one job record, and what a row of results shows. codes: place slug -> country code (build.PLACE_CODE),
     for the flags and "remote open to my country"; day: the build's day, which turns the order of the paid Premium jobs."""
     usd = rec.get("usd")
+    if not usd and rec.get("usd_h"):                  # an hourly rate: the pay filter and "Highest pay" read it as a year of 2,080 hours
+        usd = [rec["usd_h"][0] * HOURS, rec["usd_h"][1] * HOURS]
     title, company, posted = rec.get("title") or "", rec.get("company") or "", (rec.get("posted") or rec.get("first_seen") or "")[:10]
     places = [p for p in rec.get("places") or [] if isinstance(p, str)]
     premium = bool(rec.get("premium"))

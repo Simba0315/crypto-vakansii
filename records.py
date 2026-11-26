@@ -72,6 +72,8 @@ def save(path, jobs, b):
         # 25 Nov 2026 (records_test found them): the count of open jobs the header's jobs menu shows (nav data-n) and the median
         # hourly pay per field the hourly pay line compares with; pages built from records had neither
         "all_open": b.ALL_OPEN[0], "hmed": b.HMED,
+        # 26 Nov 2026 (data teardown): the pay of the same work (build.FAM), which the salary estimate of a job page without pay reads
+        "fam": getattr(b, "FAM", {}),
         # 26 Nov 2026 (records_test): the pages that keep a search (build.same_as, CAT_HOME): the built job page links its field's page
         # (/categories/product-project/) where a page built from a record linked /jobs/product/, which gives its search to that page
         "cat_home": dict(getattr(b, "CAT_HOME", {}) or {}),
@@ -202,6 +204,8 @@ class Store:
         b.V = ctx["v"]                                           # the stylesheet and scripts the pages link to are the ones built with the records
         b.ALL_OPEN[0] = ctx.get("all_open", 0)                   # absent in a store built before 25 Nov 2026
         b.HMED = ctx.get("hmed", {})
+        if hasattr(b, "FAM"):                                    # absent in a store built before 26 Nov 2026: no estimate rather than the old one
+            b.FAM.clear(); b.FAM.update(ctx.get("fam") or {})
         if hasattr(b, "same_as"):                                # the links to the page that keeps each search, as the build had them
             b.CAT_HOME.clear(); b.CAT_HOME_RX[0] = None; b.CAT_HOME_PRE[0] = ()     # absent in a store built before 26 Nov 2026: none
             for src_, dst_ in sorted((ctx.get("cat_home") or {}).items()):

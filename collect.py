@@ -1013,39 +1013,112 @@ PAY_SYM = {"US$": "$", "USD": "$", "$": "$", "CA$": "CA$", "C$": "CA$", "CAD": "
 _CUR = r"US\$|CA\$|C\$|A\$|\$|£|€|USD|CAD|AUD|GBP|EUR"
 _AMT = r"\d{2,3}(?:,\d{3})+(?:\.\d+)?|\d{2,3}(?:\.\d+)?\s?[kK]\b"
 PAY_RNG = re.compile(rf"({_CUR})\s?({_AMT})\s?(?:USD|CAD|AUD|GBP|EUR)?\s?(?:-|–|—|to|and)\s?(?:{_CUR})?\s?({_AMT})(\s?(?:USD|CAD|AUD|GBP|EUR))?", re.I)
-PAY_CTX = re.compile(r"salary|compensation|pay range|base pay|pay scale|base range|annual base|\bpay\b|\bOTE\b|on[- ]target earnings|wage", re.I)
+# "Hiring Range", "Pay Details", "Pay Band", "Pay Rate", "starting pay" (data teardown, 26 Nov 2026: 12 of 44 postings that state pay
+# in their text showed "Not listed", 8 of them by the hour)
+PAY_CTX = re.compile(r"salary|compensation|pay range|base pay|pay scale|base range|annual base|\bpay\b|\bOTE\b|on[- ]target earnings|wage|hiring range|pay band|"
+                     r"pay rate|rate of pay|hourly rate|starting (?:at|rate)|\bearn\b", re.I)
 PAY_NOT_YEARLY = re.compile(r"per hour|an hour|/ ?hour|hourly|/ ?hr\b|per month|a month|/ ?month|monthly|per day|/ ?day|daily|per week|weekly", re.I)
+_HR = r"\d{1,3}(?:\.\d{1,2})?"
+_HR_UNIT = r"\s*(?:usd\s*)?(?:/\s*(?:hour|hr|h)\b|per\s+(?:hour|hr)\b|an\s+hour\b|a\s+hour\b|hourly\b|p/h\b|/hr\b)"
+# an hourly range or rate: "$20.00-$23.00 Hourly", "$18.00/hr – $21", "$30 - $50/hr", "USD $19.17/hr", "$156.00/hour"
+PAY_HR = re.compile(rf"(US\$|\$|USD\s?\$?)\s?({_HR})(?:{_HR_UNIT})?\s*(?:-|–|—|to)\s*(?:US\$|\$|USD\s?\$?)?\s?({_HR})(?!\d|,\d|\s?[kK]\b)({_HR_UNIT})?|(US\$|\$|USD\s?\$?)\s?({_HR})(?!\d|,\d|\s?[kK]\b)({_HR_UNIT})?", re.I)
+# what a small dollar amount near pay words is when it is not a wage: a bonus, a stipend, a discount, a sum per month or per year
+PAY_HR_NOT = re.compile(r"^\s*(?:\+|plus\b|k\b|,\d|million|billion|bn\b|m\b|in\b|of\b|off\b|bonus|sign|stipend|allowance|gift|referral|credit|reimburs|discount|"
+                        r"per (?:month|week|day|year|mile|visit|session|shift|diem|unit|case|delivery)|a (?:month|week|day|year)|/ ?(?:month|mo|week|wk|day|year|yr|mile)\b|"
+                        r"monthly|weekly|daily|annual|yearly|tips?\b|toward|towards|match|fee|deposit|cash)", re.I)
+PAY_HR_BEFORE_NOT = re.compile(r"(?:bonus|stipend|allowance|referral|reimburs\w*|up to|discount|credit|fee|tuition|deposit|gift card|incentive|differential|premium|shift diff\w*)\W{0,12}$", re.I)
+PAY_MINMAX = re.compile(rf"\bmin(?:imum)?\b\W{{0,12}}(?:usd\s*)?({_CUR})\s?(\d{{2,3}}(?:,\d{{3}})+(?:\.\d+)?)[^$€£]{{0,60}}?\bmax(?:imum)?\b\W{{0,12}}(?:usd\s*)?(?:{_CUR})?\s?(\d{{2,3}}(?:,\d{{3}})+(?:\.\d+)?)", re.I)
+PAY_ONE = re.compile(rf"({_CUR})\s?(\d{{2,3}},\d{{3}}(?:\.\d{{2}})?)(?!,?\d)(?!\s?(?:-|–|—|to)\s?(?:{_CUR})?\s?\d)\s?(USD|CAD|AUD|GBP|EUR)?", re.I)
+PAY_ONE_NOT = re.compile(r"^\s*(?:\+|plus|bonus|sign|relocation|stipend|tuition|401|match|revenue|billion|million|in (?:funding|revenue|sales|assets)|per (?:month|week)|a month|monthly|"
+                         r"/ ?mo\b|toward|of (?:funding|revenue)|signing|referral|annual bonus|budget|grant|award|loan|in )", re.I)
 
 
 def pay_k(sym, lo, hi):
     return f"{sym}{lo / 1000:,.0f}K - {sym}{hi / 1000:,.0f}K"
 
 
+def _cents(v):
+    return f"{v:,.0f}" if v == int(v) else f"{v:,.2f}"
+
+
+def _sym_for(sym, tail, location):
+    """The currency of a bare dollar sign: the local dollar outside the US; None where it cannot be told."""
+    if sym == "$" and tail in ("CAD", "AUD"): sym = PAY_SYM[tail]
+    if sym == "$":                                       # a bare dollar sign outside the US is usually the local dollar
+        if re.search(r"canada|toronto|vancouver|montr[eé]al|ontario|ottawa|calgary|waterloo|, ?(?:ON|BC|QC|AB|MB|SK|NS|NB)\b", location, re.I): sym = "CA$"
+        elif re.search(r"australia|sydney|melbourne|brisbane", location, re.I): sym = "A$"
+        elif re.search(r"singapore|hong kong|new zealand|auckland|mexico|philippines|argentina|colombia|chile|taiwan", location, re.I): return None
+    return sym
+
+
 def pay_from_text(text, location=""):
-    """A yearly pay range written in the posting's own text ("The salary range for this role is $180,000 - $240,000"), or "".
-    Deliberately strict: the range must sit next to a word about pay, be yearly, and look like a salary."""
-    for m in PAY_RNG.finditer(text or ""):
-        if not PAY_CTX.search(text[max(0, m.start() - 220):m.end() + 60]) or PAY_NOT_YEARLY.search(text[max(0, m.start() - 50):m.start()] + text[m.end():m.end() + 40]):
+    """The pay written in the posting's own text, or "": a yearly range ("The salary range for this role is $180,000 - $240,000"),
+    a yearly minimum and maximum ("Pay Band Min USD $86,450 ... Max USD $..."), a yearly figure ("Salary: $38,328.16"), then an
+    hourly range or rate in US dollars ("$20.00-$23.00 Hourly", "Pay Rate: USD $19.54", "starting base pay ... is $17.00 per hour").
+    Strict: the figure must sit next to a word about pay and look like one person's wage."""
+    text = text or ""
+    for m in PAY_RNG.finditer(text):
+        # the 30 characters before the range ("hourly rate: $"), not 50: "In-Office Lunch (5 days per week) Compensation Base salary: $82,000 -
+        # $107,000" is a yearly range
+        if not PAY_CTX.search(text[max(0, m.start() - 220):m.end() + 60]) or PAY_NOT_YEARLY.search(text[max(0, m.start() - 30):m.start()] + text[m.end():m.end() + 40]):
             continue
         num = lambda s: float(re.sub(r"[kK\s,]", "", s)) * (1000 if s.strip()[-1] in "kK" else 1)
         lo, hi = num(m.group(2)), num(m.group(3))
         if not (20000 <= lo <= hi <= 2000000 and hi <= 4 * lo): continue
-        sym, tail = PAY_SYM[m.group(1).upper()], (m.group(4) or "").strip().upper()
-        if sym == "$" and tail in ("CAD", "AUD"): sym = PAY_SYM[tail]
-        if sym == "$":                                   # a bare dollar sign outside the US is usually the local dollar
-            if re.search(r"canada|toronto|vancouver|montr[eé]al|ontario|ottawa|calgary", location, re.I): sym = "CA$"
-            elif re.search(r"australia|sydney|melbourne|brisbane", location, re.I): sym = "A$"
-            elif re.search(r"singapore|hong kong|new zealand|auckland", location, re.I): continue
-        return pay_k(sym, lo, hi)
+        sym = _sym_for(PAY_SYM[m.group(1).upper()], (m.group(4) or "").strip().upper(), location)
+        if sym: return pay_k(sym, lo, hi)
+    for m in PAY_MINMAX.finditer(text):
+        if not PAY_CTX.search(text[max(0, m.start() - 160):m.start() + 20]): continue
+        lo, hi = float(m.group(2).replace(",", "")), float(m.group(3).replace(",", ""))
+        sym = _sym_for(PAY_SYM.get(m.group(1).upper(), "$"), "", location)
+        if sym and 20000 <= lo <= hi <= 900000 and hi <= 3 * lo: return pay_k(sym, lo, hi)
+    for m in PAY_ONE.finditer(text):
+        before, after = text[max(0, m.start() - 70):m.start()], text[m.end():m.end() + 30]
+        if not PAY_CTX.search(before) or PAY_HR_BEFORE_NOT.search(before) or PAY_ONE_NOT.search(after) or PAY_NOT_YEARLY.search(after[:20]): continue
+        if re.search(r"\d\s*(?:-|–|—|to)\s*$", before): continue            # the top of a range the rules above did not take
+        v = float(m.group(2).replace(",", ""))
+        sym = _sym_for(PAY_SYM[m.group(1).upper()], (m.group(3) or "").strip().upper(), location)
+        if sym and 20000 <= v <= 900000: return f"{sym}{v / 1000:,.0f}K"
+    for m in PAY_HR.finditer(text):
+        rng = m.group(2) is not None
+        lo = float(m.group(2) if rng else m.group(6)); hi = float(m.group(3)) if rng else lo
+        unit = (m.group(4) if rng else m.group(7)) or (re.search(_HR_UNIT, text[m.start():m.start() + 40], re.I) and "hour" if rng else None)
+        before, after = text[max(0, m.start() - 90):m.start()], text[m.end():m.end() + 30]
+        if PAY_HR_BEFORE_NOT.search(before) or (not unit and PAY_HR_NOT.search(after)) or re.match(r"\s*(?:k\b|,\d{3})", after): continue
+        # without "an hour" written, a dollar figure with cents or under $150 right after a word about pay is a wage by the hour
+        if not unit and not (PAY_CTX.search(before[-70:]) and (("." in m.group(0)) or hi <= 150) and re.search(r"\bpay\b|wage|rate|hourly|compensation|salary|range|earn", before[-70:], re.I)):
+            continue
+        if not unit and re.search(r"\b(?:salary|annual|per year|a year|yearly)\b", before[-40:], re.I): continue
+        if not (7 <= lo <= hi <= 500 and hi <= 3 * lo): continue
+        if re.search(r"canada|australia|new zealand|mexico|philippines|singapore|hong kong|, ?(?:ON|BC|QC|AB)\b", location, re.I) and "US" not in m.group(0).upper(): continue
+        return f"${_cents(lo)} - ${_cents(hi)} an hour" if hi > lo else f"${_cents(lo)} an hour"
     return ""
 
 
-def pay_from_greenhouse(ranges):
-    """Greenhouse's structured pay ranges (several zones are merged into one overall range)."""
+for _t, _w in (("Salary Range: USD $19.17/hr The salary range above reflects", "$19.17 an hour"), ("Pay Details: $25.75 - $38.50 per hour", "$25.75 - $38.50 an hour"),
+               ("Hours: 40 Pay Details: $25.75 - $38.50 The pay", "$25.75 - $38.50 an hour"), ("Compensation Range: $38.05- $75", "$38.05 - $75 an hour"),
+               ("Denver, CO Pay Rate: USD $19.54 The salary range above reflects", "$19.54 an hour"), ("Starting pay range is $30 - $50/hr", "$30 - $50 an hour"),
+               ("The anticipated starting base pay for this position is $17.00 per hour.", "$17 an hour"), ("The pay range for this role is $18.00/hr – $21.00/hr", "$18 - $21 an hour"),
+               ("Pay: $20.00-$23.00 Hourly", "$20 - $23 an hour"), ("Rate: $156.00/hour", "$156 an hour"), ("Annual Salary: $38,328.16", "$38K"),
+               ("Pay Band Min USD $86,450 Max USD $129,700", "$86K - $130K"), ("The salary range for this role is $180,000 - $240,000.", "$180K - $240K"),
+               ("We offer a $500 sign-on bonus and competitive pay", ""), ("Paid volunteer hours & charity donation matching up to $2000/year", ""),
+               ("revenues of more than $3 billion", ""), ("A $100 referral bonus. Competitive pay.", ""), ("Pay: $25 gift card for applying", ""),
+               ("Shift differential: $2.00 per hour for nights", ""), ("Salary: competitive. Raised $25,000,000 in funding", ""),
+               ("Base pay for this role is $55,000 CAD per year", "CA$55K"), ("In-Office Lunch (5 days per week) Compensation Base salary: $82,000 - $107,000 (before equity)", "$82K - $107K"),
+               ("Hourly rate: $95,000 - $120,000", "")):
+    assert pay_from_text(_t) == _w, (_t, pay_from_text(_t), _w)
+assert pay_from_text("Hiring Range: $55,062.53 – $68,828.16", "Waterloo, Ontario, Canada") == "CA$55K - CA$69K"
+
+
+def pay_from_greenhouse(ranges, location=""):
+    """Greenhouse's structured pay ranges (several zones are merged into one overall range). A posting with a US and a Canadian range
+    shows the one of its place: a New York role read "CA$140K - CA$220K" because the Canadian range came first (data teardown, 26 Nov 2026)."""
     ok = [r for r in (ranges or []) if isinstance(r, dict) and r.get("min_cents") and r.get("max_cents")]
     if not ok: return ""
-    cur = ok[0].get("currency_type") or "USD"
-    same = [r for r in ok if (r.get("currency_type") or "USD") == cur]
+    curs = [(r.get("currency_type") or "USD").upper() for r in ok]
+    canada = bool(re.search(r"canada|toronto|vancouver|montr[eé]al|ontario|ottawa|calgary|, ?(?:ON|BC|QC|AB)\b", location or "", re.I))
+    cur = "CAD" if canada and "CAD" in curs else "USD" if "USD" in curs and not canada else ok[0].get("currency_type") or "USD"
+    same = [r for r in ok if (r.get("currency_type") or "USD").upper() == cur.upper()]
     lo, hi = min(r["min_cents"] for r in same) / 100, max(r["max_cents"] for r in same) / 100
     if hi > 3 * lo: lo, hi = same[0]["min_cents"] / 100, same[0]["max_cents"] / 100     # zones too far apart to be one range: show the first
     return tidy_pay(f"{lo:.0f} - {hi:.0f} {cur}")
@@ -1272,7 +1345,7 @@ def fetch_feed(src, reuse=None):
         for j in d["jobs"]:
             dept = ", ".join(x.get("name", "") for x in (j.get("departments") or []))
             add(j["id"], j, lambda: parse(name, ats, j["id"], j.get("title"), j.get("absolute_url"), (j.get("location") or {}).get("name"),
-                                         False, dept, j.get("first_published") or j.get("updated_at"), strip_html(j.get("content")), pay_from_greenhouse(j.get("pay_input_ranges")), "", html.unescape(j.get("content") or ""),
+                                         False, dept, j.get("first_published") or j.get("updated_at"), strip_html(j.get("content")), pay_from_greenhouse(j.get("pay_input_ranges"), (j.get("location") or {}).get("name") or ""), "", html.unescape(j.get("content") or ""),
                                          posted_at=j.get("first_published")))          # the publishing time; "updated_at" moves with every edit, so it is never used as the exact time
     elif ats == "lever":
         d = get_json(f"https://api.lever.co/v0/postings/{tok}?mode=json", 60)

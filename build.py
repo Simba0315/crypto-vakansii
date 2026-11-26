@@ -758,6 +758,103 @@ def money(v):
     return f"${v / 1000:,.0f}K"
 
 
+# ---- The pay of the same work, where a posting states none (data teardown, 26 Nov 2026) ----------------------------------------------
+# "Similar roles advertise a median of ..." came from one median per field, counted from yearly ranges only: in Healthcare the doctors and
+# nurse practitioners set it, so a dental assistant and an LPN read $110K, and a $17-an-hour store job in Sales read $125K. It was 1.5
+# times off or more on 20 of the 32 pages of a sample that showed it. Now the comparison is the same work (the title without its level,
+# hours and place), counted in the way that work is paid (by the hour or by the year), from US postings only, and nothing is shown when
+# fewer than FAM_MIN comparable postings state pay.
+FAM_MIN = 10
+FAM_DROP = re.compile(r"\b(?:senior|sr|snr|junior|jr|lead|principal|staff|chief|head|entry[- ]level|level\s+(?:[ivx]+|\d+)|[ivx]{1,4}|\d+(?:st|nd|rd|th)?|part[- ]?time|"
+                      r"full[- ]?time|pt|ft|prn|per diem|seasonal|temporary|temp|holiday|bilingual|remote|hybrid|on-?site|nights?|days?|evenings?|weekends?|overnights?|"
+                      r"shifts?|first|second|third|new grad|graduate|trainee|travel(?:ing)?|contract|contractor|freelance|casual|float|pool|relief|flex|needed|"
+                      r"urgent(?:ly)?|hiring|immediate(?:ly)?|now|sign[- ]on|bonus|talent|candidate|opportunit(?:y|ies)|positions?|openings?|registry|weekly pay)\b", re.I)
+FAM_SPLIT = re.compile(r"\s*[\(\[,|/–—:]\s*|\s+-\s+|(?<=[a-z])-(?=[A-Z0-9])")
+FAM_STOP = {"and", "of", "the", "a", "an", "with", "for", "in", "at", "to", "&", "or"}
+
+
+@lru_cache(maxsize=1 << 17)
+def pay_family(title):
+    """(the work named fully, its last two words) of a job title, for comparing pay: "Licensed Practical Nurse (LPN) - Saturday Nights"
+    -> ("licensed practical nurse", "practical nurse"); "Seasonal - Athlete Advisor (Sales Associate, Part-Time)" -> ("athlete advisor",
+    "athlete advisor"); ("", "") when the title names no work."""
+    for part in FAM_SPLIT.split(title or ""):
+        words = [w for w in re.sub(r"[^a-z' ]+", " ", FAM_DROP.sub(" ", part.lower())).split() if w not in FAM_STOP and len(w) > 1 and "'" not in w]
+        if words and not SEASON_RX.match(" ".join(words)):
+            return " ".join(words), " ".join(words[-2:])
+    return "", ""
+
+
+for _t, _w in (("Licensed Practical Nurse (LPN) - Saturday Nights", ("licensed practical nurse", "practical nurse")),
+               ("Registered Dental Assistant (Bilingual)", ("registered dental assistant", "dental assistant")), ("Sales Associate - Dedham, MA", ("sales associate", "sales associate")),
+               ("Seasonal - Athlete Advisor (Sales Associate, Part-Time)", ("athlete advisor", "athlete advisor")), ("B Operator-2nd Shift", ("operator", "operator")),
+               ("Staff Physician, Internal Medicine (PER DIEM)", ("physician", "physician")), ("Senior Software Engineer II", ("software engineer", "software engineer")),
+               ("Freelance Copywriter (Talent Pool)", ("copywriter", "copywriter")), ("Seasonal", ("", ""))):
+    assert pay_family(_t) == _w, (_t, pay_family(_t))
+TAG_RX = re.compile(r"<[^>]+>")
+FAM = {}            # family key (pay_family's name, with "\x1f" and a level when it is told apart) -> [yearly n, yearly median, hourly n, hourly median]
+HOURLY_HINT = re.compile(r"\b(?:cashier|barista|crew member|associate|clerk|attendant|cook|server|bartender|housekeep\w*|janitor|custodian|caregiver|aide|cna|driver|"
+                         r"operator|assembler|picker|packer|handler|loader|laborer|labourer|helper|warehouse|stocker|technician|tech|teller|receptionist|dishwasher|"
+                         r"host(?:ess)?|valet|lifeguard|guard|key ?holder|team member|cleaner|porter|courier|groomer|phlebotomist|dsp|direct support)\b", re.I)
+
+
+def fam_keys(title, level=""):
+    """The families a title is compared in, closest first: the work with its level, the work, its last two words with the level, its last two words."""
+    fine, coarse = pay_family(title)
+    if not fine: return []
+    lv = level if level in ("Junior", "Senior", "Lead") else ""
+    keys = ([fine + "\x1f" + lv] if lv else []) + [fine] + ([coarse + "\x1f" + lv] if lv and coarse != fine else []) + ([coarse] if coarse != fine else [])
+    return keys
+
+
+def fam_estimate(j):
+    """("y", yearly median, postings, the work) or ("h", hourly median, postings, the work) for a US job that states no pay, or None.
+    Part-time, seasonal and temporary work and the trades paid by the hour are compared by the hour, or not at all."""
+    if not FAM or not j.get("active") or j.get("level") == "Intern" or not j.get("location"): return None
+    if not any(c_ == "US" for c_, _ in countries_of(j["location"])): return None
+    hourly = (j.get("etype") or "") in ("Part-time", "Seasonal", "Temporary", "Internship") or bool(HOURLY_HINT.search(j.get("title") or ""))
+    for k in fam_keys(j.get("title"), j.get("level") or ""):
+        st = FAM.get(k)
+        if not st: continue
+        ny, my, nh, mh = st
+        name = k.split("\x1f")[0]
+        if nh >= FAM_MIN and (hourly or nh >= ny): return ("h", mh, nh, name)
+        if ny >= FAM_MIN and not hourly: return ("y", my, ny, name)
+    return None
+
+
+def fam_compare(j, kind):
+    """(median, "dental assistant postings") of the same work, by the year ("y") or the hour ("h"), for the pay bar of a job that states pay."""
+    if not FAM: return None
+    for k in fam_keys(j.get("title"), j.get("level") or ""):
+        st = FAM.get(k)
+        if st and st[0 if kind == "y" else 2] >= FAM_MIN: return st[1 if kind == "y" else 3], f"{k.split(chr(31))[0]} postings in the US"
+    return None
+
+
+def fam_said(est):
+    """The estimate in words: "$21.50 an hour" or "$64K"."""
+    return f"${est[1]:,.2f} an hour" if est[0] == "h" else money(est[1])
+
+
+def fam_medians(active):
+    """FAM from the open US jobs that state pay: each family's count and median, by the year and by the hour."""
+    ys, hs = defaultdict(list), defaultdict(list)
+    for j in active:
+        if "united-states" not in (j.get("places") or ()): continue
+        y_ = j.get("usd"); h_ = None if y_ else usd_hourly(j.get("salary"))
+        if not (y_ or h_): continue
+        for k in fam_keys(j["title"], j.get("level") or ""):
+            if y_: ys[k].append((y_[0] + y_[1]) / 2)
+            else: hs[k].append((h_[0] + h_[1]) / 2)
+    FAM.clear()
+    for k in set(ys) | set(hs):
+        y_, h_ = ys.get(k, []), hs.get(k, [])
+        if max(len(y_), len(h_)) >= FAM_MIN:
+            FAM[k] = [len(y_), round(median(sorted(y_)), 2) if y_ else 0, len(h_), round(median(sorted(h_)), 2) if h_ else 0]
+    return len(FAM)
+
+
 ATS_HOSTS = (("greenhouse.io", "Greenhouse", 1), ("ashbyhq.com", "Ashby", 1), ("lever.co", "Lever", 1), ("myworkdayjobs.com", "Workday", 0), ("workable.com", "Workable", 1),
              ("smartrecruiters.com", "SmartRecruiters", 1), ("recruitee.com", "Recruitee", 0), ("bamboohr.com", "BambooHR", 0), ("teamtailor.com", "Teamtailor", 0),
              ("icims.com", "iCIMS", 0), ("jobvite.com", "Jobvite", 1), ("breezy.hr", "Breezy", 0), ("personio.de", "Personio", 0), ("personio.com", "Personio", 0),
@@ -2520,7 +2617,14 @@ def faq_for(label, jobs, first=None, extra=()):
             qa.append((f"What do {label} pay in {word_}?", f"{len(lm_):,} of the open postings state a yearly range in {word_}: the median midpoint is {sym_}{median(lm_):,.0f}, and the middle half "
                        f"advertise {sym_}{lm_[len(lm_) // 4]:,.0f} to {sym_}{lm_[3 * len(lm_) // 4]:,.0f}. These are advertised ranges as each employer wrote them, not verified pay."))
     # a company page answers its own "Does <company> pay well?" (extra): the generic pay question under it repeated the same figures (25 Nov 2026)
-    if len(mids) >= 15 and not any("pay" in q_.lower() for q_, _ in extra):
+    hrs = sorted((h_[0] + h_[1]) / 2 for j in jobs if (h_ := j.get("usd_h") if "usd_h" in j else usd_hourly(j.get("salary"))))
+    if len(hrs) >= 15 and len(hrs) >= len(mids) and not any("pay" in q_.lower() for q_, _ in extra):
+        # most of these postings state pay by the hour (data teardown, 26 Nov 2026: Google quoted "Retail and Store Jobs... The median
+        # advertised salary is $132K", the store managers' yearly ranges, for work paid $16 to $22 an hour)
+        qa.append((f"What do {label} pay?",
+                   f"The median advertised pay is ${median(hrs):,.2f} an hour, based on {len(hrs):,} open roles that state an hourly rate in US dollars. The middle half of those "
+                   f"roles advertise between ${hrs[len(hrs) // 4]:,.2f} and ${hrs[min(len(hrs) - 1, 3 * len(hrs) // 4)]:,.2f} an hour. These are advertised rates, not verified pay."))
+    elif len(mids) >= 15 and not any("pay" in q_.lower() for q_, _ in extra):
         qa.append((f"What is the median salary of {label}?" if " pay " in f" {label} " else f"What do {label} pay?",
                    f"The median advertised salary is {money(median(mids))}, based on {len(mids):,} open roles that publish a yearly US-dollar range. The middle half of those roles advertise between "
                    f"{money(mids[len(mids) // 4])} and {money(mids[min(len(mids) - 1, 3 * len(mids) // 4)])}. These are advertised ranges, not verified pay. "
@@ -2888,17 +2992,30 @@ def place_desc(name, js, rr):
     return d_
 
 
-def role_desc(name, rj, mids, what):
+def role_desc(name, rj, span, what):
     """The search line of a kind-of-work page (24 Nov 2026). It read "319 open roles for sales leaders, straight from employers' careers
     pages. A person in this job leads a company's or region's sales organisation and answers…": 32 of these lines were cut inside a word
     and none named an employer or a wage. The top results for "<work> jobs" (Indeed, LinkedIn, Glassdoor) open with the count, the
     employers and the pay, so the line does too; the plain-English meaning follows when it fits (fit_desc keeps whole sentences)."""
     top = [c for c, _ in Counter(j.get("company", "") for j in rj if j.get("company")).most_common(3)]
     who = (" at " + (top[0] if len(top) == 1 else ", ".join(top[:-1]) + " and " + top[-1])) if top else ""
-    pay = f", most paying {money(mids[len(mids) // 4])}–{money(mids[3 * len(mids) // 4])} a year" if len(mids) >= 15 else ""
+    pay = f", most paying {span[2:]}{'' if 'hour' in span else ' a year'}" if span else ""          # pay_span()
     head = f"{name[:1].upper() + name[1:]} jobs: {len(rj):,} open now{who}{pay}."
     if len(head) > 150 and pay: head = f"{name[:1].upper() + name[1:]} jobs: {len(rj):,} open now{who}."
     return head + (f" A person in this job {what}." if what else "")
+
+
+def pay_span(jobs, n_min=15):
+    """", $66K–$131K" or ", $16–$22 an hour": the middle half of the US-dollar pay a list's postings state, the way most of them state it,
+    or "" when fewer than n_min state it. Data teardown, 26 Nov 2026: "Retail and Store Jobs (14,610 open, $66K–$131K)" counted only the
+    yearly ranges, the store managers', while BoxLunch, first in its description, pays $16 - $18 an hour. Where most postings state a yearly
+    range, the hourly ones count too, at 2,080 hours a year."""
+    yl = [(j["usd"][0] + j["usd"][1]) / 2 for j in jobs if j.get("usd")]
+    hl = sorted((h_[0] + h_[1]) / 2 for j in jobs if (h_ := (j.get("usd_h") if "usd_h" in j else usd_hourly(j.get("salary")))))
+    if len(hl) >= n_min and len(hl) >= len(yl):
+        return f", ${hl[len(hl) // 4]:,.0f}–${hl[3 * len(hl) // 4]:,.0f} an hour"
+    yl = sorted(yl + [v * 2080 for v in hl])
+    return f", {money(yl[len(yl) // 4])}–{money(yl[3 * len(yl) // 4])}" if len(yl) >= n_min and len(yl) - len(hl) >= n_min else ""
 
 
 def title_pay(path, title, jobs):
@@ -2906,8 +3023,7 @@ def title_pay(path, title, jobs):
     has none to show and its title takes the month instead. One rule for listing() and for the titles chosen before it (26 Nov 2026:
     a place list with a pay range keeps "(43 open, $95K–$175K)"; one without gets the week's new jobs in its title)."""
     if "$" in title: return ""
-    mids_l = sorted((lo + hi) / 2 for j in jobs if j.get("usd") for lo, hi in [j["usd"]])
-    pay_l = f", {money(mids_l[len(mids_l) // 4])}–{money(mids_l[3 * len(mids_l) // 4])}" if len(mids_l) >= 15 else ""
+    pay_l = pay_span(jobs)
     # A page about a place paid in pounds or euros never carries a dollar range in its title (search check, 18 Nov 2026:
     # "Python jobs in London ($185K–$254K)" stood among results that all quote pounds). The range in the local currency
     # when ten postings state one, else the month, as on a list with no pay.
@@ -3666,6 +3782,7 @@ def job_page(j, active_by_cat):
     # a US-dollar estimate only makes sense for US roles, and intern pay is not comparable with salaried roles
     est_ok = j["level"] != "Intern" and j["cat"] != OTHER[0] and (not j["location"] or any(c == "US" for c, _ in countries_of(j["location"])))
     est_ok_h = not j["location"] or any(c == "US" for c, _ in countries_of(j["location"]))     # a plain "$" hourly rate is only compared for US roles
+    fam_est = None if j["salary"] else fam_estimate(j)          # the pay of the same work where the posting states none (FAM)
     comp_url = f'{P}/companies/{slugify(j["company"])}/'
     rows = [("Company", f'<a href="{comp_url}">{e(j["company"])}</a>')]
     if j["location"]: rows.append(("Location", loc_flags(j["location"], 6) + e(j["location"])))
@@ -3687,10 +3804,9 @@ def job_page(j, active_by_cat):
         if j.get("usd") and j["usd"][1] >= 2 * j["usd"][0]:
             ctx += f'<br><span class="note">A wide range: the top is {j["usd"][1] / j["usd"][0]:.1f} times the bottom. Ask early where this role sits in it.</span>'
         rows.append(("Salary", e(j["salary"]) + ctx))
-    elif j["active"] and est_ok and (EST.get((j["cat"], j["level"])) or CATMED.get(j["cat"])):
-        est = EST.get((j["cat"], j["level"])) or CATMED[j["cat"]]
-        kind = (j["level"] + " " if EST.get((j["cat"], j["level"])) and j["level"] else "") + CAT[j["cat"]]
-        rows.append(("Salary", f'Not listed<br><span class="note">Similar {e(kind)} roles advertise a median of {money(est)}. <a href="{P}/salaries/">Salary data</a></span>'))
+    elif fam_est:
+        rows.append(("Salary", f'Not listed<br><span class="note">{fam_est[2]:,} {e(fam_est[3])} postings in the United States that state pay advertise a median of '
+                               f'{fam_said(fam_est)}. <a href="{P}/salaries/">Salary data</a></span>'))
     if j["posted"]:
         t = j.get("t") or 0
         # With an exact time from the feed the date carries it, and a posting under a day old gets a second line that freshen() in site.js
@@ -3796,8 +3912,8 @@ def job_page(j, active_by_cat):
     kind_ = "" if j["cat"] == OTHER[0] else CAT[j["cat"]] + " "
     if j["active"]:
         pay_line = (f" The posting gives a salary of {e(j['salary'])}." if j["salary"] else
-                    f" The posting gives no salary; similar roles in the United States advertise a median of {money(EST.get((j['cat'], j['level'])) or CATMED[j['cat']])}."
-                    if est_ok and (EST.get((j["cat"], j["level"])) or CATMED.get(j["cat"])) else "")
+                    f" The posting gives no salary; {fam_est[3]} postings in the United States that state pay advertise a median of {fam_said(fam_est)}."
+                    if fam_est else "")
         if j.get("tg"):                       # a channel post: no US pay estimate, no "careers page" claim
             pay_line = f" The post gives a salary of {e(j['salary'])}." if j["salary"] else ""
         tldr = (f'<p class="tldr"><strong>{e(j["title"])}</strong> at {e(j["company"])}{where} was posted in the Telegram channel @{e(j["tg"])}'
@@ -3829,20 +3945,23 @@ def job_page(j, active_by_cat):
     # Pay at a glance: the range from the posting on a scale, with the median of its category marked
     pb_edge = lambda x_: " l" if x_ < 12 else " r" if x_ > 88 else ""      # the word "median" under the tick: kept inside the card near either end
     paybar = ""
-    if j["active"] and j.get("usd") and j["cat"] in CATMED and j["cat"] != OTHER[0] and j["usd"][1] >= j["usd"][0] > 0:
-        lo_, hi_ = j["usd"]; med_ = CATMED[j["cat"]]
+    # the mark is the median of the same work where FAM_MIN postings of it state pay the same way (FAM), else of the field
+    fy_ = fam_compare(j, "y") if j["active"] and j.get("usd") and est_ok_h else None
+    if j["active"] and j.get("usd") and (fy_ or (j["cat"] in CATMED and j["cat"] != OTHER[0])) and j["usd"][1] >= j["usd"][0] > 0:
+        lo_, hi_ = j["usd"]; med_, of_ = fy_ or (CATMED[j["cat"]], f"{CAT[j['cat']]} roles")
         a_, b_ = min(lo_, med_) * 0.85, max(hi_, med_) * 1.15
         pos_ = lambda v: max(0.0, min(100.0, 100 * (v - a_) / (b_ - a_)))
         mid_ = (lo_ + hi_) / 2
         verdict = "above" if mid_ > med_ * 1.05 else "below" if mid_ < med_ * 0.95 else "close to"
         paybar = (f'<div class="paybar"><p class="pb-h"><b>{e(j["salary"])}</b><span>stated in the posting</span></p>'
                   f'<div class="pb-t" aria-hidden="true"><i style="left:{pos_(lo_):.1f}%;width:{max(1.5, pos_(hi_) - pos_(lo_)):.1f}%" data-tip="Stated in the posting · {e(j["salary"])}"></i>'
-                  f'<u style="left:{pos_(med_):.1f}%" data-tip="Median for {e(CAT[j["cat"]])} roles · {money(med_)}"></u><em class="pb-m{pb_edge(pos_(med_))}" style="left:{pos_(med_):.1f}%">median</em></div>'
-                  f'<p class="pb-s">The middle of this range is {verdict} the median for {e(CAT[j["cat"]])} roles, {money(med_)} (the mark on the line).</p></div>')
+                  f'<u style="left:{pos_(med_):.1f}%" data-tip="Median for {e(of_)} · {money(med_)}"></u><em class="pb-m{pb_edge(pos_(med_))}" style="left:{pos_(med_):.1f}%">median</em></div>'
+                  f'<p class="pb-s">The middle of this range is {verdict} the median for {e(of_)}, {money(med_)} (the mark on the line).</p></div>')
     # Pay stated by the hour (26 Nov 2026): the bar above only reads yearly ranges, so nursing, retail, warehouse and care postings,
     # which state an hourly rate, got no comparison at all. Same line, drawn on the hourly figures of the category; US dollars only.
-    if not paybar and j["active"] and j["cat"] in HMED and (h2_ := usd_hourly(j.get("salary"))) and h2_[1] >= h2_[0] > 0 and est_ok_h:
-        lo_, hi_ = h2_; med_ = HMED[j["cat"]]
+    fh_ = fam_compare(j, "h") if not paybar and j["active"] and est_ok_h else None
+    if not paybar and j["active"] and (fh_ or j["cat"] in HMED) and (h2_ := usd_hourly(j.get("salary"))) and h2_[1] >= h2_[0] > 0 and est_ok_h:
+        lo_, hi_ = h2_; med_, of_ = fh_ or (HMED[j["cat"]], f"{CAT[j['cat']]} roles that state one")
         a_, b_ = min(lo_, med_) * 0.85, max(hi_, med_) * 1.15
         pos_ = lambda v: max(0.0, min(100.0, 100 * (v - a_) / (b_ - a_)))
         mid_ = (lo_ + hi_) / 2
@@ -3850,8 +3969,8 @@ def job_page(j, active_by_cat):
         year_ = f"${mid_ * 2080 / 1000:,.0f}K"
         paybar = (f'<div class="paybar"><p class="pb-h"><b>{e(j["salary"])}</b><span>stated in the posting</span></p>'
                   f'<div class="pb-t" aria-hidden="true"><i style="left:{pos_(lo_):.1f}%;width:{max(1.5, pos_(hi_) - pos_(lo_)):.1f}%" data-tip="Stated in the posting · {e(j["salary"])}"></i>'
-                  f'<u style="left:{pos_(med_):.1f}%" data-tip="Median hourly rate for {e(CAT[j["cat"]])} roles · ${med_:,.2f}"></u><em class="pb-m{pb_edge(pos_(med_))}" style="left:{pos_(med_):.1f}%">median</em></div>'
-                  f'<p class="pb-s">The middle of this range is {verdict} the median hourly rate for {e(CAT[j["cat"]])} roles that state one, ${med_:,.2f} (the mark on the line). '
+                  f'<u style="left:{pos_(med_):.1f}%" data-tip="Median hourly rate for {e(of_)} · ${med_:,.2f}"></u><em class="pb-m{pb_edge(pos_(med_))}" style="left:{pos_(med_):.1f}%">median</em></div>'
+                  f'<p class="pb-s">The middle of this range is {verdict} the median hourly rate for {e(of_)}, ${med_:,.2f} (the mark on the line). '
                   f'At 40 hours a week all year, {"$%.2f" % mid_} an hour comes to about {year_} a year before tax.</p></div>')
     # What the range leaves after US federal tax, Social Security and Medicare, for postings in the United States only (the rules are the ones the take-home pay tool uses)
     thline = ""
@@ -4563,6 +4682,7 @@ def main():
         j["salary"] = sane_pay(j["salary"])
         j["usd"] = usd_range(j["salary"])
         j["rkey"] = search_engine.role_key(j["title"], j["location"])      # one row per role in every list (collapse)
+        j["usd_h"] = None if j["usd"] else usd_hourly(j["salary"])      # an hourly rate in US dollars: the search's pay filter reads it (search_engine.doc)
         j["places"] = places_of(j["location"]) if j["active"] and j["location"] else []
         j["t"], j["ts"] = exact(j), stamp(j)
     active = [j for j in jobs if j["active"]]
@@ -4641,6 +4761,7 @@ def main():
         for lv in ("Intern", "Junior", "Senior", "Lead"):
             lm = [(lo + hi) / 2 for j in by_cat[cs] if j["level"] == lv and j["usd"] for lo, hi in [j["usd"]]]
             if len(lm) >= 15: EST[(cs, lv)] = median(lm)
+    fam_medians(active)                          # the pay of the same work, for the jobs that state none (fam_estimate)
     top_cats = sorted((s for s in CAT if by_cat[s] and s != OTHER[0]), key=lambda s: -len(by_cat[s]))
     pop_sk = [t for t, _ in Counter(t for j in active for t in j["tags"]).most_common(10)]
     FOOT["pop"] = ('<p class="pop"><span>Popular searches:</span>' + "".join(f'<a href="{P}/skills/{TAG_SLUG.get(t, slugify(t))}/">{e(t)} jobs</a>' for t in pop_sk)
@@ -6092,13 +6213,12 @@ def main():
         fam_line = (labrow("Part of", [f'<a href="{P}/categories/{fs}/">{e(fn)}</a>' for fs, fn in fams])
                     + labrow("Prepare", prep_, ("resume/examples/", "All resume examples"))) if fams else ""
         secs = hub_sections(f"{low} roles", rj, "roles,who")        # the employers' tiles stand once, under "Companies hiring ..."
-        mids_r = sorted((lo + hi) / 2 for j in rj if j["usd"] for lo, hi in [j["usd"]])
-        pay_r = f", {money(mids_r[len(mids_r) // 4])}–{money(mids_r[3 * len(mids_r) // 4])}" if len(mids_r) >= 15 else ""     # the pay range in the title, as the top results show it
+        pay_r = pay_span(rj)     # the pay range in the title, as the top results show it: by the hour where most postings state it so
         # a kind of work named after a skill that is not also a company (SEO, computer vision, DeFi, AML/KYC) takes "<skill> jobs"
         sk_q = next((t for t, s_ in SKILL_ROLE.items() if s_ == slug_r and t not in OPEN and t not in ("SAP", "Salesforce", "Workday", "Oracle", "HubSpot", "Zendesk", "Snowflake", "Databricks")), None)
         r_title = (lambda t1, t2: t1 if len(t1) <= 65 else t2)(f"{tcase(sk_q)} Jobs ({len(rj):,} open{pay_r}): {tcase(rname)}", f"{tcase(sk_q)} Jobs ({len(rj):,} open{pay_r})") if sk_q else f"{tcase(rname)} Jobs ({len(rj):,} open{pay_r})"
         listing(f"roles/{slug_r}/", f"{sk_q} jobs" if sk_q else f"{rname} jobs", f"{r_title} | {SITE}",
-                role_desc(sk_q or rname, rj, mids_r, w_),
+                role_desc(sk_q or rname, rj, pay_r, w_),
                 rj, (f"<strong>{e(rname)}</strong>: a person in this job {e(w_)}. " if w_ else "") + intro_for(rj, "", f" with “{e(rname)}” or a close variant in the title", hub=True),
                 trail=(("Categories", "categories/"),), feed=True, stats=True, extra=fam_line + rel(REL["role:" + slug_r], ("roles/", "All roles")), pics=mini_pics(rj) + secs[0], faq=f"{low} jobs",
                 faq_first=((f"What is {art(low)} {low} job?", f"In {art(low)} {low} job, a person {w_}. {len(rj):,} such roles are open on {SITE} as of {fdate(TODAY)}.") if w_ else None),
