@@ -710,34 +710,14 @@
     };
     // hub path: [card, columns]. A column is a list of groups [heading, links]; a link is [path, name, icon, one short line or nothing].
     // The card is the search box (jobs) or the menu's main action, which is also a link in a group for the phone menu.
+    // One panel since 26 Nov 2026 (track "one button": the header held 56 to 59 links in four panels): the jobs menu, its search box
+    // and the seven lists people open most. Resume is a plain link; the tools, the employers' pages and the rest are in the footer.
     var M = {
       '/jobs/': [{ search: 1 }, [
-        [['Search', [['/jobs/', 'All jobs', 'search', 'Every job, checked every hour'], ['/new/', 'New jobs', 'clock', 'Posted in the last 3 days'],
-          ['/jobs-near-me/', 'Jobs near me', 'pin', 'Open jobs in your city'], ['/remote/', 'Remote jobs', 'home', 'Work from home, by country']]],
-         ['For you', [['/for-you/', 'Jobs that fit you', 'target', 'Five questions, your matches'], ['/my-jobs/', 'My jobs', 'mark', 'Saved jobs and applications']]]],
-        [['Schedule and type', [['/jobs/?etype=Full-time', 'Full-time', 'bag'], ['/part-time/', 'Part-time', 'half'], ['/hybrid/', 'Hybrid', 'swap'],
-          ['/work-from-anywhere/', 'Work from anywhere', 'globe'], ['/contract/', 'Contract', 'doc'], ['/temporary/', 'Temporary, seasonal', 'cal'],
-          ['/night-shift/', 'Night shift', 'moon'], ['/weekend/', 'Weekend', 'sun']]]],
-        [['Experience', [['/internships/', 'Internships', 'cap'], ['/entry-level/', 'Entry-level', 'sprout'], ['/no-experience-jobs/', 'No experience', 'steps']]],
-         ['By field', [['/tech/', 'Tech jobs', 'code'], ['/government-jobs/', 'Government jobs', 'gov'], ['/categories/', 'All categories', 'grid'], ['/salaries/', 'Salaries by title', 'coin']]]]]],
-      '/resume/': [{ h: '/resume/', t: 'Resume builder', p: 'A one-page resume in your browser, no account.', a: 'Start a resume' }, [
-        [['Write', [['/resume/', 'Resume builder', 'pen', 'A one-page resume, no account'], ['/resume/examples/', 'Resume examples', 'doc', 'A written example for each kind of work'],
-          ['/cover-letter-examples/', 'Cover letter examples', 'mail', 'A letter for each kind of work, ready to copy'],
-          ['/resignation-letters/', 'Resignation letters', 'exit', 'From two weeks notice to effective immediately'],
-          ['/resume-words/', 'Resume words', 'text', 'What to write instead of “managed”']]]],
-        [['Check', [['/tools/resume-review/', 'Resume review', 'check', 'A score out of 10 and what to fix first'],
-          ['/tools/resume-match/', 'Resume match', 'cols', 'Your resume against a posting, word by word']]]]]],
-      '/tools/': [{ h: '/tools/', t: 'Free tools', p: 'Offer check, raise calculator, letters and more. They run in your browser.', a: 'See all tools' }, [
-        [['Prepare', [['/tools/', 'All free tools', 'tool', 'Offer check, raise calculator and more'], ['/interview-questions/', 'Interview questions', 'chat', 'What to prepare for each job'],
-          ['/career-quiz/', 'Career quiz', 'compass', 'Seven plain questions, the fields that fit'], ['/how-to-become/', 'How to become…', 'trend', 'Skills, pay and first jobs, career by career'],
-          ['/ahead/', 'Helpers in your browser', 'spark', 'Skill GPS, interview practice out loud']]]],
-        [['Learn', [['/guides/', 'Guides', 'book', 'The job market with today’s numbers'], ['/relocate/', 'Relocation guides', 'plane', 'Jobs abroad with visa or relocation help'],
-          ['/map/', 'Jobs map', 'map', 'Every city with open jobs on one map'], ['/glossary/', 'Glossary', 'text', 'Hiring words in plain English']]]]]],
-      '/post-a-job/': [{ h: '/post-a-job/', t: 'Post a job', p: 'Free, with paid options to stand out.', a: 'Start posting' }, [
-        [['Hire', [['/post-a-job/', 'Post a job', 'plus', 'Free, with paid options to stand out'], ['/account/?as=employer', 'Employer sign in', 'key', 'Your jobs, views, clicks and billing'],
-          ['/pricing/#employers', 'Pricing for employers', 'tag', 'Every plan and what it includes']]]],
-        [['Resources', [['/how-to-hire/', 'How to hire…', 'users', 'Who else hires each role, and the pay'], ['/job-descriptions/', 'Job description templates', 'doc', 'A template per role, with today’s figures'],
-          ['/widgets/', 'Jobs for your website', 'win', 'A widget with your jobs or any list'], ['/api/', 'Data for developers', 'code', 'Every open job as free JSON']]]]]]
+        [['Search', [['/jobs/', 'All jobs', 'search', 'Every open job, checked every hour'], ['/new/', 'New jobs', 'clock', 'Posted in the last 3 days'],
+          ['/remote/', 'Remote jobs', 'home', 'Work from home, by country'], ['/jobs-near-me/', 'Jobs near me', 'pin', 'Open jobs in your city']]]],
+        [['By kind', [['/entry-level/', 'Entry-level', 'sprout', 'First jobs and junior roles'], ['/part-time/', 'Part-time', 'half', 'Fewer hours a week'],
+          ['/categories/', 'All categories', 'grid', 'Every field and kind of work']]]]]]
     };
     var here = location.pathname.slice(P.length) || '/';
     var svg = function (k) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + I[k] + '</svg>'; };
