@@ -7,7 +7,7 @@ which records_test.py uses to check that a page built from a record is the same 
 A page needs more than its own record: the similar jobs, the open roles of the company, the medians of its field. build.py works those
 out once per build; they are stored next to the records in the table ctx and loaded once, not per page.
 """
-import collections, datetime, html, json, os, re, sqlite3, threading, time
+import collections, datetime, faulthandler, html, json, os, re, sqlite3, sys, threading, time
 from pathlib import Path
 
 import texts
@@ -133,12 +133,46 @@ class Cards:
         return [got[s_] for s_ in xs if s_ in got]
 
 
+class Busy(RuntimeError):
+    """The store's lock stayed taken for WAIT seconds: the request is answered at once instead of joining the queue."""
+
+
+class Guard:
+    """The store's lock, taken for at most WAIT seconds. 26 Nov 2026, 06:57-08:09 UTC: one request held the plain lock and every other job
+    page and search queued behind it, one thread and one socket each, until serve.py reached its 1,024 open files and answered 500 to
+    everything but the static pages. Now a request that cannot have the lock in WAIT seconds fails fast (Busy), and a watchdog writes
+    every thread's stack to the log once when the lock has been held for STUCK seconds, so the cause can be read the next time."""
+    WAIT, STUCK = 15, 30
+
+    def __init__(self):
+        self.lock, self.since, self.told = threading.Lock(), 0.0, False
+        threading.Thread(target=self.watch, daemon=True).start()
+
+    def __enter__(self):
+        if not self.lock.acquire(timeout=self.WAIT): raise Busy("the job store is busy")
+        self.since, self.told = time.monotonic(), False
+        return self
+
+    def __exit__(self, *exc):
+        self.since = 0.0
+        self.lock.release()
+
+    def watch(self):
+        while True:
+            time.sleep(5)
+            t = self.since
+            if t and not self.told and time.monotonic() - t > self.STUCK:
+                self.told = True
+                print(f"records: the store's lock is held for {time.monotonic() - t:.0f} s; every thread:", file=sys.stderr, flush=True)
+                faulthandler.dump_traceback(file=sys.stderr, all_threads=True)
+
+
 class Store:
     """Reads data/jobs.db and builds job pages from it. When the hourly build puts a new file in place, the next request opens it."""
 
     def __init__(self, path, b, live=False):
         self.path, self.b, self.live = Path(path), b, live
-        self.lock = threading.Lock()
+        self.lock = Guard()
         self.stamp, self.looked, self.con = None, 0.0, None
 
     def _fresh(self):

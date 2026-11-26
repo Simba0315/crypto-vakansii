@@ -161,6 +161,7 @@ def mcp(msg):
 class Handler(SimpleHTTPRequestHandler):
     server_version = "HRN"
     sys_version = ""
+    timeout = 30            # a connection that sends nothing for 30 s is closed: it no longer keeps a thread and an open file (26 Nov 2026)
 
     def __init__(self, *a, **kw):
         super().__init__(*a, directory=str(SITE), **kw)
@@ -194,6 +195,12 @@ class Handler(SimpleHTTPRequestHandler):
         self.send_json(200, out)
 
     def do_GET(self):
+        try:
+            return self.get()
+        except records.Busy:                             # the job store stayed busy for 15 s: say so at once, do not join the queue
+            return self.send(503, "Busy for a moment. Try again in a few seconds.", extra=[("Retry-After", "5"), ("Cache-Control", "no-store")])
+
+    def get(self):
         path = self.path.split("?", 1)[0].split("#", 1)[0]
         if path == MCP: return self.send(405, "This is an MCP server: add its address as a connector in your AI assistant.", "text/plain; charset=utf-8", [("Allow", "POST")])
         if path == LATEST:
