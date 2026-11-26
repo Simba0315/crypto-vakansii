@@ -14606,8 +14606,10 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     if _gc.exists() and re.fullmatch(r"glama_claim_[\w-]+", (_gct := _gc.read_text().strip())):
         (OUT / ".well-known").mkdir(parents=True, exist_ok=True)
         (OUT / ".well-known" / "glama.json").write_text(json.dumps({"$schema": "https://glama.ai/mcp/schemas/connector.json", "claim": _gct}, indent=2) + "\n", encoding="utf-8")
-    # ShapBot (26 Nov 2026): a scraper that read the site at about 15 requests a second on 25 Nov and raised the server's load; it sends no visitors.
-    write("robots.txt", "User-agent: *\nAllow: /\n\nUser-agent: ShapBot\nDisallow: /\n\n# AI assistants and AI search may read, quote and link to every page. A guide for them: "
+    # ShapBot stays allowed (26 Nov 2026): it comes with a "Shap-User" agent, the pattern of an AI assistant's crawler (PerplexityBot /
+    # Perplexity-User, GPTBot / ChatGPT-User). The owner wants every AI assistant to read the site, so it is not blocked; its rate is a
+    # server matter, not a robots.txt one.
+    write("robots.txt", "User-agent: *\nAllow: /\n\n# AI assistants and AI search may read, quote and link to every page. A guide for them: "
           f"{FULL}/llms.txt\n" + "".join(f"User-agent: {b}\n" for b in ai_bots) + f"Allow: /\n\nSitemap: {FULL}/sitemap.xml\n", sitemap=False)
     lap('IndexNow: the key file, and the list of pages that changed f')
     # IndexNow: the key file, and the list of pages that changed for the workflow to send (Bing, and the assistants that search through it).
