@@ -1382,3 +1382,68 @@ Two more ChatGPT questions in temporary chats (search on), only to find the prod
 | (c) a training path for $25 an hour without a degree | /jobs-that-pay/25-an-hour/: "Training routes to $25 an hour without a degree": ten trades from the BLS Occupational Outlook Handbook (way in, training, license, 2025 median pay), with today's open postings whose title names the work and the hourly pay they state, counted at build time; two answered questions |
 | (d) skills grouped on resume examples | every resume and CV example: "Technical skills" (in tech work; "Hard skills" elsewhere), "Tools" (or "Tools and technologies") and "Soft skills", the last counted in that work's own posting texts (a sample of 250, shown when 20 texts or more are held and a skill is named by 10% of them); a question "What soft skills should a <work> resume list?" with the shares; the builder keeps one line |
 | (e) BLS median pay for database administrators | bls_wages.py: Database Administrators (15-1242, median $104,620, May 2025) and nine trades; /skills/<skill>/ "Jobs you can get with SQL" now has a "US median, all employers" column |
+
+## Search Console, 26 Nov 2026
+
+Read in Search Console (web search, read only) on 26 Nov 2026. The property has data from 19 Nov, so "last 7 days" and "last 28 days" are the
+same window, 19–24 Nov: **100 clicks, 30,618 impressions, CTR 0.33%, average position about 21** (impression-weighted from the days:
+19 Nov 5 clicks / 3,043 at 32.4 … 23 Nov 32 / 6,286 at 19.5, 24 Nov 28 / 10,105 at 15.2). The position improves every day.
+
+Queries with impressions at positions 4–20 and no click, with the page Google showed:
+
+| Query | Impressions | Position | Clicks | Page (impressions for that query) |
+|---|---|---|---|---|
+| entry level jobs | 1,144 | 5.8 | 0 | /locations/dublin/entry-level/ (797, Ireland 795), /locations/lithuania/entry-level/ (323), /skills/arabic/entry-level/ (24, Saudi Arabia) |
+| virtual assistant jobs | 481 | 7.5 | 0 | /locations/bulgaria/remote/ |
+| marketing jobs | 201 | 8.0 | 0 | /locations/bulgaria/marketing/ (173 at 7.6), Turkey, Sweden, France |
+| rolling basis meaning | 184 | 7.7 | 2 | /glossary/rolling-basis/ (page: 629 impressions, 2 clicks, 8.5) |
+| independent contractor | 172 | 9.6 | 0 | /glossary/independent-contractor/ |
+| work from home jobs | 154 | 8.6 | 0 | /locations/bulgaria/remote/ (137), /locations/finland/remote/ (17) |
+| graphic design jobs | 150 | 8.3 | 0 | /locations/turkey/design/ (148) |
+| rolling basis | 147 | 7.7 | 0 | /glossary/rolling-basis/ |
+| employment lawyer | 127 | 9.5 | 0 | /locations/japan/skills/employment-law/ (the searcher wants a lawyer, not a job: not changed) |
+| marketing automation jobs | 60 | 3.8 | 0 | /locations/florida/skills/marketing-automation/ (57 at 3.3), /locations/california/skills/marketing-automation/ (37 at 4.7) |
+| etl developer taiwan job application | 42 | 3.0 | 0 | /locations/taiwan/skills/etl/ |
+| program manager jobs | 31 | 15.6 | 0 | /roles/program-manager/ |
+| performance marketing jobs | 27 | 13.0 | 0 | /locations/raleigh-durham/skills/performance-marketing/, /locations/austin/skills/performance-marketing/ |
+| sales jobs | 24 | 8.6 | 0 | /locations/amsterdam/sales-bd/ (13), /locations/colombia/sales-bd/ (9) |
+| new grad meaning | 23 | 6.1 | 0 | /glossary/new-grad/ |
+| last working day of this month | 20 | 7.2 | 0 | /tools/last-working-day/ |
+| reference title meaning | 19 | 8.5 | 0 | /glossary/reference/ |
+
+Clicked queries shown by name: "rolling basis meaning" 2, "deel hyderabad" 1, "acca jobs in netherlands" 1, "remote jobs entry level" 1 (/remote/); the
+other 95 clicks are on queries Search Console does not name. Pages with the most impressions: /remote/ 945 (2 clicks, 6.2),
+/locations/dublin/entry-level/ 797 (0, 5.9), /skills/ 762 (2, 6.3), /locations/los-angeles/ 691 (0, 5.4), /locations/bulgaria/remote/ 634 (0, 8.7),
+/glossary/rolling-basis/ 629 (2, 8.5), /locations/asia-pacific/ 621 (0, 6.7), /locations/california/ 568 (0, 5.9), /locations/san-francisco/ 537
+(0, 5.5), /roles/cybersecurity/ 449 (0, 5.7), /locations/lithuania/entry-level/ 323 (0, 5.5), /locations/london/ 315 (1, 5.9). The hubs' queries
+are long company searches ("<company> careers ai machine learning jobs"), one or two impressions each: no single query to write for.
+Home page: 118 impressions, 4 clicks, position 5.6; its named queries are a single impression each, so its title and line were not touched.
+
+What the table says: Google already shows the place lists for the generic query of the searcher's own country (Ireland, Lithuania,
+Bulgaria, Turkey) on page 1, and nobody clicks. The titles read "Marketing jobs in Bulgaria (23 open, November 2026)" and the lines
+under them stopped at 120 characters with nothing a click would give.
+
+Done (build.py, tools_pages.py, glossary_more.json), for every page of each kind, not only the ones above:
+- Every place list (/locations/<place>/<field>/, /remote/, /entry-level/, /skills/<skill>/, /part-time/, /internships/, /contract/): the
+  title in the words people type ("Marketing Jobs in Bulgaria: 23 Open, 4 New This Week", "Remote & Work From Home Jobs in Bulgaria: …",
+  "Marketing Automation Jobs in Florida (43 open, $95K–$175K)"); the pay range stays where the list has one. The line under it, up to 160
+  characters: the searched words, the count, three employers, the week's new jobs, the pay or the internship split, and "Each one links to
+  the employer's own application and is checked every hour". The lead names the kinds of work with the most openings. Questions in the
+  searcher's words, answered from the list: "What entry level jobs are there in Dublin?", "Are there virtual assistant jobs in Bulgaria
+  you can do from home?" (assistant and admin titles counted; customer support named beside them), "Are there graphic design jobs in
+  Turkey?" (graphic, brand and visual design titles counted, UX beside them; the title reads "Graphic & UX Design Jobs in …" where the
+  list has both), "What marketing jobs are open in Bulgaria?". The line of every other combination list (role in a place and the rest)
+  has the same parts.
+- query_key ignores the counts after the colon, so a place's field list and its skill list of the same name ("Customer Service Jobs in
+  Austin") still count as one search and keep one page.
+- /entry-level/ links to the entry-level list of each place, largest first ("Entry-level jobs by city and country"): it linked to none.
+- /tools/last-working-day/: the title and the line carry this month's date ("Last Working Day of This Month (Mon, Nov 30) & Notice
+  Calculator"), the lead opens with it; the page is built every hour, so it turns on the 1st.
+- /glossary/rolling-basis/, /glossary/new-grad/, /glossary/independent-contractor/: a figure counted from today's postings in the card and
+  in the line ("Rolling basis meaning: … N open postings here say so today: apply early."); the new grad title leads with the query
+  ("New Grad Meaning: Who Counts as a New Grad and When to Apply").
+- Questions on every list: "75 of the 75 open entry-level jobs in Dublin (100%) are for beginners" and "0.0% of all 784,846 open jobs"
+  now read as sentences; a list's lead no longer starts with a lower-case company name ("the Agency").
+
+Not done: "employment lawyer" (a searcher who wants a lawyer); the hire-a-developer pages at 40–90 (not a title problem); /roles/program-manager/
+(the page is "Program and Project Manager Jobs", one kind of work; a split would make two pages compete). Check CTR of the place lists on 3 Dec.

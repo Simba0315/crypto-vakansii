@@ -505,6 +505,9 @@ def query_key(title):
     """What a list's title is about: no brand, no counts in brackets, "&" as "and", the words in a fixed order. Numbers stay, so
     "$25 an hour" and "$50 an hour" are different queries."""
     t = re.sub(r"\([^)]*\)", " ", title.rsplit(" | ", 1)[0].lower()).replace("&", " and ")
+    # the counts after a colon are not words of the query either: "Customer Service Jobs in Austin: 50 Open, 5 New This Week" and the
+    # skill list "Customer Service Jobs in Austin: 31 Open, 2 New" are one search (26 Nov 2026, when place lists took this form)
+    t = re.sub(r":\s*[\d,]+ open(?:,\s*[\d,]+ new(?: this week)?)?\s*$", " ", t)
     return " ".join(sorted(w for w in re.findall(r"[a-z0-9$+#.]+", t) if w != "and"))
 
 
@@ -2354,8 +2357,10 @@ def faq_for(label, jobs, first=None, extra=()):
     # a company page asks its own "Is it hard to get hired at <company>?" (extra): a second, generic one read as a repeat (24 Nov 2026)
     if n_ >= 20 and (len(yrs) >= 10 or ent) and not any(q_.startswith("Is it hard to get") for q_, _ in qa):
         one_ = (art(label[:-5]) + " " + label[:-1]) if label.endswith(" jobs") else f"one of the {label}"     # "data analyst jobs" -> "a data analyst job"
+        # an entry-level list said "75 of the 75 open entry-level jobs in Dublin (100%) are for beginners" (26 Nov 2026)
         qa.append((f"Is it hard to get {one_}?",
-                   f"{ent:,} of the {n_:,} open {label} ({100 * ent / n_:.0f}%) are for beginners: junior roles and internships."
+                   (f"All {n_:,} open {label} are junior roles or internships, meant for beginners." if ent == n_ else
+                    f"{ent:,} of the {n_:,} open {label} ({100 * ent / n_:.0f}%) are for beginners: junior roles and internships.")
                    + (f" Of the {len(yrs):,} postings that state experience, the median asks for {yrs[len(yrs) // 2]} {'year' if yrs[len(yrs) // 2] == 1 else 'years'}." if len(yrs) >= 10 else "")
                    + ((f" {n_co:,} companies are hiring" + (f" and {new7:,} {'role was' if new7 == 1 else 'roles were'} posted in the last seven days" if new7 else "") + ".") if n_co > 1 else
                       (f" {new7:,} {'role was' if new7 == 1 else 'roles were'} posted in the last seven days." if new7 else "")) + " Matching your resume to the skills each posting names helps most; the free resume builder shows the match."))
@@ -2380,7 +2385,9 @@ def faq_for(label, jobs, first=None, extra=()):
                    ", ".join(f"{t} ({k})" for t, k in ti_) + f": the most common titles among the {n_:,} open roles, without the level and place notes in brackets."))
     if n_ >= 20 and ALL_OPEN[0] and n_co > 1:        # one company's jobs: "in demand ... at 1 company" said nothing (25 Nov 2026)
         qa.append((f"Are {label} in demand in {TODAY[:4]}?",
-                   f"{n_:,} {label} are open on {SITE} today at {n_co:,} {'company' if n_co == 1 else 'companies'}, {100 * n_ / ALL_OPEN[0]:.1f}% of all {ALL_OPEN[0]:,} open jobs here"
+                   f"{n_:,} {label} are open on {SITE} today at {n_co:,} {'company' if n_co == 1 else 'companies'}, "
+                   # "0.0% of all 784,846 open jobs" on a list of 75 (26 Nov 2026)
+                   + (f"{100 * n_ / ALL_OPEN[0]:.1f}% of all" if 100 * n_ / ALL_OPEN[0] >= 0.05 else "out of") + f" {ALL_OPEN[0]:,} open jobs here"
                    + (f"; {new7:,} were posted in the last seven days." if new7 else ".") + (f" The median advertised salary is {money(median(mids))}." if len(mids) >= 15 else "")
                    + f" {r:,} ({100 * r / n_:.0f}%) can be done remotely."))
     qa.append((f"How do I apply for {label}?",
@@ -2709,6 +2716,33 @@ def role_desc(name, rj, mids, what):
     return head + (f" A person in this job {what}." if what else "")
 
 
+def title_pay(path, title, jobs):
+    """The pay range a list's title carries after its count (", $95K–$175K", ", €67K–€132K", ", $18–$24 an hour"), or "" when the list
+    has none to show and its title takes the month instead. One rule for listing() and for the titles chosen before it (26 Nov 2026:
+    a place list with a pay range keeps "(43 open, $95K–$175K)"; one without gets the week's new jobs in its title)."""
+    if "$" in title: return ""
+    mids_l = sorted((lo + hi) / 2 for j in jobs if j.get("usd") for lo, hi in [j["usd"]])
+    pay_l = f", {money(mids_l[len(mids_l) // 4])}–{money(mids_l[3 * len(mids_l) // 4])}" if len(mids_l) >= 15 else ""
+    # A page about a place paid in pounds or euros never carries a dollar range in its title (search check, 18 Nov 2026:
+    # "Python jobs in London ($185K–$254K)" stood among results that all quote pounds). The range in the local currency
+    # when ten postings state one, else the month, as on a list with no pay.
+    # Lists of work that is paid by the hour show the hourly range, not a yearly one (search check, 18 Nov 2026: for
+    # "part time jobs" and "night shift jobs" every first result leads with dollars an hour; ours said "$76K–$145K").
+    if path in HOURLY_LISTS or re.fullmatch(r"locations/[^/]+/part-time/", path):
+        hr_l = sorted((lo + hi) / 2 for j in jobs if (hh_ := usd_hourly(j.get("salary"))) for lo, hi in [hh_])
+        if len(hr_l) >= 15: pay_l = f", ${hr_l[len(hr_l) // 4]:,.0f}–${hr_l[3 * len(hr_l) // 4]:,.0f} an hour"
+    m_pl = PATH_PLACE.match(path)
+    sym_l = {"GB": "£"}.get(PLACE_CODE.get(m_pl.group(1), ""), "€" if m_pl and PLACE_CODE.get(m_pl.group(1), "") in EURO_CC else "") if m_pl else ""
+    if sym_l:
+        lm_l = sorted(m_ for j in jobs if (m_ := local_mid(j.get("salary"), sym_l)))
+        pay_l = f", {sym_l}{lm_l[len(lm_l) // 4] / 1000:,.0f}K–{sym_l}{lm_l[3 * len(lm_l) // 4] / 1000:,.0f}K" if len(lm_l) >= 10 else ""
+    # 24 Nov 2026: the same for every other place outside the US: "Jobs in India (17,483 open, $110K–$210K)" and "Jobs in Europe
+    # ($85K–$185K)" quoted the few postings that state US dollars, which is not what people there are paid. No local range: the month.
+    elif m_pl and PLACE_CODE.get(m_pl.group(1), "") != "US":
+        pay_l = ""
+    return pay_l
+
+
 def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", feed=False, head_html=None, after="", max_pages=None, more=None, faq=None, hub="", accent=None, list_title="", faq_first=None, live="", faq_extra=(),
             stats=False, pics="", tail="", links=()):
     """A page that is a list of jobs. The order on its first page (sections review, 17 Nov 2026): the trail, the heading, one
@@ -2755,25 +2789,7 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
         body = top + (extra if n == 1 else "") + the_list + ((hub + after + kind_row(path) + faq_html + tail) if n == 1 else "")      # questions after what the page shows
         if n == 1:
             # the month in the title, as Upwork and Indeed do on lists that really change: "Data Analyst Jobs (133 open, November 2026)"
-            mids_l = sorted((lo + hi) / 2 for j in jobs if j.get("usd") for lo, hi in [j["usd"]])
-            pay_l = f", {money(mids_l[len(mids_l) // 4])}–{money(mids_l[3 * len(mids_l) // 4])}" if len(mids_l) >= 15 and "$" not in title else ""
-            # A page about a place paid in pounds or euros never carries a dollar range in its title (search check, 18 Nov 2026:
-            # "Python jobs in London ($185K–$254K)" stood among results that all quote pounds). The range in the local currency
-            # when ten postings state one, else the month, as on a list with no pay.
-            # Lists of work that is paid by the hour show the hourly range, not a yearly one (search check, 18 Nov 2026: for
-            # "part time jobs" and "night shift jobs" every first result leads with dollars an hour; ours said "$76K–$145K").
-            if (path in HOURLY_LISTS or re.fullmatch(r"locations/[^/]+/part-time/", path)) and "$" not in title:
-                hr_l = sorted((lo + hi) / 2 for j in jobs if (hh_ := usd_hourly(j.get("salary"))) for lo, hi in [hh_])
-                if len(hr_l) >= 15: pay_l = f", ${hr_l[len(hr_l) // 4]:,.0f}–${hr_l[3 * len(hr_l) // 4]:,.0f} an hour"
-            m_pl = PATH_PLACE.match(path)
-            sym_l = {"GB": "£"}.get(PLACE_CODE.get(m_pl.group(1), ""), "€" if m_pl and PLACE_CODE.get(m_pl.group(1), "") in EURO_CC else "") if m_pl else ""
-            if sym_l and "$" not in title:
-                lm_l = sorted(m_ for j in jobs if (m_ := local_mid(j.get("salary"), sym_l)))
-                pay_l = f", {sym_l}{lm_l[len(lm_l) // 4] / 1000:,.0f}K–{sym_l}{lm_l[3 * len(lm_l) // 4] / 1000:,.0f}K" if len(lm_l) >= 10 else ""
-            # 24 Nov 2026: the same for every other place outside the US: "Jobs in India (17,483 open, $110K–$210K)" and "Jobs in Europe
-            # ($85K–$185K)" quoted the few postings that state US dollars, which is not what people there are paid. No local range: the month.
-            elif m_pl and "$" not in title and PLACE_CODE.get(m_pl.group(1), "") != "US":
-                pay_l = ""
+            pay_l = title_pay(path, title, jobs)
             page(path, re.sub(r"\((\d[\d,]*) open\)", lambda m_: f"({m_.group(1)} open{pay_l or ', ' + MONTH_YEAR})", title, count=1), desc, body, head=ld + faq_ld, cls="lp")
         else: page(f"{path}{n}/", f"{title.rsplit(' | ', 1)[0]}, page {n} | {SITE}", f"Page {n} of {pages}. {desc}", body, head=ld, sitemap=False, cls="lp")
 
@@ -3345,6 +3361,9 @@ def intro_for(jobs, pre="", post="", hub=False, row=False):
     if not jobs: return ""
     r = sum(j["remote"] for j in jobs)
     names = [c for c, _ in Counter(j["company"] for j in jobs).most_common(5)]
+    # the sentence starts with the first name: "the Agency, Jet Direct Mortgage … have the most" (26 Nov 2026, the Florida marketing
+    # automation list); "eBay" or "iCIMS" keep their own spelling
+    if names and names[0].startswith("the "): names[0] = "The" + names[0][3:]
     top = ", ".join(names)
     if hub and len(jobs) >= 20 and len(names) >= 3:
         # one rule for every list (17 Nov 2026): the first sentence says how many are open, in words that search and AI assistants
@@ -5042,12 +5061,13 @@ def main():
             seen_.add(j["id"])
             for s_ in job_roles.get(j["id"], ()): out_[s_].append(j)
         return out_
+    ROLE_ROWS_SKIP = {"analyst", "coordinator", "director", "executive", "growth", "intern", "staff-engineer", "founding-team", "bilingual", "government", "energy", "payments", "consulting", "operators"}
     def role_rows(js, k_min=5):
         """[(count, role slug, role name, median advertised pay or 0, the jobs)] for the kinds of work inside a set of jobs, largest first."""
         kind_ = by_kind(js)
         out_ = []
         for s_, (nm_, rj_) in by_role.items():
-            if s_ in ("analyst", "coordinator", "director", "executive", "growth", "intern", "staff-engineer", "founding-team", "bilingual", "government", "energy", "payments", "consulting", "operators"): continue
+            if s_ in ROLE_ROWS_SKIP: continue
             hit_ = kind_.get(s_, [])
             if len(hit_) >= k_min:
                 pay_ = [(j["usd"][0] + j["usd"][1]) / 2 for j in hit_ if j["usd"]]
@@ -5187,19 +5207,120 @@ def main():
     # and /locations/lithuania/entry-level/ to searchers there. Their titles read "Entry-level jobs in Dublin (73 open, November 2026)"
     # beside "Now Hiring: 1,258,000 Entry Level Jobs | Indeed" and "Entry Level Jobs Near Me (New & Hiring Now)" (Bing, 26 Nov 2026).
     # The words people type, the count and what is new this week; the line under it names the employers and the kinds of entry roles.
-    COMBO_DESC = {}
+    #
+    # Search Console, 19-24 Nov 2026 (read 26 Nov: 30.6K impressions, 100 clicks in all): the same happens on every kind of place list.
+    # Generic searches meet the list of the searcher's own country at 4 to 9 and nobody clicks: "entry level jobs" 1,144 impressions at
+    # 5.8 (Dublin 797, Lithuania 323), "virtual assistant jobs" 481 at 7.5 and "work from home jobs" 154 at 8.6 (/locations/bulgaria/
+    # remote/), "marketing jobs" 201 at 8.0 (Bulgaria 173, Turkey, Sweden, France), "graphic design jobs" 150 at 8.3 (/locations/turkey/
+    # design/), "sales jobs" 24 at 8.6 (Amsterdam, Colombia), "marketing automation jobs" 60 at 3.8 (Florida 57 at 3.3, California 37 at
+    # 4.7). The lines under those titles ran 120 characters and named nothing a click would give. One form for every place list now:
+    # the title in the words people type, "Jobs" written as the results around it write it, with the count and the pay range when the
+    # list has one, else the jobs new this week; a line of up to 160 characters with the count, the employers, the week's new jobs, the
+    # pay and what a click gives; a lead that says which kinds of work are open; a question in the searcher's own words.
+    COMBO_DESC, COMBO_LEAD = {}, {}
     wk_e = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
+    and_ = lambda xs_: xs_[0] if len(xs_) == 1 else ", ".join(xs_[:-1]) + " and " + xs_[-1]
+    SMALL_W = {"and", "or", "of", "for", "in", "the", "to", "with", "on", "a", "an", "at", "by", "from"}
+    def words_up(s_):
+        """"Marketing automation" -> "Marketing Automation"; "dbt", "iOS", "C++" and "Part-time" stay as they are."""
+        ws_ = s_.split(" ")
+        if not ws_ or not ws_[0][:1].isupper(): return s_
+        return " ".join(w_[:1].upper() + w_[1:] if i_ and w_.isalpha() and w_.islower() and w_ not in SMALL_W else w_ for i_, w_ in enumerate(ws_))
+    ROLE_ORDER = {s_: i_ for i_, s_ in enumerate(by_role)}
+    def kinds_of(js_, k_min=2, n_=3):
+        """The kinds of work most open in a list, with their counts, and whether they are kinds of work (True) or job titles (False):
+        ("software engineer (12), accountant (5) and data analyst (4)", True). Counted from by_kind, so a place list of 30 jobs costs
+        30 steps, not one per kind of work on the site (there are thousands of place lists)."""
+        rr_ = sorted(((len(v_), s_) for s_, v_ in by_kind(js_).items() if len(v_) >= k_min and s_ not in ROLE_ROWS_SKIP), key=lambda x_: (-x_[0], ROLE_ORDER[x_[1]]))[:n_]
+        if len(rr_) >= 2: return and_([f"{rlow(by_role[s_][0])} ({c_:,})" for c_, s_ in rr_]), True
+        tt_ = [(k_, t_) for t_, k_ in Counter(short_title(j["title"]) for j in js_).most_common(n_ + 2) if k_ >= k_min and 3 <= len(t_) <= 50][:n_]
+        return (and_([f"{t_} ({c_:,})" for c_, t_ in tt_]), False) if len(tt_) >= 2 else ("", False)
+    def place_title(path_t, what_t, js_t, new_t):
+        """"Marketing Jobs in Bulgaria: 23 Open, 4 New This Week"; a list whose title shows a pay range keeps "(43 open)", which listing()
+        fills with the range. Never past 65 characters, where the numbers would be cut off."""
+        if title_pay(path_t, "", js_t) or not new_t: return f"{what_t} ({len(js_t):,} open) | {SITE}"
+        for t_ in (f"{what_t}: {len(js_t):,} Open, {new_t:,} New This Week", f"{what_t}: {len(js_t):,} Open, {new_t:,} New"):
+            if len(t_) <= 65: return t_ + f" | {SITE}"
+        return f"{what_t} ({len(js_t):,} open) | {SITE}"
+    def place_desc_l(lab_d, js_d, path_d, new_d, extra_d=""):
+        """The line under the title: what was searched, the count, three employers, the week's new jobs, then the pay or the extra
+        sentence, then what a click gives, as long as it fits in 160 characters."""
+        top_ = [c_ for c_, _ in Counter(j["company"] for j in js_d if j.get("company")).most_common(3)]
+        head_ = f"{lab_d}: {len(js_d):,} open now" + (f" at {and_(top_)}" if top_ else "") + (f", {new_d:,} posted this week" if new_d else "") + "."
+        pay_ = title_pay(path_d, "", js_d)
+        extra_d = extra_d or (f" Most pay {pay_[2:]}{'' if 'hour' in pay_ else ' a year'}." if pay_ else "")
+        for x_ in (extra_d, ""):
+            for tail_ in (f" Each one links to the employer’s own application and is checked {EVERY}.", f" Apply on the employer’s own site, checked {EVERY}.", f" Checked {EVERY}."):
+                if len(head_ + x_ + tail_) <= 160: return head_ + x_ + tail_
+        return head_ + extra_d
+    GRAPHIC_RX = re.compile(r"graphic|visual design|brand design|web design|presentation design|motion design|illustrat|art director|digital design|marketing design", re.I)
+    UX_RX = re.compile(r"\bux\b|\bui\b|user experience|user interface|product design|interaction design", re.I)
+    ASSIST_RX = re.compile(r"virtual assistant|(?:executive|administrative|personal|admin|office|team|legal|sales|marketing) assistant|data entry|secretar|administrative (?:coordinator|specialist|support)", re.I)
     for path_e, h1_e, js_e, *_r in combos:
-        if not re.fullmatch(r"locations/[^/]+/entry-level/", path_e): continue
-        nm_e = h1_e[len("Entry-level jobs in "):]
+        m_e = re.fullmatch(r"locations/([^/]+)/(.+)/", path_e)
+        if not m_e or not js_e or " in " not in h1_e: continue
+        kind_e, nm_e = m_e.group(2), h1_e.rsplit(" in ", 1)[1]          # rsplit: a skill can hold " in " ("Sign in with Apple"), a place name does not
         new_e = sum(1 for j in js_e if (j["posted"] or "") >= wk_e)
-        int_e = sum(1 for j in js_e if j["level"] == "Intern")
-        if new_e: COMBO_TITLE[path_e] = f"Entry Level Jobs in {nm_e}: {len(js_e):,} Open, {new_e:,} New This Week | {SITE}"
-        else: COMBO_TITLE[path_e] = f"Entry Level Jobs in {nm_e} ({len(js_e):,} open) | {SITE}"
-        top_e = [c_ for c_, _ in Counter(j["company"] for j in js_e).most_common(3)]
-        COMBO_DESC[path_e] = (f"Entry level jobs in {nm_e}: {len(js_e):,} open now at " + (top_e[0] if len(top_e) == 1 else ", ".join(top_e[:-1]) + " and " + top_e[-1])
-                              + (f", {new_e:,} posted in the last 7 days." if new_e else ".")
-                              + (f" {int_e:,} internships and {len(js_e) - int_e:,} junior and graduate roles." if int_e and len(js_e) > int_e else " Junior, graduate and trainee roles."))
+        kinds_e, is_kind_e = kinds_of(js_e)
+        lead_e = (f" The kinds of work with the most openings: {kinds_e}." if is_kind_e else f" The titles open most: {kinds_e}." if kinds_e else "")
+        if kind_e == "entry-level":
+            # "Entry-level jobs in Dublin (73 open, November 2026)" stood beside "Now Hiring: 1,258,000 Entry Level Jobs | Indeed" and
+            # "Entry Level Jobs Near Me (New & Hiring Now)" (Bing, 26 Nov 2026): the words people type, the count and the week's new jobs
+            int_e = sum(1 for j in js_e if j["level"] == "Intern")
+            COMBO_TITLE[path_e] = place_title(path_e, f"Entry Level Jobs in {nm_e}", js_e, new_e) if new_e else f"Entry Level Jobs in {nm_e} ({len(js_e):,} open) | {SITE}"
+            split_e = (f" {int_e:,} internships, {len(js_e) - int_e:,} junior and graduate roles." if int_e and len(js_e) > int_e else
+                       " All internships." if int_e else " Junior, graduate and trainee roles.")
+            COMBO_DESC[path_e] = place_desc_l(f"Entry level jobs in {nm_e}", js_e, path_e, new_e, split_e)
+            if kinds_e:
+                COMBO_QA[path_e] = list(COMBO_QA.get(path_e, ())) + [(
+                    f"What entry level jobs are there in {nm_e}?",
+                    f"Of the {len(js_e):,} open entry-level jobs in {nm_e} today, the kinds of work with the most openings are {kinds_e}. "
+                    + (f"{int_e:,} are internships and {len(js_e) - int_e:,} junior or graduate roles. " if int_e and len(js_e) > int_e else "")
+                    + (f"{new_e:,} {'was' if new_e == 1 else 'were'} posted in the last 7 days. " if new_e else "")
+                    + "Each one comes from the employer’s own careers page, so applying takes you straight to the employer.")]
+        elif kind_e == "remote":
+            COMBO_TITLE[path_e] = place_title(path_e, f"Remote & Work From Home Jobs in {nm_e}", js_e, new_e)
+            COMBO_DESC[path_e] = place_desc_l(f"Remote and work-from-home jobs in {nm_e}", js_e, path_e, new_e)
+            # "virtual assistant jobs" (481 impressions at 7.5 on the Bulgarian remote list): answered from the list itself, never guessed
+            va_ = [j for j in js_e if ASSIST_RX.search(j["title"])]
+            cs_ = sum(1 for j in js_e if j["cat"] == "support")
+            va_all = next((p_ for p_ in ("roles/administrative-assistant/remote/", "roles/executive-assistant/remote/") if p_ in COMBO_PATHS), "")
+            if va_ or cs_: COMBO_QA[path_e] = list(COMBO_QA.get(path_e, ())) + [(
+                f"Are there virtual assistant jobs in {nm_e} you can do from home?",
+                (f"Yes: {len(va_):,} of the {len(js_e):,} remote jobs in {nm_e} today are assistant or admin roles, such as "
+                 + and_(list(dict.fromkeys(short_title(j["title"]) for j in va_))[:3]) + "." if va_ else
+                 f"Not today: none of the {len(js_e):,} remote jobs in {nm_e} is a virtual assistant, executive assistant or admin role.")
+                + (f" There {'is' if cs_ == 1 else 'are'} also {cs_:,} remote customer support {'role' if cs_ == 1 else 'roles'} here." if cs_ else "")
+                + (" The remote administrative assistant list covers every country." if va_all else ""))]
+            if va_all and not va_:
+                COMBO_AFTER[path_e] = COMBO_AFTER.get(path_e, "") + f'<p class="note">Looking for virtual assistant or admin work? <a href="{P}/{va_all}">Remote administrative assistant jobs in every country</a>.</p>'
+        elif kind_e in CAT or kind_e.startswith("skills/") or kind_e in ("part-time", "internships", "contract"):
+            what_e = words_up(h1_e.rsplit(" in ", 1)[0]).replace(" jobs", " Jobs")
+            lab_e = h1_e
+            extra_e = ""
+            if kind_e == "design":
+                # "graphic design jobs" (150 impressions at 8.3 on /locations/turkey/design/): the list's own graphic and UX roles, counted
+                g_ = [j for j in js_e if GRAPHIC_RX.search(j["title"])]
+                u_ = [j for j in js_e if UX_RX.search(j["title"]) and not GRAPHIC_RX.search(j["title"])]
+                if g_ and u_: what_e = "Graphic & UX Design Jobs"
+                if g_ or u_:
+                    extra_e = f" {len(g_):,} graphic, brand or visual design and {len(u_):,} UX or product design roles."
+                    lead_e = f" {len(g_):,} are graphic, brand or visual design roles and {len(u_):,} UX, UI or product design roles." + lead_e
+                COMBO_QA[path_e] = list(COMBO_QA.get(path_e, ())) + [(
+                    f"Are there graphic design jobs in {nm_e}?",
+                    (f"Yes: {len(g_):,} of the {len(js_e):,} open design jobs in {nm_e} today are graphic, brand or visual design roles, such as "
+                     + and_(list(dict.fromkeys(short_title(j["title"]) for j in g_))[:3]) + "." if g_ else
+                     f"Not by that name today: none of the {len(js_e):,} open design jobs in {nm_e} has graphic, brand or visual design in its title.")
+                    + (f" {len(u_):,} more are UX, UI or product design roles." if u_ else ""))]
+            elif kind_e in CAT and kinds_e:
+                COMBO_QA[path_e] = list(COMBO_QA.get(path_e, ())) + [(
+                    f"What {h1_e.rsplit(' jobs in ', 1)[0].lower() if not h1_e[:2].isupper() else h1_e.rsplit(' jobs in ', 1)[0]} jobs are open in {nm_e}?",
+                    f"The kinds of work with the most openings among the {len(js_e):,} in {nm_e} today: {kinds_e}."
+                    + (f" {new_e:,} {'was' if new_e == 1 else 'were'} posted in the last 7 days." if new_e else ""))]
+            COMBO_TITLE[path_e] = place_title(path_e, f"{what_e} in {nm_e}", js_e, new_e)
+            COMBO_DESC[path_e] = place_desc_l(lab_e, js_e, path_e, new_e, extra_e)
+        else: continue
+        COMBO_LEAD[path_e] = e(lead_e)
     # 26 Nov 2026, ChatGPT (temporary chat, search on) "finance jobs in Atlanta GA: who is hiring and what they pay": its first figures are
     # this site's /locations/atlanta/finance/ (216 open, $125K median, 116 companies), then pay by job title from single postings on
     # Indeed, Glassdoor and Haystack ("Financial analyst $65K–$100K", "FP&A manager $139K–$208K"). The same from the postings here: the
@@ -5236,8 +5357,9 @@ def main():
         # jobs" 58 impressions and "virtual assistant jobs" 119 at 8-9 on /locations/bulgaria/remote/): its title carries both, as /remote/ does
         wfh_ = re.fullmatch(r"locations/[^/]+/remote/", path) and h1.startswith("Remote jobs in ")
         listing(path, h1, COMBO_TITLE.get(path) or (f"Remote & Work From Home Jobs in {h1[len('Remote jobs in '):]} ({len(js):,} open) | {SITE}" if wfh_ else f"{h1} ({len(js):,} open) | {SITE}"),
-                COMBO_DESC.get(path) or f"{roles(len(js), 'open role')}: {h1} at companies. Updated hourly.",
-                js, intro_for(js, pre, post, hub=row_), trail=trail, per=50, max_pages=3, more=qs, faq=lab_, stats=row_, pics=gl_, hub=tl_, list_title=lt_ if len(js) >= 20 else "",
+                COMBO_DESC.get(path) or (place_desc_l(h1, js, path, 0 if " posted in the last " in h1 else sum(1 for j in js if (j["posted"] or "") >= wk_e)) if js
+                                         else f"{roles(len(js), 'open role')}: {h1} at companies. Updated hourly."),
+                js, intro_for(js, pre, post, hub=row_) + COMBO_LEAD.get(path, ""), trail=trail, per=50, max_pages=3, more=qs, faq=lab_, stats=row_, pics=gl_, hub=tl_, list_title=lt_ if len(js) >= 20 else "",
                 after=COMBO_AFTER.get(path, ""), faq_extra=COMBO_QA.get(path, ()))
 
     lap('Listings')
@@ -5494,6 +5616,14 @@ def main():
                              + '</table></div><p class="note">Median of the midpoints of advertised yearly US-dollar ranges; a kind of work needs 5 entry-level postings with pay.</p>')
     if len(nd_e) >= 3:
         ent_after += section("Entry-level jobs with no degree required", f"<p>{len(nd_e):,} of these postings say no degree is required. The newest:</p>" + job_links(nd_e))
+    # Search Console, 19-24 Nov 2026: Google answers "entry level jobs" with the place lists (Dublin 797 impressions, Lithuania 323, at
+    # 5.5 to 5.9) and this page linked to none of them. The place lists by size, so the hub leads to the pages searchers are shown.
+    ent_pl = sorted(((len(js_), p_, h_) for p_, h_, js_, *_ in combos if re.fullmatch(r"locations/[^/]+/entry-level/", p_) and h_.startswith("Entry-level jobs in ")),
+                    key=lambda x_: (-x_[0], x_[1]))
+    if len(ent_pl) >= 3:
+        ent_after += section("Entry-level jobs [[by city and country]]", '<p class="rel chips">'
+                             + "".join(f'<a href="{P}/{p_}">{e(h_[len("Entry-level jobs in "):])} <b>{c_:,}</b></a>' for c_, p_, h_ in ent_pl[:48]) + "</p>",
+                             sid="places", label="By place")
     ENTRY_SITES = ("handshake", "snagajob", "indeed", "linkedin-jobs", "ziprecruiter", "usajobs", "governmentjobs", "craigslist")
     ent_after += vs_tiles("Other sites for a first job, [[compared]]", ENTRY_SITES, "Students, hourly work, government and the large general sites, each beside this one, from its own pages.")
     ent_after += guide_row([("entry-level-jobs", "Where beginners are hired"), ("how-to-get-a-job-with-no-experience", "A job with no experience"), ("how-to-find-a-job", "How to find a job"),
@@ -12090,7 +12220,25 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     paid_ = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in active if j["usd"])
     perk_n = Counter(x for j in active for x in j.get("perks", []))
     et_n = Counter(j.get("etype", "") for j in active)
+    # Search Console, 19-24 Nov 2026 (read 26 Nov): "rolling basis meaning" 184 impressions at 7.7 and "rolling basis" 147 at 7.7 (2 clicks
+    # on 629 impressions of the page), "independent contractor" 172 at 9.6, "new grad meaning" 23 at 6.1, all under a line that only
+    # defined the word. The count of today's postings that use it goes into the card and the line, as a fact no dictionary has.
+    g_txt = lambda j: (j.get("excerpt") or "") + " " + re.sub(r"<[^>]+>", " ", j.get("desc") or "")
+    g_roll = sum(1 for j in descs_ if "rolling basis" in g_txt(j).lower())
+    g_grad = sum(1 for j in active if re.search(r"new grad|new graduate|recent graduate|\bgraduate (?:program|programme|scheme|trainee|engineer|analyst)", j["title"], re.I))
+    g_1099 = sum(1 for j in descs_ if re.search(r"\b1099\b|independent contractor", g_txt(j), re.I))
+    GDESC_FIG = {
+        "Rolling basis": (f"Rolling basis meaning: applications are read as they arrive and the job can close before any deadline. {g_roll:,} open postings here say so today: apply early."
+                          if g_roll >= 5 else ""),
+        "New grad": (f"New grad meaning: a role for people who finished their degree within about a year. {g_grad:,} open jobs here say new grad or graduate in the title today."
+                     if g_grad >= 5 else ""),
+        "Independent contractor (1099)": (f"Independent contractor (1099): paid per project, no tax withheld, no benefits. {g_1099:,} open postings here mention 1099 or independent-contractor work."
+                                          if g_1099 >= 5 else ""),
+    }
     gfig = {   # a figure counted from today's postings, where the term has one
+        "Rolling basis": (f"{g_roll:,} of the {len(descs_):,} open postings here with a full text say applications are reviewed on a rolling basis." if g_roll >= 5 else ""),
+        "New grad": (f"{g_grad:,} of today’s open jobs say new grad, new graduate, recent graduate or graduate program in the title." if g_grad >= 5 else ""),
+        "Independent contractor (1099)": (f"{g_1099:,} of the {len(descs_):,} open postings here with a full text mention 1099 or independent-contractor work." if g_1099 >= 5 else ""),
         "Remote": f"{sum(1 for j in active if j['remote']):,} of the {n_act:,} open jobs here are remote ({pc_(sum(1 for j in active if j['remote']), n_act)}%).",
         # Google's "Is hybrid 2 or 3 days a week?" (People also ask, 24 Nov 2026): the office days today's postings state (stage 10 above)
         "Hybrid": f"{sum(1 for j in active if j.get('hybrid')):,} of the {n_act:,} open jobs here are hybrid."
@@ -12205,6 +12353,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
             elif cut_ > 60: gd_ = gd_[:cut_].rstrip(" ,;:") + "."
         for add_ in (gfig.get(term, ""), tip):
             if add_ and add_ not in gd_ and len(gd_) + 1 + len(add_) <= 160: gd_ = gd_.rstrip() + " " + add_
+        if GDESC_FIG.get(term) and len(GDESC_FIG[term]) <= 160: gd_ = GDESC_FIG[term]
         if len(gd_) < 125:
             for fill_ in (" Explained in plain English, with what to do about it in a job search.", " Its plain-English meaning and what to do about it.", " What it means and what to do."):
                 if len(gd_) + len(fill_) <= 160: gd_ = gd_.rstrip() + fill_; break
