@@ -558,6 +558,12 @@ INDEX_MIN = 20                 # jobs a narrow list needs to be offered to searc
 INDEX_MIN_CO = 5               # open jobs a company page needs
 NOINDEX_FOLLOW = '<meta name="robots" content="noindex,follow">'
 THIN = {}                      # page -> its open jobs, for the pages under the line: kept, but noindex,follow and out of the sitemap
+# A page Search Console has shown in Google's results is never put under the line, whatever its count (owner, 27 Nov 2026: "не уменьшай
+# seo"; the SEO teardown of 26 Nov: judge by demand, not by count, and "<company> careers" is the easiest search a new site can win).
+# search_demand.json lists them, from SERP_AI_CHECK.md; DEMAND_KEPT notes the ones that would have been under it.
+try: DEMAND = frozenset(json.loads((ROOT / "search_demand.json").read_text(encoding="utf-8"))["pages"])
+except (OSError, ValueError, KeyError): DEMAND = frozenset()
+DEMAND_KEPT = {}               # page -> its open jobs: under the line by count, offered to search engines for its impressions
 PAGE_MOD = {}                  # page -> the day its list last changed: the newest job on it (first seen), or the newest closing on a list of closed jobs
 DUP_PAGES = {}                 # page -> the page with the same jobs that keeps the search (it names that page as canonical and leaves the sitemap)
 EVERY_CUT = []                 # (title of an every_list block, links kept, links to lists under the line left out), for the build's report
@@ -3148,6 +3154,7 @@ def listing(path, h1, title, desc, jobs, intro="", trail=(), per=100, extra="", 
     the sitemap (THIN). None: always offered."""
     jobs = order(jobs)
     thin_ = index_min is not None and len(jobs) < index_min
+    if thin_ and path in DEMAND: thin_, DEMAND_KEPT[path] = False, len(jobs)
     if thin_: THIN[path] = len(jobs)
     # the sitemap's lastmod: the day the list last gained a job (a list of closed jobs: the newest closing), not the day of the build
     mod_ = max(((j.get("first_seen") if j.get("active") else j.get("closed")) or "")[:10] for j in jobs) if jobs else ""
@@ -3839,6 +3846,14 @@ def same_text_jobs(jobs):
     return n_
 
 
+def job_in_sitemap(j):
+    """Is the job's page listed in the sitemaps? Open jobs only (27 Nov 2026, the SEO teardown: one job page in five in the sitemaps was a
+    closed job). A closed job's page stays as it was, open to search engines and linked from its company page and the archive: it shows
+    "Closed" and open jobs like it, without the job markup; only the sitemaps, the list of what we ask search engines to read, leave it
+    out. A Telegram post and a word-for-word repeat of another job page (same_text_jobs) are left out as before."""
+    return bool(j.get("active")) and job_indexable(j) and not j.get("dup_of")
+
+
 def job_indexable(j):
     """Every job page goes to search engines: open ones, and closed ones as an archive (the owner, 13 Nov 2026: "every job must be in
     Google, every one"; "keep closed jobs, there may be search traffic on them"). Only posts read from Telegram channels stay out.
@@ -4150,7 +4165,7 @@ def job_page(j, active_by_cat):
     ok_ = job_indexable(j)
     # a repeat of an earlier posting (same_text_jobs) stays for visitors and names the first one as canonical, out of the sitemap
     dup_ = j.get("dup_of") if ok_ and j.get("active") else None      # a job live.py saw close since the build is a closed page of its own
-    page(f"job/{j['slug']}/", title, desc, body, head + ("" if ok_ else '<meta name="robots" content="noindex">'), sitemap=ok_ and not dup_, compact=True,
+    page(f"job/{j['slug']}/", title, desc, body, head + ("" if ok_ else '<meta name="robots" content="noindex">'), sitemap=job_in_sitemap(j), compact=True,
          canon=f"job/{dup_}/" if dup_ else None)
 
 
@@ -7599,7 +7614,7 @@ def main():
         size = records.save(ROOT / "data" / "jobs.db", jobs, sys.modules[__name__])
         print(f"job records: {len(jobs):,} in data/jobs.db, {size / 2**20:.0f} MiB")
     if rec_mode == "1":
-        URLS.extend(f"job/{j['slug']}/" for j in jobs if job_indexable(j) and not j.get("dup_of"))        # the pages are not files, but they are in the sitemap all the same (not Telegram posts, not repeats)
+        URLS.extend(f"job/{j['slug']}/" for j in jobs if job_in_sitemap(j))        # the pages are not files, but they are in the sitemap all the same (open jobs only: not closed ones, Telegram posts or repeats)
     else:
         for j in jobs: job_page(j, by_cat)
     # Sections review, batch 5: the page was a heading, one line and a list. Under the line now stand the archive's own figures
@@ -15525,6 +15540,32 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
           + "".join(f"<sitemap><loc>{FULL}/{name}</loc><lastmod>{max([job_mod.get(u, TODAY) for u in urls] or [TODAY])}</lastmod></sitemap>" for name, urls in parts if urls)
           + "</sitemapindex>", sitemap=False)
     print(f"sitemaps: {len(core_urls):,} main pages, {len(page_urls):,} other pages, {len(job_urls):,} job pages")
+    n_closed_ = sum(1 for j in jobs if not j.get("active") and job_indexable(j))
+    print(f"closed jobs left out of the sitemaps (their pages stay, open to search engines): {n_closed_:,}")
+    print(f"lists and company pages under the line by count but offered for their Search Console impressions (search_demand.json): {len(DEMAND_KEPT):,}"
+          + (": " + ", ".join(f"/{k_} ({v_})" for k_, v_ in sorted(DEMAND_KEPT.items())) if DEMAND_KEPT else ""))
+    # What the owner may decide next (27 Nov 2026: measured here, nothing of it applied): how many job pages of the sitemaps are stale
+    # (talent pools, posted 90+ days ago), how many repeat a role of the same employer (search_engine.role_key) in the same area or
+    # anywhere, and how old the open postings are.
+    in_map_ = [j for j in jobs if job_in_sitemap(j)]
+    city_ = {s_ for _, s_, r_ in PLACES if isinstance(r_, tuple) and s_ not in ("california", "texas", "florida")}
+    def area_(j):
+        pl_ = [x for x in (j.get("places") or []) if x in city_]
+        if pl_: return pl_[0]
+        st_ = sorted(part_states(j.get("location") or "")) if j.get("location") else []
+        return ("us-" + "-".join(st_)) if st_ else "-".join(sorted({c_ for c_, _ in countries_of(j.get("location") or "")})) or ("remote" if j.get("remote") else "")
+    fresh_ = [j for j in in_map_ if not stale(j)]
+    by_role_ = len({(j["company"], j.get("rkey") or "") for j in fresh_})
+    by_area_ = len({(j["company"], j.get("rkey") or "", area_(j)) for j in fresh_})
+    ages_ = Counter()
+    for j in in_map_:
+        try: d_ = (datetime.date.fromisoformat(TODAY) - datetime.date.fromisoformat((j.get("posted") or j.get("first_seen") or "")[:10])).days
+        except ValueError: d_ = None
+        ages_[next((k_ for k_ in (7, 14, 30, 90) if d_ is not None and d_ <= k_), "older or no date")] += 1
+    print(f"proposal, not applied: of {len(in_map_):,} job pages in the sitemaps {len(in_map_) - len(fresh_):,} are stale (talent pools, posted 90+ days ago); "
+          f"of the {len(fresh_):,} fresh ones {len(fresh_) - by_area_:,} repeat a role of the same employer in the same area and {len(fresh_) - by_role_:,} anywhere; "
+          f"posted within 7 days {ages_[7]:,}, 8-14 {ages_[14]:,}, 15-30 {ages_[30]:,}, 31-90 {ages_[90]:,}, older or no date {ages_['older or no date']:,}; "
+          f"lists and company pages under the line (noindex,follow since 26 Nov) {len(THIN):,}")
     ai_bots = ["GPTBot", "OAI-SearchBot", "ChatGPT-User", "ClaudeBot", "Claude-SearchBot", "Claude-User", "PerplexityBot", "Perplexity-User", "Google-Extended",
                "Applebot-Extended", "Amazonbot", "meta-externalagent", "CCBot", "DuckAssistBot", "MistralAI-User", "cohere-ai"]
     if MAIL.get("security"):

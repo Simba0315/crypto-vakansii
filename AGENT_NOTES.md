@@ -241,6 +241,12 @@ day (or `changed`, which collect.py sets when the posting's text changes or it r
 first day of its newest job (`PAGE_MOD`), any other page the day its text last changed, figures aside (`page_dates()`, the file
 data/lastmod.json, carried between runs in the Actions cache). check.py fails when a sitemap lists a noindex or canonicalised page,
 a missing page or an address twice.
+Since 27 Nov 2026 (owner: «не уменьшай seo», so nothing open leaves search): the sitemaps list open jobs only (`job_in_sitemap()`); a
+closed job's page stays as it was, open to search engines, linked from its company page and /archive/, showing "Closed" and open jobs
+like it. A page Search Console has shown is never under the line whatever its count: `search_demand.json` (from SERP_AI_CHECK.md; add
+pages, never remove), and the build prints which pages it kept that way. check.py reads every job address of the sitemaps (the record
+on a site built from records, the page's head otherwise): an open job, no noindex, its own canonical. The build also prints, as a
+proposal only, the stale job pages, the repeats of one role per employer and area, and the ages of the postings in the sitemaps.
 
 ## The owner's taste (screenshots of 14 Nov 2026 — follow it in every new block)
 

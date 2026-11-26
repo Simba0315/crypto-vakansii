@@ -189,6 +189,27 @@ if (SITE / "sitemap.xml").is_file():
             if rel_ in not_for_map: fails["sitemaps"]["lists a noindex or canonicalised page"] += 1
             elif not rel_.startswith("job/") and not exists(f"{P}/{rel_}"): fails["sitemaps"]["lists a page that does not exist"] += 1
     if any(k_ > 1 for k_ in listed_.values()): fails["sitemaps"]["lists an address twice"] += sum(1 for k_ in listed_.values() if k_ > 1)
+    # every job page the sitemaps list, not only the sample (27 Nov 2026): an open job, offered to search engines (no noindex), naming itself
+    # as canonical. Closed jobs left the sitemaps that day; their pages stay. On a site built from records the record says it (open, a
+    # Telegram post, a repeat of another page), read by SQLite without building 800,000 pages; on a site of files the page's own head.
+    job_listed_ = [r_[4:].rstrip("/") for r_ in listed_ if r_.startswith("job/")]
+    counts["sitemap job pages"] = len(job_listed_)
+    if STORE:
+        with STORE.reading() as con_:
+            facts_ = {sl_: (a_, t_, d_) for sl_, a_, t_, d_ in con_.execute("SELECT slug, active, json_extract(rec, '$.tg'), json_extract(rec, '$.dup_of') FROM jobs")}
+        for sl_ in job_listed_:
+            a_, t_, d_ = facts_.get(sl_, (None, None, None))
+            if a_ is None: fails["sitemaps"]["lists a job with no record"] += 1
+            elif not a_: fails["sitemaps"]["lists a closed job"] += 1
+            elif t_ or d_: fails["sitemaps"]["lists a noindex or canonicalised job page"] += 1
+    else:
+        for sl_ in job_listed_:
+            f_ = SITE / "job" / sl_ / "index.html"
+            if not f_.is_file(): fails["sitemaps"]["lists a page that does not exist"] += 1; continue
+            with f_.open(encoding="utf-8", errors="replace") as fh_: h_ = fh_.read(12000)
+            c_ = re.search(r'<link rel="canonical" href="([^"]*)"', h_)
+            if re.search(r'<meta name="robots" content="[^"]*noindex', h_) or not c_ or c_.group(1) != f"{FULL}/job/{sl_}/": fails["sitemaps"]["lists a noindex or canonicalised job page"] += 1
+            elif re.search(r"<title>[^<]*\(closed\)", h_): fails["sitemaps"]["lists a closed job"] += 1
 # every script the pages load must parse (20 Nov 2026: a stray "//" in assets/site.js left every script of the live site dead)
 import shutil, subprocess                     # noqa: E402
 if shutil.which("node"):
