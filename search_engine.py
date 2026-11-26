@@ -92,6 +92,31 @@ def day_start(day):
         return 0
 
 
+HOURS = 2080              # working hours in a year: an hourly rate in the pay filter and in "Highest pay" (search page, "$20/h+")
+# The store, mall, cinema or town an employer appends to a title it posts at every address: "Seasonal Key Holder - Oak Park Mall" is the
+# role "Seasonal Key Holder" (data teardown, 26 Nov 2026: BoxLunch's 924 "Seasonal Sales Associate" postings stood as 16 rows on its
+# company page, one per mall). A tail that names the work ("Software Engineer - Backend", "Assistant Manager - Level 2") stays.
+ROLE_TAIL = re.compile(r"(?:\s[-–—|@]\s*|\s*[–—|@:,]\s*|\s+at\s+)((?:(?!\s[-–—|@]\s|[–—|@:,]).){2,80})$|\s*[\(\[]([^\)\]]{2,80})[\)\]]\s*(?:seasonal hire)?\s*$", re.I)
+PLACEISH = re.compile(r"\b(?:malls?|cent(?:er|re)|outlets?|plaza|village|galleria|square|commons|crossings?|marketplace|mills|promenade|pavilion|shops|shoppes|station|stores?|"
+                      r"cinemas?|theat(?:er|re)s?|hospital|campus|clinic|branch|downtown|airport|towne?|city|county|park|parkway|fashion|premium|place|pointe?|landing|"
+                      r"district|metro|lodge|resort|hotel|depot|terminal|warehouse|dc|location|#\s?\d+|\d{3,})\b", re.I)
+STATE_TAIL = re.compile(r"(?:^|,\s?|\s)(?:A[KLRZ]|C[AOT]|D[CE]|FL|GA|HI|I[ADLN]|K[SY]|LA|M[ADEINOST]|N[CDEHJMVY]|O[HKR]|PA|RI|S[CD]|T[NX]|UT|V[AT]|W[AIVY])\s*$")
+
+
+def role_key(title, place=""):
+    """The role a title names, for one row per role in the lists and the search: lower case, without a store, mall or town at its end."""
+    t, low_place = " ".join((title or "").split()), (place or "").lower()
+    for _ in range(3):
+        m = ROLE_TAIL.search(t)
+        if not m: break
+        tail = (m.group(1) or m.group(2) or "").strip()
+        city = low_place.split(",")[0].strip()
+        if not tail or not (PLACEISH.search(tail) or STATE_TAIL.search(tail) or (len(tail) > 3 and tail.lower() in low_place) or (len(city) > 3 and city in tail.lower())) \
+                or len(t[:m.start()].strip()) < 3: break
+        t = t[:m.start()].strip()
+    return re.sub(r"[^\w+#]+", " ", t.lower()).strip()
+
+
 def doc(rec, descr, codes=None, day=""):
     """The searchable part of one job record, and what a row of results shows. codes: place slug -> country code (build.PLACE_CODE),
     for the flags and "remote open to my country"; day: the build's day, which turns the order of the paid Premium jobs."""
@@ -112,7 +137,7 @@ def doc(rec, descr, codes=None, day=""):
             # the order of "Newest first", as build.order(): paid first, then the newest, a bumped job as new as its bump
             "t": int(rec.get("t") or 0), "ts": max(int(rec.get("ts") or 0) or day_start(posted), int(rec.get("bump") or 0)),
             "rot": hashlib.md5(f"{day}-{rec['slug']}".encode()).hexdigest() if premium else "",
-            "ckey": (company + SEP + title)[:2000]}      # the same role posted once per city is one row with "+N more locations"
+            "ckey": (company + SEP + (rec.get("rkey") or role_key(title, rec.get("location") or "")))[:2000]}      # the same role posted once per city is one row with "+N more locations"
 
 
 def index(db_path=ROOT / "data" / "jobs.db", keep=1):
@@ -475,7 +500,7 @@ def _test():
              "usd": [90000, 120000], "salary": "$90K - $120K", "tags": ["Care"], "posted": "2026-11-20", "places": ["texas", "united-states"],
              "perks": ["Relocation support"], "etype": "Full-time", "t": 1795000000, "ts": 1795000000, "bump": 0, "urgent": True, "premium": True},
             "", {"texas": "US", "united-states": "US"}, "2026-11-25")
-    assert d["exec"] and d["cc"] == ["US"] and d["pay_hi"] == 120000 and d["has_pay"] and d["ckey"] == "Acme" + SEP + "Director of Nursing" and len(d["rot"]) == 32
+    assert d["exec"] and d["cc"] == ["US"] and d["pay_hi"] == 120000 and d["has_pay"] and d["ckey"] == "Acme" + SEP + "director of nursing" and len(d["rot"]) == 32
     assert doc({"slug": "x", "title": "Engineer", "posted": "2026-11-20", "ts": 0}, "")["ts"] == day_start("2026-11-20") > 0
     r = row(d, 2, True, now=1795000000 + 3600)
     assert r[:4] == ["nurse-acme", "Director of Nursing", "Acme", "Austin, TX"] and r[4] == 1 | 64 and r[9] == 20261120 and r[10] == 120000

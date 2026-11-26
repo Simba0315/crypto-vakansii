@@ -169,10 +169,25 @@
     return true;
   }
   // collapse the same role posted once per city: returns rows, fills `extra` (slug -> number of extra postings)
+  // the role a title names, without the store, mall or town at its end (search_engine.role_key): "Seasonal Key Holder - Oak Park Mall"
+  var ROLE_TAIL = /(?:\s[-–—|@]\s*|\s*[–—|@:,]\s*|\s+at\s+)((?:(?!\s[-–—|@]\s|[–—|@:,]).){2,80})$|\s*[\(\[]([^\)\]]{2,80})[\)\]]\s*(?:seasonal hire)?\s*$/i;
+  var PLACEISH = /\b(?:malls?|cent(?:er|re)|outlets?|plaza|village|galleria|square|commons|crossings?|marketplace|mills|promenade|pavilion|shops|shoppes|station|stores?|cinemas?|theat(?:er|re)s?|hospital|campus|clinic|branch|downtown|airport|towne?|city|county|park|parkway|fashion|premium|place|pointe?|landing|district|metro|lodge|resort|hotel|depot|terminal|warehouse|dc|location|#\s?\d+|\d{3,})\b/i;
+  var STATE_TAIL = /(?:^|,\s?|\s)(?:A[KLRZ]|C[AOT]|D[CE]|FL|GA|HI|I[ADLN]|K[SY]|LA|M[ADEINOST]|N[CDEHJMVY]|O[HKR]|PA|RI|S[CD]|T[NX]|UT|V[AT]|W[AIVY])\s*$/;
+  function roleKey(title, place) {
+    var t = (title || '').replace(/\s+/g, ' ').trim(), lp = (place || '').toLowerCase(), city = lp.split(',')[0].trim();
+    for (var i = 0; i < 3; i++) {
+      var m = t.match(ROLE_TAIL);
+      if (!m) break;
+      var tail = (m[1] || m[2] || '').trim();
+      if (!tail || !(PLACEISH.test(tail) || STATE_TAIL.test(tail) || (tail.length > 3 && lp.indexOf(tail.toLowerCase()) >= 0) || (city.length > 3 && tail.toLowerCase().indexOf(city) >= 0)) || t.slice(0, m.index).trim().length < 3) break;
+      t = t.slice(0, m.index).trim();
+    }
+    return t.toLowerCase().replace(/[^\w+#]+/g, ' ').trim();
+  }
   function collapse(rows, extra) {
     var first = new Map(), out = [];
     rows.forEach(function (j) {
-      var k = j[2] + '|' + j[1];
+      var k = j[2] + '|' + roleKey(j[1], j[3]);
       if (first.has(k)) extra.set(first.get(k), (extra.get(first.get(k)) || 0) + 1);
       else { first.set(k, j[0]); out.push(j); }
     });

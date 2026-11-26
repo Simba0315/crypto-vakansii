@@ -2355,10 +2355,11 @@ def diverse_pairs(pairs, k, per=2):
 
 
 def collapse(jobs):
-    """The same role posted once per city becomes one row: [(job, number of extra postings)]."""
+    """The same role posted once per city becomes one row: [(job, number of extra postings)]. The role is the title without the store,
+    mall or town an employer appends at each address (search_engine.role_key, the search's own rows: "+N more locations")."""
     first, out = {}, []
     for j in jobs:
-        k = (j["company"], j["title"])
+        k = (j["company"], j.get("rkey") or search_engine.role_key(j["title"], j.get("location") or ""))
         if k in first: out[first[k]][1] += 1
         else:
             first[k] = len(out); out.append([j, 0])
@@ -4561,6 +4562,7 @@ def main():
         j["pool"] = bool(POOL_RX.search(j["title"]))
         j["salary"] = sane_pay(j["salary"])
         j["usd"] = usd_range(j["salary"])
+        j["rkey"] = search_engine.role_key(j["title"], j["location"])      # one row per role in every list (collapse)
         j["places"] = places_of(j["location"]) if j["active"] and j["location"] else []
         j["t"], j["ts"] = exact(j), stamp(j)
     active = [j for j in jobs if j["active"]]
@@ -5232,12 +5234,12 @@ def main():
             if 2 < len(c_) < 30 and not re.search(r"\d", c_): city_n[c_] += 1
     city_opts = "".join(f'<option value="{e(c_)}">' for c_, k_ in city_n.most_common(600) if k_ >= 3)
     # the first page of results, as the server would answer it with no filter: the newest 50 roles, each with its other postings
-    same_n, first_rows, seen_ = Counter((j["company"], j["title"]) for j in active), [], set()
+    same_n, first_rows, seen_ = Counter((j["company"], j["rkey"]) for j in active), [], set()      # one row per role, as the server's (role_key)
     for j in order(active):
         if stale(j): continue                   # the search leaves them out by default (old=1 brings them back); order() puts them last
-        if (j["company"], j["title"]) in seen_: continue
-        seen_.add((j["company"], j["title"]))
-        first_rows.append(search_engine.row(search_engine.doc(j, "", PLACE_CODE, TODAY), same_n[(j["company"], j["title"])] - 1, slugify(j["company"]) in LOGOS, NOW))
+        if (j["company"], j["rkey"]) in seen_: continue
+        seen_.add((j["company"], j["rkey"]))
+        first_rows.append(search_engine.row(search_engine.doc(j, "", PLACE_CODE, TODAY), same_n[(j["company"], j["rkey"])] - 1, slugify(j["company"]) in LOGOS, NOW))
         if len(first_rows) == search_engine.PAGE: break
     # v4 (design night, 25 Nov 2026): the trail, a label with today's count, the title and the box open the page as one framed panel
     search = ('<div class="khero shero"><div class="khero-t">' + crumbs(("All jobs", "")) + f'<p class="sec-label">{n:,} open jobs · checked {EVERY}</p>'
