@@ -5373,7 +5373,7 @@ table.adm-log td:last-child{min-width:280px}
   .tiles.hsc .tile{min-height:44px;padding:4px 6px 4px 16px;gap:10px}
   /* the box and the field choice each take the whole line (the choice was narrower than the box above it); the order is one row
      that scrolls sideways (A–Z stood alone on a second line) */
-  .cbar #cfilter,.cbar #cfield{flex:1 1 100%;max-width:none}
+  .cbar #cfilter,.cbar #cfield{flex:1 1 100%;max-width:none;min-width:0}      /* a choice is as wide as its longest field name unless told otherwise */
   .cbar .csort{flex:1 1 100%;flex-wrap:nowrap;margin:0 -20px;padding:0 20px;overflow-x:auto;scrollbar-width:none}
   .cbar .csort::-webkit-scrollbar{display:none}
   .cbar .csort .tab{flex:none}
