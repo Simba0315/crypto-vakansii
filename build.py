@@ -4210,6 +4210,72 @@ FIELD_FIX = [
     ("manufacturing", _r(r"\bmillwrights?\b|\bdetailers?\b|\bhandym[ae]n\b|\bdismantlers?\b|\bgeneral labou?r(?:ers?)?\b|\bline associates?\b|\bproduction line\b"), None, (OTHER[0],)),
     ("education", _r(r"\bclassroom (?:assistant|aide)s?\b|\bchild ?care (?:aides?|assistants?|workers?|teachers?)\b|\bstudent assistants?\b|\byouth development|\bearly years practitioner|"
                      r"\bnursery (?:practitioner|assistant)s?\b|\bdaycare\b"), None, (OTHER[0],)),
+    # Data teardown, 26 Nov 2026: "Other" held 123,004 of 784,846 open jobs (15.7%), and store sales associates stood in Sales, where the
+    # salary estimate was a sales executive's ($125K for a $17-an-hour job). The rules below come from 1,000 titles of "Other" read on the
+    # live site that day, the largest families first; each names the work, not the employer.
+    ("retail", _r(r"\bsales (?:associates?|assistants?|advisors?|floor)\b|\bathlete advisor\b|\bkey ?holders?\b"),
+     _r(r"\b(?:inside|enterprise|account|business|b2b|saas|software|insurance|financial|bank|banking|outside|territory|solutions|technical|regional|equity|institutional|fx|"
+        r"development|automotive|auto|car|vehicle|rv|boat|wholesale|counter|trade|industrial|commercial|medical|pharma|wealth|mortgage|real estate|travel|cruise|b2c|telesales|"
+        r"phone|call|remote|virtual|investment|loan|route|junk|solar|energy|security|media|advertising|digital|internet|wireless (?:b2b|business))\b"), ("sales-bd",)),
+    ("healthcare", _r(r"\bpatients?\b|\bsurgical\b|\bsurgery\b|\bmed(?:ical)? assistant|\bhca\b|\bunit secretary|\b(?:registration|admitting|unit|ward|medical records?) clerk|"
+                      r"\bregistrar\b.*\b(?:surgery|hospital|clinic|ambulatory|emergency|patient)\b|\bmental health\b|\bpmhnp\b|\bnuclear medicine|\borthodont|\blab aide\b|\brehab\b|"
+                      r"\bresidency program|\b(?:rn|nurse|clinical|behavioral|medical|social work|mental health|hospital|hospice|home health) case manag|\bcase manag\w*\b.*\b(?:dhs|okdhs|health|medical|clinical|behavioral|patient|hospice)\b|\bhospital\b|\bhealth ?care\b|\bvirtual care\b|\bclinic\b|\bmedic(?:al|ine)\b|\bwellness (?:coach|nurse|coordinator)|"
+                      r"\bhealth (?:educator|navigator|worker|aide|coach)|\bdietitian|\bnutrition(?:ist)?\b|\bdental\b|\bhome care\b|\bgroup home\b|\bresidential (?:counselor|aide|staff|"
+                      r"specialist|advisor|instructor)|\bdirect care\b|\becho(?:cardiograph\w*)?\b|\bsonograph|\bperfusion|\bsterile\b|\binterpreter\b.*\b(?:medical|health|clinic|hospital)\b"),
+     _r(r"\b(?:software|engineer|sales|account (?:executive|manager)|marketing|recruit|data scien)"), (OTHER[0],)),
+    ("education", _r(r"\bstudents?\b|\bschool\b|\bpreschool\b|\bkids? club\b|\bchild ?watch\b|\bhead start\b|\byouth\b|\bteen\b|\blibrar(?:y|ian|ians)\b|\bscholar\b|"
+                     r"\bprogram leader\b|\bsubstitute\b|\bmentor\b|\btutor|\bacademy\b|\bkid'?s'? club\b|\bcampus\b|\bafter[- ]?school\b|\bsite assistant\b|\bliteracy\b|\bcamp counsel+or\b|"
+                     r"\bsummer camp\b|\bresident assistant\b.*\b(?:college|university|campus|hall|housing)\b|\bregistrar\b|\badmissions?\b|\bdean\b|\bfaculty\b|\bprovost\b|\bcurator\b|"
+                     r"\bmuseum\b|\barchivist\b|\b(?:early|childhood) learning\b|\bchildren'?s\b"),
+     _r(r"\b(?:software|engineer|sales|account (?:executive|manager)|recruiter|data scien|nurse|physician)"), (OTHER[0],)),
+    ("retail", _r(r"\bguest (?:service|services|relations|experience|room)s?\b|\bcrew members?\b|\bhotel\b|\bvalet\b|\bparking (?:attendant|cashier|lot)\b|\bbeverage\b|\bcommis\b|"
+                  r"\bcounter manager\b|\bkey (?:lead|holder|carrier)\b|\bkeyholder\b|\bgreeter\b|\b(?:beverage cart|pool|locker room|lot|ride|attraction|guest|room|laundry|fitting room|"
+                  r"cart|parking|gym|front desk|desk) attendants?\b|\bmeat cutter\b|\bcooks?\b|\bconcierge|\bhousekeep|\blaundry\b|\bresort\b|\bcasino\b|\bspa\b|\bfitness\b|\bgym\b|"
+                  r"\b(?:golf|country|athletic|beach|swim) club\b|\bbanquets?\b|\bcatering\b|\bevent staff\b|\bticket(?:ing)? (?:agent|seller|taker)|\busher\b|\bconcessions?\b|"
+                  r"\bfood (?:and|&) beverage\b|\bf&b\b|\bdining\b|\bpizza\b|\bbakery\b|\bcafe\b|\bcafé\b|\bbartend|\bsommelier|\bmerchandiser\b|\bvisual merchandis|\bstockiste\b|"
+                  r"\bstore (?:associate|team|supervisor|lead)|\bcashier\b|\bretail\b|\bwarehouse club\b|\bclothing\b|\bdressing room\b|\bcinema\b|\btheat(?:er|re) (?:staff|crew)\b"),
+     _r(r"\b(?:software|engineer|sales manager|account (?:executive|manager)|recruit|data scien|director of|vice president|patient|artist|designer|developer|analyst)"), (OTHER[0],)),
+    ("people", _r(r"\b(?:benefits?|leave|staffing|hr|payroll|onboarding|compensation|workforce|employee relations|people|talent|learning (?:and|&) development|training)\s+"
+                  r"(?:(?:&|and)\s+\w+\s+)?(?:specialist|coordinator|manager|partner|assistant|administrator|analyst|lead|generalist|advisor)s?\b"), None, (OTHER[0],)),
+    ("support", _r(r"\bhelp ?desk\b|\bservice desk\b|\bcontact cent(?:er|re)\b|\bcall cent(?:er|re)\b|\bmember services?\b|\bcustomer (?:care|contact|relations)\b|"
+                   r"\bclient services?\b|\bpersonal service representative|\bservice representative\b|\btechnical support\b|\bdesktop support\b|\btier [123](?:\.0)?\b"), None, (OTHER[0],)),
+    ("engineering", _r(r"^(?:sr\.? |senior |junior |jr\.? |lead )?it (?:specialist|manager|intern|support|technician|analyst|administrator|director|engineer|lead|coordinator|"
+                       r"transformation|security|operations|project|infrastructure|systems)\b|\bsystems? administrator\b|\bnetwork administrator\b|\btech expert\b|\bit manager\b"),
+     None, (OTHER[0],)),
+    ("supply-chain", _r(r"\bcontracts? (?:management )?(?:specialist|administrator|manager|officer)\b|\bcontracting (?:specialist|officer|expert)\b|\bcommodity (?:lead|manager|specialist)\b|"
+                        r"\bpurchasing\b|\bdock ?worker|\b(?:package|freight|material|baggage|ramp) handlers?\b|^handler\b|\bpick(?:er)?\s*/\s*pack|\bmail ?room\b|\bdistribution center\b|"
+                        r"\bbaling\b|\bdonations?\b.*\bassociate|\bsupplier\b|\bvendor (?:manager|specialist|coordinator)\b|\bcourier\b|\bdelivery (?:associate|specialist|helper)\b|"
+                        r"\bmove (?:manager|coordinator)\b|\bmovers?\b|\bloader\b|\bunloader\b|\bstock (?:associate|clerk|team)\b|\bfreight\b|\bdispatch"), None, (OTHER[0],)),
+    ("manufacturing", _r(r"\bforem[ae]n\b|\bconcrete\b|\bplumbing\b|\bplumbers?\b|\belectrical (?:helper|apprentice|foreman|technician|supervisor|installer|worker)\b|\broofers?\b|"
+                         r"\bsubcontractors?\b|\btrades? (?:supervisor|helper|worker)\b|\bcombined trades\b|\bestimators?\b|\bconstruction\b|\bcrew (?:lead|leader|chief)\b|\bcabinet\b|"
+                         r"\binstallers?\b|\bsafety (?:specialist|coordinator|manager|officer|intern|lead|technician|professional|advisor)\b|\b(?:ehs|hse|environmental,? health)\b|"
+                         r"\bquality (?:assurance|control|development|document|inspector|lead|specialist|coordinator|manager|technician|auditor|engineer)\b|\bqc\b|\bqa specialist\b|"
+                         r"\butility workers?\b|\boperatives?\b|\bconfined space\b|\bt[ée]cnic[oa]\b|\bhatchery\b|\bfarm (?:hand|worker|associate|manager)\b|\bagricultur|\bapprentice\b|"
+                         r"\bglazier|\bglass (?:and|&) glazing\b|\bdrywall\b|\bflooring\b|\bmason\b|\bbricklayer|\bscaffold|\bwelding\b|\bfabricator\b|\bsheet metal\b|\bpipefitter|"
+                         r"\bjob captain\b|\breconditioning\b|\bdetailing\b|\bcar wash\b|\btire\b|\blube\b|\bautomotive\b|\belevator\b|\bupholster|\bsewing\b|\bembroidery\b|\bprint(?:ing)? (?:operator|press)"),
+     _r(r"\b(?:software|sales|account (?:executive|manager)|marketing|recruit|attorney|counsel)\b"), (OTHER[0],)),
+    ("finance", _r(r"\bbank(?:ing|er)?\b|\bclaims?\b|\bloans?\b|\bpayment (?:accuracy|integrity|specialist|operations)|\baccountancy\b|\bcash\b|\bfx\b|\bcredit\b|\bmortgage\b|"
+                   r"\bunderwrit|\bbilling\b|\bcollections?\b|\binsurance (?:follow[- ]?up|verification|billing|claims)|\bfollow[- ]?up representative\b|\bteller\b|\bescrow\b|"
+                   r"\bwealth\b|\bfinancial\b|\bfund (?:accountant|administrator)|\bbookkeep|\binvoic|\bprocurement card|\brevenue cycle\b|\btax\b"),
+     _r(r"\b(?:software|engineer|developer|recruit|marketing|nurse|physician)\b"), (OTHER[0],)),
+    ("sales-bd", _r(r"\bkey account\b|\bkam\b|\bmajor accounts\b|\bmarket development rep|\bcommercial (?:excellence|manager|director|lead|operations|partner|lines)\b|"
+                    r"\bcountry manager\b|\bvalue expansion\b|\bmarket access\b|\b(?:insurance|travel|leasing|real estate|sales|booking) agents?\b|\bpartner (?:manager|development)\b|"
+                    r"\bchannel (?:manager|partner|sales)\b|\baccount (?:specialist|representative|coordinator|associate)\b|\bfranchise (?:sales|development)\b|\bbroker\b|\brealtor\b"),
+     None, (OTHER[0],)),
+    ("marketing", _r(r"\bevents? (?:coordinator|manager|specialist|planner|producer)\b|\bconference (?:manager|coordinator|producer)\b|\bcompetitive intelligence\b|"
+                     r"\bcommunications? (?:manager|specialist|coordinator|officer|lead|director|intern)\b|\bcopy ?edit|\bplay market\b|\bmarket(?:ing)? insights\b|\bsponsorship\b|"
+                     r"\binfluencer\b|\bambassador\b(?!.*\b(?:student|teen)\b)"), None, (OTHER[0],)),
+    ("design", _r(r"\bart director\b|\bcreative director\b|\bvisual (?:artist|designer)\b|\bartist\b|\banimator\b"), None, (OTHER[0],)),
+    ("compliance-legal", _r(r"\bgovernance\b|\binternal controls?\b|\bgrievance|\bappeals\b|\blitigation\b|\bdocketing\b|\bjudicial\b|\bcourt\b|\bpolicy (?:analyst|advisor|"
+                            r"specialist|manager|director|officer|intern|associate|fellow)\b|\bgovernment (?:affairs|relations)\b|\bpublic policy\b|\bethics\b|\bprivacy\b|\blegal\b|"
+                            r"\bparalegal\b|\bcontracts? (?:attorney|counsel)\b|\bclaims adjust|\binvestigator\b|\bcompliance\b"), None, (OTHER[0],)),
+    ("consulting", _r(r"\bsubject matter expert\b|\bsme\b|\bcontracting expert\b|\bfield applications? specialist\b|\bapplications? specialist\b|\bclinical specialist\b(?=.*device)"), None, (OTHER[0],)),
+    ("operations", _r(r"\bclerks?\b|\bsecretary\b|\breceptionists?\b|\bword processor\b|\badministrative\b|\bproperty (?:manager|services|management)\b|\bleasing manager\b|"
+                      r"\bassistant property manager\b|\bproject (?:leader|lead|specialist|support)\b|\btask order manager\b|\bcontinuous improvement\b|\bprocess improvement\b|"
+                      r"\bperformance (?:manager|services|improvement)\b|\bprogram (?:coordinator|specialist|manager|assistant|analyst|director|officer)\b|\bservice manager\b|"
+                      r"\bfacility (?:manager|coordinator)\b|\bfront office\b|\bdata entry\b|\bscheduling (?:coordinator|specialist)\b|\bschedulers?\b|\bincident manager\b|"
+                      r"\boffice (?:coordinator|specialist|clerk|administrator)\b|\bcoordinator\b|\bsupervisor\b|\bteam (?:leader|lead|supervisor|manager)\b|\bmanager in training\b|"
+                      r"\bgeneral application\b|\bhousehold manager\b|\bfamily assistant\b|\bfounder'?s associate\b|\bchief of staff\b|\boperations?\b"), None, (OTHER[0],)),
 ]
 FIELD_FIX = [(to, rx, no, frozenset(frm)) for to, rx, no, frm in FIELD_FIX]
 FIX_OF = {c_: [(to, rx, no) for to, rx, no, frm in FIELD_FIX if c_ in frm] for c_ in {c_ for *_, frm in FIELD_FIX for c_ in frm}}     # the rules for each field, in order
@@ -4307,7 +4373,7 @@ for _t, _c, _want in (
         # finance titles
         ("Wealth Management Advisor", "consulting", "finance"), ("Branch Banking Client Consultant II", "consulting", "finance"), ("Retail Banker", "retail", "finance"),
         ("Universal Banker", "other", "finance"), ("Bank Teller", "other", "finance"), ("Production Underwriter", "manufacturing", "finance"), ("Residential Mortgage Loan Underwriter", "product", "finance"),
-        ("Cage Teller - Casino", "other", "other"), ("Business Consultant", "consulting", "consulting"), ("Management Consultant", "consulting", "consulting"),
+        ("Cage Teller - Casino", "other", "retail"), ("Business Consultant", "consulting", "consulting"), ("Management Consultant", "consulting", "consulting"),
         # administrators
         ("Systems Administrator", "operations", "engineering"), ("Senior Oracle DBA", "operations", "engineering"),
         ("Office Manager - Superior Inc. dba Brown Design Group", "operations", "operations"), ("Linux Systems Administrator", "operations", "engineering"), ("Database Administrator", "operations", "engineering"),
@@ -4343,7 +4409,21 @@ for _t, _c, _want in (
         ("Lead Advanced Analytics, Community Support", "marketing", "marketing"), ("CRA & Fair Lending Officer", "operations", "operations"), ("Software Developer", "engineering", "engineering"), ("Content Designer", "design", "design"),
         # sales
         ("Retail Sales Assistant", "sales-bd", "retail"), ("Wireless Retail Sales Associate", "sales-bd", "retail"), ("Sales Associate - Key Holder", "sales-bd", "retail"),
-        ("Sales Tax Analyst", "sales-bd", "finance"), ("Sales Associate", "sales-bd", "sales-bd"), ("Retail Sales Manager", "sales-bd", "sales-bd"), ("Account Executive", "sales-bd", "sales-bd"),
+        ("Sales Tax Analyst", "sales-bd", "finance"), ("Retail Sales Manager", "sales-bd", "sales-bd"), ("Account Executive", "sales-bd", "sales-bd"),
+        # a plain "Sales Associate" works in a shop (data teardown, 26 Nov 2026: 115 of 400 "associate" titles in Sales, at DTLR, KnitWell, Lowe's, Goodwill);
+        # inside, automotive and account sales stay in Sales
+        ("Sales Associate", "sales-bd", "retail"), ("Seasonal Sales Associate", "sales-bd", "retail"), ("PT Sales Associate", "sales-bd", "retail"),
+        ("Sales Associate - Dedham, MA", "sales-bd", "retail"), ("Seasonal - Athlete Advisor (Sales Associate, Part-Time)", "sales-bd", "retail"),
+        ("The North Face: Seasonal Sales Associate", "sales-bd", "retail"), ("Inside Sales Associate", "sales-bd", "sales-bd"), ("Automotive Sales Associate", "sales-bd", "sales-bd"),
+        ("New Car Sales Associate", "sales-bd", "sales-bd"), ("Business Development Associate", "sales-bd", "sales-bd"), ("Associate Account Manager", "sales-bd", "sales-bd"),
+        # Other out (the teardown's sample and the 1,000 titles of "Other" read that day), and what stays
+        ("Teen Leader - Brighton", "other", "education"), ("Deputy Court Clerk", "other", "compliance-legal"), ("Law Librarian", "other", "education"),
+        ("Junior Estimator - Commercial Glass & Glazing", "other", "manufacturing"), ("Insurance Follow-Up Representative", "other", "finance"),
+        ("Commercial Partner Manager", "other", "sales-bd"), ("Children's Librarian - Hunts Point Library", "other", "education"), ("Crew Member(Country Club Cinema)", "other", "retail"),
+        ("Benefits & Leave Specialist", "other", "people"), ("Tier 1.0 Help Desk Specialist", "other", "support"), ("Concrete Foreman", "other", "manufacturing"),
+        ("Contract Specialist", "other", "supply-chain"), ("Unit Secretary-Riverview-Mother/Baby-Part Time-Nights-Benefits", "other", "healthcare"),
+        ("Guest Service Associate - 2079 Kimpton Hotel Monaco Philadelphia", "other", "retail"), ("Governance & Control Specialist", "other", "compliance-legal"),
+        ("Patient Safety Attendant - Part Time", "other", "healthcare"), ("Specialist", "other", "other"), ("Expert", "other", "other"),
         # marketing
         ("Community Health Worker", "marketing", "healthcare"), ("Director of Social Services", "marketing", "healthcare"), ("Life Skills Coach/Community Support Associate", "marketing", "healthcare"),
         ("Assistant Community Manager - Alta Grandway", "marketing", "operations"), ("Community Manager - Affordable Housing", "marketing", "operations"),
@@ -4387,6 +4467,14 @@ for _t, _c, _want in (
         ("Patient Care Technician", "", "healthcare"),
 ):
     assert job_field(_t, _c) == _want, (_t, _c, job_field(_t, _c))
+LEVEL_ENTRY = re.compile(r"(?i)\bentry[- ]level\b")
+LEVEL_STAFF = re.compile(r"(?i)\bstaff (?:physician|nurse|pharmacist|psychiatrist|psychologist|therapist|chaplain|dentist|veterinarian|member|support|rn)s?\b|\b(?:teaching|support|nursing|medical|kitchen|office|clinical|program|direct care|wait|event|seasonal|part[- ]time) staff\b")
+LEVEL_LEAD = re.compile(r"(?i)\b(?:lead|director|head of|chief|principal|vp|vice president|supervisor|manager)\b")
+for _t, _lv in (("Entry Level Marketing Lead", "Junior"), ("Staff Physician, Internal Medicine", ""), ("Part-Time Teaching Staff", ""), ("Staff Software Engineer", "Lead"), ("Lead Teacher", "Lead")):
+    _l = collect.level(_t)
+    if _l == "Lead" and LEVEL_ENTRY.search(_t): _l = "Junior"
+    elif _l == "Lead" and LEVEL_STAFF.search(_t) and not LEVEL_LEAD.search(_t): _l = ""
+    assert _l == _lv, (_t, _l)
 FOR_JUNIORS = re.compile(r"(?i)\b(?:early[- ]career|university|campus|graduate|new grad|intern(?:ship)?)s?\b[^,]*?\b(?:recruit\w*|sourcer|program manager|programs? lead|coordinator|talent partner)\b")
 REQ_CODE = [re.compile(r"\s*[\(\[]\s*(?:R|JR|REQ|Req|req|ID|Job ID|Requisition(?: ID)?)\s*[-#:_ ]?\s*\d{3,}\s*[\)\]]"),   # "(R6043)", "[REQ-12345]"
             re.compile(r"\s*[\(\[]\s*\d{5,}\s*[\)\]]"),                                                    # "(123456)", never a year
@@ -4465,6 +4553,10 @@ def main():
         j["cat"] = job_field(j["title"], j.get("cat"))         # behaviour analysts and technicians: Healthcare, not Data or Manufacturing (ABA_ROLE)
         if j["level"] == "Junior" and ASSOC_SENIOR.match(j["title"]): j["level"] = "Lead"
         elif j["level"] in ("Junior", "Intern") and FOR_JUNIORS.search(j["title"]): j["level"] = ""      # "Early Career & University Recruiter", "Intern Program Coordinator" hire juniors, are not ones
+        # "Entry Level Marketing Lead" is entry level, and a staff physician or the teaching staff are no grade at all (data teardown, 26 Nov 2026:
+        # collect.level() read "lead" and "staff" as Lead)
+        elif j["level"] == "Lead" and LEVEL_ENTRY.search(j["title"]): j["level"] = "Junior"
+        elif j["level"] == "Lead" and LEVEL_STAFF.search(j["title"]) and not LEVEL_LEAD.search(j["title"]): j["level"] = ""
         j["entry"] = j["level"] in ("Junior", "Intern")
         j["pool"] = bool(POOL_RX.search(j["title"]))
         j["salary"] = sane_pay(j["salary"])
