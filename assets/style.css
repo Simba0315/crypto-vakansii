@@ -5729,3 +5729,16 @@ main.about>.sec-label{margin-bottom:16px}
 .khero::after,.hero.v2>.wrap:first-child::after,main.nfp .nf::after{right:-120px;top:-150px;width:420px;height:420px;border:36px solid color-mix(in srgb,var(--brand) 6%,transparent)}
 .khero::before,.hero.v2>.wrap:first-child::before,main.nfp .nf::before{right:86px;top:56px;width:8px;height:8px;background:color-mix(in srgb,var(--brand) 30%,transparent)}
 @media(max-width:700px){.khero::after,.hero.v2>.wrap:first-child::after,main.nfp .nf::after{right:-200px;top:-210px;width:300px;height:300px;border-width:24px}}
+
+/* ---- the green marker is back under the ending words (owner, 27 Nov 2026, after the pairs above: «там же ты зеленым раньше
+   выделял… концовку зеленую ты делал. щас такого нету»). The design night of 25 Nov had turned the marker under a panel heading's
+   key words (.hl) into plain bold; now the bold ending of every two-weight heading carries it: the first panels' H1 (the home's
+   "ghost jobs", "what you pay for"), the section headings, the call-to-action panels and the list headings. A highlighter: the light
+   green sits low behind the letters, which stay ink (15:1 on #b7eec3). In dark mode and on the ink panels it is a green line under
+   the words, so light text stays readable. The marker reaches a hair past the letters without moving them (padding with an
+   equal negative margin: the headings break into lines where they did). The "free" chip keeps its own ink pill. ---- */
+.khero h1 .hl,main.sp .khero h1 .hl,.hero.v2 h1 .hl,.sec-head h2.tw b,.sec-head.lst h2.tw b,.kcta h2.tw b:not(.free),.alertf h2.tw b,.guide h2.tw2 b{
+  padding:0 .07em;margin:0 -.07em;background:linear-gradient(transparent 58%,var(--hl) 58%,var(--hl) 91%,transparent 91%);-webkit-box-decoration-break:clone;box-decoration-break:clone}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .khero h1 .hl,:root:not([data-theme=light]) main.sp .khero h1 .hl,:root:not([data-theme=light]) .hero.v2 h1 .hl,:root:not([data-theme=light]) .sec-head h2.tw b,:root:not([data-theme=light]) .sec-head.lst h2.tw b,:root:not([data-theme=light]) .kcta h2.tw b:not(.free),:root:not([data-theme=light]) .alertf h2.tw b,:root:not([data-theme=light]) .guide h2.tw2 b{background:linear-gradient(transparent 82%,var(--hl) 82%,var(--hl) 91%,transparent 91%)}}
+:root[data-theme=dark] .khero h1 .hl,:root[data-theme=dark] main.sp .khero h1 .hl,:root[data-theme=dark] .hero.v2 h1 .hl,:root[data-theme=dark] .sec-head h2.tw b,:root[data-theme=dark] .sec-head.lst h2.tw b,:root[data-theme=dark] .kcta h2.tw b:not(.free),:root[data-theme=dark] .alertf h2.tw b,:root[data-theme=dark] .guide h2.tw2 b,
+.kpanel.ink .khero h1 .hl,.kpanel.ink .sec-head h2.tw b,.kpanel.ink .kcta h2.tw b:not(.free),.kpanel.ink .alertf h2.tw b,.kpanel.ink .guide h2.tw2 b,.inkband .khero h1 .hl,.inkband .sec-head h2.tw b,.inkband .kcta h2.tw b:not(.free),.inkband .alertf h2.tw b,.inkband .guide h2.tw2 b,.kpanel.ink.kcta h2.tw b:not(.free){background:linear-gradient(transparent 82%,var(--hl) 82%,var(--hl) 91%,transparent 91%)}
