@@ -109,6 +109,7 @@ MCP_COVERAGE = ("open jobs in every field: healthcare, engineering, sales, skill
 MCP_SOURCE = ("Every job is read from the employer's own careers page (US federal jobs from USAJOBS), and the lists are read again around the clock, "
               "so a job the employer takes down leaves the results.")
 # Read-only, never destructive; open world because the jobs are public postings of thousands of employers, not one closed account.
+# annotations.title as well as the tool's own title: the Claude directory reads the name from the annotations (27 Nov 2026).
 MCP_READ = {"readOnlyHint": True, "destructiveHint": False, "openWorldHint": True}
 MCP_TOOLS = [
     {"name": "search_jobs", "title": "Search open jobs",
@@ -120,12 +121,12 @@ MCP_TOOLS = [
          "query": {"type": "string", "description": "Words to look for: a role, skill, company or place, e.g. 'entry level nurse texas' or 'customer service remote'"},
          "remote_only": {"type": "boolean", "description": "Only remote jobs", "default": False},
          "limit": {"type": "integer", "minimum": 1, "maximum": 20, "default": 10}}, "required": ["query"]},
-     "annotations": MCP_READ},
+     "annotations": {**MCP_READ, "title": "Search open jobs"}},
     {"name": "get_job", "title": "Read one job",
      "description": "The full posting of one job: the employer's own text, place, pay, when it was posted, when it was last seen open, and the link to apply on the employer's site.",
      "inputSchema": {"type": "object", "properties": {
          "job": {"type": "string", "description": "The job's slug or its page address, as search_jobs gives them"}}, "required": ["job"]},
-     "annotations": MCP_READ},
+     "annotations": {**MCP_READ, "title": "Read one job"}},
 ]
 
 
