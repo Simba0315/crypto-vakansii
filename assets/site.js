@@ -566,14 +566,15 @@
   })();
 
   /* ---------- theme + mobile menu + shortcuts ---------- */
-  var themeBtn = $('theme');
-  if (themeBtn) themeBtn.addEventListener('click', function () {
+  // the switch sits in the header (top right, where the owner looks for it: 27 Nov 2026) and in the footer; both do the same
+  var themeFlip = function () {
     var root = document.documentElement, cur = root.getAttribute('data-theme');
     var dark = cur ? cur === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
     var next = dark ? 'light' : 'dark';
     root.setAttribute('data-theme', next);
     try { localStorage.setItem('hrn_theme', next); } catch (e) {}
-  });
+  };
+  Array.prototype.forEach.call(document.querySelectorAll('#theme, [data-theme-toggle]'), function (b) { b.addEventListener('click', themeFlip); });
   var menuBtn = $('menu'), header = document.querySelector('header.site');
   if (menuBtn && header) menuBtn.addEventListener('click', function () {
     var open = header.classList.toggle('open');
