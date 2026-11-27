@@ -12552,7 +12552,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          crumbs(("Terms", "")) + "<h1>Terms of use</h1>"
          + f'<p class="note">Effective {fdate(LEGAL_DATE)}.</p>'
          + f"<h2 class='h2s'>Who runs this site</h2><p>{e(SITE)} (jobseveryhour.com) is run by {e(FOUNDER)}, its founder. "
-           f"Questions about them: {mail_a('support')}. A listing to correct or remove: {mail_a('jobs')}.</p>"
+           f"Questions about these terms: {mail_a('support')}. A listing to correct or remove: {mail_a('jobs')}.</p>"
          "<h2 class='h2s'>What this site is</h2><p>A search service for job postings published by companies on their own careers pages. We are not the employer and not a recruitment agency, and we take no part in hiring decisions.</p>"
          "<h2 class='h2s'>Accuracy</h2><p>Listings are collected automatically, around the clock. A job may change or close between updates, and details such as salary, perks and location are read from the posting text. Always check the employer's own page before you rely on them.</p>"
          "<h2 class='h2s'>Applying</h2><p>Applications are made on the employer's site. Viewing jobs and applying is free.</p>"

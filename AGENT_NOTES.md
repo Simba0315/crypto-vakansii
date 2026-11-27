@@ -698,3 +698,23 @@ plain HTML, so the page is readable without the map.
   analysts; the first results carry 50 to 80, we carry 26); (3) resume example variants (junior, senior) for the largest roles.
   Template changes for the other gaps are made in the main session: leave `build.py`'s list, company and place templates alone.
 
+
+## Who runs the site, the press page, the Ghost Jobs Index, employers (27 Nov 2026, track 5)
+
+- The founder's public name is `FOUNDER` in build.py ("Adam Shanin", the owner's choice; no photo, the owner said none). About,
+  /terms/, /privacy/, /press/, the editorial policy and llms.txt name him. Do not write "a small team".
+- One Organization markup: `org_json(description)` (the @id `ORG_ID`, founder, foundingDate, contact points, `ORG_SAME_AS`). Every
+  profile in `ORG_SAME_AS` was opened and answered on 27 Nov 2026; add one only after it answers (LinkedIn and G2 refuse plain
+  requests with 403: open them in a browser). Crunchbase has no profile yet.
+- `LEGAL_DATE` is the "Effective" date of /terms/ and /privacy/: change it when their substance changes, not with every build.
+- `FACTS` also holds `open_90d`, `dated_open`, `undated_open`, `open_90d_pct`: open postings older than 90 days by the employer's own
+  date; a posting without a date or with only its iCIMS "last changed" day (`posted_from == "lastmod"`) is left out and counted apart.
+  /ghost-jobs/, /how-long-job-postings-stay-open/, /press/ and llms.txt use it. /ghost-jobs/ also writes data/ghost-jobs.csv and
+  data/ghost-jobs-employers.csv (Dataset markup); it is the one page for "what share of postings are ghost jobs".
+- The footer's line and the header's Find jobs card say "around the clock" with `FACTS["checked_24h_pct"]` (nav `data-c`, read by
+  site.js; records.py carries FACTS into job pages). check.py's "header and footer" fails on "every hour" there and in site.js.
+- Employers: buttons that post a job go to `/account/?as=employer#post`; company pages link `/account/?as=employer&claim=<name>#company`
+  (account.js fills the claim form). The company names for the account's fields are /data/company-names.json, fetched on demand.
+  While `payments_live` is not set in config.json, every paid product says "Not on sale yet: payments are not switched on".
+  /for-employers/, /employers/ and /hire/ are hand-over pages to /post-a-job/; server/hosting/nginx-hrn.conf has real 301s for them,
+  which apply only after the owner deploys the server config.
