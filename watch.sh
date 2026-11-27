@@ -45,7 +45,8 @@ page "Search" "$SITE/api/search?q=nurse" '"total"'
 
 get "$SITE/api/latest"
 slug=$(grep -o '"slug":"[^"]*"' "$STATE/body" | head -1 | cut -d'"' -f4)
-newest=$(grep -o '"ts":[0-9]*' "$STATE/body" | cut -d: -f2 | sort -n | tail -1)
+# found_at is when we found the job; "ts" is the employer's own date (often midnight), so it says nothing about our freshness
+newest=$(grep -o '"found_at":"[^"]*"' "$STATE/body" | cut -d'"' -f4 | sort | tail -1 | python3 -c 'import sys,datetime; s=sys.stdin.read().strip(); print(int(datetime.datetime.fromisoformat(s.replace("Z","+00:00")).timestamp()) if s else 0)')
 if [ -z "$slug" ]; then
   echo "  FAIL Newest jobs: HTTP $CODE, no job in the answer"
   echo "- **Newest jobs** ($SITE/api/latest): HTTP $CODE, no job in the answer" >> "$P"
