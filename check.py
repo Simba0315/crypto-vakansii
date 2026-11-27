@@ -212,6 +212,40 @@ if (SITE / "sitemap.xml").is_file():
             if rel_ in not_for_map: fails["sitemaps"]["lists a noindex or canonicalised page"] += 1
             elif not rel_.startswith("job/") and not exists(f"{P}/{rel_}"): fails["sitemaps"]["lists a page that does not exist"] += 1
     if any(k_ > 1 for k_ in listed_.values()): fails["sitemaps"]["lists an address twice"] += sum(1 for k_ in listed_.values() if k_ > 1)
+    # robots.txt (27 Nov 2026: the query addresses of the tool and search pages are disallowed for "User-agent: *"): no sitemap names an
+    # address it disallows, the pages themselves stay open, and the AI assistants' group allows everything, as Google reads the rules
+    # (the longest matching rule wins, Allow on a tie; "*" is any characters, "$" the end)
+    if (SITE / "robots.txt").is_file():
+        groups_, cur_, fresh_ = {}, [], True
+        for ln_ in (SITE / "robots.txt").read_text(encoding="utf-8").splitlines():
+            ln_ = ln_.split("#", 1)[0].strip()
+            if not ln_ or ":" not in ln_: continue
+            k_, v_ = (x_.strip() for x_ in ln_.split(":", 1))
+            if k_.lower() == "user-agent":
+                if not fresh_: cur_ = []
+                fresh_ = True
+                groups_.setdefault(v_.lower(), cur_)
+            elif k_.lower() in ("allow", "disallow"):
+                fresh_ = False
+                cur_.append((k_.lower(), v_))
+        def rule_rx_(pat_):
+            end_ = pat_.endswith("$")
+            return re.compile(re.escape(pat_[:-1] if end_ else pat_).replace(r"\*", ".*") + ("$" if end_ else ""))
+        def blocked_(path_, rules_):
+            best_ = (-1, "allow")
+            for kind_, pat_ in rules_:
+                if pat_ and rule_rx_(pat_).match(path_) and (len(pat_) > best_[0] or (len(pat_) == best_[0] and kind_ == "allow")): best_ = (len(pat_), kind_)
+            return best_[1] == "disallow"
+        assert blocked_("/resume/?job=a", [("disallow", "/resume/?")]) and not blocked_("/resume/", [("disallow", "/resume/?")])
+        assert blocked_("/tools/cover-letter/?job=a", [("disallow", "/tools/*?job=")]) and not blocked_("/tools/cover-letter/", [("disallow", "/tools/*?job=")])
+        counts["robots.txt"] = 1
+        star_ = groups_.get("*", [])
+        bad_ = [r_ for r_ in listed_ if blocked_(f"{P}/{r_}", star_)]
+        if bad_: fails["robots.txt"][f"a sitemap lists an address it disallows ({bad_[0]})"] += len(bad_)
+        for open_ in ("/", "/jobs/", "/resume/", "/tools/resume-match/", "/tools/cover-letter/", "/job/x/", "/remote/", "/companies/x/"):
+            if blocked_(P + open_, star_): fails["robots.txt"][f"disallows {open_}"] += 1
+        for bot_ in ("gptbot", "claudebot", "perplexitybot", "google-extended"):
+            if bot_ not in groups_ or any(k_ == "disallow" and v_ for k_, v_ in groups_[bot_]): fails["robots.txt"][f"does not allow everything for {bot_}"] += 1
     # every job page the sitemaps list, not only the sample (27 Nov 2026): an open job, offered to search engines (no noindex), naming itself
     # as canonical. Closed jobs left the sitemaps that day; their pages stay. On a site built from records the record says it (open, a
     # Telegram post, a repeat of another page), read by SQLite without building 800,000 pages; on a site of files the page's own head.

@@ -15678,7 +15678,13 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     # ShapBot stays allowed (26 Nov 2026): it comes with a "Shap-User" agent, the pattern of an AI assistant's crawler (PerplexityBot /
     # Perplexity-User, GPTBot / ChatGPT-User). The owner wants every AI assistant to read the site, so it is not blocked; its rate is a
     # server matter, not a robots.txt one.
-    write("robots.txt", "User-agent: *\nAllow: /\n\n# AI assistants and AI search may read, quote and link to every page. A guide for them: "
+    # Search engines skip the addresses that only repeat a page under a query (Search Console, 27 Nov 2026: 31 such URLs under "Alternate
+    # page with proper canonical tag", and Google spent its crawls on them): every job page links /resume/?job=, /tools/resume-match/?job=
+    # and /tools/cover-letter/?job=, about 800,000 variants of three tool pages, and a search of /jobs/ (?loc=...&skills=...) is the search
+    # page under its canonical /jobs/. The pages themselves (/resume/, /tools/..., /jobs/) stay open, no sitemap names an address with a
+    # query (check.py), and the AI assistants' group below keeps "Allow: /" for every address.
+    write("robots.txt", "User-agent: *\nAllow: /\nDisallow: /resume/?\nDisallow: /tools/*?job=\nDisallow: /jobs/?\n\n"
+          "# AI assistants and AI search may read, quote and link to every page. A guide for them: "
           f"{FULL}/llms.txt\n" + "".join(f"User-agent: {b}\n" for b in ai_bots) + f"Allow: /\n\nSitemap: {FULL}/sitemap.xml\n", sitemap=False)
     lap('IndexNow: the key file, and the list of pages that changed f')
     # IndexNow: the key file, and the list of pages that changed for the workflow to send (Bing, and the assistants that search through it).
