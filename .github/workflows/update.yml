@@ -281,6 +281,7 @@ jobs:
         continue-on-error: true
         env:
           GOOGLE_INDEXING_KEY: ${{ secrets.GOOGLE_INDEXING_KEY }}
+          HRN_INDEXING_DAILY: ${{ vars.HRN_INDEXING_DAILY }}
         run: python3 indexing.py
       - name: Keep what was sent to Google
         if: (steps.google.outcome == 'success' || steps.google.outcome == 'failure') && hashFiles('data/indexing_sent.json') != ''

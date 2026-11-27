@@ -36,8 +36,10 @@ PREV = ROOT / "data" / "indexing_prev.txt"
 STATE = Path(os.environ.get("HRN_INDEXING_STATE") or ROOT / "data" / "indexing_sent.json")
 SITE = json.loads((ROOT / "config.json").read_text()).get("base_url", "https://jobseveryhour.com").rstrip("/")
 PER_RUN = int(os.environ.get("HRN_INDEXING_PER_RUN") or 20)     # the collecting run's most, when it sends at all (fallback)
-DAILY = int(os.environ.get("HRN_INDEXING_DAILY") or 200)        # Google's default: publish requests a day per Cloud project
-LIVE_MAX = 20                  # the hourly sender's most in one run (after skipped runs; normally the day's share is 8 or 9)
+# Google's default: publish requests a day per Cloud project. When Google grants more, the owner sets the repository variable
+# HRN_INDEXING_DAILY (Settings > Secrets and variables > Actions > Variables) to the new number; both workflows pass it here.
+DAILY = int(os.environ.get("HRN_INDEXING_DAILY") or 200)
+LIVE_MAX = max(20, DAILY // 10)  # the hourly sender's most in one run (after skipped runs; normally the day's share, 8 or 9 at 200)
 KEEP_DAYS = 30                 # an address sent is not sent again for this long
 FRESH_H = 48                   # "fresh": posted in the last 48 hours
 LONG_OPEN = 90                 # build.LONG_OPEN: a posting its employer dated this many days ago or more is stale (build.stale)
@@ -382,10 +384,10 @@ def page_check(url, today=None):
 
 # ---- the hourly sender: the newest jobs of the live site ----
 
-def candidates(get=None):
-    """The newest open jobs: /api/latest (those live.py found since the last upload first, then the record's newest), then the first
-    pages of the search list of jobs posted in the last two days, newest first (/api/search?list=1, rows as search_engine.row writes
-    them). As [{slug, title, company, salary, posted, t, pool}]; a source that fails is left out."""
+def candidates(get=None, want=250):
+    """The newest open jobs: /api/latest (those live.py found since the last upload first, then the record's newest), then pages of the
+    search list of jobs posted in the last two days, newest first (/api/search?list=1, rows as search_engine.row writes them), until
+    there are `want`. As [{slug, title, company, salary, posted, t, pool}]; a source that fails is left out."""
     get = get or (lambda u: json.loads(fetch(u)[3]))
     out, errors = [], []
     try:
@@ -394,7 +396,8 @@ def candidates(get=None):
                 for j in get(f"{SITE}/api/latest?limit=100").get("jobs") or [] if j.get("slug")]
     except Exception as ex:                         # noqa: BLE001  (any failure of one source: the other may still answer)
         errors.append(f"/api/latest: {type(ex).__name__}")
-    for off in (0, 50, 100):
+    for off in range(0, 5000, 50):
+        if len(out) >= want: break
         try:
             rows = get(f"{SITE}/api/search?list=1&sort=new&age=2&offset={off}").get("jobs") or []
         except Exception as ex:                     # noqa: BLE001
@@ -443,7 +446,7 @@ def live(argv):
     print(f"indexing: Google's day {day} (Pacific time), {hours_left(now)} h left: {s['days'].get(day, 0)} of {DAILY} sent so far"
           + (", Google said the quota is used up" if s.get("full") == day else "") + f"; this run's share: {n}"
           + f" ({len(s['sent']):,} addresses sent in the last {KEEP_DAYS} days are skipped)")
-    jobs, errors = candidates()
+    jobs, errors = candidates(want=max(250, 10 * n))
     if errors: print("indexing: could not read " + ", ".join(errors))
     if not jobs:
         print("indexing: the live site gave no jobs, nothing sent"); return 0

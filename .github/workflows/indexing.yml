@@ -44,6 +44,8 @@ jobs:
       - name: Tell Google about the newest jobs
         env:
           GOOGLE_INDEXING_KEY: ${{ secrets.GOOGLE_INDEXING_KEY }}
+          # Google's daily quota; unset means its default, 200. Set the repository variable when Google grants more.
+          HRN_INDEXING_DAILY: ${{ vars.HRN_INDEXING_DAILY }}
         run: python3 indexing.py --live
       - name: Keep what was sent
         if: always() && hashFiles('data/indexing_sent.json') != ''
