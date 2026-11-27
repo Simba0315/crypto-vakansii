@@ -9189,42 +9189,46 @@ def main():
          '<meta name="robots" content="noindex">', sitemap=False)
     # 25 Nov 2026: the search "job application tracker" now has its own page (/job-application-tracker/, the tool explained with an example and
     # other trackers compared); this tool page carries its own name in the title so the two do not compete for the same words.
+    # Redesigned 27 Nov 2026 (the owner: "the design is all broken" at 1280 px: recently viewed titles one word to a line, one heading with a
+    # label and its neighbour without, big grey empty boxes, Board view adrift in the tab row). Now: the panel; one quiet line about keeping
+    # the lists on every device; "Get set up" (four steps that tick themselves from this browser's data and go away when all four are done;
+    # no prizes); the match profile beside the saved resumes (the primary one's skills count in every "Fits you" mark); the tracker, its tabs
+    # with Board view and Export CSV together on one row; then a grid of four labelled parts, two to a row: companies you follow, saved
+    # searches, recently viewed jobs, your data. Each empty part is one line and one button. Nothing was removed.
+    mj_part = lambda title_, label_, inner_, sid_="": section(title_, inner_, sid=sid_, label=label_)
+    mj_empty = lambda id_, text_, url_, btn_, cls_="ghost": (f'<div class="empty" id="{id_}"><p>{text_}</p><a class="btn {cls_} sm" href="{P}/{url_}">{btn_}</a></div>')
     page("my-jobs/", f"My Jobs: Saved Jobs, Applications and Notes | {SITE}", "My jobs: the jobs you saved, where each application stands, your notes and saved searches, kept in this browser with no account. Export to CSV any time.",
-         crumbs(("My jobs", "")) + '<h1>My jobs: your application tracker</h1><p class="lead">Saved jobs, applications, notes and searches in one place, so you know what you applied to and who answered. It is all kept in this browser; nothing is uploaded.</p>'
+         crumbs(("My jobs", "")) + '<h1>My jobs: your <span class="hl">application tracker</span></h1><p class="lead">Saved jobs, applications, notes and searches in one place, so you know what you applied to and who answered. It is all kept in this browser; nothing is uploaded.</p>'
          f'<p class="note">Want more to save? <a href="{P}/swipe/">Swipe through the newest jobs</a> one at a time. New here? <a href="{P}/job-application-tracker/">How the tracker works, with an example</a>.</p>'
-         # 27 Nov 2026 (the owner's study of Jobright's account): a short checklist that ticks itself (site.js reads this browser's data and
-         # hides it once all four are done; no prizes), then the match profile and up to five saved resumes, the primary one feeding the
-         # "Fits you" marks on every job. Everything stays in this browser; the backup, restore and erase below include it.
-         '<section class="sec mj-setup" id="mj-setup"><div class="sec-head"><h2>Get set up: four steps to the jobs that fit you</h2><p class="note" id="mj-setup-n"></p></div><ol class="setup" id="mj-setup-list">'
-         + "".join(f'<li data-step="{k_}"><a href="{P}/{u_}"><i aria-hidden="true"></i><span><b>{t_}</b><span>{d_}</span></span></a></li>' for k_, u_, t_, d_ in (
-             ("answers", "for-you/", "Answer the five questions", "Every job then shows how well it fits you"),
-             ("resume", "my-jobs/#resumes", "Add a resume", "Its skills count in every match"),
-             ("alert", "jobs/#alert-search-h", "Turn on an email alert", "New jobs for a search, daily or weekly"),
-             ("save", "jobs/", "Save a job", "It waits here, with where you stand")))
-         + '</ol></section>'
-         '<div class="mj-two mj-me"><section class="sec mj-prof" id="profile"><div class="sec-head"><h2>Your job match profile</h2></div><div id="mj-prof">'
-         f'<p class="note">Answer five questions on <a href="{P}/for-you/">For you</a> (the work, your level, where, the pay you need, your skills) and every job here shows how well it fits you.</p></div></section>'
-         '<section class="sec mj-cvs" id="resumes"><div class="sec-head"><h2>Your saved resumes</h2></div><div id="mj-cvs">'
-         f'<p class="note">Keep up to five resumes in this browser, each for a kind of job. The skills of the primary one count in every match. Paste one in the <a href="{P}/tools/resume-match/">resume match checker</a> to start.</p></div></section></div>'
-         '<div id="mj-root"><div class="rbar"><div class="tabs" id="mj-tabs"></div><button class="btn ghost sm" id="mj-view" type="button" aria-pressed="false">Board view</button><button class="btn ghost sm" id="mj-export" type="button">Export CSV</button></div>'
+         # signed out: the way to keep the lists on every device (the account merges them, account.js autoSync); site.js says so when signed in
+         f'<p class="note mj-sync" id="mj-sync">Keep your jobs on every device: <a href="{P}/account/?sso=google">Continue with Google</a>, free.</p>'
+         + mj_part("Four steps to [[the jobs that fit you]]", "Get set up", '<p class="note mj-setup-n" id="mj-setup-n"></p><ol class="setup" id="mj-setup-list">'
+                   + "".join(f'<li data-step="{k_}"><a href="{P}/{u_}"><i aria-hidden="true"></i><span><b>{t_}</b><span>{d_}</span></span></a></li>' for k_, u_, t_, d_ in (
+                       ("answers", "for-you/", "Answer the five questions", "Every job then shows how well it fits you"),
+                       ("resume", "my-jobs/#resumes", "Add a resume", "Its skills count in every match"),
+                       ("alert", "jobs/#alert-search-h", "Turn on an email alert", "New jobs for a search, daily or weekly"),
+                       ("save", "jobs/", "Save a job", "It waits here, with where you stand"))) + "</ol>", "mj-setup")
+         + '<div class="mj-two mj-me">'
+         + mj_part("Your job match [[profile]]", "Profile", '<div id="mj-prof">'
+                   f'<p class="note">Answer five questions on <a href="{P}/for-you/">For you</a> (the work, your level, where, the pay you need, your skills) and every job here shows how well it fits you.</p></div>', "profile")
+         + mj_part("Your saved [[resumes]]", "Resumes", '<div id="mj-cvs">'
+                   f'<p class="note">Keep up to five resumes in this browser, each for a kind of job. The skills of the primary one count in every match. Paste one in the <a href="{P}/tools/resume-match/">resume match checker</a> to start.</p></div>', "resumes")
+         + '</div>'
+         '<div id="mj-root"><div class="rbar"><div class="tabs" id="mj-tabs"></div><div class="mj-acts"><button class="btn ghost sm" id="mj-view" type="button" aria-pressed="false">Board view</button>'
+         '<button class="btn ghost sm" id="mj-export" type="button">Export CSV</button></div></div>'
          '<div class="mj-board" id="mj-board" hidden></div>'
          '<p class="note" id="mj-nudge" hidden></p>'
-         # Sections review, batch 5: an empty list is one sentence and one action (it was a dashed box with a link inside the
-         # sentence); the four smaller lists stand two to a row on a wide screen, so an empty tracker is one screen, not four.
-         '<ul class="jobs" id="mj-list"></ul><div class="empty" id="mj-empty"><p>Nothing here yet. Open any job and press “Save job” or “Mark as applied”.</p>'
-         f'<a class="btn primary sm" href="{P}/jobs/">Search the jobs</a></div><p class="note" id="mj-hidden" hidden></p>'
-         '<div class="mj-two"><section class="sec"><div class="sec-head"><h2>Companies you follow</h2></div><ul class="jobs" id="fc-list"></ul>'
-         f'<div class="empty" id="fc-empty"><p>You do not follow any company yet. Open a <a class="inl" href="{P}/companies/">company page</a> and press “Follow”.</p>'
-         f'<a class="btn ghost sm" href="{P}/companies/">Browse companies</a></div></section>'
-         '<section class="sec"><div class="sec-head"><h2>Saved searches</h2></div><ul class="jobs" id="ss-list"></ul>'
-         f'<div class="empty" id="ss-empty"><p>No saved searches. Set filters on the <a class="inl" href="{P}/jobs/">search page</a> and press “Save this search”.</p>'
-         f'<a class="btn ghost sm" href="{P}/jobs/">Open the search</a></div></section></div>'
-         '<div class="mj-two"><section class="sec"><div class="sec-head"><h2>Recently viewed jobs</h2></div><ul class="jobs" id="seen-list"></ul><div class="empty" id="seen-empty"><p>No jobs viewed yet.</p>'
-         f'<a class="btn ghost sm" href="{P}/new/">See the newest jobs</a></div></section>'
-         '<section class="sec mj-data"><div class="sec-head"><h2>Your data</h2></div><p>Everything on this page is stored in this browser and nowhere else. Keep a copy, move it to another device, or wipe it.</p>'
-         '<p class="mjdata"><button class="btn ghost sm" id="mj-backup" type="button">Download a backup</button> <button class="btn ghost sm" id="mj-restore" type="button">Restore from a backup</button> '
-         '<button class="btn ghost sm" id="mj-erase" type="button">Erase everything</button><input type="file" id="mj-file" aria-label="Backup file to restore" accept="application/json,.json" hidden></p>'
-         '<p class="note" id="mj-data-note" role="status"></p></section></div></div>', cls="sp mjp")
+         '<ul class="jobs" id="mj-list"></ul>' + mj_empty("mj-empty", "Nothing here yet. Open any job and press “Save job” or “Mark as applied”.", "jobs/", "Search the jobs", "primary")
+         + '<p class="note" id="mj-hidden" hidden></p>'
+         '<div class="mj-two mj-grid">'
+         + mj_part("Companies you [[follow]]", "Follows", '<ul class="jobs" id="fc-list"></ul>' + mj_empty("fc-empty", "No company yet. Press “Follow” on a company’s page.", "companies/", "Browse companies"))
+         + mj_part("Your saved [[searches]]", "Searches", '<ul class="jobs" id="ss-list"></ul>' + mj_empty("ss-empty", "No saved search. Set filters and press “Save this search”.", "jobs/", "Open the search"))
+         + mj_part("Recently viewed [[jobs]]", "History", '<ul class="jobs" id="seen-list"></ul>' + mj_empty("seen-empty", "No jobs viewed yet.", "new/", "See the newest jobs"))
+         + mj_part("Your [[data]]", "Backup", '<p class="mjdata-t">Everything on this page is kept in this browser. Keep a copy, move it to another device, or wipe it.</p>'
+                   '<p class="mjdata"><button class="btn ghost sm" id="mj-backup" type="button">Download a backup</button> <button class="btn ghost sm" id="mj-restore" type="button">Restore from a backup</button> '
+                   '<button class="btn ghost sm" id="mj-erase" type="button">Erase everything</button><input type="file" id="mj-file" aria-label="Backup file to restore" accept="application/json,.json" hidden></p>'
+                   '<p class="note" id="mj-data-note" role="status"></p>', "data").replace('<section class="sec hsec" id="data">', '<section class="sec hsec mj-data" id="data">', 1)
+         + '</div></div>', cls="sp mjp")
 
     lap('acronyms match in capitals only ("OPT", not "opt in"); a bar')
     # acronyms match in capitals only ("OPT", not "opt in"); a bare "TN" would be Tennessee, so only "TN visa" / "TN status" count

@@ -241,6 +241,8 @@
         g.disabled = true;
         api('POST', '/api/auth/google/start').then(function (r) { try { sessionStorage.setItem('hrn_google', r.secret); } catch (e) {} location.href = r.url; }, function (e) { g.disabled = false; authSay(e.message); });
       });
+      // "Continue with Google" pressed on My jobs (/account/?sso=google): the same press, once, so it is one click from there
+      if (g && /[?&]sso=google(?:&|$)/.test(location.search) && !drawAuth.sso) { drawAuth.sso = 1; g.click(); }
     }
     Array.prototype.forEach.call(root.querySelectorAll('[data-mode]'), function (t) { t.addEventListener('click', function (ev) { ev.preventDefault(); drawAuth(t.getAttribute('data-mode')); }); });
     Array.prototype.forEach.call(root.querySelectorAll('[data-role]'), function (t) { t.addEventListener('click', function () { setRole(t.getAttribute('data-role')); drawAuth(mode === 'forgot' || mode === 'link' ? 'in' : mode); }); });

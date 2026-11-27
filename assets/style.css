@@ -5808,9 +5808,6 @@ main.about>.sec-label{margin-bottom:16px}
   .fit1 .fit1-go{font-size:13.5px;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line2)}
 }
 /* My jobs: get set up, the profile, the saved resumes */
-main.mjp .mj-setup{margin-top:36px}
-main.mjp .mj-setup .sec-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
-main.mjp .mj-setup .sec-head .note{margin:0;font-size:14px}
 .setup{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .setup a{display:grid;grid-template-columns:24px minmax(0,1fr);gap:10px;align-items:start;height:100%;padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--text);text-decoration:none}
 .setup a:hover{border-color:var(--text)}
@@ -5822,8 +5819,7 @@ main.mjp .mj-setup .sec-head .note{margin:0;font-size:14px}
 .setup li.done i::after{content:"\2713";position:absolute;inset:0;color:var(--brand-ink);font:700 12px/18px Inter,system-ui,sans-serif;text-align:center}
 .setup li.done b{text-decoration:line-through;text-decoration-color:var(--line2);color:var(--muted)}
 @media(max-width:900px){.setup{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:520px){.setup{grid-template-columns:minmax(0,1fr)}.setup a{padding:12px 14px}}
-main.mjp .mj-me .sec{margin-top:44px}
+@media(max-width:520px){.setup{gap:8px}.setup a{grid-template-columns:20px minmax(0,1fr);gap:8px;padding:11px 12px;border-radius:14px}.setup i{width:20px;height:20px}.setup li.done i::after{font-size:11px;line-height:16px}.setup b{font-size:14px}.setup b+span{font-size:12.5px;line-height:1.35}}
 .mj-dl{margin:0 0 14px}
 .mj-dl div{display:grid;grid-template-columns:70px minmax(0,1fr);gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:14.5px}
 .mj-dl dt{color:var(--muted);font-size:13.5px}
@@ -5859,3 +5855,24 @@ main.mjp .mj-me .sec{margin-top:44px}
 .hmy.due{position:relative}
 .hmy.due::after{content:"";position:absolute;top:-3px;right:-3px;width:10px;height:10px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 2px var(--bg)}
 a.fu-due{color:var(--amber);font-weight:600}
+/* My jobs, redesigned 27 Nov 2026 (the owner: "the design is all broken" at 1280 px). Every part has a label and a two-weight heading, so
+   neighbours line up; the tracker's tabs and its two actions share one row; an empty part is one line and one button; recently viewed
+   jobs are the same cards as the job lists, the title across the free width. */
+main.mjp .mj-sync{margin:10px 0 0;font-size:14px}
+main.mjp .mj-sync a{color:var(--text);font-weight:600;text-decoration:underline;text-decoration-color:var(--brand);text-decoration-thickness:2px;text-underline-offset:3px}
+main.mjp #mj-setup{margin-top:40px}
+main.mjp .mj-setup-n{margin:-4px 0 12px;font-size:14px}
+main.mjp .mj-setup-n:empty{display:none}
+main.mjp .rbar{gap:10px}
+main.mjp .mj-acts{display:flex;gap:8px;flex:none;margin-left:auto}
+main.mjp .mj-acts .btn{margin:0}
+main.mjp .empty{flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px 14px;padding:14px 16px;border:1px dashed var(--line2);border-radius:14px;background:none;font-size:14.5px;text-align:left}
+main.mjp .empty p{max-width:none;flex:1 1 220px}
+main.mjp .mj-grid .sec,main.mjp .mj-me .sec{margin-top:52px}
+main.mjp .mj-grid .job>a{grid-template-columns:auto minmax(0,1fr);gap:12px}
+main.mjp .mj-grid .jt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+main.mjp .mj-grid .js{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+main.mjp .mj-data .mjdata-t{margin:0 0 14px;color:var(--muted);max-width:54ch}
+main.mjp .mj-data .mjdata{display:flex;flex-wrap:wrap;gap:8px;margin:0}
+main.mjp .mj-data .mjdata .btn{margin:0}
+@media(max-width:720px){main.mjp .mj-acts{margin-left:0}main.mjp .mj-grid .sec,main.mjp .mj-me .sec{margin-top:40px}}

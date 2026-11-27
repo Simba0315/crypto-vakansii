@@ -2153,6 +2153,9 @@
      All of it is this browser's own data (hrn_profile, hrn_resumes, hrn_alert_on, hrn_jobs); nothing is sent anywhere. ---------- */
   var mjProf = $('mj-prof'), mjCvs = $('mj-cvs');
   if (mjProf && mjCvs) {
+    // signed in (the account merges saved jobs, statuses, searches and follows on every device: account.js autoSync): the line says so
+    var syncL = $('mj-sync');
+    if (syncL && get('hrn_token', '')) syncL.innerHTML = 'Signed in: your saved jobs, searches and follows are kept in your account too, merged each time you open <a href="' + P + '/account/">Your account</a>.';
     var EXPN = { '0': 'Starting out', '1': 'A few years', '2': 'Many years', '3': 'I lead people' }, WHERE = { remote: 'From home', hybrid: 'Hybrid', office: 'At an office' };
     var kfmt0 = function (v) { return '$' + Math.round(v / 1000) + 'K'; };
     var dayOf0 = function (ts) { try { return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); } catch (e) { return ''; } };
