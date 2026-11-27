@@ -4243,7 +4243,7 @@ def season_page(path, d):
     top5 = Counter(j["company"] for j in js).most_common(5)
     month_ago = (datetime.date.fromisoformat(TODAY) - datetime.timedelta(days=30)).isoformat()
     new30 = sum(1 for j in js if (j.get("posted") or "") >= month_ago)
-    by_month = sorted(Counter(j["posted"][:7] for j in js if j.get("posted")).items())
+    by_month = sorted(Counter(j["posted"][:7] for j in js if re.match(r"20\d\d-[01]\d", j.get("posted") or "")).items())     # a date in another shape is left out, never a crash
     month_s = lambda ym: f"{MONTHS[int(ym[5:7]) - 1]} {ym[:4]}"
     dl, full, roll = deadlines_of(js)
     paid, hr, yl = season_pay(js)
