@@ -8,7 +8,8 @@ other job reaches Google.
 Two senders, one record of what was sent (data/indexing_sent.json, carried from run to run in the Actions cache):
   - the hourly workflow (.github/workflows/indexing.yml, --live): the newest jobs of the live site, those posted in the last 48 hours
     first, never a talent pool or a posting 90+ days old (build.stale), each page opened first: it must answer 200 under its own address
-    and carry valid JobPosting markup. It spreads the day's 200 over the hours left in Google's day, about 8 or 9 an hour.
+    and carry valid JobPosting markup. It spreads the day's 200 evenly over Google's day, about 8 or 9 an hour; what a start GitHub
+    skipped would have sent goes with the next one.
   - the collecting run (update.yml, after its upload): the best jobs new in that run, but only when the hourly workflow has not run for
     two hours (its fallback), and never more than the day has left.
 An address sent once is not sent again for 30 days, by either of them.
@@ -39,7 +40,7 @@ PER_RUN = int(os.environ.get("HRN_INDEXING_PER_RUN") or 20)     # the collecting
 # Google's default: publish requests a day per Cloud project. When Google grants more, the owner sets the repository variable
 # HRN_INDEXING_DAILY (Settings > Secrets and variables > Actions > Variables) to the new number; both workflows pass it here.
 DAILY = int(os.environ.get("HRN_INDEXING_DAILY") or 200)
-LIVE_MAX = max(20, DAILY // 10)  # the hourly sender's most in one run (after skipped runs; normally the day's share, 8 or 9 at 200)
+LIVE_MAX = max(50, DAILY // 4)   # the hourly sender's most in one run, after skipped starts (normally 8 or 9 an hour at 200)
 KEEP_DAYS = 30                 # an address sent is not sent again for this long
 FRESH_H = 48                   # "fresh": posted in the last 48 hours
 LONG_OPEN = 90                 # build.LONG_OPEN: a posting its employer dated this many days ago or more is stale (build.stale)
@@ -125,12 +126,16 @@ def left_today(s, now):
 
 
 def hourly_share(s, now, cap=LIVE_MAX):
-    """This hour's part of what the day has left, less what either sender sent in the last 50 minutes: about 9 an hour, more after
-    skipped runs, nothing for the second start of an hour that the first one served."""
+    """What is due by an hour from now, the day's DAILY spread evenly over Google's day, less what either sender sent this day: about 9
+    an hour at 200. A start GitHub skipped (it skips many scheduled starts) leaves its part to the next one, so a day of few runs still
+    uses the quota; the second start of an hour sends only the few that came due since the first."""
     left = left_today(s, now)
     if not left: return 0
-    recent = sum(1 for t in s["sent"].values() if t >= iso(now - 50 * 60))
-    return max(0, min(cap, left, math.ceil(left / hours_left(now)) - recent))
+    local = datetime.datetime.fromtimestamp(now, PACIFIC)
+    start = datetime.datetime.combine(local.date(), datetime.time(), PACIFIC).timestamp()
+    end = datetime.datetime.combine(local.date() + datetime.timedelta(days=1), datetime.time(), PACIFIC).timestamp()
+    due = math.ceil(DAILY * min(1.0, (now - start + 3600) / (end - start)))
+    return max(0, min(cap, left, due - (DAILY - left)))
 
 
 def publish(urls, raw, s):
@@ -446,6 +451,10 @@ def live(argv):
     print(f"indexing: Google's day {day} (Pacific time), {hours_left(now)} h left: {s['days'].get(day, 0)} of {DAILY} sent so far"
           + (", Google said the quota is used up" if s.get("full") == day else "") + f"; this run's share: {n}"
           + f" ({len(s['sent']):,} addresses sent in the last {KEEP_DAYS} days are skipped)")
+    if not n:
+        if not dry:
+            s["live_at"] = iso(now); save_state(s, now)
+        print("indexing: nothing is due yet, nothing sent"); return 0
     jobs, errors = candidates(want=max(250, 10 * n))
     if errors: print("indexing: could not read " + ", ".join(errors))
     if not jobs:
@@ -453,17 +462,16 @@ def live(argv):
     if not dry:
         s["live_at"] = iso(now)                   # the collecting run's fallback stays out while this one works
     pick, why = [], {}
-    if n:
-        today = datetime.date.fromtimestamp(now)
-        for j in live_choose(jobs, set(s["sent"]), now)[:3 * n + 10]:
-            u = f"{SITE}/job/{j['slug']}/"
-            bad = page_check(u, today)
-            if bad:
-                why[bad.split(":")[0]] = why.get(bad.split(":")[0], 0) + 1
-                print(f"indexing: skipped {u}: {bad}")
-                continue
-            pick.append((u, j))
-            if len(pick) >= n: break
+    today = datetime.date.fromtimestamp(now)
+    for j in live_choose(jobs, set(s["sent"]), now)[:3 * n + 10]:
+        u = f"{SITE}/job/{j['slug']}/"
+        bad = page_check(u, today)
+        if bad:
+            why[bad.split(":")[0]] = why.get(bad.split(":")[0], 0) + 1
+            print(f"indexing: skipped {u}: {bad}")
+            continue
+        pick.append((u, j))
+        if len(pick) >= n: break
     fresh = sum(1 for j in jobs if (live_rank(j, now) or (False,))[0])
     print(f"indexing: {len(jobs)} newest jobs read ({fresh} posted in the last {FRESH_H} h), {len(pick)} pages checked good"
           + (" (skipped: " + ", ".join(f"{k} {v}" for k, v in why.items()) + ")" if why else ""))
@@ -590,14 +598,15 @@ def test():
     jobs[0]["pool"], jobs[5]["posted"] = True, "2026-08-01"                                  # a talent pool, a posting 90+ days old
     assert [j["id"] for j in choose(jobs, {"d"}, 5, today=day)] == ["g", "b"]
 
-    # the day's budget: Google's day ends at midnight Pacific time; 200 spread over the hours left, less the last 50 minutes' sends
+    # the day's budget: Google's day ends at midnight Pacific time; what is due an hour from now, 200 spread evenly, less what was sent
     now = datetime.datetime(2026, 11, 27, 8, 30, tzinfo=datetime.timezone.utc).timestamp()      # 00:30 in Los Angeles (PST)
     assert quota_day(now) == "2026-11-27" and quota_day(now - 3600) == "2026-11-26" and hours_left(now) == 24
     s = {"sent": {}, "days": {}}
-    assert hourly_share(s, now) == 9                                   # ceil(200 / 24)
-    s["sent"].update({f"u{i}": iso(now - 600) for i in range(9)}); s["days"]["2026-11-27"] = 9
-    assert hourly_share(s, now) == 0                                   # the hour's second start: the first one sent them
-    assert hourly_share(s, now + 3600) == 9 and hourly_share(s, now + 23 * 3600) == 20        # ceil(191/23); the last hour: capped at 20
+    assert hourly_share(s, now) == 13                                  # ceil(200 * 1.5 / 24)
+    s["days"]["2026-11-27"] = 13
+    assert hourly_share(s, now) == 0 and hourly_share(s, now + 1800) == 4                      # the hour's second start: what came due since
+    assert hourly_share(s, now + 3600) == 8 and hourly_share(s, now + 4 * 3600) == 33          # an hour on; four hours of skipped starts
+    assert hourly_share(s, now + 23 * 3600) == 50                                              # the day's last hour: the rest, at most 50 a run
     s["full"] = "2026-11-27"
     assert hourly_share(s, now + 3600) == 0 and left_today(s, now + 24 * 3600) == 200          # 429: nothing until Google's next day
     s = {"sent": {"old": iso(now - 31 * 86400), "new": iso(now - 86400)}, "days": {"2026-11-01": 5, "2026-11-26": 3}}

@@ -6,8 +6,9 @@ name: Tell Google about new jobs
 # its own canonical, valid JobPosting markup), and sends this hour's part of the day's 200, about 8 or 9 (indexing.py --live).
 # What was sent is one record shared with update.yml's own step, kept in the Actions cache: an address is never sent twice in 30 days,
 # and update.yml sends only when this workflow has not run for two hours.
-# Two starts an hour: GitHub skips or delays many scheduled starts. The second start of an hour the first one served sends nothing
-# (indexing.hourly_share); one that comes after skipped hours sends more, up to 20.
+# Two starts an hour: GitHub skips or delays many scheduled starts (the first one after this workflow was added, 00:53 UTC on 27 Nov,
+# never came). Each start sends what is due by then of the day's 200, spread evenly, less what was sent (indexing.hourly_share): the
+# second start of an hour sends the few that came due since the first, one after skipped hours makes them up, up to 50.
 
 on:
   schedule:
