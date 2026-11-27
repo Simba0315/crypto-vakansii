@@ -1,0 +1,24 @@
+[
+{
+"name": "Baylor Scott & White Health",
+"ats": "phenom",
+"token": "jobs.bswhealth.com/us/en",
+"count": 2382,
+"lands": [
+"US"
+],
+"added": "2026-11-27",
+"lifted": "2026-11-27"
+},
+{
+"name": "Children's Health",
+"ats": "phenom",
+"token": "jobsearch.childrens.com",
+"count": 202,
+"lands": [
+"US"
+],
+"added": "2026-11-27",
+"lifted": "2026-11-27"
+}
+]

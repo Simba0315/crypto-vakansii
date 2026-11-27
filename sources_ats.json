@@ -23871,5 +23871,104 @@
 "DE"
 ],
 "added": "2026-11-15"
+},
+{
+"name": "Methodist Health System",
+"ats": "workday",
+"token": "methodisthealthsystem.wd1/MHS_Careers",
+"count": 750,
+"lands": [
+"US"
+],
+"added": "2026-11-27",
+"lifted": "2026-11-27"
+},
+{
+"name": "Parkland Health",
+"ats": "workday",
+"token": "parklandhospital.wd12/Parkland_Careers",
+"count": 237,
+"lands": [
+"US"
+],
+"added": "2026-11-27",
+"where": "Dallas, TX",
+"lifted": "2026-11-27"
+},
+{
+"name": "Advocate Health",
+"ats": "workday",
+"token": "aah.wd115/External",
+"count": 2000,
+"lands": [
+"US"
+],
+"added": "2026-11-27"
+},
+{
+"name": "Intermountain Health",
+"ats": "workday",
+"token": "imh.wd108/IntermountainCareers",
+"count": 1511,
+"lands": [
+"US"
+],
+"added": "2026-11-27"
+},
+{
+"name": "Cleveland Clinic",
+"ats": "workday",
+"token": "ccf.wd1/ClevelandClinicCareers",
+"count": 2318,
+"lands": [
+"US"
+],
+"added": "2026-11-27"
+},
+{
+"name": "Wells Fargo",
+"ats": "workday",
+"token": "wf.wd1/WellsFargoJobs",
+"count": 1545,
+"lands": [
+"US",
+"IN",
+"PH"
+],
+"added": "2026-11-27"
+},
+{
+"name": "Capital One",
+"ats": "workday",
+"token": "capitalone.wd12/Capital_One",
+"count": 2050,
+"lands": [
+"US",
+"GB",
+"MX"
+],
+"added": "2026-11-27"
+},
+{
+"name": "Truist",
+"ats": "workday",
+"token": "truist.wd1/Careers",
+"count": 1313,
+"lands": [
+"US"
+],
+"added": "2026-11-27"
+},
+{
+"name": "Comcast",
+"ats": "workday",
+"token": "comcast.wd115/Comcast_Careers",
+"count": 572,
+"lands": [
+"US",
+"IN",
+"PH"
+],
+"added": "2026-11-27"
 }
 ]

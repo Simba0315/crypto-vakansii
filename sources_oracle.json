@@ -1,0 +1,78 @@
+[
+{
+"name": "Texas Instruments",
+"ats": "oracle",
+"token": "edbz.fa.us2.oraclecloud.com/CX",
+"count": 922,
+"lands": [
+"US",
+"IN",
+"TW"
+],
+"added": "2026-11-27",
+"lifted": "2026-11-27"
+},
+{
+"name": "Tenet Healthcare",
+"ats": "oracle",
+"token": "eodr.fa.us2.oraclecloud.com/CX_1001",
+"count": 2453,
+"lands": [
+"US"
+],
+"added": "2026-11-27",
+"lifted": "2026-11-27"
+},
+{
+"name": "Providence",
+"ats": "oracle",
+"token": "evac.fa.us2.oraclecloud.com/CX_1",
+"count": 2101,
+"lands": [
+"US"
+],
+"added": "2026-11-27"
+},
+{
+"name": "Mayo Clinic",
+"ats": "oracle",
+"token": "fa-euwp-saasfaprod1.fa.ocs.oraclecloud.com/Mayo-US",
+"count": 1466,
+"lands": [
+"US"
+],
+"added": "2026-11-27"
+},
+{
+"name": "Northwell Health",
+"ats": "oracle",
+"token": "eppr.fa.us2.oraclecloud.com/CX_2",
+"count": 1130,
+"lands": [
+"US"
+],
+"added": "2026-11-27"
+},
+{
+"name": "JPMorgan Chase",
+"ats": "oracle",
+"token": "jpmc.fa.oraclecloud.com/CX_1001",
+"count": 6778,
+"lands": [],
+"added": "2026-11-27",
+"hold": true,
+"why": "its instance's firewall answers robots.txt with 'Blocked by WAF4SaaS' (27 Nov 2026): released only with the owner's yes"
+},
+{
+"name": "Dollar General",
+"ats": "oracle",
+"token": "ibxwjb.fa.ocs.oraclecloud.com/CX_1",
+"count": 91239,
+"lands": [
+"US"
+],
+"added": "2026-11-27",
+"hold": true,
+"why": "91,239 store postings, the same few store jobs in every town"
+}
+]

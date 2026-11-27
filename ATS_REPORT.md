@@ -77,6 +77,44 @@ Klaviyo, Etched, Lovable, Kalshi, Miro, Deliveroo, Consensys and 16 more), and o
 Parallel Learning, MERGE World). Among them are large boards with many copies of one job in many places (BoxLunch 4,662, BJAK
 3,156, Private Equity Insights 1,284 with volunteer roles and one posting per language); they are in as the task asked.
 
+## Large US employers (27 Nov 2026)
+
+The critics (backlog/critique, 26 Nov) found "nurse, Dallas" at 225 jobs here against 7,393 on HiringCafe, none of them from Baylor
+Scott & White, Texas Health Resources, Parkland, UT Southwestern, Methodist, Medical City (HCA) or Children's Health. Each employer's
+own careers site was opened to see which hiring system it reads, and each board was read once with the collector's own code
+(`collect.fetch`: the list with 120 postings' texts, twice, and the list alone once). Added: 16 boards, 22,952 open jobs at the check.
+
+| Employer | System | Open jobs | Read |
+|---|---|---|---|
+| Baylor Scott & White Health | Phenom (Taleo behind it) | 2,382 | lifted: every run until filled |
+| Children's Health (Dallas) | Phenom (Infor behind it) | 202 | lifted |
+| Methodist Health System (Dallas) | Workday | 750 | lifted |
+| Parkland Health (Dallas) | Workday, places are buildings: `"where": "Dallas, TX"` | 237 | lifted |
+| Texas Instruments (Dallas) | Oracle | 922 | lifted |
+| Tenet Healthcare (Dallas) | Oracle | 2,453 | lifted |
+| Advocate Health (Atrium, Advocate, Aurora) | Workday (its total stops at 2,000) | 2,000 | every 8 hours |
+| Intermountain Health | Workday | 1,511 | every 8 hours |
+| Cleveland Clinic | Workday | 2,318 | every 8 hours |
+| Providence | Oracle | 2,101 | every 8 hours |
+| Mayo Clinic | Oracle | 1,466 | every 8 hours |
+| Northwell Health | Oracle | 1,130 | every 8 hours |
+| Wells Fargo | Workday | 1,545 | every 8 hours |
+| Capital One | Workday | 2,050 | every 8 hours |
+| Truist | Workday | 1,313 | every 8 hours |
+| Comcast | Workday | 572 | every 8 hours |
+
+A read of the list alone (nothing new) took 3 to 141 seconds a board from a laptop outside the US (Phenom 3 and 8, Oracle 16 to 48,
+Workday 12 to 141); a read with 120 texts 122 to 436 seconds. All are on the slow rotation (`SLOW_ATS`); the six Dallas boards carry
+`"lifted"` so that they fill in days. On hold (`"hold": true`, with the reason): JPMorgan Chase (Oracle, 6,778 jobs; its firewall
+answers robots.txt with "Blocked by WAF4SaaS") and Dollar General (Oracle, 91,239 store postings of a few store jobs).
+
+Not added, and why: Texas Health Resources, Ascension, Kroger and Atrium's old site (their careers hosts did not resolve in DNS that day,
+also from Google's resolver); HCA Healthcare / Medical City, Houston Methodist, Verizon, American Airlines and Albertsons (403 to our user
+agent: a bot check; Wells Fargo's careers site too, but its Workday board answers and is read); Parkland and JPS answered nothing from outside the US (Parkland's Workday board is read);
+Citi and Southwest Airlines (their Workday robots.txt asks crawlers to stay out); UT Southwestern and Kaiser Permanente (Taleo, which
+the collector does not read); Walgreens (BrassRing), Starbucks (Eightfold); Amazon (amazon.jobs answers "10,000" for any search, 830 KB a
+hundred: it needs its own reader and a decision on the load); Costco and FedEx's US jobs (no public feed found).
+
 ## Newer systems: how boards were found and checked
 
 `discover_ats.py` took every board address in Common Crawl's URL index for `apply.workable.com/*`, `*.recruitee.com`,
@@ -123,6 +161,8 @@ LinkedIn's crawler and disallows everyone else. No SmartRecruiters board was sea
 | Personio | `<token>.jobs.personio.de/xml?language=en` | in the same answer | a job without an English version has no text there and is left out |
 | Workday | POST `/wday/cxs/<tenant>/<site>/jobs`, 20 a request | one request per new posting | newest 1,000 per board; at most 40 texts per board per read |
 | SmartRecruiters | `api.smartrecruiters.com/v1/companies/<id>/postings` | one request per new posting | not used, see above |
+| Phenom (27 Nov 2026) | the careers site's sitemap (`/sitemap_index.xml` or `/sitemap.xml`) | the posting's own page (`phApp.ddo`), one request per new posting | careers sites on the employer's domain; its JobPosting `datePosted` is the day of the request, so the page's own date is used |
+| Oracle Recruiting Cloud (27 Nov 2026) | `/hcmRestApi/resources/latest/recruitingCEJobRequisitions`, 200 a request | `recruitingCEJobRequisitionDetails`, one request per new posting | the REST resources the Oracle careers site itself reads; no sign-in |
 
 Politeness: the user agent `Mozilla/5.0 (job-board aggregator)`, at most 4 to 12 boards of one system at a time and a pause between
 requests (0.1 to 0.3 seconds, per tenant on Workday), no login, no bot check bypassed. The checks made roughly 20,000 requests over
