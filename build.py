@@ -60,6 +60,10 @@ CFG["talent_db"] = bool(CFG["api_url"]) and (os.environ.get("HRN_TALENT_DB") == 
 SITE, BASE, P = CFG["site_name"], CFG["base_url"].rstrip("/"), CFG.get("base_path", "").rstrip("/")
 LVL_NAME = {"Intern": "Intern", "Junior": "Junior", "Senior": "Senior", "Lead": "Lead and above", "": "No level in the title"}   # the one vocabulary for seniority (AUDIT 21); "Lead" covers lead, staff, principal, head of, director
 FULL = BASE + P
+try:      # the share picture's address carries its version: Cloudflare and the social networks keep a picture for weeks, and on 27 Nov
+    OG_URL = f"{FULL}/og.jpg?v={hashlib.md5((ROOT / 'assets' / 'og.jpg').read_bytes()).hexdigest()[:8]}"   # /og.jpg was still the old brand
+except Exception:
+    OG_URL = f"{FULL}/og.jpg"
 TODAY = datetime.date.today().isoformat()
 e = html.escape
 MAIL = {k: v for k, v in (CFG.get("emails") or {}).items() if v}       # one address per department: jobs, partners, press, privacy, abuse, security
@@ -2153,7 +2157,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False,
 <link rel="canonical" href="{e(url)}">
 <meta property="og:title" content="{e(title)}"><meta property="og:description" content="{e(desc)}">
 <meta property="og:type" content="website">{"" if compact else f'<meta property="og:url" content="{e(url)}">'}<meta property="og:site_name" content="{e(SITE)}">
-<meta property="og:image" content="{FULL}/og.jpg"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#121110">
+<meta property="og:image" content="{OG_URL}"><meta name="twitter:card" content="summary_large_image"><meta name="theme-color" content="#121110">
 <link rel="icon" type="image/svg+xml" href="{P}/favicon.svg"><link rel="apple-touch-icon" href="{P}/brand/apple-touch-icon.png"><link rel="manifest" href="{P}/manifest.json">
 {"" if compact else f'<link rel="alternate" type="application/rss+xml" title="{e(SITE)} — latest jobs" href="{P}/feed.xml">'}
 <link rel="preload" href="{P}/fonts/publicsans-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="{P}/fonts/schibsted-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -11236,7 +11240,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     def guide(slug, title, desc, cat, lead, body, prev, more=(), extra_head=""):
         ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Article", "headline": title, "description": desc, "datePublished": PUBLISHED, "dateModified": TODAY,
                "author": {"@type": "Organization", "name": SITE, "url": FULL + "/about/"}, "publisher": {"@type": "Organization", "name": SITE, "url": FULL + "/", "logo": {"@type": "ImageObject", "url": FULL + "/og.jpg"}},
-               "mainEntityOfPage": f"{FULL}/guides/{slug}/", "image": FULL + "/og.jpg"}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+               "mainEntityOfPage": f"{FULL}/guides/{slug}/", "image": OG_URL}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         # sections review, batch 3. What to read next is a row of links that look like links (it was one grey line). The short answer
         # of an advice article stands first, right under the question in the heading, and the paragraph that sets the scene after it.
         # A guide with three headings or more gets the "On this page" list beside it (with_toc() looks for section() blocks, a guide
@@ -12665,7 +12669,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in bc_qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
     bc_ld += ('<script type="application/ld+json">' + json.dumps([
         {"@context": "https://schema.org", "@type": "Article", "headline": "Which free resume builders let you download the PDF?",
-         "datePublished": BC.CHECKED, "dateModified": bc_days[-1], "mainEntityOfPage": f"{FULL}/free-resume-builders/", "image": f"{FULL}/og.jpg",
+         "datePublished": BC.CHECKED, "dateModified": bc_days[-1], "mainEntityOfPage": f"{FULL}/free-resume-builders/", "image": OG_URL,
          "author": {"@type": "Organization", "name": SITE, "url": FULL + "/about/"},
          "publisher": {"@type": "Organization", "name": SITE, "url": FULL + "/", "logo": {"@type": "ImageObject", "url": FULL + "/brand/icon-512.png"}}},
         {"@context": "https://schema.org", "@type": "ItemList", "name": "Resume builders compared by what the free plan gives",

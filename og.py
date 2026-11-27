@@ -34,7 +34,7 @@ hr{position:absolute;left:64px;right:64px;bottom:34px;border:0;border-top:2px so
 </style></head><body>
 <div class="logo">MARK SITENAME</div>
 <h1>Jobs that are <span>still open</span></h1>
-<p>Read every hour from employers’ own pages.<br>A job the employer takes down leaves the list.</p>
+<p>Read around the clock from employer sites.<br>A job the employer takes down leaves the list.</p>
 <div class="board"><div class="bh"><i></i>Just posted</div>ROWS</div><hr>
 </body></html>"""
 
