@@ -2,10 +2,15 @@
 (function () {
   var root = document.getElementById('rb'); if (!root) return;
   var H = window.HRN, esc = H.esc, $ = function (id) { return document.getElementById(id); };
-  var blank = { name: '', title: '', email: '', phone: '', place: '', links: '', summary: '', skills: '', exp: [{ role: '', org: '', dates: '', text: '' }], edu: [{ what: '', org: '', dates: '' }],
+  var blank = { name: '', title: '', email: '', phone: '', place: '', links: '', summary: '', skills: '', interests: '', exp: [{ role: '', org: '', dates: '', text: '' }], edu: [{ what: '', org: '', dates: '' }],
     proj: [], cert: [], lang: [] };
   var copy = function (x) { return JSON.parse(JSON.stringify(x)); };
-  var TPLS = ['classic', 'modern', 'compact', 'developer', 'executive', 'timeline', 'minimal', 'accent'];
+  // the templates, in the order of the gallery; build.py writes /resume-templates/ and each template's page from the same ids (TPL_NAMES below)
+  var TPLS = ['classic', 'modern', 'simple', 'professional', 'compact', 'executive', 'student', 'creative', 'elegant', 'bold', 'fresh', 'heritage', 'developer', 'timeline', 'minimal', 'accent'];
+  // Design: a colour for the headings (all dark enough to print and read), a font, the paper. '' is the template's own choice.
+  var COLS = [['', 'The template’s own'], ['#111111', 'Black'], ['#1f3a68', 'Navy'], ['#2b5d8a', 'Blue'], ['#0f6b6b', 'Teal'], ['#1d5c3a', 'Green'], ['#7a1f2b', 'Burgundy'], ['#4b2a5e', 'Plum'], ['#3b4a5a', 'Slate']];
+  var FONTS = [['', 'Template'], ['inter', 'Inter'], ['arial', 'Arial'], ['georgia', 'Georgia'], ['times', 'Times New Roman']];
+  var PAPER = { letter: [816, 1056, 'Letter'], a4: [794, 1123, 'A4'] }, MARGIN = 48;          // CSS pixels at 96 per inch; a half-inch margin on every side
   var fill = function (d) {                                                         // a damaged, old or foreign value must not break the builder
     if (!d || typeof d !== 'object' || Array.isArray(d)) d = {};
     Object.keys(blank).forEach(function (k) {
@@ -13,8 +18,15 @@
       else if (Array.isArray(d[k])) d[k] = d[k].filter(function (x) { return x && typeof x === 'object'; });
     });
     if (TPLS.indexOf(d.tpl) < 0) d.tpl = 'classic';
+    if (!COLS.some(function (c) { return c[0] === d.col; })) delete d.col;
+    if (!FONTS.some(function (f) { return f[0] === d.font; })) delete d.font;
+    if (!PAPER[d.paper]) delete d.paper;
+    if (typeof d.fs !== 'number' || !(d.fs >= 10.5 && d.fs <= 16)) delete d.fs;
+    if (typeof d.lh !== 'number' || !(d.lh >= 1.2 && d.lh <= 1.8)) delete d.lh;
     return d;
   };
+  // Letter where the visitor's browser says US, Canada, Mexico or the Philippines (or just "en"), A4 everywhere else, until they pick one
+  var paperOf = function (d) { return d.paper || (/^en$|-(US|CA|MX|PH)$/i.test(navigator.language || 'en') ? 'letter' : 'a4'); };
   var data = fill(H.get('hrn_resume', null));
   /* Several resumes, one per kind of job: the open one stays in hrn_resume, which the other pages read; the others, with the posting
      each was aimed at, wait in hrn_resume_set. */
@@ -23,9 +35,15 @@
   SET.items = SET.items.filter(function (x) { return x && typeof x.id === 'string'; }).slice(0, 30);
   if (!SET.items.length) SET.items = [{ id: 'r1', label: '' }];
   if (!SET.items.some(function (x) { return x.id === SET.cur; })) SET.cur = SET.items[0].id;
+  // the template, the colour, the font and the size on one sheet element (the preview, or a small picture in the Design gallery)
+  var styleSheet = function (el, d, tpl) {
+    el.className = 'rbs tpl-' + (tpl || d.tpl) + (d.font ? ' ff-' + d.font : '');
+    if (d.col) el.style.setProperty('--uac', d.col); else el.style.removeProperty('--uac');
+    if (d.fs) el.style.setProperty('--fs', d.fs + 'px'); else el.style.removeProperty('--fs');
+    el.style.lineHeight = d.lh ? String(d.lh) : '';
+  };
   var applyTpl = function () {
-    var pv = $('rb-preview'), sel = $('rb-tpl'); pv.className = 'tpl-' + data.tpl; if (sel) sel.value = data.tpl;
-    pv.style.fontSize = data.fs ? data.fs + 'px' : ''; pv.style.lineHeight = data.lh ? String(data.lh) : '';
+    var pv = $('rb-preview'), sel = $('rb-tpl'); styleSheet(pv, data); if (sel) sel.value = data.tpl;
     Array.prototype.forEach.call(document.querySelectorAll('.tplcard'), function (c) { c.classList.toggle('on', c.getAttribute('data-pick') === data.tpl); });
   };
   var save = function () { H.set('hrn_resume', data); };
@@ -84,31 +102,43 @@
       + '<p class="note" id="rb-sum-done" hidden>Copied. Paste it in the assistant’s message box (Ctrl+V or ⌘V).</p></div>';
   };
   var drawForm = function () {
-    var exp = listOf('exp'), edu = listOf('edu');
+    var exp = listOf('exp'), edu = listOf('edu'), empty = !hasContent(data);
     var sec = function (id, inner) { return '<div class="rsec' + (tab === id ? ' on' : '') + '" data-sec="' + id + '">' + inner + nextBtn(id) + '</div>'; };
+    var fileIn = '<input type="file" id="rb-file" accept=".docx,.pdf,.txt,.md,.json" hidden>';
     $('rb-form').innerHTML =
-      sec('contact', '<div class="rb-imp no-print"><p><b>Already have a resume?</b><span>Word, PDF, text or JSON Resume: it is read in this browser, nothing is uploaded.</span></p>' +
-        '<p class="rb-imp-a"><label class="btn ghost sm">Import a file<input type="file" id="rb-file" accept=".docx,.pdf,.txt,.md,.json" hidden></label>' +
-        '<button class="linkbtn" type="button" id="rb-paste">or paste the text</button></p>' +
+      // two ways in while the builder is empty, as CVMaker opens: your old resume (read here, never uploaded) or a blank form
+      sec('contact', '<div class="rb-imp no-print">' + (empty
+        ? '<p><b>Two ways to start</b><span>Bring in the resume you have, or start from nothing. Either way it stays in this browser.</span></p>' +
+          '<div class="rb-ways"><label><b>Upload my resume</b><span>PDF or Word (.docx). Read in this browser, nothing is uploaded.</span>' + fileIn + '</label>' +
+          '<button type="button" id="rb-scratch"><b>Start from scratch</b><span>Begin with the job you want</span></button></div><p class="rb-imp-a">'
+        : '<p><b>Already have a resume?</b><span>Word, PDF, text or JSON Resume: it is read in this browser, nothing is uploaded.</span></p>' +
+          '<p class="rb-imp-a"><label class="btn ghost sm">Import a file' + fileIn + '</label>') +
+        '<button class="linkbtn" type="button" id="rb-paste">' + (empty ? 'Or paste the text of your resume' : 'or paste the text') + '</button></p>' +
         '<div id="rb-pastebox" hidden><textarea id="rb-pastetext" rows="7" placeholder="Paste the whole resume as text: name, contacts, experience, education, skills"></textarea>' +
         '<p><button class="btn sm" type="button" id="rb-pasteread">Read it</button></p></div>' +
         (impMsg ? '<p class="note rb-impmsg" role="status">' + impMsg + '</p>' : '') +
         // a third way to start, while the builder is empty (plan item 4.7, 20 Nov 2026): one of the 390 examples for your work
         (hasContent(data) ? '' : '<p class="rb-imp-a rb-start"><label for="rb-expick">Or start from an example for your work:</label> <input id="rb-expick" list="rb-exlist" placeholder="Type a job, for example nurse" autocomplete="off"><datalist id="rb-exlist"></datalist> <button class="btn ghost sm" type="button" id="rb-exgo">Open it</button></p>') +
         '</div>' +
-        '<span class="flabel">About you</span>' + field('Full name', 'name', 'text', 'Alex Morgan') + field('Headline: the job you want', 'title', 'text', 'Senior Backend Engineer') +
+        // the job you want comes first (CVMaker asks for the desired job title before anything else): it is the headline under the name,
+        // and it brings the skills employers ask for in that work and lines to start from, one click each
+        '<span class="flabel">The job you want</span>' + field('Target job title (the headline under your name)', 'title', 'text', 'SEO Specialist') +
+        '<div id="rb-tsug" class="rb-tsug no-print" aria-live="polite">' + sugHtml(false) + '</div>' +
+        '<span class="flabel">About you</span>' + field('Full name', 'name', 'text', 'Alex Morgan') +
         '<div class="rrow">' + field('Email', 'email', 'text', 'you@example.com') + field('Phone', 'phone', 'text', '+1 555 010 0199') + '</div>' +
         '<div class="rrow">' + field('Location', 'place', 'text', 'Berlin, Germany · open to remote') + field('Links', 'links', 'text', 'github.com/you, linkedin.com/in/you') + '</div>') +
       sec('summary', field('Summary', 'summary', 'area', 'Two or three sentences: what you do, for how long, and what you are best at.') + '<p class="note rb-sumc" id="rb-sumc">' + sumCount() + '</p>' + sumAI()) +
       sec('experience', '<span class="flabel">Experience</span>' + exp) +
       sec('education', '<span class="flabel">Education</span>' + edu) +
-      sec('skills', '<span class="flabel">Skills</span>' + field('Comma-separated', 'skills', 'text', 'Python, PostgreSQL, AWS, Kubernetes')) +
+      sec('skills', '<span class="flabel">Skills</span>' + field('Comma-separated', 'skills', 'text', 'Python, PostgreSQL, AWS, Kubernetes') +
+        '<div id="rb-ssug" class="rb-tsug no-print" aria-live="polite">' + sugHtml(true) + '</div>') +
       sec('more', '<p class="note rb-more-n">Each of these is optional: a section with nothing in it is left off the page.</p>'
         + '<span class="flabel">Projects</span>' + listOf('proj') + '<span class="flabel">Certificates and licences</span>' + listOf('cert')
         + '<span class="flabel">Languages</span>' + listOf('lang')
+        + '<span class="flabel">Interests</span>' + field('Two to four, each specific (optional)', 'interests', 'text', 'Volunteer soccer coach, two seasons · Half-marathons, three finished')
         + '<datalist id="rb-levels"><option value="Native"><option value="Fluent"><option value="Professional"><option value="Conversational"><option value="Basic"><option value="C2"><option value="C1"><option value="B2"><option value="B1"><option value="A2"></datalist>') +
       sec('finish', finishUp());
-    drawTabs(); drawSet();
+    drawTabs(); drawSet(); drawMode(); needSug();
   };
   /* ---- Import an old resume, as resumai and Rezi offer it: a Word file is unzipped here (the browser's own DecompressionStream), a PDF
      is read with pdf.js, loaded only when a PDF is chosen; the text goes through HRNT.parseResume. Nothing leaves the browser. ---- */
@@ -243,7 +273,7 @@
     return id === 'contact' ? !!(data.name && (data.email || data.phone)) : id === 'summary' ? String(data.summary || '').length > 40
       : id === 'experience' ? data.exp.some(function (x) { return x.role && x.text; }) : id === 'education' ? data.edu.some(function (x) { return x.what || x.org; })
       : id === 'skills' ? String(data.skills || '').split(',').filter(function (x) { return x.trim(); }).length >= 3
-      : id === 'more' ? data.proj.some(function (x) { return x.name || x.text; }) || data.cert.some(function (x) { return x.name; }) || data.lang.some(function (x) { return x.name; }) : false;
+      : id === 'more' ? data.proj.some(function (x) { return x.name || x.text; }) || data.cert.some(function (x) { return x.name; }) || data.lang.some(function (x) { return x.name; }) || !!data.interests : false;
   };
   var drawTabs = function () {
     var nav = $('rb-tabs'); if (!nav) return;
@@ -259,20 +289,79 @@
     drawTabs();
     var left = document.querySelector('.rb-left'); if (left && left.getBoundingClientRect().top < 0) left.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
-  /* Finish up: the template gallery with small pictures, and the format (size and spacing), saved with the resume. */
-  var TPL_NAMES = { classic: ['Classic', 'Serif, calm, for any field'], modern: ['Modern', 'Clean sans-serif, a bar on each heading'], compact: ['Compact', 'Fits more on one page'],
-    developer: ['Developer', 'Monospace headings, for engineers'], executive: ['Executive', 'Centred name, for senior roles'],
-    timeline: ['Timeline', 'Dates and time in each job on the left, as on hh.ru'], minimal: ['Minimal', 'Light lines and space, for design and product'],
-    accent: ['Accent', 'One navy colour on the headings, for sales and business'] };
+  /* The templates: a name and one line each. build.py reads this list (the count in the page copy, and a check that every template has
+     its page at /resume-templates/<id>/). */
+  var TPL_NAMES = { classic: ['Classic', 'Serif text, calm headings, for any field'], modern: ['Modern', 'Clean sans-serif, a bar on each heading'],
+    simple: ['Simple', 'The plainest page: Arial, bold headings, no lines'], professional: ['Professional', 'Serif, small capitals, a rule under the header'],
+    compact: ['Compact', 'Smaller type that fits more on one page'], executive: ['Executive', 'Centred name and headings, for senior roles'],
+    student: ['Student', 'Education and projects first, for a first job'], creative: ['Creative', 'A coloured header band, the rest plain'],
+    elegant: ['Elegant', 'Serif throughout, centred, thin rules'], bold: ['Bold', 'A large name and heavy headings'],
+    fresh: ['Fresh', 'Teal headings on a light band'], heritage: ['Heritage', 'Burgundy and serif, a double rule'],
+    developer: ['Developer', 'Monospace type, for engineers'], timeline: ['Timeline', 'Dates and time in each job on the left'],
+    minimal: ['Minimal', 'Light lines and space, for design and product'], accent: ['Accent', 'Navy name and headings, for sales and business'] };
+  var fmtRow = function () {
+    return '<div class="fmtrow"><span>Text size</span><button class="btn ghost sm" type="button" data-fs="-1" aria-label="Smaller text">A−</button><b id="rb-fs">' + sizeNow() + '</b><button class="btn ghost sm" type="button" data-fs="1" aria-label="Larger text">A+</button>'
+      + '<span>Spacing</span><button class="btn ghost sm" type="button" data-lh="-0.05" aria-label="Less space between lines">−</button><b id="rb-lh">' + (data.lh || 1.5).toFixed(2) + '</b><button class="btn ghost sm" type="button" data-lh="0.05" aria-label="More space between lines">+</button></div>';
+  };
+  var sizeNow = function () { var pv = $('rb-preview'); return data.fs || (pv ? parseFloat(getComputedStyle(pv).getPropertyValue('--fs')) || 14 : 14); };
+  var nameOf = function (list, v) { return (list.filter(function (x) { return x[0] === v; })[0] || ['', ''])[1]; };
+  /* Finish up: what the page will look like, and the downloads. The template, colour, font and paper are chosen under Design. */
   var finishUp = function () {
-    return '<span class="flabel">Template</span><div class="tplgal">' + TPLS.map(function (t) {
-        return '<button type="button" class="tplcard' + (data.tpl === t ? ' on' : '') + '" data-pick="' + t + '"><span class="tplmini tpl-' + t + '"><b>Alex Example</b><i></i><i class="s"></i><u></u><i></i><i class="s"></i></span>'
-          + '<span class="tpln"><b>' + TPL_NAMES[t][0] + '</b><span>' + TPL_NAMES[t][1] + '</span></span></button>';
+    return '<span class="flabel">Your design</span><p class="rb-dnote"><b>' + esc(TPL_NAMES[data.tpl][0]) + '</b> template'
+      + (data.col ? ', ' + esc(nameOf(COLS, data.col)).toLowerCase() + ' headings' : '') + (data.font ? ', ' + esc(nameOf(FONTS, data.font)) : '') + ', ' + PAPER[paperOf(data)][2] + ' paper. '
+      + '<button class="linkbtn" type="button" data-mode="design">Change the design</button></p>'
+      + '<p class="note">One page is what most recruiters read: if the sheet runs over, make the text a little smaller under Design or cut older jobs to a line each.</p>'
+      + '<p class="rsec-dl"><button class="btn primary" type="button" id="rb-print2">Download PDF</button><button class="btn ghost" type="button" id="rb-doc2">Word</button></p>'
+      + '<p class="note">Both are free, with no account and no watermark. “Download PDF” opens your browser’s print window: choose “Save as PDF”.</p>' + myJobsBox();
+  };
+  /* Design: the templates as small pictures of this resume (or of an example while the form is empty), the colour, the font, the size
+     and the paper. Every choice is saved with the resume and changes the page at once. */
+  var SAMPLE = { name: 'Morgan Lee', title: 'Customer Success Manager', email: 'morgan.lee@example.com', phone: '(555) 010-0144', place: 'Denver, CO', links: 'linkedin.com/in/morgan-lee-example',
+    summary: 'Customer success manager with six years in B2B software. Keeps 120 accounts growing: renewals at 94% and expansion revenue up 31% last year.',
+    skills: 'Account management, Onboarding, Renewals, Salesforce, Gainsight, SQL, Training',
+    exp: [{ role: 'Customer Success Manager', org: 'Brightpath Software', dates: 'Mar 2022 – now', text: 'Kept renewals at 94% across 120 mid-market accounts worth $6.8M a year\nCut onboarding time from 45 days to 28 with a shared launch plan\nGrew expansion revenue 31% in 2025 by running quarterly business reviews' },
+      { role: 'Account Coordinator', org: 'Northside Media', dates: 'Jun 2019 – Feb 2022', text: 'Handled 40 client accounts and their monthly reports\nTrained 6 new coordinators on the reporting tools' }],
+    edu: [{ what: 'B.A. in Communication', org: 'University of Colorado', dates: '2019' }], proj: [], cert: [], lang: [] };
+  var drawDesign = function () {
+    var el = $('rb-design'); if (!el || el.hidden) return;
+    var src = hasContent(data) ? data : SAMPLE;
+    el.innerHTML = '<span class="flabel">Template</span><div class="tplgal">' + TPLS.map(function (t) {
+        return '<div class="tplcard' + (data.tpl === t ? ' on' : '') + '" data-pick="' + t + '"><div class="tplsheet" aria-hidden="true"><div data-mini="' + t + '">' + sheetHtml(src, t) + '</div></div>'
+          + '<button type="button" class="tpln" data-pick="' + t + '" aria-pressed="' + (data.tpl === t) + '" title="' + esc(TPL_NAMES[t][1]) + '"><b>' + TPL_NAMES[t][0] + '</b></button></div>';
+      }).join('') + '</div><p class="rb-dnote" id="rb-tplnote"></p>'
+      + '<span class="flabel">Colour of the headings</span><div class="rb-swatch" role="group" aria-label="Colour of the headings">' + COLS.map(function (c) {
+        return '<button type="button" data-col="' + c[0] + '"' + (c[0] ? ' style="background:' + c[0] + '"' : ' class="none"') + ' aria-pressed="' + ((data.col || '') === c[0]) + '" aria-label="' + esc(c[1]) + '" title="' + esc(c[1]) + '"></button>';
       }).join('') + '</div>'
-      + '<span class="flabel">Format</span><div class="fmtrow"><span>Text size</span><button class="btn ghost sm" type="button" data-fs="-1">A−</button><b id="rb-fs">' + (data.fs || 14) + '</b><button class="btn ghost sm" type="button" data-fs="1">A+</button>'
-      + '<span>Spacing</span><button class="btn ghost sm" type="button" data-lh="-0.05">−</button><b id="rb-lh">' + (data.lh || 1.5).toFixed(2) + '</b><button class="btn ghost sm" type="button" data-lh="0.05">+</button></div>'
-      + '<p class="note">One page is what most recruiters read: if the sheet runs over, make the text a little smaller or cut older jobs to a line each.</p>'
-      + '<p class="rsec-dl"><button class="btn primary" type="button" id="rb-print2">Download PDF</button><button class="btn ghost" type="button" id="rb-doc2">Word</button></p>';
+      + '<span class="flabel">Font</span><div class="rb-dsel" role="group" aria-label="Font">' + FONTS.map(function (f) {
+        return '<button type="button" data-font="' + f[0] + '" aria-pressed="' + ((data.font || '') === f[0]) + '">' + esc(f[0] ? f[1] : 'The template’s own') + '</button>'; }).join('') + '</div>'
+      + '<span class="flabel">Size and spacing</span>' + fmtRow()
+      + '<span class="flabel">Paper</span><div class="rb-dsel" role="group" aria-label="Paper size">' + ['letter', 'a4'].map(function (p) {
+        return '<button type="button" data-paper="' + p + '" aria-pressed="' + (paperOf(data) === p) + '">' + (p === 'letter' ? 'US Letter' : 'A4') + '</button>'; }).join('') + '</div>'
+      + '<p class="rb-dnote">Letter is the size used in the US and Canada, A4 in most other countries. Every template is one column of real text with standard headings, the layout screening software reads best.</p>'
+      + '<p class="rsec-dl"><button class="btn primary" type="button" id="rb-print3">Download PDF</button><button class="btn ghost" type="button" id="rb-doc3">Word</button></p>';
+    restyleDesign();
+  };
+  var restyleDesign = function () {             // after a choice: the pictures, the pressed buttons and the line about the template, without drawing them again
+    var el = $('rb-design'); if (!el || el.hidden || !el.firstChild) return;
+    Array.prototype.forEach.call(el.querySelectorAll('[data-mini]'), function (m) { styleSheet(m, data, m.getAttribute('data-mini')); });
+    var press = function (sel, attr, v) { Array.prototype.forEach.call(el.querySelectorAll(sel), function (b) { b.setAttribute('aria-pressed', String(b.getAttribute(attr) === v)); }); };
+    press('button[data-pick]', 'data-pick', data.tpl); press('[data-col]', 'data-col', data.col || ''); press('[data-font]', 'data-font', data.font || ''); press('[data-paper]', 'data-paper', paperOf(data));
+    var n = $('rb-tplnote');
+    if (n) n.innerHTML = '<b>' + esc(TPL_NAMES[data.tpl][0]) + ':</b> ' + esc(TPL_NAMES[data.tpl][1]) + '. <a href="' + H.base + '/resume-templates/' + data.tpl + '/">What it suits</a>';
+    if ($('rb-fs')) $('rb-fs').textContent = sizeNow();
+    if ($('rb-lh')) $('rb-lh').textContent = (data.lh || 1.5).toFixed(2);
+  };
+  var mode = H.get('hrn_rb_mode', 'content'); if (mode !== 'design') mode = 'content';
+  var drawMode = function () {
+    var m = $('rb-mode'); if (!m) return;
+    m.innerHTML = '<button type="button" role="tab" data-mode="content" aria-selected="' + (mode === 'content') + '" aria-controls="rb-form">Content</button>'
+      + '<button type="button" role="tab" data-mode="design" aria-selected="' + (mode === 'design') + '" aria-controls="rb-design">Design</button>';
+    $('rb-tabs').hidden = $('rb-form').hidden = mode !== 'content';
+    if ($('rb-design')) $('rb-design').hidden = mode !== 'design';
+  };
+  var setMode = function (m) {
+    mode = m === 'design' ? 'design' : 'content'; H.set('hrn_rb_mode', mode); drawMode(); drawDesign();
+    var left = document.querySelector('.rb-left'); if (left && left.getBoundingClientRect().top < 0) left.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
   var linesOf = function (t) { return String(t || '').split('\n').map(function (l) { return l.replace(/^[-•*\s]+/, '').trim(); }).filter(Boolean); };
   var ulOf = function (t) { var lines = linesOf(t); return lines.length ? '<ul>' + lines.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>' : ''; };
@@ -305,10 +394,12 @@
     var y = Math.floor(n / 12), m = n % 12;
     return (y ? y + (y === 1 ? ' yr' : ' yrs') : '') + (y && m ? ' ' : '') + (m ? m + (m === 1 ? ' mo' : ' mos') : '');
   };
-  var drawPreview = function () {
-    var contact = [data.email, data.phone, data.place].concat(String(data.links || '').split(',').map(function (s) { return s.trim(); })).filter(Boolean).map(esc).join(' · ');
-    var tl = data.tpl === 'timeline', spans = [];
-    var exp = data.exp.filter(function (x) { return x.role || x.org || x.text; }).map(function (x) {
+  /* The sheet's HTML for a resume d in template tpl: the preview, the pictures under Design and the Word file use it (and build.py's
+     sheet_html() writes the same markup for the template gallery). '' when there is nothing to show. */
+  var sheetHtml = function (d, tpl) {
+    var contact = [d.email, d.phone, d.place].concat(String(d.links || '').split(',').map(function (s) { return s.trim(); })).filter(Boolean).map(esc).join(' · ');
+    var tl = tpl === 'timeline', spans = [];
+    var exp = d.exp.filter(function (x) { return x.role || x.org || x.text; }).map(function (x) {
       if (tl) {
         var n = months(x.dates); spans.push(range(x.dates));
         return '<div class="pv-item pv-tl"><div class="pv-when">' + esc(x.dates) + (n ? '<span>' + span(n) + '</span>' : '') + '</div><div class="pv-what">'
@@ -316,26 +407,85 @@
       }
       return '<div class="pv-item"><div class="pv-top"><strong>' + esc(x.role) + (x.org ? ', ' + esc(x.org) : '') + '</strong><span>' + esc(x.dates) + '</span></div>' + ulOf(x.text) + '</div>';
     }).join('');
-    var proj = data.proj.filter(function (x) { return x.name || x.text; }).map(function (x) {
+    var proj = d.proj.filter(function (x) { return x.name || x.text; }).map(function (x) {
       return '<div class="pv-item"><div class="pv-top"><strong>' + esc(x.name) + '</strong><span>' + esc(x.link) + '</span></div>' + ulOf(x.text) + '</div>';
     }).join('');
-    var cert = data.cert.filter(function (x) { return x.name; }).map(function (x) {
+    var cert = d.cert.filter(function (x) { return x.name; }).map(function (x) {
       return '<div class="pv-item"><div class="pv-top"><strong>' + esc(x.name) + (x.org ? ', ' + esc(x.org) : '') + '</strong><span>' + esc(x.date) + '</span></div></div>';
     }).join('');
-    var lang = data.lang.filter(function (x) { return x.name; }).map(function (x) { return esc(x.name) + (x.level ? ' (' + esc(x.level) + ')' : ''); });
-    var edu = data.edu.filter(function (x) { return x.what || x.org; }).map(function (x) {
+    var lang = d.lang.filter(function (x) { return x.name; }).map(function (x) { return esc(x.name) + (x.level ? ' (' + esc(x.level) + ')' : ''); });
+    var edu = d.edu.filter(function (x) { return x.what || x.org; }).map(function (x) {
       return '<div class="pv-item"><div class="pv-top"><strong>' + esc(x.what) + (x.org ? ', ' + esc(x.org) : '') + '</strong><span>' + esc(x.dates) + '</span></div></div>';
     }).join('');
-    var skills = String(data.skills || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
-    $('rb-preview').innerHTML = (data.name || data.title || contact || exp || edu || skills.length || proj || cert || lang.length)
-      ? '<h2 class="pv-name">' + esc(data.name || 'Your name') + '</h2>' + (data.title ? '<p class="pv-title">' + esc(data.title) + '</p>' : '') +
-        (contact ? '<p class="pv-contact">' + contact + '</p>' : '') + (data.summary ? '<h3>Summary</h3><p>' + esc(data.summary) + '</p>' : '') +
-        (exp ? '<h3>Experience' + (tl && union(spans) ? ' <small>' + span(union(spans)) + '</small>' : '') + '</h3>' + exp : '') + (proj ? '<h3>Projects</h3>' + proj : '') + (edu ? '<h3>Education</h3>' + edu : '') + (cert ? '<h3>Certifications</h3>' + cert : '') +
-        (skills.length ? '<h3>Skills</h3>' + (tl ? '<p class="pv-tags">' + skills.map(function (k) { return '<span>' + esc(k) + '</span>'; }).join('') + '</p>' : '<p>' + skills.map(esc).join(' · ') + '</p>') : '') + (lang.length ? '<h3>Languages</h3><p>' + lang.join(' · ') + '</p>' : '')
-      // the empty sheet: one sentence and one way out (an example to start from), not a blank box with a grey line
-      : '<div class="pane-empty"><p>Start typing on the left. Your resume appears here.</p><p class="no-print"><a class="btn ghost sm" href="' + H.base + '/resume/examples/">Open an example to start from</a></p></div>';
-    applyTpl();
+    var skills = String(d.skills || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    if (!(d.name || d.title || contact || exp || edu || skills.length || proj || cert || lang.length || d.interests)) return '';
+    var S = { summary: d.summary ? '<h3>Summary</h3><p>' + esc(d.summary) + '</p>' : '',
+      exp: exp ? '<h3>Experience' + (tl && union(spans) ? ' <small>' + span(union(spans)) + '</small>' : '') + '</h3>' + exp : '',
+      proj: proj ? '<h3>Projects</h3>' + proj : '', edu: edu ? '<h3>Education</h3>' + edu : '', cert: cert ? '<h3>Certifications</h3>' + cert : '',
+      skills: skills.length ? '<h3>Skills</h3>' + (tl ? '<p class="pv-tags">' + skills.map(function (k) { return '<span>' + esc(k) + '</span>'; }).join('') + '</p>' : '<p>' + skills.map(esc).join(' · ') + '</p>') : '',
+      lang: lang.length ? '<h3>Languages</h3><p>' + lang.join(' · ') + '</p>' : '', interests: d.interests ? '<h3>Interests</h3><p>' + esc(d.interests) + '</p>' : '' };
+    // the Student template puts what a first job is judged by first: school, then projects, then any work
+    var order = tpl === 'student' ? ['summary', 'edu', 'proj', 'exp', 'skills', 'cert', 'lang', 'interests'] : ['summary', 'exp', 'proj', 'edu', 'cert', 'skills', 'lang', 'interests'];
+    return '<div class="pv-head"><h2 class="pv-name">' + esc(d.name || 'Your name') + '</h2>' + (d.title ? '<p class="pv-title">' + esc(d.title) + '</p>' : '') +
+      (contact ? '<p class="pv-contact">' + contact + '</p>' : '') + '</div>' + order.map(function (k) { return S[k]; }).join('');
   };
+  var drawPreview = function () {
+    $('rb-preview').innerHTML = sheetHtml(data, data.tpl)
+      // the empty sheet: one sentence and one way out (an example to start from), not a blank box with a grey line
+      || '<div class="pane-empty"><p>Start typing on the left. Your resume appears here.</p><p class="no-print"><a class="btn ghost sm" href="' + H.base + '/resume/examples/">Open an example to start from</a></p></div>';
+    applyTpl(); paginate();
+  };
+  /* The sheet is a real page: Letter or A4 with half-inch margins (the PDF gets the same through @page), zoomed to fit the column or as
+     the visitor sets it. The page count is measured on the sheet itself, and a dashed line shows where each next page starts. */
+  var zoomPref = H.get('hrn_rb_zoom', 'fit'), ZOOMS = [0.35, 0.5, 0.65, 0.8, 1, 1.25], pageAt = 1, nPages = 1;
+  if (zoomPref !== 'fit' && ZOOMS.indexOf(zoomPref) < 0) zoomPref = 'fit';
+  var pageCss = function () {
+    var st = $('rb-page-css');
+    if (!st) { st = document.createElement('style'); st.id = 'rb-page-css'; document.head.appendChild(st); }
+    st.textContent = '@page{size:' + (paperOf(data) === 'a4' ? 'A4' : 'letter') + ';margin:0.5in}';
+  };
+  var zoomNow = function () {
+    var box = $('rb-pbox'), W = PAPER[paperOf(data)][0];
+    if (zoomPref !== 'fit' || !box) return zoomPref === 'fit' ? 1 : zoomPref;
+    var cs = getComputedStyle(box), inner = box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    return Math.max(0.25, Math.min(1, Math.floor(inner / W * 100) / 100));
+  };
+  var paginate = function () {
+    var pv = $('rb-preview'); if (!pv) return;
+    var pp = PAPER[paperOf(data)], CH = pp[1] - 2 * MARGIN;
+    pageCss();
+    Array.prototype.forEach.call(pv.querySelectorAll('.pv-break'), function (x) { x.remove(); });
+    pv.style.zoom = 1; pv.style.width = pp[0] + 'px'; pv.style.minHeight = '';
+    nPages = Math.max(1, Math.ceil((pv.scrollHeight - 2 * MARGIN - 2) / CH));
+    pv.style.minHeight = (nPages * CH + 2 * MARGIN) + 'px';
+    for (var k = 1; k < nPages; k++) {
+      var b = document.createElement('div'); b.className = 'pv-break no-print'; b.setAttribute('aria-hidden', 'true');
+      b.style.top = (MARGIN + k * CH) + 'px'; b.innerHTML = '<span>Page ' + (k + 1) + ' starts here</span>'; pv.appendChild(b);
+    }
+    pv.style.zoom = zoomNow(); drawBar();
+  };
+  var drawBar = function () {
+    var bar = $('rb-pvbar'); if (!bar) return;
+    pageAt = Math.max(1, Math.min(pageAt, nPages));
+    bar.innerHTML = '<span class="grp"><button type="button" data-pg="-1" aria-label="Previous page"' + (pageAt <= 1 ? ' disabled' : '') + '>‹</button>'
+      + '<span>Page <b>' + pageAt + '</b> of ' + nPages + '</span><button type="button" data-pg="1" aria-label="Next page"' + (pageAt >= nPages ? ' disabled' : '') + '>›</button></span>'
+      + (nPages > 1 ? '<span class="over">' + nPages + ' pages: shorten older jobs, or make the text smaller under Design</span>' : '<span>Fits on one page · ' + PAPER[paperOf(data)][2] + '</span>')
+      + '<span class="grp"><button type="button" data-zoom="-1" aria-label="Zoom out">−</button><b>' + Math.round(zoomNow() * 100) + '%</b>'
+      + '<button type="button" data-zoom="1" aria-label="Zoom in">+</button><button type="button" data-zoom="fit"' + (zoomPref === 'fit' ? ' aria-pressed="true"' : '') + '>Fit</button></span>';
+  };
+  var zoomBy = function (v) {
+    if (v === 'fit') zoomPref = 'fit';
+    else { var z = zoomNow(), i = ZOOMS.filter(function (x) { return v > 0 ? x > z + 0.001 : x < z - 0.001; }); zoomPref = i.length ? (v > 0 ? i[0] : i[i.length - 1]) : (v > 0 ? ZOOMS[ZOOMS.length - 1] : ZOOMS[0]); }
+    H.set('hrn_rb_zoom', zoomPref); $('rb-preview').style.zoom = zoomNow(); drawBar();
+  };
+  var goPage = function (step) {
+    pageAt = Math.max(1, Math.min(nPages, pageAt + step)); drawBar();
+    var pv = $('rb-preview'), to = pageAt === 1 ? pv : pv.querySelectorAll('.pv-break')[pageAt - 2];
+    if (to) to.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  var rtimer;
+  window.addEventListener('resize', function () { clearTimeout(rtimer); rtimer = setTimeout(function () { if (zoomPref === 'fit') { $('rb-preview').style.zoom = zoomNow(); drawBar(); } }, 150); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { paginate(); });       // the page count with the real fonts
   // a Word file: the same page as simple HTML, which Word opens and saves as .docx
   // The same resume in the open JSON Resume format (jsonresume.org): a file other tools and AI assistants can read
   var jsonFile = function () {
@@ -345,21 +495,30 @@
     a.download = (data.name ? data.name.replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '') : 'resume') + '.json';
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
   };
+  // the template's look in Word's terms: its font, its accent colour, a centred header where the template centres it
+  var SERIF = { classic: 1, executive: 1, professional: 1, elegant: 1, heritage: 1 };
+  var TAC = { accent: '#1f3a68', professional: '#2d3a4a', student: '#2b5d8a', creative: '#1f4e5f', fresh: '#0f6b6b', heritage: '#7a1f2b', elegant: '#333333' };
   var wordFile = function () {
-    var css = 'body{font-family:' + (data.tpl === 'classic' ? 'Georgia,serif' : data.tpl === 'developer' ? 'Consolas,monospace' : 'Arial,sans-serif') + ';font-size:11pt;line-height:1.4;color:#111}' +
-      'h2{font-size:20pt;margin:0}h3{font-size:10pt;text-transform:uppercase;letter-spacing:1pt;border-bottom:1px solid #111;margin:14pt 0 6pt}p{margin:0 0 5pt}ul{margin:3pt 0 0}.pv-top span{color:#555}' +
-      (data.tpl === 'accent' ? 'h2,h3{color:#1f3a68}h3{border-bottom-color:#1f3a68}' : data.tpl === 'minimal' ? 'h3{border-bottom:1px solid #ccc;color:#444;font-weight:normal}' : '');
+    var t = data.tpl, ac = data.col || TAC[t] || '#111111';
+    var ff = { inter: 'Inter,Arial,sans-serif', arial: 'Arial,sans-serif', georgia: 'Georgia,serif', times: '"Times New Roman",serif' }[data.font]
+      || (SERIF[t] ? 'Georgia,serif' : t === 'developer' ? 'Consolas,monospace' : t === 'simple' ? 'Arial,sans-serif' : 'Calibri,Arial,sans-serif');
+    var pt = ((data.fs || 14) * 11 / 14).toFixed(1);          // 14 CSS px on the sheet is 11 pt in Word
+    var css = 'body{font-family:' + ff + ';font-size:' + pt + 'pt;line-height:' + (data.lh || 1.4) + ';color:#111}' +
+      'h2{font-size:20pt;margin:0;color:' + (/^(accent|professional|fresh|heritage|creative)$/.test(t) ? ac : '#111') + '}' +
+      'h3{font-size:10pt;text-transform:uppercase;letter-spacing:1pt;color:' + ac + ';border-bottom:1px solid ' + ac + ';margin:14pt 0 6pt}p{margin:0 0 5pt}ul{margin:3pt 0 0}.pv-top span{color:#555}' +
+      (/^(executive|elegant)$/.test(t) ? '.pv-head p,.pv-head h2{text-align:center}' : '') + (t === 'minimal' ? 'h3{border-bottom-color:#ccc;color:#444;font-weight:normal}' : '') +
+      (t === 'simple' ? 'h3{text-transform:none;letter-spacing:0;border:0;font-size:11pt}' : '') + (t === 'professional' ? 'h3{font-variant:small-caps;text-transform:none;font-size:12pt}' : '');
     var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>Resume</title><style>' + css + '</style></head><body>' +
-      $('rb-preview').innerHTML.replace(/<div class="pv-top"><strong>(.*?)<\/strong><span>(.*?)<\/span><\/div>/g, '<p><strong>$1</strong> &nbsp; <span>$2</span></p>')
+      sheetHtml(data, t).replace(/<div class="pv-top"><strong>(.*?)<\/strong><span>(.*?)<\/span><\/div>/g, '<p><strong>$1</strong> &nbsp; <span>$2</span></p>')
         .replace(/<div class="pv-item pv-tl"><div class="pv-when">(.*?)<\/div><div class="pv-what">(.*?)<\/div><\/div>/g,
                  '<table width="100%" style="margin:0 0 8pt"><tr><td width="27%" valign="top" style="color:#555;font-size:10pt">$1</td><td valign="top">$2</td></tr></table>') + '</body></html>';
     var a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob(['\ufeff' + html], { type: 'application/msword' }));
+    a.href = URL.createObjectURL(new Blob(['﻿' + html], { type: 'application/msword' }));
     a.download = (data.name ? data.name.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') + '-' : '') + 'resume.doc';
     document.body.appendChild(a); a.click(); a.remove();
   };
   root.addEventListener('change', function (ev) { if (ev.target.id === 'rb-tpl') { data.tpl = ev.target.value; save(); drawPreview(); } });      // a template can change the markup (Timeline), not only the style
-  var htimer;
+  var htimer, stimer;
   root.addEventListener('input', function (ev) {
     var t = ev.target, blk = t.closest('.rblock');
     if (blk && t.getAttribute('data-f')) {
@@ -374,6 +533,7 @@
       if (k === 'summary' && $('rb-sumc')) $('rb-sumc').textContent = sumCount();
       if (k === 'title' && / \(copy\)$/.test(curItem().label || '')) { curItem().label = ''; keepSet(); }        // a copy renamed by its new headline
       if (k === 'title' || k === 'name') { var o = document.querySelector('#rb-which option[value="' + SET.cur + '"]'); if (o) o.textContent = labelOf(curItem()); }
+      if (k === 'title' || k === 'skills') { clearTimeout(stimer); stimer = setTimeout(drawSug, 400); }
     } else return;
     save(); drawPreview();
   });
@@ -408,12 +568,29 @@
       });
     }
     else if (t.closest && t.closest('[data-tab]')) setTab(t.closest('[data-tab]').getAttribute('data-tab'));
-    else if (t.closest && t.closest('[data-pick]')) { data.tpl = t.closest('[data-pick]').getAttribute('data-pick'); save(); drawPreview(); }
-    else if (t.getAttribute('data-fs')) { data.fs = Math.max(11, Math.min(16, (data.fs || 14) + Number(t.getAttribute('data-fs')) * 0.5)); save(); applyTpl(); $('rb-fs').textContent = data.fs; }
-    else if (t.getAttribute('data-lh')) { data.lh = Math.max(1.2, Math.min(1.8, Math.round(((data.lh || 1.5) + Number(t.getAttribute('data-lh'))) * 100) / 100)); save(); applyTpl(); $('rb-lh').textContent = data.lh.toFixed(2); }
-    else if (t.id === 'rb-print' || t.id === 'rb-print2') window.print();
-    else if (t.id === 'rb-doc2') wordFile();
+    else if (t.closest && t.closest('[data-pick]')) { data.tpl = t.closest('[data-pick]').getAttribute('data-pick'); save(); drawPreview(); restyleDesign(); }
+    else if (t.closest && t.closest('[data-mode]')) setMode(t.closest('[data-mode]').getAttribute('data-mode'));
+    else if (t.hasAttribute('data-col')) { var c_ = t.getAttribute('data-col'); if (c_) data.col = c_; else delete data.col; save(); applyTpl(); paginate(); restyleDesign(); }
+    else if (t.hasAttribute('data-font')) { var f_ = t.getAttribute('data-font'); if (f_) data.font = f_; else delete data.font; save(); applyTpl(); paginate(); restyleDesign(); }
+    else if (t.hasAttribute('data-paper')) { data.paper = t.getAttribute('data-paper'); save(); paginate(); restyleDesign(); }
+    else if (t.getAttribute('data-fs')) { data.fs = Math.max(10.5, Math.min(16, sizeNow() + Number(t.getAttribute('data-fs')) * 0.5)); save(); applyTpl(); paginate(); restyleDesign(); }
+    else if (t.getAttribute('data-lh')) { data.lh = Math.max(1.2, Math.min(1.8, Math.round(((data.lh || 1.5) + Number(t.getAttribute('data-lh'))) * 100) / 100)); save(); applyTpl(); paginate(); restyleDesign(); }
+    else if (t.getAttribute('data-zoom')) { var z_ = t.getAttribute('data-zoom'); zoomBy(z_ === 'fit' ? 'fit' : Number(z_)); }
+    else if (t.getAttribute('data-pg')) goPage(Number(t.getAttribute('data-pg')));
+    else if (t.getAttribute('data-addline') != null && sugLines[+t.getAttribute('data-addline')]) addLine(sugLines[+t.getAttribute('data-addline')]);
+    else if (t.closest && t.closest('#rb-scratch')) { var ti = document.querySelector('#rb-form [data-k="title"]'); if (ti) ti.focus(); }
+    else if (t.id === 'rb-print' || t.id === 'rb-print2' || t.id === 'rb-print3') window.print();
+    else if (t.id === 'rb-doc2' || t.id === 'rb-doc3') wordFile();
     else if (t.id === 'rb-doc') wordFile();
+    else if (t.id === 'rb-myjobs') {
+      var mj = $('rb-myjobs-n'), txt = asText();
+      if (!hasContent(data)) { mj.textContent = 'Fill in the resume first.'; return; }
+      H.cvSkillsOf(txt).catch(function () { return []; }).then(function (sk) {
+        var kept = H.cvSave({ id: 'rb-' + SET.cur, name: labelOf(curItem()), title: data.title || '', text: txt, skills: sk });
+        mj.innerHTML = kept ? 'Kept in <a href="' + H.base + '/my-jobs/#resumes">My jobs</a>' + (sk.length ? ', with ' + sk.length + ' skills it names' : '') + '. Save again after a change to update it.'
+          : 'My jobs keeps five resumes, and five are there: <a href="' + H.base + '/my-jobs/#resumes">remove one</a> first.';
+      });
+    }
     else if (t.id === 'rb-json') jsonFile();
     else if (t.id === 'rb-exgo') {
       var pick = ($('rb-expick').value || '').trim().toLowerCase();
@@ -464,6 +641,7 @@
     if (ce.length) { L.push('', 'Certifications'); ce.forEach(function (x) { L.push([x.name, x.org, x.date].filter(Boolean).join(', ')); }); }
     var la = data.lang.filter(function (x) { return x.name; });
     if (la.length) L.push('', 'Languages: ' + la.map(function (x) { return x.name + (x.level ? ' (' + x.level + ')' : ''); }).join(', '));
+    if (data.interests) L.push('', 'Interests: ' + data.interests);
     return L.join('\n');
   };
   var drawCheck = function () {
@@ -494,7 +672,7 @@
         + (m.terms.filter(function (t) { return !t.found; }).length ? '<p class="note">Its repeated words you do not use yet: ' + m.terms.filter(function (t) { return !t.found; }).slice(0, 6).map(function (t) { return '“' + esc(t.term) + '”'; }).join(', ') + '.</p>' : '');
     }
     html += '<details class="rbc-jd"' + (jd ? '' : ' open') + '><summary>' + (jd ? 'Change the posting' : 'Paste a posting') + '</summary><textarea id="rb-jd" rows="5" aria-label="The job posting to match your resume to" placeholder="Paste the full text of the job posting">' + esc(jd) + '</textarea>'
-      + (jd ? '<button class="linkbtn" type="button" id="rb-jd-clear">Remove the posting</button>' : '') + '</details></div>' + titleSkills() + payLine(text) + aiLine(text);
+      + (jd ? '<button class="linkbtn" type="button" id="rb-jd-clear">Remove the posting</button>' : '') + '</details></div>' + payLine(text) + aiLine(text);
     chk.innerHTML = html;
     chk.hidden = false;
   };
@@ -549,27 +727,85 @@
       return '<span class="rb-chip"><button class="chipbtn" type="button" data-addskill="' + esc(x) + '">+ ' + esc(x) + '</button><button class="rb-skip" type="button" data-skipskill="' + esc(x) + '" aria-label="Skip ' + esc(x) + '" title="Not mine: do not suggest it again">×</button></span>';
     }).join('');
   }
-  var roleEx = null, roleAsked = false;
-  var titleSkills = function () {
-    var t = String(data.title || '').toLowerCase();
-    if (t.replace(/\s/g, '').length < 3) return '';
-    if (!roleEx) {
-      if (!roleAsked && window.fetch) { roleAsked = true; fetch(H.base + '/data/resume-examples.json').then(function (r) { return r.json(); }).then(function (d) { roleEx = d; drawCheck(); }).catch(function () {}); }
-      return '';
-    }
-    var best = null, bestN = 0;
-    Object.keys(roleEx).forEach(function (k) {
-      var words = String(roleEx[k].title || '').toLowerCase().split(/[^a-z0-9+#]+/).filter(function (w) { return w.length > 1; });
-      if (!words.length || words.some(function (w) { return t.indexOf(w) < 0; })) return;
-      if (words.length > bestN) { best = k; bestN = words.length; }
+  /* The target job (27 Nov 2026, from CVMaker's "desired job title"): under the title, the skills today's postings for that work ask for
+     most (data/role-skills.json, counted by build.py, with the number of postings) and lines to start from, taken from our example for that
+     work with every number left as [number] for the visitor to fill in. One click adds a skill to the skills line or a line to the first job. */
+  var roleSk, sugEx, sugAsked, sugLines = [], sugMsg = '';
+  function needSug() {
+    if (sugAsked || !window.fetch) return;
+    sugAsked = true;
+    Promise.all([fetch(H.base + '/data/role-skills.json').then(function (r) { return r.json(); }).catch(function () { return null; }), exList().catch(function () { return null; })])
+      .then(function (r) { roleSk = (r[0] && r[0].roles) || []; sugEx = r[1] || {}; drawSug(); });
+  }
+  function words(s) {
+    return String(s || '').toLowerCase().split(/[^a-z0-9+#]+/).filter(function (w) { return w.length > 1; })
+      .map(function (w) { return w.length > 3 ? w.replace(/ies$/, 'y').replace(/s$/, '') : w; });
+  }
+  // words that name a level or a kind of job title rather than the work: "SEO Specialist" is SEO work, not "specialist" work
+  var GENERIC = { and: 1, of: 1, the: 1, for: 1, in: 1, manager: 1, specialist: 1, engineer: 1, analyst: 1, associate: 1, assistant: 1, senior: 1, junior: 1, lead: 1, staff: 1,
+    principal: 1, head: 1, director: 1, officer: 1, coordinator: 1, representative: 1, consultant: 1, technician: 1, developer: 1, designer: 1, administrator: 1, intern: 1,
+    executive: 1, worker: 1, operator: 1, supervisor: 1, professional: 1, expert: 1 };
+  function bestOf(title, items) {        // items [key, name, postings, …]: the share of the name's words found in the title, at least one of them about the work itself
+    var t = words(title), best = null;
+    if (!t.length) return null;
+    items.forEach(function (it) {
+      var w = words(it[1]).filter(function (x) { return x !== 'and' && x !== 'of' && x !== 'the' && x !== 'for' && x !== 'in'; });
+      var m = w.filter(function (x) { return t.indexOf(x) >= 0; });
+      if (!m.length || !m.some(function (x) { return !GENERIC[x]; })) return;
+      var sc = m.length / w.length + m.length / 100;
+      if (!best || sc > best.sc || (sc === best.sc && (it[2] || 0) > best.w)) best = { key: it[0], name: it[1], w: it[2] || 0, sc: sc, it: it };
     });
-    if (!best) return '';
-    var have = {}; String(data.skills || '').split(',').forEach(function (x) { x = x.trim().toLowerCase(); if (x) have[x] = 1; });
-    var miss = String(roleEx[best].skills || '').split(',').map(function (x) { return x.trim(); }).filter(function (x) { return x && !have[x.toLowerCase()]; }).slice(0, 10);
-    if (!miss.length) return '';
-    return '<div class="rbc-sk"><p class="rbc-h"><b>Skills</b> employers ask for in ' + esc(roleEx[best].title) + ' jobs today</p><p class="note">Add the ones you have:</p><p class="rbc-add">'
-      + chips(miss) + '</p></div>';
-  };
+    return best;
+  }
+  function placeholders(l) {             // "from 480 ms to 190 ms", "41%", "$6.8M" -> "from [number] ms to [number] ms", "[number]%", "$[number]M"
+    return l.replace(/([$€£])?\d+(?:[.,]\d+)*(\s?(?:%|[KkMmBb]\b))?/g, function (m, cur, unit) { return (cur || '') + '[number]' + (unit || ''); });
+  }
+  function sugHtml(skillsOnly) {
+    if (!roleSk || !sugEx) return '';
+    var title = String(data.title || '');
+    if (title.replace(/\s/g, '').length < 3) return skillsOnly ? '' : '<p class="note">Type the job you want: the skills employers ask for in it and lines to start from appear here.</p>';
+    var rs = bestOf(title, roleSk), ex = bestOf(title, Object.keys(sugEx).map(function (k) { return [k, sugEx[k].title || '', 0]; }));
+    if (!ex && rs && sugEx[rs.key]) ex = { key: rs.key, name: sugEx[rs.key].title || rs.name };
+    if (!rs && !ex) return skillsOnly ? '' : '<p class="note">No suggestions for “' + esc(title) + '” yet. Try the usual name of the job, for example “Data Analyst” or “Registered Nurse”.</p>';
+    var seen = {}, list = [], mineSk = String(data.skills || '').toLowerCase();
+    // a skill already in the skills line, or inside one of its items ("SEO" in "technical SEO"), is not offered again
+    var haveSk = function (k) { try { return new RegExp('(^|[^a-z0-9+#])' + k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^a-z0-9+#])').test(mineSk); } catch (e) { return false; } };
+    (rs ? rs.it[3].map(function (x) { return x[0]; }) : []).concat(ex && sugEx[ex.key].skills ? String(sugEx[ex.key].skills).split(',') : []).forEach(function (x) {
+      x = String(x).trim(); var k = x.toLowerCase();
+      if (x && !seen[k] && !haveSk(k)) { seen[k] = 1; list.push(x); }
+    });
+    var low = function (n) { return String(n).replace(/\b([A-Z])([a-z]+)\b/g, function (m) { return m.toLowerCase(); }); };      // "SEO Manager" -> "SEO manager"
+    var ch = chips(list.slice(0, 12)), out = '';
+    if (ch) out += '<p><b>Skills employers ask for in ' + esc(low(rs ? rs.name : ex.name)) + ' jobs</b>'
+      + (rs ? ' <span class="note">(counted in ' + Number(rs.w).toLocaleString('en-US') + ' open postings)</span>' : '') + '. Add the ones you have:</p><p class="rbc-add">' + ch + '</p>';
+    if (!skillsOnly && ex) {
+      var mine = {};
+      data.exp.forEach(function (x) { String(x.text || '').split('\n').forEach(function (l) { mine[l.trim()] = 1; }); });
+      sugLines = [];
+      (sugEx[ex.key].exp || []).forEach(function (j) {
+        String(j.text || '').split('\n').forEach(function (l) { l = placeholders(l.trim()); if (l && !mine[l] && sugLines.indexOf(l) < 0) sugLines.push(l); });
+      });
+      sugLines = sugLines.slice(0, 5);
+      if (sugLines.length) out += '<p><b>Lines to start from</b>, written for our ' + esc(low(ex.name)) + ' example. One goes into your first job; change each [number] to your own:</p><ul class="rb-lines">'
+        + sugLines.map(function (l, i) { return '<li><button type="button" data-addline="' + i + '">' + esc(l) + '</button></li>'; }).join('') + '</ul>';
+      out += '<p class="note">' + (sugMsg ? '<b>' + sugMsg + '</b> ' : '') + '<a href="' + H.base + '/resume/examples/' + ex.key + '/">The whole ' + esc(low(ex.name)) + ' resume example</a></p>';
+    }
+    return out;
+  }
+  /* "Save this resume to My jobs" (27 Nov 2026): My jobs keeps up to five resumes (hrn_resumes, written by site.js cvSave), and the
+     "Fits you" marks on every job list count the skills of the primary one. The resume keeps one place there however often it is saved. */
+  function myJobsBox() {
+    if (!H.cvSave || !H.cvSkillsOf) return '';
+    return '<p class="note rb-myj"><button class="btn ghost sm" type="button" id="rb-myjobs">Save this resume to My jobs</button> '
+      + '<span id="rb-myjobs-n">Its skills then count in the “Fits you” marks on job lists. Kept in this browser.</span></p>';
+  }
+  function drawSug() { var a = $('rb-tsug'), b = $('rb-ssug'); if (a) a.innerHTML = sugHtml(false); if (b) b.innerHTML = sugHtml(true); }
+  function addLine(l) {
+    if (!data.exp.length) data.exp.push(emptyOf('exp'));
+    var j = data.exp[0]; j.text = (String(j.text || '').replace(/\s+$/, '') + '\n' + l).replace(/^\n/, '');
+    sugMsg = 'Added to your first job under Experience.';
+    save(); drawForm(); drawPreview(); sugMsg = '';
+  }
   var aiAsks = [];
   var aiLine = function (text) {
     if (String(text).replace(/\s+/g, ' ').trim().length < 60) return '';
@@ -683,6 +919,27 @@
   /* An example from /resume/examples/<role>/ opens here: ?example=<role>. A resume that is already in this browser is replaced
      only if the visitor agrees. */
   var exq = ''; try { exq = new URLSearchParams(location.search).get('example') || ''; } catch (e) {}
+  /* ?tpl=<id>: "Use this template" on /resume-templates/ opens the builder with that template, keeping whatever is already written. */
+  var tq = ''; try { tq = new URLSearchParams(location.search).get('tpl') || ''; } catch (e) {}
+  if (TPLS.indexOf(tq) >= 0) {
+    data.tpl = tq; save(); applyTpl(); drawPreview(); restyleDesign();
+    if (!exq) try { history.replaceState(null, '', location.pathname); } catch (e) {}
+    var tn = document.createElement('div'), rbf = document.getElementById('rb');
+    tn.className = 'banner ok rb-opened'; tn.setAttribute('role', 'status');
+    tn.innerHTML = 'Template: <b>' + esc(TPL_NAMES[tq][0]) + '</b>. ' + (hasContent(data) ? 'Your resume is shown in it.' : 'Fill in the form; the page takes its look as you type.')
+      + ' Change the template, colour or font any time under Design.';
+    if (rbf && rbf.parentNode) rbf.parentNode.insertBefore(tn, rbf);
+  }
+  /* A file dropped anywhere on the builder is read like "Upload my resume". */
+  var dragN = 0;
+  root.addEventListener('dragenter', function (ev) { if (ev.dataTransfer && [].indexOf.call(ev.dataTransfer.types || [], 'Files') >= 0) { dragN++; root.classList.add('drag'); } });
+  root.addEventListener('dragleave', function () { if (--dragN <= 0) { dragN = 0; root.classList.remove('drag'); } });
+  root.addEventListener('dragover', function (ev) { if (root.classList.contains('drag')) ev.preventDefault(); });
+  root.addEventListener('drop', function (ev) {
+    dragN = 0; root.classList.remove('drag');
+    var f = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0];
+    if (f) { ev.preventDefault(); if (mode !== 'content') setMode('content'); setTab('contact'); readFile(f); }
+  });
   if (exq) fetch(H.base + '/data/resume-examples.json').then(function (r) { return r.json(); }).then(function (all) {
     var ex = all[exq]; if (!ex) return;
     var kept = hasContent(data);
@@ -726,5 +983,30 @@
         b.textContent = res.ok ? 'Saved to your account ✓' : (res.x && res.x.message) || 'Could not save: try again';
         if (res.ok) setTimeout(function () { b.textContent = 'Save to my account'; }, 4000);
       }, function () { b.disabled = false; b.textContent = 'No connection: try again'; });
+  });
+})();
+
+/* The template gallery (/resume-templates/) and a template's own page: each picture is the sheet at its real width (816 px), zoomed to
+   the width of its frame, and the filters show the templates for one experience level and one style. */
+(function () {
+  var pics = document.querySelectorAll('.tg-pic'); if (!pics.length) return;
+  var fit = function () { Array.prototype.forEach.call(pics, function (a) { var w = a.clientWidth; if (w) a.style.setProperty('--z', (w / 816).toFixed(4)); }); };
+  fit(); window.addEventListener('resize', fit);
+  var f = document.getElementById('tg-filter'), none = document.getElementById('tg-none'); if (!f) return;
+  f.hidden = false;
+  var lvl = '', sty = '';
+  var has = function (c, attr, v) { return !v || (' ' + c.getAttribute(attr) + ' ').indexOf(' ' + v + ' ') >= 0; };
+  var apply = function () {
+    var n = 0;
+    Array.prototype.forEach.call(document.querySelectorAll('#tg-grid .tg-card'), function (c) { var ok = has(c, 'data-lvl', lvl) && has(c, 'data-sty', sty); c.hidden = !ok; if (ok) n++; });
+    if (none) none.hidden = n > 0;
+    Array.prototype.forEach.call(f.querySelectorAll('[data-tgl]'), function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-tgl') === lvl)); });
+    Array.prototype.forEach.call(f.querySelectorAll('[data-tgs]'), function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-tgs') === sty)); });
+    fit();
+  };
+  document.addEventListener('click', function (ev) {
+    var b = ev.target && ev.target.closest && ev.target.closest('[data-tgl],[data-tgs],[data-tgall]'); if (!b) return;
+    if (b.hasAttribute('data-tgall')) lvl = sty = ''; else if (b.hasAttribute('data-tgl')) lvl = b.getAttribute('data-tgl'); else sty = b.getAttribute('data-tgs');
+    apply();
   });
 })();

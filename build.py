@@ -33,6 +33,7 @@ import resignation_pages                # a resignation letter per situation (/r
 import resume_words                     # stronger words for an overused resume verb (/resume-words/)
 import compare_sites                    # sourced facts for "Jobs Every Hour vs <job site>" (/vs/)
 import builders_check                   # what a free user of each resume builder can download (/free-resume-builders/)
+import resume_templates                 # the builder's templates: /resume-templates/ and a page for each
 import compare_tools                    # AI interview practice tools and cover letter generators, read on their own pages
 import trade_training                   # training routes into $25-an-hour work without a degree (BLS Occupational Outlook Handbook)
 import quiz_pages                        # skill self-tests (/skill-tests/)
@@ -715,7 +716,7 @@ def org_json(description):
             "description": description, "foundingDate": "2026-11", "founder": {"@type": "Person", "name": FOUNDER, "jobTitle": "Founder"},
             "contactPoint": [{"@type": "ContactPoint", "contactType": t_, "email": a_} for t_, a_ in (("customer support", CFG.get("contact_email", "")), ("press", mail_.get("press", ""))) if a_],
             "sameAs": ORG_SAME_AS}
-V = hashlib.md5(b"".join((ROOT / "assets" / f).read_bytes() for f in ("style.css", "site.js", "app.js", "account.js", "tools.js", "tools.css", "resume.js", "widget.js", "widgets.js", "map.js", "explorer.js", "fsel.js"))).hexdigest()[:8]   # cache-busting version
+V = hashlib.md5(b"".join((ROOT / "assets" / f).read_bytes() for f in ("style.css", "site.js", "app.js", "account.js", "tools.js", "tools.css", "resume.js", "resume.css", "widget.js", "widgets.js", "map.js", "explorer.js", "fsel.js"))).hexdigest()[:8]   # cache-busting version
 VC = hashlib.md5(b"".join((ROOT / "assets" / f).read_bytes() for f in ("compare.js", "compare.css"))).hexdigest()[:8]     # the comparison table's own files (/vs/compare/)
 # a job page's short footer; the dots between the links are their own spans, so on a phone the links can stand as a row of 44 px taps
 # without a dot left at the start of a line (26 Nov 2026)
@@ -2279,7 +2280,7 @@ def FULL_FOOT():
 <div><a class="logo" href="{P}/" aria-label="{e(SITE)}, home">{LOGO}</a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked around the clock{foot_checked()}.</p></div>
 <details class="fgrp" open><summary>Find jobs</summary><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/map/">Jobs map</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/senior-jobs/">Senior-level</a></li><li><a href="{P}/executive-jobs/">Executive</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/jobs-that-pay/">Jobs by hourly pay</a></li><li><a href="{P}/collections/">Job lists by pay and hours</a></li><li><a href="{P}/tech/">Tech jobs</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></details>
 <details class="fgrp" open><summary>Browse</summary><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Jobs by country</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></details>
-<details class="fgrp" open><summary>Tools and data</summary><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/free-resume-builders/">Free resume builders compared</a></li><li><a href="{P}/how-to-become/">How to become…</a></li><li><a href="{P}/career-quiz/">Career quiz</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/interview-questions/">Interview questions</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/how-long-job-postings-stay-open/">How long jobs stay open</a></li><li><a href="{P}/ghost-jobs/">Ghost jobs index</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></details>
+<details class="fgrp" open><summary>Tools and data</summary><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume-templates/">Resume templates</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/free-resume-builders/">Free resume builders compared</a></li><li><a href="{P}/how-to-become/">How to become…</a></li><li><a href="{P}/career-quiz/">Career quiz</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/interview-questions/">Interview questions</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/how-long-job-postings-stay-open/">How long jobs stay open</a></li><li><a href="{P}/ghost-jobs/">Ghost jobs index</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></details>
 <details class="fgrp" open><summary>Employers and sites</summary><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/pricing/">Pricing</a></li><li><a href="{P}/job-descriptions/">Job description templates</a></li><li><a href="{P}/how-to-hire/">How to hire…</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></details>
 <details class="fgrp" open><summary>About</summary><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/about/#contact">Contact</a></li><li><a href="{P}/press/">Press</a></li><li><a href="{P}/vs/">Compared with other job sites</a></li><li><a href="{P}/job-search-engines/">Job search engines compared</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/ahead/">What is new here</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/methodology/#editorial-policy">Editorial policy</a></li><li><a href="{P}/guides/">Guides</a></li><li><a href="{P}/help/">Help</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></details>
 </div>{fpop("Popular searches", FOOT.get("pop", ""))}{fpop("Jobs by type", FOOT.get("types", ""))}{ask_ai_row()}{FOOT_TRUST}<p class="fine"><button class="icon ic-t" id="theme" type="button" aria-label="Switch between light and dark"></button><span class="flang"><span class="vh">Language: </span>English</span> © {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p><div class="fbig" aria-hidden="true" style="--wm:url('{P}/brand/{brand.APPLIED}-logo-mono-white.svg')"></div></div></footer>"""
@@ -2821,7 +2822,8 @@ CAT_ACCENT = {}                       # sections once had their own colours; the
 HUB = {"roles": {}, "week": "", "job_roles": {}}       # role slug -> (name, ids of its jobs); job id -> its role slugs; filled in main()
 # How many templates the resume builder offers, counted from assets/resume.js (TPL_NAMES), so the copy cannot fall behind it again:
 # it said "five" while the builder had six (20 Nov 2026).
-_NUM_WORD = {3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten"}
+_NUM_WORD = {3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten", 11: "eleven", 12: "twelve", 13: "thirteen", 14: "fourteen",
+             15: "fifteen", 16: "sixteen", 17: "seventeen", 18: "eighteen", 19: "nineteen", 20: "twenty"}
 _rb_m = re.search(r"TPL_NAMES = \{(.*?)\};", (ROOT / "assets" / "resume.js").read_text(), re.S)
 RB_N = len(re.findall(r"(\w+): \[", _rb_m.group(1))) if _rb_m else 0
 RB_TPLS = _NUM_WORD.get(RB_N, "several")
@@ -13286,8 +13288,8 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
               + f'</tbody></table></div><p class="note">Read on each builder’s own pricing and help pages on {", ".join(_rb_day(d_) for d_ in _rb_days[:-1])} and {_rb_day(_rb_days[-1])}. '
               f'<a href="{P}/free-resume-builders/">All {len(builders_check.BUILDERS)} builders, with the sources</a>.</p>')
     rb_steps = ('<ol class="steps">'
-                f'<li><b>Pick a template.</b> All {RB_N} are one column with standard headings, so screening software reads them. You can switch at any time; the text stays.</li>'
-                '<li><b>Fill in the form.</b> Contact line, a two-line summary, your jobs with results, skills and education. The preview updates as you type.</li>'
+                f'<li><b>Pick a template.</b> All {RB_N} are one column with standard headings, so screening software reads them. Switch at any time under Design, with the colour, font and size; the text stays.</li>'
+                '<li><b>Fill in the form, or upload your old resume.</b> Start with the job you want: the builder suggests the skills employers ask for in it and lines to start from. A Word or PDF resume is read in your browser, never uploaded. The page updates as you type, with its page count.</li>'
                 '<li><b>Read the score.</b> The panel beside the preview gives a score and suggestions while you write.</li>'
                 '<li><b>Download.</b> “Save as PDF” through your browser’s print window, or “Download for Word”. Free, with no watermark and no account.</li></ol>')
     page("resume/", f"100% Free Resume Builder: PDF & Word Download, No Sign-Up | {SITE}",
@@ -13302,14 +13304,16 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          # Sections review, batch 5: the builder is the page's first screen. Above it stand the heading, one paragraph and the one
          # action (on a phone it jumps to the form, not to the row of download buttons); the bar of downloads is the top of the
          # tool; the notes and the Plus line moved under the tool. The action row is "no-print": it used to print into the PDF.
-         + act_row("#rb-app", "Start your resume", [("resume/examples/", "Examples by job"), ("guides/how-to-write-a-resume/", "How to write a resume"), ("guides/employment-gap/", "Explaining a gap")]) + "</div></div>"
+         + act_row("#rb-app", "Start your resume", [("resume-templates/", f"All {RB_N} templates"), ("resume/examples/", "Examples by job"), ("guides/how-to-write-a-resume/", "How to write a resume"), ("guides/employment-gap/", "Explaining a gap")]) + "</div></div>"
          '<div id="rb"><div class="rb-actions"><button class="btn" id="rb-print" type="button">Save as PDF — free</button><button class="btn ghost" id="rb-doc" type="button">Download for Word</button><button class="btn ghost" id="rb-json" type="button" title="The open JSON Resume format, readable by other tools and AI assistants">JSON</button>'
-         '<label class="wl rb-tplpick">Template<select id="rb-tpl"><option value="classic">Classic</option><option value="modern">Modern</option><option value="compact">Compact</option>'
-         '<option value="developer">Developer</option><option value="executive">Executive</option><option value="timeline">Timeline</option><option value="minimal">Minimal</option><option value="accent">Accent</option></select></label>'
+         '<label class="wl rb-tplpick">Template<select id="rb-tpl">' + "".join(f'<option value="{t_["id"]}">{e(t_["name"])}</option>' for t_ in resume_templates.TEMPLATES) + '</select></label>'
          '<button class="btn ghost" id="rb-match" type="button">Match jobs to this resume</button><button class="btn ghost" id="rb-clear" type="button">Start over</button></div>'
          '<p class="note no-print rb-hint">“Save as PDF” opens your browser’s print window: choose “Save as PDF” as the printer.</p>'
-         '<div class="rgrid app" id="rb-app"><div class="rb-left no-print"><div id="rb-set" class="rb-set"></div><div id="rb-tabs" class="rb-tabs" role="navigation" aria-label="Resume sections"></div><div id="rb-form"></div></div>'
-         '<div class="rb-mid"><div id="rb-preview" aria-live="polite"></div></div>'
+         # Content and Design (27 Nov 2026, as CVMaker splits its builder): the form in steps, or the template, colour, font, size and paper;
+         # the sheet is a real Letter or A4 page with a page count, page arrows and zoom (resume.js paginate)
+         '<div class="rgrid app" id="rb-app"><div class="rb-left no-print"><div id="rb-set" class="rb-set"></div><div id="rb-mode" class="rb-mode" role="tablist" aria-label="Content or design"></div>'
+         '<div id="rb-tabs" class="rb-tabs" role="navigation" aria-label="Resume sections"></div><div id="rb-form"></div><div id="rb-design" role="tabpanel" aria-label="Design" hidden></div></div>'
+         '<div class="rb-mid"><div id="rb-pvbar" class="rb-pvbar no-print" role="toolbar" aria-label="Pages and zoom"></div><div class="rb-pbox" id="rb-pbox"><div id="rb-preview" aria-live="polite"></div></div></div>'
          '<aside class="rb-side no-print" aria-label="Score and suggestions"><div id="rb-check" class="rbc" aria-live="polite" hidden></div></aside></div>'
          '<div id="rb-demand" class="no-print" aria-live="polite"></div>'
          f'<p class="rb-plus no-print"><b>With Plus, AI writes it with you</b><span>bullet points from your notes · a summary · the resume reworded for one posting · a review with a score</span><a href="{P}/plus/">See what Plus adds</a></p>'
@@ -13322,11 +13326,117 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          '<div class="feat"><h3>Results, not duties</h3><p>“Cut page load time from 4s to 1.2s” says more than “responsible for performance”.</p></div>'
          '<div class="feat"><h3>The posting’s own words</h3><p>If the job asks for PostgreSQL and you know it, write PostgreSQL, not “databases”.</p></div></div>', label="Three rules")
          + section("What is [[free]] in this resume builder", '<div class="tablewrap"><table class="kv">'
-                   + "".join(f"<tr><th>{k_}</th><td>{v_}</td></tr>" for k_, v_ in (("PDF download", "Free"), ("Word download", "Free"), ("Account", "None needed"), ("Watermark", "None"), ("Templates", f"All {RB_N} free"), ("Your resume", "Stays in this browser"), ("Matching it to open jobs", "Free")))
+                   + "".join(f"<tr><th>{k_}</th><td>{v_}</td></tr>" for k_, v_ in (("PDF download", "Free"), ("Word download", "Free"), ("Account", "None needed"), ("Watermark", "None"), ("Templates", f'All {RB_N} free: <a href="{P}/resume-templates/">see them filled in</a>'), ("Your resume", "Stays in this browser"), ("Matching it to open jobs", "Free")))
                    + '</table></div>', label="No catch")
          + section("Free PDF download: [[this builder and others]]", '<p>Many builders are free to write in and ask for payment at the download, often through a low-priced trial. This is what their own pages said.</p>' + rb_cmp, label="Compared")
          + section("Questions about [[this resume builder]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in rb_qa) + "</dl>", label="Questions") + "</div>"
-         + f'<script src="{P}/tools.js?v={V}" defer></script><script src="{P}/resume.js?v={V}" defer></script>', head=rb_ld, cls="sp rbp")
+         + f'<script src="{P}/tools.js?v={V}" defer></script><script src="{P}/resume.js?v={V}" defer></script>', head=rb_ld + f'<link rel="stylesheet" href="{P}/resume.css?v={V}">', cls="sp rbp")
+
+    lap('Resume templates: the gallery and a page for each')
+    # The template gallery (27 Nov 2026; the owner: take from CVMaker what works, its /resume-templates/ brings most of its US visits).
+    # Each template is shown filled in with an invented person, drawn with the builder's own markup and stylesheet (resume_templates.py,
+    # assets/resume.css), so the picture is what the builder makes. No view counts or "most popular" badges: we do not count views.
+    # Read before writing (SERP_AI_CHECK.md, 27 Nov): Google's first page and AI answer for "resume templates", ChatGPT for free ATS templates.
+    RT = resume_templates
+    RT.test((ROOT / "assets" / "resume.js").read_text())
+    rt_lvl, rt_sty, rt_by = dict(RT.LEVELS), dict(RT.STYLES), {t_["id"]: t_ for t_ in RT.TEMPLATES}
+    rt_cap = lambda s_: s_[:1].upper() + s_[1:]
+    def rt_card(t_):
+        tags_ = [rt_lvl[x_] for x_ in t_["level"]] + [rt_sty[x_] for x_ in t_["style"]]
+        return (f'<li class="tg-card" data-lvl="{" ".join(t_["level"])}" data-sty="{" ".join(t_["style"])}">'
+                f'<a class="tg-pic" href="{P}/resume-templates/{t_["id"]}/" tabindex="-1" aria-label="{e(t_["name"])} resume template, filled in with an invented example">{RT.sheet(t_)}</a>'
+                f'<h3><a href="{P}/resume-templates/{t_["id"]}/">{e(t_["name"])}</a></h3><p>{e(t_["line"])}.</p>'
+                '<p class="tg-tags">' + "".join(f"<span>{e(x_)}</span>" for x_ in tags_) + "</p>"
+                f'<p class="tg-act"><a class="btn primary sm" href="{P}/resume/?tpl={t_["id"]}">Use this template</a><a href="{P}/resume-templates/{t_["id"]}/">Details</a></p></li>')
+    rt_filter = ('<div class="tg-filter" id="tg-filter" hidden><div class="grp" role="group" aria-label="Experience level"><span>Experience</span><button type="button" data-tgl="" aria-pressed="true">All</button>'
+                 + "".join(f'<button type="button" data-tgl="{k_}" aria-pressed="false">{e(v_)}</button>' for k_, v_ in RT.LEVELS)
+                 + '</div><div class="grp" role="group" aria-label="Style"><span>Style</span><button type="button" data-tgs="" aria-pressed="true">All</button>'
+                 + "".join(f'<button type="button" data-tgs="{k_}" aria-pressed="false">{e(v_)}</button>' for k_, v_ in RT.STYLES) + "</div></div>"
+                 '<p class="note tg-none" id="tg-none" hidden>No template is tagged with both. <button class="linkbtn" type="button" data-tgall="1">Show every template</button></p>')
+    rt_grid = '<ul class="tg-grid" id="tg-grid">' + "".join(rt_card(t_) for t_ in RT.TEMPLATES) + "</ul>"
+    rt_pick = ('<div class="tablewrap"><table><thead><tr><th>Template</th><th>Suits</th><th>Experience</th><th>Look</th></tr></thead><tbody>'
+               + "".join(f'<tr><th><a href="{P}/resume-templates/{t_["id"]}/">{e(t_["name"])}</a></th><td>{e(", ".join(n_ for n_, _ in t_["suits"][:3]))}</td>'
+                         f'<td>{e(", ".join(rt_lvl[x_] for x_ in t_["level"]))}</td><td>{e(t_["line"])}</td></tr>' for t_ in RT.TEMPLATES) + "</tbody></table></div>")
+    rt_ats = ('<ul class="ticks">'
+              '<li><b>One column.</b> Screening software reads a page from top to bottom; two columns can come out as lines of both mixed together.</li>'
+              '<li><b>Standard headings.</b> Summary, Experience, Education, Skills: the words the software looks for to sort your resume into fields.</li>'
+              '<li><b>Real text, not pictures.</b> A name, a skill bar or a contact line drawn as an image is empty to the software. Every line here is text you can select.</li>'
+              '<li><b>Contact details in the page, not in its header or footer.</b> Some systems skip the header and footer areas of a Word file.</li>'
+              '<li><b>A common font at a readable size.</b> Arial, Georgia, Inter or Times New Roman, 10.5 to 12 pt for the text.</li>'
+              '<li><b>No tables, text boxes, icons or skill bars.</b> They look tidy and read badly.</li>'
+              '<li><b>A PDF of real text, or a Word file.</b> Your browser’s “Save as PDF” keeps every line as text; a scanned or photographed resume is a picture with no words in it.</li></ul>'
+              f'<p>All {RB_N} templates here follow these rules, colour included: colour is fine for the software, the layout is what breaks it. To see how your own resume reads, paste it into the <a href="{P}/tools/resume-review/">resume review</a>.</p>')
+    rt_how = ('<ol class="steps">'
+              '<li><b>Pick a template</b> and press “Use this template”. You can change it later without losing a word.</li>'
+              '<li><b>Type the job you want first.</b> The builder suggests the skills employers ask for in that work, counted in today’s postings, and lines to start from.</li>'
+              '<li><b>Or bring your old resume in.</b> Upload a Word or PDF file: it is read in your browser and split into jobs, dates, education and skills. Nothing is uploaded, and nothing is added that is not in your file.</li>'
+              '<li><b>Write results, not duties.</b> One line per result, a verb first and a number where you have one.</li>'
+              '<li><b>Check the page count and download.</b> The preview counts the pages as you type. The PDF and the Word file are free.</li></ol>')
+    rt_qa = [
+        ("What is the best resume template?", "For most people, a one-column template with standard headings and a plain font: it reads cleanly in screening software and lets a recruiter find your title, years and best result in the top third. "
+         "Simple and Classic suit almost any job, Student suits a first job, Executive suits senior roles; the best one is the one where your results are easiest to find."),
+        ("Are these resume templates really free?", f"Yes. All {RB_N} templates, the PDF download and the Word download are free, with no account, no trial and no watermark. Many builders let you write for free and ask for payment at the download; this one does not."),
+        ("Which resume templates are ATS-friendly?", f"Templates with one column of real text, standard headings and no tables, text boxes, icons or skill bars. All {RB_N} templates here are built that way; colour on the name and headings is fine."),
+        ("Can I use these resume templates in Word or Google Docs?", "Yes. Fill in the template in the builder and press “Word”: the file opens in Microsoft Word, Google Docs (upload it to Drive) and Apple Pages, and you can keep editing it there."),
+        ("Should a resume be one page or two?", "One page for most people with under about ten years of experience; two pages for senior roles with more results than fit on one. The builder shows the page count as you type."),
+        ("Should I put a photo on my resume?", "In the United States, Canada and the United Kingdom, no: employers usually advise against it to avoid bias, and a photo can confuse screening software. None of these templates has a photo box."),
+        ("What is the difference between a resume template and a CV template?", "In the US a resume is a one- or two-page summary, and a CV is a longer academic record. In the UK, Ireland and much of Europe, “CV” means the same document as a US resume, so these templates work as CV templates too: pick A4 paper under Design."),
+    ]
+    rt_qh, rt_ld = qa_sec("Questions about [[resume templates]]", rt_qa, label="Questions", sid="questions")
+    rt_ld += ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "ItemList", "name": "Free resume templates",
+              "itemListElement": [{"@type": "ListItem", "position": i_ + 1, "name": f'{t_["name"]} resume template', "url": f'{FULL}/resume-templates/{t_["id"]}/'} for i_, t_ in enumerate(RT.TEMPLATES)]},
+              ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    rt_head = f'<link rel="stylesheet" href="{P}/resume.css?v={V}">'
+    page("resume-templates/", f"Resume Templates: {RB_N} Free & ATS-Friendly | {SITE}",
+         f"{RB_N} free resume templates that applicant tracking systems read: simple, professional, modern, student and more. Free PDF and Word download, no account.",
+         crumbs(("Resume builder", "resume/"), ("Resume templates", ""))
+         + f'<h1>Free resume templates <span class="hl">screening software can read</span></h1>'
+         + f'<p class="tldr"><strong>All {RB_N} resume templates are free, and so are the PDF and the Word download: no account, no trial, no watermark.</strong> '
+           'Each is one column of real text with standard headings, the layout applicant tracking systems read best. Press “Use this template”, fill in the form or upload your old resume, and download.</p>'
+         + rt_filter + rt_grid
+         + '<p class="note">The people, companies and numbers in the pictures are invented. Each picture is the template as the builder draws it.</p>'
+         + section("Which resume template [[to pick]]", '<p>Start from the work you do and how long you have done it. Every template takes the same content, so you can switch later.</p>' + rt_pick, sid="pick", label="Pick one")
+         + section("What makes a resume template [[ATS-friendly]]", rt_ats, sid="ats", label="ATS")
+         + section("How to fill in a resume template, [[in five steps]]", rt_how, sid="how", label="Five steps")
+         + section("Free PDF download: [[this builder and others]]", '<p>Many builders are free to write in and ask for payment at the download, often through a low-priced trial that renews. This is what their own pages said.</p>' + rb_cmp, sid="compare", label="Compared")
+         + section("Resume templates and [[CV templates]]", '<p>In the United States and Canada the document is a resume; in the United Kingdom, Ireland, Australia and most of Europe the same document is called a CV, and it is printed on A4. '
+                   f'Every template here works as either: pick A4 under Design. For the British way of writing it, see the <a href="{P}/cv-examples/">CV examples in UK format</a>.</p>', sid="cv", label="CV")
+         + rt_qh
+         + f'<p class="note cmpl">Next: <a href="{P}/resume/">the resume builder</a> · <a href="{P}/resume/examples/">resume examples for {len(rex_data)} kinds of work</a> · <a href="{P}/cover-letter-examples/">cover letter examples</a> · '
+           f'<a href="{P}/resume-words/">stronger resume words</a> · <a href="{P}/free-resume-builders/">free resume builders compared</a></p>'
+         + f'<script src="{P}/resume.js?v={V}" defer></script>', head=rt_ld + rt_head, cls="hub rtg")
+    # A page for each template: what it suits, how it reads in screening software, the questions about it, and the others
+    for t_ in RT.TEMPLATES:
+        T_ = rt_cap(t_["title"])
+        ttl_ = next(x_ for x_ in (f"{T_}: Free, ATS-Friendly", f"{T_}: Free PDF & Word", f"{T_} (Free)", T_) if len(x_) <= 47)
+        suits_ = "".join(f"<li><b>{e(n_)}</b>" + (f': see the <a href="{P}/resume/examples/{sl_}/">{e(by_role[sl_][0].lower())} resume example</a>' if sl_ in rex_data and sl_ in by_role else "") + "</li>" for n_, sl_ in t_["suits"])
+        facts_ = [("Suits", ", ".join(rt_lvl[x_] for x_ in t_["level"]).lower().capitalize()), ("Look", t_["line"]), ("Font", t_["font"]), ("Colour", t_["colour"]),
+                  ("Sections, in order", t_["order"]), ("Download", "PDF and Word, free, no account")]
+        pp_ = RT.PEOPLE[t_["person"]]
+        near_ = sorted((x_ for x_ in RT.TEMPLATES if x_["id"] != t_["id"]), key=lambda x_: -(len(set(x_["style"]) & set(t_["style"])) * 2 + len(set(x_["level"]) & set(t_["level"]))))[:4]
+        qa_ = [(q_.format(name=t_["name"]), a_) for q_, a_ in RT.COMMON_QA] + [(f"Is the {t_['name']} resume template ATS-friendly?", "Yes. " + t_["ats"])] + list(t_["qa"])
+        qh_, ld_ = qa_sec(f"Questions about the [[{t_['name']} template]]", qa_, label="Questions", sid="questions")
+        ld_ += ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "CreativeWork", "name": f'{t_["name"]} resume template',
+                "description": t_["about"], "url": f'{FULL}/resume-templates/{t_["id"]}/', "isAccessibleForFree": True, "inLanguage": "en",
+                "publisher": {"@type": "Organization", "name": SITE, "url": f"{FULL}/"}}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
+        page(f"resume-templates/{t_['id']}/", f"{ttl_} | {SITE}",
+             f"The {t_['name']} resume template: {t_['line'][0].lower() + t_['line'][1:]}. {t_['about'].split('. ')[0]}. Free PDF and Word download, no account.",
+             crumbs(("Resume builder", "resume/"), ("Resume templates", "resume-templates/"), (t_["name"], ""))
+             + '<div class="tp-hero"><div>'
+             + f'<h1>{e(T_)}<span class="lt">: {e(t_["name"]) + ", " if t_["name"].lower() not in t_["title"].lower() else ""}free, with PDF and Word</span></h1>'
+             + f'<p class="tldr"><strong>{e(t_["about"])}</strong> Fill it in and download it as a PDF or a Word file for free, with no account and no watermark.</p>'
+             + act_row(f"resume/?tpl={t_['id']}", "Use this template", [("resume-templates/", f"All {RB_N} templates"), (f"resume/examples/", "Examples by job")], note="Free, no account.")
+             + '<dl class="tp-facts">' + "".join(f"<div><dt>{e(k_)}</dt><dd>{e(v_)}</dd></div>" for k_, v_ in facts_) + "</dl></div>"
+             + f'<figure><a class="tg-pic" href="{P}/resume/?tpl={t_["id"]}" tabindex="-1" aria-label="Open the {e(t_["name"])} template in the builder">{RT.sheet(t_)}</a>'
+               f'<figcaption class="note">The {e(t_["name"])} template with an invented example: {e(pp_["name"])}, {e(pp_["title"].lower())}.</figcaption></figure></div>'
+             + section(f"Who the {t_['name']} template [[suits]]", f'<ul class="ticks">{suits_}</ul><p>It suits {e(", ".join(rt_lvl[x_] for x_ in t_["level"]).lower())} candidates. '
+                       'The template is only the frame: what gets you called is the results under each job, written with a number where you have one.</p>', sid="suits", label="Who it suits")
+             + section(f"How the {t_['name']} template reads in [[screening software]]", f'<p>{e(t_["ats"])}</p>' + rt_ats, sid="ats", label="ATS")
+             + section(f"How to fill in the {t_['name']} template", rt_how, sid="how", label="Five steps")
+             + qh_
+             + section("Other resume templates [[like this one]]", '<ul class="tg-grid">' + "".join(rt_card(x_) for x_ in near_) + "</ul>"
+                       + '<p class="note">All of them: ' + " · ".join(f'<a href="{P}/resume-templates/{x_["id"]}/">{e(x_["name"])}</a>' for x_ in RT.TEMPLATES if x_["id"] != t_["id"]) + "</p>", sid="more", label="More templates")
+             + f'<script src="{P}/resume.js?v={V}" defer></script>', head=ld_ + rt_head, cls="hub rtg rtp")
 
     lap('"Which free resume builders let you download the PDF": the q')
     # "Which free resume builders let you download the PDF": the question every "best free resume builder" list argues about (owner,
@@ -16324,7 +16434,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
 ## Tools
 - [Free tools]({FULL}/tools/): {tools_md}
 - [Jobs matched to your skills]({FULL}/for-you/)
-- [Resume builder]({FULL}/resume/)
+- [Resume builder]({FULL}/resume/): one-column templates, free PDF and Word download, no account; an old resume (Word or PDF) is read in the browser, nothing is uploaded
+- [Resume templates]({FULL}/resume-templates/): every template of the builder filled in with an invented example, with a page each at {FULL}/resume-templates/<id>/ (simple, professional, modern, student, executive and more)
 - [Free resume builders compared]({FULL}/free-resume-builders/): what the free plan of each well-known resume builder lets you download, read from its own pages, dated
 - [Job widget and live badges for other sites]({FULL}/widgets/){llm_more}
 
@@ -16467,6 +16578,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     # page no longer fetches the whole file afterwards: applying it re-styled and re-laid out the 14,000 px page, the longest task of
     # its load on a phone (about 220 ms at 4x CPU slowdown).
     (OUT / "tools.css").write_text(mincss((ROOT / "assets" / "tools.css").read_text(encoding="utf-8")), encoding="utf-8")
+    (OUT / "resume.css").write_text(mincss((ROOT / "assets" / "resume.css").read_text(encoding="utf-8")), encoding="utf-8")
     (OUT / "compare.css").write_text(mincss((ROOT / "assets" / "compare.css").read_text(encoding="utf-8")), encoding="utf-8")
     shutil.copy(ROOT / "assets" / "tools.js", OUT / "tools.js")
     shutil.copytree(ROOT / "assets" / "fonts", OUT / "fonts")
@@ -16561,7 +16673,7 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     # country and part of the world, every role; listed first and in a file of their own, so they are the first thing to read
     countryish = {slug_ for _, slug_, rule_ in PLACES if isinstance(rule_, str)}
     # and the guides (25 Nov 2026: 23 of 26 were "URL unknown to Google" while they sat among 10,500 addresses in pages.xml)
-    is_core = lambda u: (u == "" or (u.count("/") == 1 and "." not in u) or re.fullmatch(r"(jobs|roles|guides)/[a-z0-9-]+/", u) is not None
+    is_core = lambda u: (u == "" or (u.count("/") == 1 and "." not in u) or re.fullmatch(r"(jobs|roles|guides|resume-templates)/[a-z0-9-]+/", u) is not None
                          or u in SEASON                     # the season and class pages (season_sets), like the hubs beside them
                          or (u.startswith("locations/") and u.count("/") == 2 and u.split("/")[1] in countryish))
     core_urls = [u for u in URLS if not u.startswith("job/") and is_core(u)]

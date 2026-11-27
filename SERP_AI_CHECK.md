@@ -1602,3 +1602,28 @@ search on, signed-in session).
   and US-person wording counted in the postings).
 - **Gap still open:** "apply by" dates per posting as a column (Roblox, Goldman Sachs), a GitHub list for 2027 new grads like
   lists/new-grad-software-engineer, and the job box itself (Google's jobs box reads JobPosting markup on the job pages, already there).
+
+## Resume templates: "resume templates", "free resume templates", "ats friendly resume templates" (27 Nov 2026)
+
+Pages: `/resume-templates/` (new) and `/resume-templates/<id>/` for each of the 16 templates of the builder (8 new: Simple, Professional,
+Student, Creative, Elegant, Bold, Fresh, Heritage). Read before writing them, in the built-in browser:
+
+- **Google, "resume templates" (US, English):** Canva and Microsoft Word first, then Harvard (HBS alumni template, the FAS bullet-point
+  template in Word and Google Docs), Zety ("750+"), Novoresume ("approved by HR", "77% hired"), Resume Genius ("143 ATS-friendly"),
+  Adobe Express, UT Austin. The AI overview lists Canva, Zety, Resume Genius, Word and Google Docs, then the structure: contact details at
+  the top, reverse-chronological bullets with outcomes, skills and education, "clean layouts, readable fonts, consistent spacing and a
+  1-to-2-page length" for applicant tracking systems. People also ask: "What is the best template for a resume?", "What is the 7 second
+  rule?", "What is a red flag on a resume?", "Can ChatGPT write a resume?" (the last three are answered on `/resume/` already). People
+  also search for: simple resume templates, Word resume templates, resume templates for high school students.
+- **ChatGPT (temporary chat, search on, signed-in session), "best free resume templates that are ATS friendly with free PDF
+  download":** names Google Docs, Jobscan (12 Word templates), Apollo Templates, ResumeAtlas, Microsoft Create and CVJet; we are not
+  named. Its checklist: single column, no tables or sidebars, no graphics, skill bars or icons, standard headings, contact details in the
+  body, standard fonts, a text-based PDF rather than a scan. It then asks for the career level (entry, professional, senior, student)
+  and the design (modern minimalist, classic corporate, modern professional).
+
+What the pages do with it: every point of both checklists is a line of "What makes a resume template ATS-friendly" (the text-based PDF
+included); filters by experience level and style as ChatGPT asks; the PAA question "What is the best template for a resume?" answered
+first; a Student template and page for "resume templates for high school students"; Word and Google Docs answered (the Word file opens in
+both); the PDF download free with no account said in the first lines (most of the first page charges for it or needs a sign-up).
+No "hired faster" figures and no view counts: we do not measure them. Largest gap still open: image results (Google shows a row of
+template pictures; ours are HTML, not image files).

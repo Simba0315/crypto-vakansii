@@ -412,16 +412,8 @@ label.rl{display:block;font-size:13px;color:var(--muted);margin-bottom:10px}
 .rblock{border:1px solid var(--line);border-radius:4px;padding:12px;margin-bottom:10px;background:var(--bg2)}
 .rblock .rrow input{margin-top:0}
 .rblock textarea{margin:10px 0 8px}
-#rb-preview{position:sticky;top:76px;background:#fff;color:#111;border:1px solid var(--line);border-radius:2px;padding:34px 38px;min-height:520px;font:14px/1.5 Georgia,"Times New Roman",serif;box-shadow:var(--shadow)}
-#rb-preview h2.pv-name{font:700 26px/1.15 "Inter",system-ui,sans-serif;letter-spacing:-.01em;margin:0;color:#111}
-#rb-preview .pv-title{font:500 15px "Inter",system-ui,sans-serif;margin:4px 0 0;color:#333}
-#rb-preview .pv-contact{font:12.5px "Inter",system-ui,sans-serif;color:#555;margin:8px 0 0}
-#rb-preview h3{font:700 11.5px "Inter",system-ui,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:#111;border-bottom:1px solid #111;padding-bottom:4px;margin:20px 0 8px}
-#rb-preview p{margin:0 0 6px}
-.pv-item{margin-bottom:10px}
-.pv-top{display:flex;justify-content:space-between;gap:12px;font-family:"Inter",system-ui,sans-serif;font-size:13.5px}
-.pv-top span{color:#555;white-space:nowrap}
-#rb-preview ul{margin:4px 0 0;padding-left:18px}
+/* the sheet and its templates are in resume.css (27 Nov 2026): the builder, the template gallery and each template's page share them */
+#rb-preview{position:sticky;top:76px;background:#fff;color:#111;border:1px solid var(--line);border-radius:2px;min-height:520px;box-shadow:var(--shadow)}
 .rb-actions{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}
 .rb-actions .btn{margin-top:0}
 @media print{
@@ -571,41 +563,6 @@ nav a.nl[aria-current]{color:var(--text);background-image:linear-gradient(var(--
 /* resume templates: all single-column and plain, so screening software reads them the same way */
 .rb-actions{align-items:flex-end}
 .rb-tplpick{margin-left:auto}
-#rb-preview.tpl-modern{font:14px/1.55 "Inter",system-ui,sans-serif}
-#rb-preview.tpl-timeline{font:14px/1.5 "Inter",system-ui,sans-serif}
-#rb-preview.tpl-timeline h2.pv-name{font-size:28px;letter-spacing:-.02em}
-#rb-preview.tpl-timeline h3{border-bottom:1px solid #ddd;color:#555;font-weight:600;letter-spacing:.04em}
-#rb-preview.tpl-timeline h3 small{font-weight:400;text-transform:none;letter-spacing:0;color:#777;margin-left:6px}
-#rb-preview.tpl-timeline .pv-tl{display:grid;grid-template-columns:minmax(92px,26%) 1fr;gap:16px;margin-bottom:12px}
-#rb-preview.tpl-timeline .pv-when{color:#555;font-size:12.5px;line-height:1.45}
-#rb-preview.tpl-timeline .pv-when span{display:block;color:#888}
-#rb-preview.tpl-timeline .pv-what strong{display:block}
-#rb-preview.tpl-timeline .pv-what b{display:block;font-weight:600;margin:1px 0 3px}
-#rb-preview.tpl-timeline .pv-tags span{display:inline-block;border:1px solid #d6d6d6;border-radius:5px;padding:1px 8px;margin:0 5px 5px 0;font-size:12.5px}
-@media (max-width:560px){#rb-preview.tpl-timeline .pv-tl{grid-template-columns:1fr;gap:2px}}
-#rb-preview.tpl-modern h2.pv-name{font-size:30px;letter-spacing:-.03em}
-#rb-preview.tpl-modern h3{border-bottom:0;border-left:3px solid #111;padding:0 0 0 8px;letter-spacing:.06em}
-#rb-preview.tpl-compact{font:12.5px/1.4 "Inter",system-ui,sans-serif;padding:26px 30px}
-#rb-preview.tpl-minimal{font:13.5px/1.6 "Inter",system-ui,sans-serif;padding:42px 46px}
-#rb-preview.tpl-minimal h2.pv-name{font-weight:600;font-size:27px;letter-spacing:-.02em}
-#rb-preview.tpl-minimal .pv-title{font-weight:400;color:#555}
-#rb-preview.tpl-minimal h3{font-weight:500;color:#555;letter-spacing:.14em;border-bottom:1px solid #d9d9d9;margin:26px 0 10px;padding-bottom:6px}
-#rb-preview.tpl-accent{font:14px/1.5 "Inter",system-ui,sans-serif}
-#rb-preview.tpl-accent h2.pv-name{color:#1f3a68;font-size:29px;letter-spacing:-.02em}
-#rb-preview.tpl-accent .pv-title{color:#1f3a68}
-#rb-preview.tpl-accent h3{color:#1f3a68;border-bottom:2px solid #1f3a68}
-#rb-preview.tpl-accent .pv-top strong{color:#1f3a68}
-#rb-preview.tpl-compact h2.pv-name{font-size:21px}
-#rb-preview.tpl-compact h3{margin:13px 0 5px;font-size:10.5px}
-#rb-preview.tpl-compact .pv-item{margin-bottom:6px}
-#rb-preview.tpl-developer{font:13px/1.55 "JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
-#rb-preview.tpl-developer h2.pv-name,#rb-preview.tpl-developer .pv-title,#rb-preview.tpl-developer .pv-contact,#rb-preview.tpl-developer h3,#rb-preview.tpl-developer .pv-top{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
-#rb-preview.tpl-developer h3{border-bottom:1px dashed #111;text-transform:none;letter-spacing:0;font-size:13px}
-#rb-preview.tpl-developer h3::before{content:"## "}
-#rb-preview.tpl-executive h2.pv-name,#rb-preview.tpl-executive .pv-title,#rb-preview.tpl-executive .pv-contact{text-align:center}
-#rb-preview.tpl-executive h2.pv-name{font:700 28px/1.15 Georgia,"Times New Roman",serif;letter-spacing:.01em}
-#rb-preview.tpl-executive h3{text-align:center;border-bottom:0;border-top:1px solid #111;padding:8px 0 0;letter-spacing:.16em;font-weight:600}
-
 /* section hubs: horizontal bars for skills and job titles */
 .hbars{display:grid;gap:0}
 .hbars a{display:grid;grid-template-columns:minmax(120px,220px) 1fr auto;gap:14px;align-items:center;padding:8px 0;min-height:40px;border-bottom:1px solid var(--line)}
@@ -1589,22 +1546,6 @@ nav a.nl.hasmenu:has(+.nlb:hover){color:var(--text);background-color:var(--bg2)}
 #rb-form .rsec.on{display:block}
 .rsec-next{margin:14px 0 0;text-align:right}
 .rsec-dl{display:flex;gap:8px;margin-top:14px}.rsec-dl .btn{margin-top:0}
-.tplgal{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.tplcard{display:flex;flex-direction:column;gap:8px;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--card);cursor:pointer;text-align:left;font:inherit;color:var(--text)}
-.tplcard.on{border-color:var(--ac);box-shadow:0 0 0 2px var(--ac)}
-.tplmini{display:block;height:92px;padding:9px 10px;background:#fff;border:1px solid #e5e5e5;border-radius:4px;overflow:hidden;color:#111;font:8px/1.3 Georgia,serif}
-.tplmini b{display:block;font-size:11px;margin-bottom:5px}
-.tplmini i{display:block;height:4px;background:#d9d9d9;border-radius:2px;margin:4px 0;width:92%}
-.tplmini i.s{width:60%}
-.tplmini u{display:block;height:2px;background:#111;margin:7px 0 5px;width:40%}
-.tplmini.tpl-modern{font-family:Inter,system-ui,sans-serif}.tplmini.tpl-modern u{width:4px;height:9px}
-.tplmini.tpl-compact{padding:6px 8px}.tplmini.tpl-compact i{height:3px;margin:3px 0}
-.tplmini.tpl-developer,.tplmini.tpl-developer b{font-family:ui-monospace,Menlo,monospace}.tplmini.tpl-developer u{background:none;border-top:1px dashed #111}
-.tplmini.tpl-executive b{text-align:center}.tplmini.tpl-executive u{margin-left:auto;margin-right:auto}
-.tplmini.tpl-timeline i{margin-left:34%}.tplmini.tpl-timeline u{width:28%}
-.tplmini.tpl-minimal{font-family:Inter,system-ui,sans-serif;padding:12px 13px}.tplmini.tpl-minimal u{height:1px;background:#cfcfcf;width:100%}
-.tplmini.tpl-accent{font-family:Inter,system-ui,sans-serif}.tplmini.tpl-accent b{color:#1f3a68}.tplmini.tpl-accent u{background:#1f3a68;height:2px;width:100%}
-.tpln b{display:block;font-size:14px}.tpln span{display:block;font-size:12.5px;color:var(--muted)}
 .fmtrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-size:14px}
 .fmtrow .btn{margin-top:0;padding:4px 10px}
 .fmtrow b{min-width:34px;text-align:center;font-family:var(--mono)}
