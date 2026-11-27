@@ -39,7 +39,7 @@ RULES = hashlib.md5(_rules_text().encode()).hexdigest()[:8]
 # Boards read in turn rather than every hour (main): the large lists added once the 1 GB limit of GitHub Pages was gone.
 ROTATING = ("sources_more.json", "sources_ats.json", "sources_gov.json", "sources_jazz.json", "sources_breezy.json", "sources_bamboo.json",
             "sources_paylocity.json", "sources_pinpoint.json", "sources_gem.json", "sources_trakstar.json", "sources_rippling.json",
-            "sources_icims.json", "sources_hn.json", "sources_phenom.json", "sources_oracle.json")
+            "sources_icims.json", "sources_hn.json", "sources_phenom.json", "sources_oracle.json", "sources_taleo.json")
 # Politeness per hiring system: how many of its boards are read at the same time, and the shortest gap in seconds between two of our
 # requests to it (across all boards; Workday's tenants each have their own address, so there the gap is per board).
 # Workday: 48 boards at a time since 18 Nov 2026 (12 before). Each tenant has its own address and still gets one request every 0.3 s.
@@ -56,10 +56,11 @@ ROTATING = ("sources_more.json", "sources_ats.json", "sources_gov.json", "source
 # request a posting for its text.
 # Phenom and Oracle (27 Nov 2026): a handful of large employers each, a request per posting's text; Phenom's pages take two or three
 # seconds, so a read of 120 texts is about five minutes, with half a second between requests across all its sites.
+# Taleo (27 Nov 2026): the same, two boards, a request per posting's text (about 1.5 seconds each), half a second apart.
 ATS_LIMIT = {"usajobs": 2, "workday": 48, "smartrecruiters": 2, "workable": 4, "recruitee": 6, "teamtailor": 6, "personio": 6, "jazzhr": 4,
-             "breezy": 4, "bamboohr": 8, "paylocity": 8, "pinpoint": 4, "gem": 4, "trakstar": 4, "rippling": 4, "icims": 4, "phenom": 2, "oracle": 4}
+             "breezy": 4, "bamboohr": 8, "paylocity": 8, "pinpoint": 4, "gem": 4, "trakstar": 4, "rippling": 4, "icims": 4, "phenom": 2, "oracle": 4, "taleo": 2}
 ATS_GAP = {"usajobs": 0.5, "workday": 0.3, "smartrecruiters": 0.5, "workable": 0.25, "recruitee": 0.1, "teamtailor": 0.1, "personio": 0.1, "jazzhr": 0.5,
-           "breezy": 0.3, "bamboohr": 0.3, "paylocity": 0.4, "pinpoint": 0.3, "gem": 0.3, "trakstar": 0.3, "rippling": 0.3, "icims": 0.5, "phenom": 0.5, "oracle": 0.3}
+           "breezy": 0.3, "bamboohr": 0.3, "paylocity": 0.4, "pinpoint": 0.3, "gem": 0.3, "trakstar": 0.3, "rippling": 0.3, "icims": 0.5, "phenom": 0.5, "oracle": 0.3, "taleo": 0.5}
 # Workday and SmartRecruiters list a board's postings without their text, which takes one more request per posting. Only new or
 # changed postings are asked for, at most this many per board in one read (the newest first); the rest wait for the next read.
 # 120 since 18 Nov 2026 (40 before): a board of 1,000 jobs released from hold got 40 texts on each of its reads, and its turn comes
@@ -77,7 +78,7 @@ LIST_MAX = 3000
 SLOW_ATS = {"workday", "smartrecruiters"}     # many requests a board: the hourly run reads them half as often as the other rotating boards
 # JazzHR too: its list is one request a board, but there are thousands of boards on one service, each new posting is a page of its
 # own, and live.py would otherwise read a board that changed in the last day every 10 minutes. Every 8 hours here, hourly in live.py.
-SLOW_ATS |= {"jazzhr", "breezy", "bamboohr", "paylocity", "rippling", "icims", "phenom", "oracle"}
+SLOW_ATS |= {"jazzhr", "breezy", "bamboohr", "paylocity", "rippling", "icims", "phenom", "oracle", "taleo"}
 # <<< not rules
 
 # Same-name companies that are not crypto, and trading firms where most roles are not crypto.
@@ -2294,10 +2295,135 @@ def fetch_oracle(src, reuse=None):
     return detail_board(src, reuse, "oracle", items, read)
 
 
+# Taleo (27 Nov 2026; sources_taleo.json). Oracle Taleo Enterprise runs the careers sites of large hospitals and others; the critics'
+# Dallas hospitals included UT Southwestern, on it. Two ways in, both public and without sign-in:
+# - a career section with its own job search ("token": host and section, such as utsw.taleo.net/2, "portal": the section's number):
+#   the list is the request its search page makes (POST /careersection/rest/jobboard/searchjobs, 25 postings a page, with the
+#   visitor's time zone as a header, as the page sends it); a posting's text, date and type are in its page (jobdetail.ftl), in the
+#   form data the page is drawn from (initialHistory). utsw.taleo.net has no robots.txt (404 on 27 Nov 2026).
+# - a careers site in front of Taleo whose Taleo section has no public search ("site": its host; Kaiser Permanente, where
+#   kp.taleo.net/careersection/external/jobsearch.ftl sends a visitor to sign in). Its robots.txt (27 Nov 2026) keeps crawlers out of
+#   /search-jobs/ only and the site publishes a sitemap of its postings; each posting's page carries its JobPosting data for search
+#   engines (title, text, date, place) and the Taleo fields the site shows (pay range, schedule).
+TALEO_TZ = ("tz: GMT-06:00", "tzname: America/Chicago")
+TALEO_TYPE = {"full-time": "Full-time", "full time": "Full-time", "part-time": "Part-time", "part time": "Part-time", "per diem": "Part-time",
+              "prn": "Part-time", "temporary": "Temporary", "contract": "Contract", "intern": "Internship"}
+
+
+def taleo_place(raw):
+    """"Texas-Dallas-5939 Harry Hines Blvd" (state, city, building) as "Dallas, TX"; any other form as written."""
+    bits = [b.strip() for b in str(raw or "").split("-")]
+    code = {v.lower(): k for k, v in US_STATE_NAME.items()}.get(bits[0].lower()) if bits else None
+    if code and len(bits) >= 2 and bits[1]: return f"{bits[1]}, {code}"
+    return str(raw or "").strip()
+
+
+def taleo_fields(page):
+    """The values a Taleo posting page is drawn from (its initialHistory), decoded, each once and in order."""
+    import urllib.parse
+    m = re.search(r'id="initialHistory"[^>]*value="([^"]*)"', page or "") or re.search(r'value="([^"]*)"[^>]*id="initialHistory"', page or "")
+    if not m: return []
+    out = []
+    for p_ in html.unescape(m.group(1)).split("!|!"):
+        v = urllib.parse.unquote(p_).replace("\\:", ":").strip()
+        if v and (not out or out[-1] != v): out.append(v)
+    return out
+
+
+def taleo_detail(page):
+    """(text as HTML, posting day as yyyy-mm-dd, type of work) from a Taleo posting page."""
+    vals = taleo_fields(page)
+    texts = list(dict.fromkeys(v[3:].strip() for v in vals if v.startswith("!*!") and len(strip_html(v[3:]).strip()) > 40))
+    day = ""
+    for v in vals:
+        m = re.match(r"([A-Z][a-z]{2}) (\d{1,2}), (\d{4})\b", v)
+        if m:
+            try: day = datetime.datetime.strptime(" ".join(m.groups()), "%b %d %Y").date().isoformat(); break
+            except ValueError: pass
+    kind = next((TALEO_TYPE[v.lower()] for v in vals if v.lower() in TALEO_TYPE), "")
+    return "".join(texts), day, kind
+
+
+def kaiser_fields(page):
+    """The Taleo fields a TalentBrew careers page shows in its markup ("custom_fields.CFSalaryLow-71000"), as {name: value}."""
+    return {k: v.replace("-", " ").strip() for k, v in re.findall(r"custom_fields\.([A-Za-z0-9_]+)-([^\s<\"]{1,80})", page or "")}
+
+
+assert taleo_place("Texas-Dallas-5939 Harry Hines Blvd") == "Dallas, TX" and taleo_place("California-Los Angeles-West Los Angeles Medical Center") == "Los Angeles, CA"
+assert taleo_place("Remote") == "Remote"
+assert taleo_detail('<input id="initialHistory" value="ftlx0!|!RN!|!989264!|!!*!%3Cp%3EYou will lead the clinic team and care for patients every day.%3C/p%3E!|!'
+                    '!*!%3Cp%3EYou will lead the clinic team and care for patients every day.%3C/p%3E!|!Full-time!|!Nov 25, 2026, 5%5C:47%5C:33 PM">') == \
+    ("<p>You will lead the clinic team and care for patients every day.</p>", "2026-11-25", "Full-time")
+assert kaiser_fields('x custom_fields.CFSalaryLow-71000 custom_fields.PayBasis-Yearly custom_fields.JobSchedule-Full-time "') == \
+    {"CFSalaryLow": "71000", "PayBasis": "Yearly", "JobSchedule": "Full time"}
+
+
+def fetch_taleo(src, reuse=None):
+    name, tok = src["name"], src["token"].strip("/")
+    host, section = (tok.split("/", 1) + [""])[:2]
+    if src.get("site"):
+        site = src["site"].strip("/")
+        polite("taleo")
+        x = _net.get_text(f"https://{site}/sitemap.xml", 90, accept="application/xml", compressed=True)
+        if not x or "<urlset" not in x: return name, None
+        items = [(jid, {"url": u}) for u, jid in dict.fromkeys(re.findall(rf"<loc>\s*(https://{re.escape(site)}/job/[^<\s]+?/(\d+))\s*</loc>", x))]
+        if not items: return name, None
+
+        def read(jid, raw):
+            page = _net.get_text(raw["url"], 40, accept="text/html", compressed=True) or ""
+            d = jazz_page(page)
+            title, desc = str(d.get("title") or "").strip(), str(d.get("description") or "")
+            if strip_html(str(d.get("qualifications") or "")).strip(): desc += "<h3>Qualifications</h3>" + str(d["qualifications"])
+            if not title or not strip_html(desc).strip(): return None
+            text = strip_html(desc)
+            if not english(f"{title}\n{text}"): return "not english"
+            f = kaiser_fields(page)
+            pay = ""
+            try:
+                lo, hi = float(f.get("CFSalaryLow") or 0), float(f.get("CFSalaryHigh") or 0)
+                if 0 < lo <= hi: pay = f"{lo:.2f} - {hi:.2f} USD per hour" if f.get("PayBasis", "").lower().startswith("hour") or hi < 1000 else f"{lo:.0f} - {hi:.0f} USD"
+            except ValueError:
+                pass
+            remote = str(d.get("jobLocationType") or "").upper() == "TELECOMMUTE"
+            return parse(name, "taleo", jid, title, raw["url"], icims_place(d), remote, str(f.get("Specialty") or f.get("Field1") or ""),
+                         str(d.get("datePosted") or "")[:10], text, pay, TALEO_TYPE.get(str(f.get("JobSchedule") or "").lower(), ""), desc, False)
+        return detail_board(src, reuse, "taleo", items, read)
+
+    api = f"https://{host}/careersection/rest/jobboard/searchjobs?lang=en&portal={src['portal']}"
+    body = {"multilineEnabled": False, "sortingSelection": {"sortBySelectionParam": "3", "ascendingSortingOrder": "false"},
+            "fieldData": {"fields": {"KEYWORD": "", "LOCATION": ""}, "valid": True}, "filterSelectionParam": {"searchFilterSelections": []},
+            "advancedSearchFiltersSelectionParam": {"searchFilterSelections": []}, "pageNo": 1}
+    posts, total = {}, None
+    while body["pageNo"] <= LIST_MAX // 25:
+        polite("taleo")
+        d = _net.post_json(api, body, 60, headers=TALEO_TZ)
+        try: rows, paging = d["requisitionList"], d["pagingData"]
+        except (KeyError, TypeError): return name, None         # a list cut short would close the jobs on its later pages
+        if total is None: total = int(paging.get("totalCount") or 0)
+        for r in rows:
+            col = r.get("column") or []
+            if r.get("contestNo") and col and col[0]:
+                try: locs = json.loads(col[1]) if len(col) > 1 and str(col[1]).startswith("[") else [col[1]] if len(col) > 1 else []
+                except ValueError: locs = [col[1]]
+                posts.setdefault(str(r["contestNo"]), {"title": str(col[0]).strip(), "places": "; ".join(dict.fromkeys(taleo_place(l) for l in locs[:3] if l)),
+                                                      "field": str(col[2]) if len(col) > 2 else ""})
+        if not rows or len(posts) >= total: break
+        body["pageNo"] += 1
+
+    def read(jid, raw):
+        url = f"https://{host}/careersection/{section}/jobdetail.ftl?job={jid}&lang=en"
+        desc, day, kind = taleo_detail(_net.get_text(url, 40, accept="text/html", compressed=True))
+        if not strip_html(desc).strip(): return None
+        text = strip_html(desc)
+        if not english(f"{raw['title']}\n{text}"): return "not english"
+        return parse(name, "taleo", jid, raw["title"], url, raw["places"], False, raw["field"], day, text, "", kind, desc, False)
+    return detail_board(src, reuse, "taleo", list(posts.items()), read)
+
+
 _fetch_any = fetch
 READERS = {"usajobs": fetch_usajobs, "jazzhr": fetch_jazzhr, "breezy": fetch_breezy, "bamboohr": fetch_bamboohr, "paylocity": fetch_paylocity,
            "pinpoint": fetch_pinpoint, "gem": fetch_gem, "trakstar": fetch_trakstar, "rippling": fetch_rippling, "icims": fetch_icims,
-           "phenom": fetch_phenom, "oracle": fetch_oracle}      # the systems read outside fetch_feed
+           "phenom": fetch_phenom, "oracle": fetch_oracle, "taleo": fetch_taleo}      # the systems read outside fetch_feed
 
 
 def in_city(src, got):

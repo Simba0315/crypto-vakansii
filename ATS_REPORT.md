@@ -115,6 +115,21 @@ Citi and Southwest Airlines (their Workday robots.txt asks crawlers to stay out)
 the collector does not read); Walgreens (BrassRing), Starbucks (Eightfold); Amazon (amazon.jobs answers "10,000" for any search, 830 KB a
 hundred: it needs its own reader and a decision on the load); Costco and FedEx's US jobs (no public feed found).
 
+**Taleo, later the same day.** UT Southwestern and Kaiser Permanente are read now (`sources_taleo.json`, `collect.fetch_taleo`, slow
+rotation, both `"lifted"`). UT Southwestern: its public career section (utsw.taleo.net, section 2) lists 512 open postings through the
+request its own search page makes (24 pages of 25; the section's total says 659, the rest are not shown to the public), and each
+posting's page gives its text, day and type; the list alone took 26 s, then about 1.1 s a posting. Kaiser Permanente: its Taleo
+section sends a visitor to sign in instead of a search, and its careers site (kaiserpermanentejobs.org) keeps crawlers out of
+/search-jobs/ in robots.txt, so the reader takes the site's own sitemap (2,835 postings, under a second, compressed) and each
+posting's page (JobPosting data with the text, day and place, and the pay range and schedule the site shows), about 1 s a posting.
+Neither Taleo host has a robots.txt (404). At 120 texts a read, a read is about 2.5 minutes of one thread (UT Southwestern) and about
+2 minutes (Kaiser), beside the other boards.
+
+**Amazon: not read.** amazon.jobs/robots.txt (27 Nov 2026) keeps only AhrefsBot out and lets every other crawler read
+/en/search.json, but the site's "Conditions of use" link is Amazon.com's Conditions of Use (last updated 14 Aug 2026), whose licence is
+for personal and non-commercial use and excludes "any use of data mining, robots, or similar data gathering and extraction tools". So
+there is no reader; it needs Amazon's written consent (or a feed Amazon offers to job sites) first.
+
 ## Newer systems: how boards were found and checked
 
 `discover_ats.py` took every board address in Common Crawl's URL index for `apply.workable.com/*`, `*.recruitee.com`,
@@ -163,6 +178,7 @@ LinkedIn's crawler and disallows everyone else. No SmartRecruiters board was sea
 | SmartRecruiters | `api.smartrecruiters.com/v1/companies/<id>/postings` | one request per new posting | not used, see above |
 | Phenom (27 Nov 2026) | the careers site's sitemap (`/sitemap_index.xml` or `/sitemap.xml`) | the posting's own page (`phApp.ddo`), one request per new posting | careers sites on the employer's domain; its JobPosting `datePosted` is the day of the request, so the page's own date is used |
 | Oracle Recruiting Cloud (27 Nov 2026) | `/hcmRestApi/resources/latest/recruitingCEJobRequisitions`, 200 a request | `recruitingCEJobRequisitionDetails`, one request per new posting | the REST resources the Oracle careers site itself reads; no sign-in |
+| Taleo (27 Nov 2026) | POST `/careersection/rest/jobboard/searchjobs`, 25 a page, or the careers site's sitemap where the Taleo section has no public search | `jobdetail.ftl` (its initialHistory form data), or the careers site's posting page | the requests the public search page makes, with its time-zone header; no sign-in |
 
 Politeness: the user agent `Mozilla/5.0 (job-board aggregator)`, at most 4 to 12 boards of one system at a time and a pause between
 requests (0.1 to 0.3 seconds, per tenant on Workday), no login, no bot check bypassed. The checks made roughly 20,000 requests over

@@ -3,11 +3,13 @@ import json, subprocess
 UA = "Mozilla/5.0 (job-board aggregator)"
 
 
-def get_text(url, timeout=30, accept="application/json", data=None, compressed=False):
+def get_text(url, timeout=30, accept="application/json", data=None, compressed=False, headers=()):
     """Fetch a URL with curl and return the body as text, or None on any failure (a network error or an HTTP error status).
     With data (a dict) the request is a POST of that JSON, the way Workday's job lists are asked for. compressed asks for a gzip
-    answer (HTML pages: about a quarter of the bytes for both sides)."""
+    answer (HTML pages: about a quarter of the bytes for both sides). headers: more request headers, "Name: value" (Taleo's job list
+    wants the visitor's time zone, as its own page sends it)."""
     cmd = ["curl", "-s", "-4", "-L", "--fail", "--max-time", str(timeout), "-H", f"Accept: {accept}", "-A", UA]
+    for h in headers: cmd += ["-H", h]
     if compressed: cmd.append("--compressed")
     if data is not None: cmd += ["-H", "Content-Type: application/json", "--data-binary", json.dumps(data)]
     try:
@@ -55,9 +57,9 @@ def probe(url, timeout=30, data=None):
         return None
 
 
-def post_json(url, data, timeout=30):
+def post_json(url, data, timeout=30, headers=()):
     """POST a JSON body and return the parsed JSON answer, or None on any failure."""
     try:
-        return json.loads(get_text(url, timeout, data=data) or "")
+        return json.loads(get_text(url, timeout, data=data, headers=headers) or "")
     except Exception:
         return None

@@ -1,0 +1,26 @@
+[
+{
+"name": "UT Southwestern Medical Center",
+"ats": "taleo",
+"token": "utsw.taleo.net/2",
+"portal": "101430233",
+"count": 512,
+"lands": [
+"US"
+],
+"added": "2026-11-27",
+"lifted": "2026-11-27"
+},
+{
+"name": "Kaiser Permanente",
+"ats": "taleo",
+"token": "kp.taleo.net/external",
+"site": "www.kaiserpermanentejobs.org",
+"count": 2835,
+"lands": [
+"US"
+],
+"added": "2026-11-27",
+"lifted": "2026-11-27"
+}
+]
