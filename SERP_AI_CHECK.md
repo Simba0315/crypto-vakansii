@@ -1627,3 +1627,25 @@ first; a Student template and page for "resume templates for high school student
 both); the PDF download free with no account said in the first lines (most of the first page charges for it or needs a sign-up).
 No "hired faster" figures and no view counts: we do not measure them. Largest gap still open: image results (Google shows a row of
 template pictures; ours are HTML, not image files).
+
+## Resume guides from CVMaker's blog topics (27 Nov 2026)
+
+Google (US, English) read for each before writing; what the pages answer:
+- **"computer skills for resume":** AI answer groups them (office, communication and project tools, data, design and web, programming),
+  says match the posting, state a level, prove it in bullets; PAA: basic computer skills, top 10, examples. `/guides/computer-skills-for-resume/`
+  has the same groups with a resume line each, the level advice and today's most-asked skills.
+- **"how to list references on a resume":** AI answer: a separate page, not on the resume; 3 to 5 people; name, title, organisation, phone,
+  email, one line on the relationship; ask first; skip "available upon request". PAA: is it okay not to list them, good references, what
+  the list looks like. All answered on `/guides/how-to-list-references-on-a-resume/`, with an invented example page.
+- **"resume objective examples":** 1 to 2 sentences, target role, skills, value to the employer, under 50 words; by entry level, career
+  changer, experienced. `/guides/resume-objective-examples/` has 10 examples by situation and when a summary is better.
+- **"hobbies and interests on a resume":** 2 to 5 specific ones, only when they show something useful; examples by trait. The builder got
+  an Interests field the same day.
+- **"high school student resume no experience":** education first, activities, volunteering, babysitting and tutoring, an objective,
+  3 to 4 skills; `/guides/high-school-resume/` and the Student template.
+- **"stay at home mom resume":** CVMaker's own example is first; PAA: how to explain it, a professional way to say it, skills, homemaker.
+  `/guides/stay-at-home-parent-resume/` answers each.
+- **"customer service skills for resume":** soft skills (listening, empathy, de-escalation) and tools (Zendesk, Salesforce, POS), proved with
+  CSAT, volume and time. `/guides/customer-service-skills/` gives 12 with a line each.
+Not written, because a page already answers the search: "send resume by email" (`/tools/application-email/`), "resume summary examples"
+(`/tools/resume-summary/`), "application letter sample" (`/tools/cover-letter/`, `/cover-letter-examples/`).
