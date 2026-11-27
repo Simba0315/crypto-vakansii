@@ -203,7 +203,10 @@ def split_words(q):
 # browser since 13 Nov; this does the same for every address that sends words (the API, a shared link, the assistants' connector).
 PLACE_ALIAS = {"united-states": ("usa", "united states", "u.s.", "america"), "united-kingdom": ("uk", "britain", "england", "united kingdom"),
                "san-francisco": ("san francisco", "bay area", "sf bay area"), "new-york": ("nyc", "new york city", "new york"), "washington-dc": ("washington dc", "washington d.c."),
-               "uae": ("dubai", "uae", "emirates"), "raleigh-durham": ("raleigh", "durham"), "los-angeles": ("los angeles",)}
+               "uae": ("dubai", "uae", "emirates"), "raleigh-durham": ("raleigh", "durham"), "los-angeles": ("los angeles",),
+               # the metro areas by the names people give them (27 Nov 2026; every list holds its whole metro area, build.places_of)
+               "dallas": ("dfw", "dallas fort worth", "dallas-fort worth", "dallas/fort worth"), "minneapolis": ("minneapolis", "twin cities", "st. paul", "st paul", "saint paul"),
+               "philadelphia": ("philly",)}
 _GEO = {}
 
 
@@ -250,7 +253,8 @@ def state_of(word):
 
 def city_clause(city):
     """The filter for a city typed by the visitor, which must agree with its state when one is written: "Dallas, TX" is the Dallas place
-    page (Dallas, Plano and Fort Worth in Texas, never Dallas, Oregon, or "GA - Dallas"), "Albany, NY" an Albany line that names New York."""
+    page (its whole metro area: Dallas, Fort Worth, Arlington, Irving, Frisco and the other towns of metros.py, never Dallas, Oregon, or
+    "GA - Dallas"), "Albany, NY" an Albany line that names New York; "Irving, TX" the jobs whose own place line names Irving, Texas."""
     g = geo()
     c = " ".join((city or "").lower().replace(",", " , ").split()).strip(" ,")
     name, st = c, ""
@@ -760,6 +764,11 @@ def _test():
         assert '{"term": {"etype": "Part-time"}}' not in flat(list_body(P("q=part+time+cashier"), day, drop="q"))
         # a typed city agrees with its state: "Dallas, TX" is the Dallas page (never Dallas, Oregon), "Albany, NY" needs New York
         assert city_clause("Dallas, TX") == city_clause("dallas tx") == city_clause("Dallas") == {"term": {"places": "dallas"}}
+        # the metro areas: "nurse dallas" and "nurse dfw" are the Dallas list (with Irving, Frisco, Arlington), a suburb keeps its own words
+        assert read_query("nurse dallas")["place"] == read_query("nurse dfw")["place"] == read_query("nurse in dallas-fort worth")["place"] == "dallas"
+        assert read_query("nurse twin cities")["place"] == read_query("nurse st. paul")["place"] == "minneapolis" and read_query("rn philadelphia")["place"] == "philadelphia"
+        assert read_query("teacher san antonio")["place"] == "san-antonio" and read_query("engineer detroit")["place"] == "detroit"
+        assert city_clause("San Antonio, TX") == {"term": {"places": "san-antonio"}} and "irving" in flat(city_clause("Irving, TX"))
         a_ = flat(city_clause("Albany, NY"))
         assert '"match_phrase": {"place": "albany"}' in a_ and '{"match": {"place": "ny"}}' in a_ and '"new york"' in a_ and '"minimum_should_match": 1' in a_
         assert flat(city_clause("Portland, ME")).count("maine") == 1 and city_clause("Leeds") == {"match_phrase": {"place": "leeds"}}

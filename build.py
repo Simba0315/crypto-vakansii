@@ -27,6 +27,7 @@ import fields_info                      # what each field page answers besides i
 import resume_examples
 import skills_info                      # what each skill is, in plain words, and its group
 import geo_cities                       # where the cities in postings are, for the jobs map
+import metros                           # the towns of each US metro area (US Census Bureau), for the place pages and the search
 import search_engine                    # a row of results, the same here (the first page of /jobs/) as from the server
 import resignation_pages                # a resignation letter per situation (/resignation-letters/)
 import resume_words                     # stronger words for an overused resume verb (/resume-words/)
@@ -223,7 +224,10 @@ PLACES = [
     ("Denver, CO", "denver", (r"\bdenver\b|boulder", "US")), ("Los Angeles, CA", "los-angeles", (r"los angeles|santa monica|culver city|el segundo|hawthorne|irvine", "US")),
     ("Dallas, TX", "dallas", (r"\bdallas\b|plano|fort worth", "US")), ("Atlanta, GA", "atlanta", (r"\batlanta\b|alpharetta|sandy springs|kennesaw|dunwoody|norcross|\b(?:marietta|roswell|duluth|decatur|smyrna|peachtree corners),? (?:ga|georgia)\b", "US")), ("San Diego, CA", "san-diego", (r"san diego", "US")),
     ("Pittsburgh, PA", "pittsburgh", (r"pittsburgh", "US")), ("Portland, OR", "portland", (r"\bportland\b", "US")), ("Miami, FL", "miami", (r"\bmiami\b", "US")),
-    ("Phoenix, AZ", "phoenix", (r"\bphoenix\b|scottsdale|tempe", "US")), ("Raleigh-Durham, NC", "raleigh-durham", (r"raleigh|durham|research triangle", "US")), ("Houston, TX", "houston", (r"\bhouston\b", "US")),
+    ("Phoenix, AZ", "phoenix", (r"\bphoenix\b|scottsdale|tempe", "US")), ("Raleigh-Durham, NC", "raleigh-durham", (r"raleigh|durham|research triangle", "US")), ("Houston, TX", "houston", (r"(?<!sam )\bhouston\b", "US")),
+    # 27 Nov 2026: four large metro areas that had no page; each list holds its whole metro area (metros.py), as the other US cities do
+    ("San Antonio, TX", "san-antonio", (r"\bsan antonio\b", "US")), ("Philadelphia, PA", "philadelphia", (r"\bphiladelphia\b", "US")),
+    ("Minneapolis-St. Paul, MN", "minneapolis", (r"\bminneapolis\b|\b(?:st\.?|saint) paul\b", "US")), ("Detroit, MI", "detroit", (r"\bdetroit\b", "US")),
     ("Texas", "texas", (r"\btexas\b|(?-i:, TX\b)|\baustin\b|\bdallas\b|\bhouston\b|san antonio", "US")), ("Florida", "florida", (r"\bflorida\b|(?-i:, FL\b)|\bmiami\b|orlando|\btampa\b", "US")),
     ("Toronto", "toronto", (r"toronto", "CA")), ("Vancouver", "vancouver", (r"vancouver", "CA")), ("Berlin", "berlin", (r"\bberlin\b", "DE")), ("Munich", "munich", (r"munich|münchen", "DE")),
     ("Bangalore", "bangalore", (r"bangalore|bengaluru", "IN")), ("Sydney", "sydney", (r"\bsydney\b", "AU")),
@@ -284,7 +288,8 @@ def path_fl(path):
 # of the first 500 jobs on the Portland list were in Maine or Indiana). Washington, DC is left out: its suburbs are in Virginia.
 PLACE_STATE = {"new-york": "NY", "san-francisco": "CA", "california": "CA", "seattle": "WA", "austin": "TX", "chicago": "IL", "boston": "MA", "denver": "CO",
                "los-angeles": "CA", "dallas": "TX", "atlanta": "GA", "san-diego": "CA", "pittsburgh": "PA", "portland": "OR", "miami": "FL", "phoenix": "AZ",
-               "raleigh-durham": "NC", "houston": "TX", "texas": "TX", "florida": "FL"}
+               "raleigh-durham": "NC", "houston": "TX", "texas": "TX", "florida": "FL", "san-antonio": "TX", "philadelphia": "PA", "minneapolis": "MN",
+               "detroit": "MI"}
 _ST_NAME = None
 
 
@@ -303,16 +308,20 @@ def part_states(part):
 
 
 def places_of(loc):
-    """Slugs of every place page a location line belongs on."""
+    """Slugs of every place page a location line belongs on. A town of a US metro area, named with its state, is on its metro's page
+    too ("Irving, TX" on Dallas, "Jersey City, NJ" on New York: metros.py, the US Census Bureau's Metropolitan Statistical Areas)."""
     codes = {c for c, _ in countries_of(loc)}
     out = []
     parts = None
+    metro = {s_ for s_, _, _ in metros.metro_of(loc, part_states)} if "US" in codes or not codes else ()
     for _, slug, rule in PLACES:
         if rule == "region":
             members, words = REGIONS[slug]
             hit = bool(codes & members) or bool(re.search(words, loc, re.I))
         elif isinstance(rule, str):
             hit = rule in codes
+        elif slug in metro:
+            hit = True
         else:
             hit = bool(re.search(rule[0], loc, re.I)) and (rule[1] in codes or not codes)
             if hit and slug in PLACE_STATE:            # the part that names the city must not name another state
@@ -1112,7 +1121,13 @@ for _l, _no, _yes in (("Dallas, GA, USA", {"dallas", "texas"}, {"united-states"}
                       ("Seattle, Washington", set(), {"seattle"}), ("Washington, DC", set(), {"washington-dc"}), ("Manhattan, KS", {"new-york"}, set()),
                       ("Brooklyn, NY 11201", set(), {"new-york"}), ("Plano, TX", set(), {"dallas", "texas"}), ("Dallas", set(), {"dallas", "texas"}),
                       ("43 New Scotland Avenue Albany, NY 12208", {"united-kingdom", "europe"}, {"new-york", "united-states"}),
-                      ("Serbia; Georgia; Armenia", {"united-states", "atlanta"}, {"serbia", "armenia"})):
+                      ("Serbia; Georgia; Armenia", {"united-states", "atlanta"}, {"serbia", "armenia"}),
+                      # the metro areas (metros.py): a town named with its state is on its metro's page and keeps its own name in the job
+                      ("Irving, TX", set(), {"dallas", "texas"}), ("Frisco, Texas, United States", set(), {"dallas", "texas"}), ("Arlington, TX", {"washington-dc"}, {"dallas"}),
+                      ("Arlington, VA", {"dallas"}, {"washington-dc"}), ("McKinney, TX; Remote", set(), {"dallas"}), ("Celina, TX", set(), {"dallas"}),
+                      ("Fort Sam Houston, Texas", {"houston"}, {"san-antonio", "texas"}), ("King of Prussia, PA", set(), {"philadelphia"}),
+                      ("Jersey City, NJ", set(), {"new-york"}), ("Troy, MI", set(), {"detroit"}), ("St. Paul, MN", set(), {"minneapolis"}),
+                      ("Richmond, BC, Canada", {"san-francisco", "california"}, set()), ("Frisco, CO", {"dallas"}, set()), ("Dallas, GA", {"dallas"}, {"atlanta"})):
     _got = set(places_of(_l))
     assert not (_got & _no) and _yes <= _got, (_l, _got)
 # cities postings name without their state; only names that mean one place in practice (no Cambridge, Portland or Springfield)
@@ -7358,6 +7373,22 @@ def main():
             pl_qa.append((f"What do hourly jobs in {name} pay?", f"{len(hl_p):,} of the {len(js):,} open jobs in {name} here state an hourly rate in US dollars: the median is ${hl_p[len(hl_p) // 2]:,.2f} an hour, "
                           f"and the middle half pay ${hl_p[len(hl_p) // 4]:,.2f} to ${hl_p[3 * len(hl_p) // 4]:,.2f}. At the median, 40 hours a week for a year is about ${hl_p[len(hl_p) // 2] * 2080:,.0f} before tax. "
                           "Yearly salaries on this page run higher because more of them are professional and technical jobs."))
+        # 27 Nov 2026: a US city's list holds its whole metro area (metros.py). The towns it holds, with their open jobs, each one click from
+        # its own jobs (the search's City box), and which area and counties that is, so a reader knows why a job in Irving is on Dallas.
+        mt_ = metros.names()["metros"].get(slug)
+        if mt_:
+            own_ = metros.norm(short.split(",")[0])
+            tw_, nj_ = Counter(), 0
+            for j in js:
+                got_ = {(t_, st_) for s_, t_, st_ in metros.metro_of(j["location"] or "", part_states) if s_ == slug and metros.norm(t_) != own_}
+                tw_.update(got_); nj_ += bool(got_)
+            if len(tw_) >= 3:
+                pl_after += section(f"Open jobs by town around [[{short}]]",
+                                    '<p class="chips">' + "".join(f'<a href="{P}/jobs/?city={quote(t_ + ", " + st_)}">{e(t_)} <b>{k_:,}</b></a>' for (t_, st_), k_ in tw_.most_common(24)) + "</p>"
+                                    + f'<p class="note">This list holds the {e(" and ".join(mt_["areas"]))} metro area{"s" if len(mt_["areas"]) > 1 else ""}, as the US Census Bureau '
+                                      f'draws {"them" if len(mt_["areas"]) > 1 else "it"} ({len(mt_["counties"])} counties: {e(", ".join(c_.rsplit(", ", 1)[0].removesuffix(" County") for c_ in mt_["counties"]))}). '
+                                      f'Every job keeps its own town; {nj_:,} of the {len(js):,} are in the {len(tw_):,} towns around {e(short.split(",")[0])}.</p>',
+                                    sid="towns", label="Towns")
         co_link = ((f"locations/{slug}/companies/", f"All {len(co_in[slug]):,} companies hiring in {short}"),) if slug in co_in else ()      # beside the page's main action
         listing(f"locations/{slug}/", f"Jobs in {name}", f"Jobs in {name} ({len(js):,} open) | {SITE}",
                 place_desc(name, js, rr_p),
@@ -14498,6 +14529,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     CITY_LL = {"new-york": (40.71, -74.01), "san-francisco": (37.77, -122.42), "seattle": (47.61, -122.33), "austin": (30.27, -97.74), "chicago": (41.88, -87.63), "boston": (42.36, -71.06),
                "washington-dc": (38.91, -77.04), "denver": (39.74, -104.99), "los-angeles": (34.05, -118.24), "dallas": (32.78, -96.80), "atlanta": (33.75, -84.39), "san-diego": (32.72, -117.16),
                "pittsburgh": (40.44, -80.00), "portland": (45.52, -122.68), "miami": (25.76, -80.19), "phoenix": (33.45, -112.07), "raleigh-durham": (35.78, -78.64), "houston": (29.76, -95.37),
+               "san-antonio": (29.42, -98.49), "philadelphia": (39.95, -75.17), "minneapolis": (44.98, -93.27), "detroit": (42.33, -83.05),
                "toronto": (43.65, -79.38), "vancouver": (49.28, -123.12), "berlin": (52.52, 13.40), "munich": (48.14, 11.58), "bangalore": (12.97, 77.59), "sydney": (-33.87, 151.21),
                "london": (51.51, -0.13), "manchester": (53.48, -2.24), "paris": (48.86, 2.35), "amsterdam": (52.37, 4.90), "dublin": (53.35, -6.26), "madrid": (40.42, -3.70),
                "barcelona": (41.39, 2.17), "lisbon": (38.72, -9.14), "zurich": (47.38, 8.54), "stockholm": (59.33, 18.07), "warsaw": (52.23, 21.01), "tel-aviv": (32.08, 34.78),

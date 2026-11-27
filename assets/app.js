@@ -390,7 +390,10 @@
     t.split(' & ').forEach(function (part) { names.push(part.replace(/^the /, '')); });
     if (/, [a-z]{2}$/.test(t)) names.push(t.replace(/, [a-z]{2}$/, ''));         // "New York, NY" is typed "new york"
     ({ 'united-states': ['usa', 'united states', 'the us', 'america'], 'united-kingdom': ['uk', 'britain', 'england', 'united kingdom'], 'san-francisco': ['san francisco', 'bay area', 'sf'],
-       'new-york': ['nyc', 'new york city'], 'washington-dc': ['washington dc', 'dc'], 'uae': ['dubai', 'uae', 'emirates'] }[o.value] || []).forEach(function (a) { names.push(a); });
+       'new-york': ['nyc', 'new york city'], 'washington-dc': ['washington dc', 'dc'], 'uae': ['dubai', 'uae', 'emirates'],
+       // a metro area by the names people give it (each list holds its whole metro area, metros.py; search_engine.PLACE_ALIAS the same)
+       'dallas': ['dfw', 'dallas fort worth', 'dallas-fort worth', 'dallas/fort worth'], 'minneapolis': ['minneapolis', 'twin cities', 'st. paul', 'st paul', 'saint paul'],
+       'philadelphia': ['philly'] }[o.value] || []).forEach(function (a) { names.push(a); });
     return { v: o.value, names: names.filter(function (x, i, a) { return x.length > 1 && a.indexOf(x) === i; }) };
   });
   var rxEsc = function (x) { return x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); };
