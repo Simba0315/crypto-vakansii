@@ -21,6 +21,9 @@ CREATE INDEX jobs_cat ON jobs (cat, active);
 -- 60 seconds with the store's lock held, so the home page's live list never arrived and job pages waited behind it.
 CREATE INDEX jobs_new ON jobs (active, first_seen);
 CREATE TABLE ctx (k TEXT PRIMARY KEY, v TEXT NOT NULL);
+-- an address that is no longer a job's -> the job's address (build.MOVED_JOB: a copy the build leaves out hands over to the posting it
+-- copies, 27 Nov 2026), answered with a 301 by Store.moved
+CREATE TABLE moved (slug TEXT PRIMARY KEY, to_slug TEXT NOT NULL);
 CREATE VIRTUAL TABLE jobs_fts USING fts5 (title, company, place, tags, body, content='', tokenize='porter unicode61 remove_diacritics 2');
 """
 # Word search over every job, the kind of index Lucene keeps (Lucene is what Elasticsearch, Solr and the search of large job sites are
@@ -62,6 +65,7 @@ def save(path, jobs, b):
                     ((j["slug"], j["id"], int(bool(j["active"])), j["company"], j["cat"], j.get("first_seen") or "",
                       dumps({k: v for k, v in j.items() if k != "desc"}), j.get("desc") or "") for j in jobs))
     index(con)
+    con.executemany("INSERT OR REPLACE INTO moved VALUES (?, ?)", sorted((getattr(b, "MOVED_JOB", None) or {}).items()))
     key = lambda k: SEP.join(k)
     ctx = {
         "now": b.NOW, "today": b.TODAY, "v": b.V,
@@ -355,7 +359,15 @@ class Store:
         return [got[s] for s in slugs if s in got]
 
     def moved(self, slug):
-        """The address the hourly record gave a job first published live under this one, or None."""
+        """The address a job has now, for one that is no longer a job's, or None: a copy the build left out hands over to the posting it
+        copies (table moved of the records file, build.MOVED_JOB; 27 Nov 2026, Search Console found such addresses answering 404), and a
+        job first published live under one address keeps the one the hourly record gave it (live.py's table moved)."""
+        try:
+            with self.reading() as con:
+                got = con.execute("SELECT to_slug FROM moved WHERE slug = ?", (slug,)).fetchone()
+            if got: return got[0]
+        except sqlite3.Error:                    # a records file written before 27 Nov 2026 has no such table
+            pass
         got = live_row("SELECT to_slug FROM moved WHERE slug = ?", (slug,))
         return got[0][0] if got else None
 

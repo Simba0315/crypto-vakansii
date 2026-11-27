@@ -3139,6 +3139,11 @@ def junk_reason(j):
 
 SIFTED = Counter()        # what sift() left out in this build, by reason; FACTS and the methodology page say it
 MENDED = Counter()        # what sift() kept but mended: "Copy of" taken off a title, a title read from the posting's address
+# The address of a copy sift() leaves out -> the address of the posting it copies (Search Console, 27 Nov 2026: /job/custodian-part-time-
+# z-do-not-use/ answered 404 once the "Z. Do Not Use" board's copy of Paylocity posting 3628332 left the lists; the posting is
+# /job/custodian-part-time-catholic-schools/). records.save() stores it in data/jobs.db, and the page server answers such an address with a
+# 301 to the posting (records.Store.moved), as it does for a job published live under one address and given another by the hourly record.
+MOVED_JOB = {}
 
 
 def sift(jobs):
@@ -3147,17 +3152,23 @@ def sift(jobs):
     and an ATS copy ("Copy of Graphic Designer") of a job the employer also lists under its real title; other "Copy of" titles lose the words.
     Every posting of a hiring system's sandbox goes too (sandbox()), and a title the system did not give takes the one in its address
     (lost_title)."""
-    own = set()
+    own = {}                  # (hiring system, posting id) -> (slug, open) of that posting on the employer's own board, an open one first
     open_titles = defaultdict(list)
     for j in jobs:
         co = j.get("company") or ""
         if not PLACEHOLDER_CO.search(co):
             ats = j["id"].split("-", 1)[0]
-            own.add((ats, j["id"][len(ats) + len(slugify(co)) + 2:]))
+            k_ = (ats, j["id"][len(ats) + len(slugify(co)) + 2:])
+            if k_ not in own or (j.get("active") and not own[k_][1]): own[k_] = (j["slug"], bool(j.get("active")))
         if j.get("active"): open_titles[co].append(j.get("title") or "")
     boxes = {co for co, ts in open_titles.items() if sandbox(ts)}
     if boxes: print("hiring systems' sandboxes left out: " + ", ".join(f"{co} ({len(open_titles[co])} open)" for co in sorted(boxes)))
-    keys = {(j.get("company"), (j.get("title") or "").strip().lower(), (j.get("location") or "").strip().lower()) for j in jobs if not COPY_OF.match(j.get("title") or "")}
+    keys = {}                 # (company, title, place) -> (slug, open) of a job under its real title, an open one first
+    for j in jobs:
+        if not COPY_OF.match(j.get("title") or ""):
+            k_ = (j.get("company"), (j.get("title") or "").strip().lower(), (j.get("location") or "").strip().lower())
+            if k_ not in keys or (j.get("active") and not keys[k_][1]): keys[k_] = (j["slug"], bool(j.get("active")))
+    MOVED_JOB.clear()
     out = []
     for j in jobs:
         co = j.get("company") or ""
@@ -3168,19 +3179,42 @@ def sift(jobs):
             MENDED["title_from_address"] += 1
         if PLACEHOLDER_CO.search(co):
             ats = j["id"].split("-", 1)[0]
-            if (ats, j["id"][len(ats) + len(slugify(co)) + 2:]) in own:
+            if (got_ := own.get((ats, j["id"][len(ats) + len(slugify(co)) + 2:]))):
+                if got_[0] != j["slug"]: MOVED_JOB[j["slug"]] = got_[0]
                 SIFTED["placeholder_copy"] += 1; continue
         why = junk_reason(j)
         if why:
             SIFTED[why] += 1; continue
         if COPY_OF.match(j.get("title") or ""):
             plain = COPY_OF.sub("", j["title"]).strip()
-            if (co, plain.lower(), (j.get("location") or "").strip().lower()) in keys:
+            if (got_ := keys.get((co, plain.lower(), (j.get("location") or "").strip().lower()))):
+                if got_[0] != j["slug"]: MOVED_JOB[j["slug"]] = got_[0]
                 SIFTED["copy"] += 1; continue
             j["title"] = plain
             MENDED["copy_renamed"] += 1
         out.append(j)
+    kept_ = {j["slug"] for j in out}
+    for old_ in [o_ for o_, n_ in MOVED_JOB.items() if o_ in kept_ or n_ not in kept_]: del MOVED_JOB[old_]     # never over a page that stays
     return out
+
+
+def _sift_test():
+    """sift() on made-up records: the placeholder board's copy and the "Copy of" copy hand their addresses over to the posting they copy."""
+    keep_ = (Counter(SIFTED), Counter(MENDED))
+    js_ = [{"id": "paylocity-catholic-schools-3628332", "company": "Catholic Schools", "title": "Custodian Part Time", "location": "Melbourne, FL", "slug": "custodian-part-time-catholic-schools", "active": True},
+           {"id": "paylocity-z-do-not-use-3628332", "company": "Z. Do Not Use", "title": "Custodian Part Time", "location": "Melbourne, FL", "slug": "custodian-part-time-z-do-not-use", "active": True},
+           {"id": "paylocity-z-do-not-use-4205546", "company": "Z. Do Not Use", "title": "Accounting Billing Coordinator", "location": "Orlando, FL", "slug": "accounting-billing-coordinator-z-do-not-use", "active": True},
+           {"id": "lever-acme-1", "company": "Acme", "title": "Graphic Designer", "location": "Austin, TX", "slug": "graphic-designer-acme", "active": False},
+           {"id": "lever-acme-2", "company": "Acme", "title": "Copy of Graphic Designer", "location": "Austin, TX", "slug": "copy-of-graphic-designer-acme", "active": True},
+           {"id": "icims-s-b-1", "company": "S&B", "title": "Unavailable", "url": "https://careers-sbec.icims.com/jobs/14717/project-expeditor/job", "location": "", "slug": "unavailable-s-b", "active": True}]
+    out_ = sift(js_)
+    assert [j["slug"] for j in out_] == ["custodian-part-time-catholic-schools", "accounting-billing-coordinator-z-do-not-use", "graphic-designer-acme", "unavailable-s-b"], [j["slug"] for j in out_]
+    assert MOVED_JOB == {"custodian-part-time-z-do-not-use": "custodian-part-time-catholic-schools", "copy-of-graphic-designer-acme": "graphic-designer-acme"}, MOVED_JOB
+    assert out_[-1]["title"] == "Project Expeditor" and out_[-1]["slug"] == "unavailable-s-b"
+    SIFTED.clear(); SIFTED.update(keep_[0]); MENDED.clear(); MENDED.update(keep_[1]); MOVED_JOB.clear()
+
+
+_sift_test()
 
 
 assert junk_reason({"company": "Business Contract Technologies", "title": "TiffanyKnaul", "excerpt": "We are currently partnered with a boutique restructuring and turnaround advisory firm that is seeking someone with a profile very similar to yours. Would you have time for a brief conversation tomorrow or later this week?"}) == "cold_email"
@@ -4919,7 +4953,8 @@ def main():
         if ENTITY_TEXT.search(j_.get("excerpt") or ""): j_["excerpt"] = html.unescape(j_["excerpt"])      # plain text: an entity in it is the same slip
     jobs = sift(jobs)                            # cold emails, candidate lists, placeholder boards, test postings, sandboxes and ATS copies (sift, junk_reason)
     print("left out as not jobs or not employers: " + (", ".join(f"{k} {v:,}" for k, v in SIFTED.most_common()) or "none")
-          + "; mended: " + (", ".join(f"{k} {v:,}" for k, v in MENDED.most_common()) or "none"))
+          + "; mended: " + (", ".join(f"{k} {v:,}" for k, v in MENDED.most_common()) or "none")
+          + f"; {len(MOVED_JOB):,} addresses of copies left out hand over (301) to the posting they copy")
     for j_ in jobs:                              # Workday entity codes read as names (CO_RENAME); the old address hands over below
         j_["company"] = CO_RENAME.get(j_.get("company"), j_.get("company"))
     paid_file = ROOT / "paid.json"  # employer-submitted listings, kept in the main branch
