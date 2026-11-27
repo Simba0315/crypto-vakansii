@@ -739,3 +739,18 @@ plain HTML, so the page is readable without the map.
   While `payments_live` is not set in config.json, every paid product says "Not on sale yet: payments are not switched on".
   /for-employers/, /employers/ and /hire/ are hand-over pages to /post-a-job/; server/hosting/nginx-hrn.conf has real 301s for them,
   which apply only after the owner deploys the server config.
+
+## Resume templates and the builder's Design half (27 Nov 2026)
+
+- The templates are one list in two places that must agree: `assets/resume.js` (`TPLS`, `TPL_NAMES`) and `resume_templates.py`
+  (`TEMPLATES`, with the invented person of each in `PEOPLE`); `resume_templates.test()` runs in the build and fails it when they differ.
+  The look of every template is `assets/resume.css` only (the builder, `/resume-templates/` and `/resume-templates/<id>/` load it);
+  `resume_templates.sheet_html()` writes the same markup as `resume.js` `sheetHtml()`, except that on the static pages the name and the
+  section titles are `<p class="pv-name">` / `<p class="pv-h">` instead of h2/h3, so the pages keep one heading outline.
+- Sizes on the sheet are multiples of `--fs` (the Text size control sets it); colours use `--tac` (template) and `--uac` (the visitor's).
+- The preview is a real page (`PAPER` in resume.js: Letter 816x1056 or A4 794x1123 CSS px, 48 px margins) zoomed to the column; the PDF
+  gets the same through an injected `@page` rule. `#rb-preview` must keep `top:0` (style.css still gives it `top:76px` for sticky).
+- Target-title suggestions read `data/role-skills.json` and `data/resume-examples.json`; numbers in the example lines become `[number]`.
+- "Save this resume to My jobs" calls `HRN.cvSave` (site.js, `hrn_resumes`) with the id `rb-<resume id>`, so saving again updates it.
+- No view counts or "most popular" badges on the templates: nothing counts views. Item 6 of backlog/resume-cvmaker-brief.md (new job
+  examples: medical assistant, police officer, bank teller...) needs new roles in roles_info.py first; not done.

@@ -7,10 +7,11 @@
 .rbs{--fs:14px;--tac:#111;--ac2:var(--uac,var(--tac));position:relative;box-sizing:border-box;background:#fff;color:#111;padding:48px;
   font:var(--fs)/1.5 Georgia,"Times New Roman",serif;text-align:left;overflow-wrap:break-word;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .rbs *{box-sizing:border-box}
-.rbs h2.pv-name{font:700 calc(var(--fs)*1.86)/1.15 "Inter",Arial,sans-serif;letter-spacing:-.01em;margin:0;color:#111}
+.rbs .pv-name{font:700 calc(var(--fs)*1.86)/1.15 "Inter",Arial,sans-serif;letter-spacing:-.01em;margin:0;color:#111}
 .rbs .pv-title{font:500 calc(var(--fs)*1.07)/1.35 "Inter",Arial,sans-serif;margin:4px 0 0;color:#333}
 .rbs .pv-contact{font:calc(var(--fs)*.89)/1.45 "Inter",Arial,sans-serif;color:#555;margin:8px 0 0}
-.rbs h3{font:700 calc(var(--fs)*.82)/1.3 "Inter",Arial,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--ac2);border-bottom:1px solid var(--ac2);
+.rbs h3,
+.rbs .pv-h{font:700 calc(var(--fs)*.82)/1.3 "Inter",Arial,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--ac2);border-bottom:1px solid var(--ac2);
   padding-bottom:4px;margin:20px 0 8px;break-after:avoid}
 .rbs p{margin:0 0 6px}
 .rbs .pv-item{margin-bottom:10px}
@@ -22,27 +23,34 @@
 
 /* Modern */
 .rbs.tpl-modern{font-family:"Inter",Arial,sans-serif;line-height:1.55}
-.rbs.tpl-modern h2.pv-name{font-size:calc(var(--fs)*2.14);letter-spacing:-.03em}
-.rbs.tpl-modern h3{border-bottom:0;border-left:3px solid var(--ac2);padding:0 0 0 8px;letter-spacing:.06em;color:#111}
+.rbs.tpl-modern .pv-name{font-size:calc(var(--fs)*2.14);letter-spacing:-.03em}
+.rbs.tpl-modern h3,
+.rbs.tpl-modern .pv-h{border-bottom:0;border-left:3px solid var(--ac2);padding:0 0 0 8px;letter-spacing:.06em;color:#111}
 /* Compact: more on one page */
 .rbs.tpl-compact{--fs:12.5px;font-family:"Inter",Arial,sans-serif;line-height:1.4}
-.rbs.tpl-compact h2.pv-name{font-size:calc(var(--fs)*1.68)}
-.rbs.tpl-compact h3{margin:13px 0 5px;font-size:calc(var(--fs)*.84)}
+.rbs.tpl-compact .pv-name{font-size:calc(var(--fs)*1.68)}
+.rbs.tpl-compact h3,
+.rbs.tpl-compact .pv-h{margin:13px 0 5px;font-size:calc(var(--fs)*.84)}
 .rbs.tpl-compact .pv-item{margin-bottom:6px}
 /* Developer */
 .rbs.tpl-developer{--fs:13px;font-family:"JetBrains Mono",Menlo,Consolas,monospace;line-height:1.55}
-.rbs.tpl-developer h2.pv-name,.rbs.tpl-developer .pv-title,.rbs.tpl-developer .pv-contact,.rbs.tpl-developer h3,.rbs.tpl-developer .pv-top{font-family:"JetBrains Mono",Menlo,Consolas,monospace}
-.rbs.tpl-developer h3{border-bottom:1px dashed var(--ac2);text-transform:none;letter-spacing:0;font-size:var(--fs)}
-.rbs.tpl-developer h3::before{content:"## "}
+.rbs.tpl-developer .pv-name,.rbs.tpl-developer .pv-title,.rbs.tpl-developer .pv-contact,.rbs.tpl-developer h3,.rbs.tpl-developer .pv-h,.rbs.tpl-developer .pv-top{font-family:"JetBrains Mono",Menlo,Consolas,monospace}
+.rbs.tpl-developer h3,
+.rbs.tpl-developer .pv-h{border-bottom:1px dashed var(--ac2);text-transform:none;letter-spacing:0;font-size:var(--fs)}
+.rbs.tpl-developer h3::before,
+.rbs.tpl-developer .pv-h::before{content:"## "}
 /* Executive */
-.rbs.tpl-executive h2.pv-name,.rbs.tpl-executive .pv-title,.rbs.tpl-executive .pv-contact{text-align:center}
-.rbs.tpl-executive h2.pv-name{font:700 calc(var(--fs)*2)/1.15 Georgia,"Times New Roman",serif;letter-spacing:.01em}
-.rbs.tpl-executive h3{text-align:center;border-bottom:0;border-top:1px solid var(--ac2);padding:8px 0 0;letter-spacing:.16em;font-weight:600}
+.rbs.tpl-executive .pv-name,.rbs.tpl-executive .pv-title,.rbs.tpl-executive .pv-contact{text-align:center}
+.rbs.tpl-executive .pv-name{font:700 calc(var(--fs)*2)/1.15 Georgia,"Times New Roman",serif;letter-spacing:.01em}
+.rbs.tpl-executive h3,
+.rbs.tpl-executive .pv-h{text-align:center;border-bottom:0;border-top:1px solid var(--ac2);padding:8px 0 0;letter-spacing:.16em;font-weight:600}
 /* Timeline */
 .rbs.tpl-timeline{font-family:"Inter",Arial,sans-serif}
-.rbs.tpl-timeline h2.pv-name{font-size:calc(var(--fs)*2);letter-spacing:-.02em}
-.rbs.tpl-timeline h3{border-bottom:1px solid #ddd;color:var(--uac,#555);font-weight:600;letter-spacing:.04em}
-.rbs.tpl-timeline h3 small{font-weight:400;text-transform:none;letter-spacing:0;color:#777;margin-left:6px}
+.rbs.tpl-timeline .pv-name{font-size:calc(var(--fs)*2);letter-spacing:-.02em}
+.rbs.tpl-timeline h3,
+.rbs.tpl-timeline .pv-h{border-bottom:1px solid #ddd;color:var(--uac,#555);font-weight:600;letter-spacing:.04em}
+.rbs.tpl-timeline h3 small,
+.rbs.tpl-timeline .pv-h small{font-weight:400;text-transform:none;letter-spacing:0;color:#777;margin-left:6px}
 .rbs.tpl-timeline .pv-tl{display:grid;grid-template-columns:minmax(92px,26%) 1fr;gap:16px;margin-bottom:12px}
 .rbs.tpl-timeline .pv-when{color:#555;font-size:calc(var(--fs)*.89);line-height:1.45}
 .rbs.tpl-timeline .pv-when span{display:block;color:#888}
@@ -51,58 +59,69 @@
 .rbs.tpl-timeline .pv-tags span{display:inline-block;border:1px solid #d6d6d6;border-radius:5px;padding:1px 8px;margin:0 5px 5px 0;font-size:calc(var(--fs)*.89)}
 /* Minimal */
 .rbs.tpl-minimal{--fs:13.5px;font-family:"Inter",Arial,sans-serif;line-height:1.6}
-.rbs.tpl-minimal h2.pv-name{font-weight:600;font-size:calc(var(--fs)*2);letter-spacing:-.02em}
+.rbs.tpl-minimal .pv-name{font-weight:600;font-size:calc(var(--fs)*2);letter-spacing:-.02em}
 .rbs.tpl-minimal .pv-title{font-weight:400;color:#555}
-.rbs.tpl-minimal h3{font-weight:500;color:var(--uac,#555);letter-spacing:.14em;border-bottom:1px solid #d9d9d9;margin:26px 0 10px;padding-bottom:6px}
+.rbs.tpl-minimal h3,
+.rbs.tpl-minimal .pv-h{font-weight:500;color:var(--uac,#555);letter-spacing:.14em;border-bottom:1px solid #d9d9d9;margin:26px 0 10px;padding-bottom:6px}
 /* Accent: navy */
 .rbs.tpl-accent{--tac:#1f3a68;font-family:"Inter",Arial,sans-serif}
-.rbs.tpl-accent h2.pv-name{color:var(--ac2);font-size:calc(var(--fs)*2.07);letter-spacing:-.02em}
+.rbs.tpl-accent .pv-name{color:var(--ac2);font-size:calc(var(--fs)*2.07);letter-spacing:-.02em}
 .rbs.tpl-accent .pv-title{color:var(--ac2)}
-.rbs.tpl-accent h3{border-bottom-width:2px}
+.rbs.tpl-accent h3,
+.rbs.tpl-accent .pv-h{border-bottom-width:2px}
 .rbs.tpl-accent .pv-top strong{color:var(--ac2)}
 /* Simple: the plainest page there is */
 .rbs.tpl-simple{font-family:Arial,"Helvetica Neue",Helvetica,sans-serif}
-.rbs.tpl-simple h2.pv-name{font:700 calc(var(--fs)*1.71)/1.15 Arial,"Helvetica Neue",Helvetica,sans-serif;letter-spacing:0}
+.rbs.tpl-simple .pv-name{font:700 calc(var(--fs)*1.71)/1.15 Arial,"Helvetica Neue",Helvetica,sans-serif;letter-spacing:0}
 .rbs.tpl-simple .pv-title,.rbs.tpl-simple .pv-contact,.rbs.tpl-simple .pv-top{font-family:Arial,"Helvetica Neue",Helvetica,sans-serif}
-.rbs.tpl-simple h3{font:700 calc(var(--fs)*.93)/1.3 Arial,"Helvetica Neue",Helvetica,sans-serif;text-transform:none;letter-spacing:0;border:0;padding:0;margin:18px 0 6px}
+.rbs.tpl-simple h3,
+.rbs.tpl-simple .pv-h{font:700 calc(var(--fs)*.93)/1.3 Arial,"Helvetica Neue",Helvetica,sans-serif;text-transform:none;letter-spacing:0;border:0;padding:0;margin:18px 0 6px}
 /* Professional: serif, small capitals, a rule under the header */
 .rbs.tpl-professional{--tac:#2d3a4a}
-.rbs.tpl-professional h2.pv-name{font:700 calc(var(--fs)*2)/1.15 Georgia,"Times New Roman",serif;letter-spacing:.01em;color:var(--ac2)}
+.rbs.tpl-professional .pv-name{font:700 calc(var(--fs)*2)/1.15 Georgia,"Times New Roman",serif;letter-spacing:.01em;color:var(--ac2)}
 .rbs.tpl-professional .pv-head{border-bottom:2px solid var(--ac2);padding-bottom:12px}
-.rbs.tpl-professional h3{font:700 calc(var(--fs)*1.07)/1.3 Georgia,"Times New Roman",serif;font-variant:small-caps;text-transform:none;letter-spacing:.05em;border-bottom:1px solid #c8c8c8}
+.rbs.tpl-professional h3,
+.rbs.tpl-professional .pv-h{font:700 calc(var(--fs)*1.07)/1.3 Georgia,"Times New Roman",serif;font-variant:small-caps;text-transform:none;letter-spacing:.05em;border-bottom:1px solid #c8c8c8}
 /* Student: education and projects first */
 .rbs.tpl-student{--tac:#2b5d8a;font-family:"Inter",Arial,sans-serif}
-.rbs.tpl-student h3{font-size:calc(var(--fs)*.86);border-bottom-width:2px}
+.rbs.tpl-student h3,
+.rbs.tpl-student .pv-h{font-size:calc(var(--fs)*.86);border-bottom-width:2px}
 .rbs.tpl-student .pv-title{color:var(--ac2)}
 /* Elegant: serif throughout, centred, light rules either side of each heading */
 .rbs.tpl-elegant{--tac:#333}
-.rbs.tpl-elegant h2.pv-name,.rbs.tpl-elegant .pv-title,.rbs.tpl-elegant .pv-contact,.rbs.tpl-elegant .pv-top,.rbs.tpl-elegant h3{font-family:Georgia,"Times New Roman",serif}
+.rbs.tpl-elegant .pv-name,.rbs.tpl-elegant .pv-title,.rbs.tpl-elegant .pv-contact,.rbs.tpl-elegant .pv-top,.rbs.tpl-elegant h3,.rbs.tpl-elegant .pv-h{font-family:Georgia,"Times New Roman",serif}
 .rbs.tpl-elegant .pv-head{text-align:center}
-.rbs.tpl-elegant h2.pv-name{font-weight:400;font-size:calc(var(--fs)*2.14);letter-spacing:.08em;text-transform:uppercase}
+.rbs.tpl-elegant .pv-name{font-weight:400;font-size:calc(var(--fs)*2.14);letter-spacing:.08em;text-transform:uppercase}
 .rbs.tpl-elegant .pv-title{font-style:italic;font-weight:400}
-.rbs.tpl-elegant h3{display:flex;align-items:center;gap:12px;border:0;padding:0;font-weight:400;font-size:calc(var(--fs)*.93);letter-spacing:.2em;margin:22px 0 10px}
-.rbs.tpl-elegant h3::before,.rbs.tpl-elegant h3::after{content:"";flex:1;border-top:1px solid #bbb}
+.rbs.tpl-elegant h3,
+.rbs.tpl-elegant .pv-h{display:flex;align-items:center;gap:12px;border:0;padding:0;font-weight:400;font-size:calc(var(--fs)*.93);letter-spacing:.2em;margin:22px 0 10px}
+.rbs.tpl-elegant h3::before,
+.rbs.tpl-elegant .pv-h::before,.rbs.tpl-elegant h3::after,.rbs.tpl-elegant .pv-h::after{content:"";flex:1;border-top:1px solid #bbb}
 /* Creative: a coloured header band, the rest plain */
 .rbs.tpl-creative{--tac:#1f4e5f;font-family:"Inter",Arial,sans-serif}
 .rbs.tpl-creative .pv-head{background:var(--ac2);padding:22px 26px;border-radius:4px;margin:0 0 4px}
-.rbs.tpl-creative h2.pv-name{color:#fff;font-size:calc(var(--fs)*2.14);letter-spacing:-.02em}
+.rbs.tpl-creative .pv-name{color:#fff;font-size:calc(var(--fs)*2.14);letter-spacing:-.02em}
 .rbs.tpl-creative .pv-title{color:#fff;opacity:.92}
 .rbs.tpl-creative .pv-contact{color:#e9eef0}
-.rbs.tpl-creative h3{border-bottom-width:2px}
+.rbs.tpl-creative h3,
+.rbs.tpl-creative .pv-h{border-bottom-width:2px}
 /* Bold: a large name and heavy headings */
 .rbs.tpl-bold{font-family:"Inter",Arial,sans-serif}
-.rbs.tpl-bold h2.pv-name{font-weight:800;font-size:calc(var(--fs)*2.57);letter-spacing:-.035em;line-height:1.05}
+.rbs.tpl-bold .pv-name{font-weight:800;font-size:calc(var(--fs)*2.57);letter-spacing:-.035em;line-height:1.05}
 .rbs.tpl-bold .pv-title{text-transform:uppercase;letter-spacing:.08em;font-size:calc(var(--fs)*.93);font-weight:700;color:var(--ac2);margin-top:8px}
-.rbs.tpl-bold h3{display:inline-block;font-weight:800;font-size:calc(var(--fs)*1.07);text-transform:none;letter-spacing:-.01em;color:#111;border-bottom:3px solid var(--ac2);padding-bottom:2px;margin:22px 0 10px}
+.rbs.tpl-bold h3,
+.rbs.tpl-bold .pv-h{display:inline-block;font-weight:800;font-size:calc(var(--fs)*1.07);text-transform:none;letter-spacing:-.01em;color:#111;border-bottom:3px solid var(--ac2);padding-bottom:2px;margin:22px 0 10px}
 /* Fresh: teal headings on a light band */
 .rbs.tpl-fresh{--tac:#0f6b6b;font-family:"Inter",Arial,sans-serif}
-.rbs.tpl-fresh h2.pv-name{color:var(--ac2);font-size:calc(var(--fs)*2);letter-spacing:-.02em}
-.rbs.tpl-fresh h3{font-size:calc(var(--fs)*.86);border:0;border-left:4px solid var(--ac2);background:#eef5f5;background:color-mix(in srgb,var(--ac2) 9%,#fff);padding:5px 10px;margin:18px 0 8px}
+.rbs.tpl-fresh .pv-name{color:var(--ac2);font-size:calc(var(--fs)*2);letter-spacing:-.02em}
+.rbs.tpl-fresh h3,
+.rbs.tpl-fresh .pv-h{font-size:calc(var(--fs)*.86);border:0;border-left:4px solid var(--ac2);background:#eef5f5;background:color-mix(in srgb,var(--ac2) 9%,#fff);padding:5px 10px;margin:18px 0 8px}
 /* Heritage: burgundy and serif, a double rule */
 .rbs.tpl-heritage{--tac:#7a1f2b}
-.rbs.tpl-heritage h2.pv-name{font:700 calc(var(--fs)*2.14)/1.15 Georgia,"Times New Roman",serif;color:var(--ac2)}
+.rbs.tpl-heritage .pv-name{font:700 calc(var(--fs)*2.14)/1.15 Georgia,"Times New Roman",serif;color:var(--ac2)}
 .rbs.tpl-heritage .pv-title{font-family:Georgia,"Times New Roman",serif;font-style:italic}
-.rbs.tpl-heritage h3{font-family:Georgia,"Times New Roman",serif;font-size:calc(var(--fs)*.86);letter-spacing:.12em;border-bottom:3px double var(--ac2)}
+.rbs.tpl-heritage h3,
+.rbs.tpl-heritage .pv-h{font-family:Georgia,"Times New Roman",serif;font-size:calc(var(--fs)*.86);letter-spacing:.12em;border-bottom:3px double var(--ac2)}
 
 /* A font the visitor picks wins over the template's own, on every line of the sheet */
 .rbs.ff-inter,.rbs.ff-inter *{font-family:"Inter",Arial,sans-serif!important}
@@ -175,6 +194,7 @@ main.rbp #rb-preview{position:relative;top:0;margin:0 auto;border:0;border-radiu
 }
 
 /* ---- the template gallery (/resume-templates/) and a template's own page ---- */
+.tg-h{margin:22px 0 10px;font:650 20px/1.25 var(--display);letter-spacing:-.01em}
 .tg-filter{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:4px 0 18px}
 .tg-filter .grp{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
 .tg-filter .grp>span{font-size:13px;font-weight:650;color:var(--muted);margin-right:2px}

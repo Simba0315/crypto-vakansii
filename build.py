@@ -11965,8 +11965,9 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     # by editors; these are written once and recounted from the open postings on every build, so the figures in them are never old.
     GUIDES = []
     PUBLISHED = "2026-11-13"
-    def guide(slug, title, desc, cat, lead, body, prev, more=(), extra_head=""):
-        ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Article", "headline": title, "description": desc, "datePublished": PUBLISHED, "dateModified": TODAY,
+    def guide(slug, title, desc, cat, lead, body, prev, more=(), extra_head="", published=""):
+        published = published or PUBLISHED          # a guide written later says its own day (the eight resume guides of 27 Nov 2026)
+        ld_ = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Article", "headline": title, "description": desc, "datePublished": published, "dateModified": TODAY,
                "author": {"@type": "Organization", "name": SITE, "url": FULL + "/about/"}, "publisher": {"@type": "Organization", "name": SITE, "url": FULL + "/", "logo": {"@type": "ImageObject", "url": FULL + "/og.jpg"}},
                "mainEntityOfPage": f"{FULL}/guides/{slug}/", "image": OG_URL}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
         # sections review, batch 3. What to read next is a row of links that look like links (it was one grey line). The short answer
@@ -11987,7 +11988,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
             used.add(sid); toc.append(f'<li><a href="#{sid}">{txt}</a></li>')
             return f'<h2 id="{sid}">{m_.group(1)}</h2>'
         if '<section class="sec"' not in body: body = re.sub(r"<h2>(.*?)</h2>", add_id, body)
-        art_ = (crumbs(("Guides", "guides/"), (title, "")) + f'<article class="guide"><h1>{e(title)}</h1><p class="stamp">{e(cat)} · by the <a href="{P}/about/">{SITE} team</a> · first published {fdate(PUBLISHED)} · figures recounted {fdate(TODAY)} from <b>{n:,}</b> open jobs · <a href="{P}/methodology/">how they are made</a></p>'
+        art_ = (crumbs(("Guides", "guides/"), (title, "")) + f'<article class="guide"><h1>{e(title)}</h1><p class="stamp">{e(cat)} · by the <a href="{P}/about/">{SITE} team</a> · first published {fdate(published)} · figures recounted {fdate(TODAY)} from <b>{n:,}</b> open jobs · <a href="{P}/methodology/">how they are made</a></p>'
                 f'{top_}{body}{links}</article>')
         if len(toc) >= 3:
             art_ = (f'<div class="has-toc"><div class="toc-main">{art_}</div><aside class="toc" aria-label="On this page"><p>On this page</p>'
@@ -12464,7 +12465,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     advice_ctx["top_roles"] = [(nm_, s_, money(m_), c_) for m_, nm_, s_, c_ in sorted(adv_top, reverse=True)[:12]]
     for a_ in advice_pages.ARTICLES:
         guide(a_["slug"], a_["title"], a_["desc"], a_["cat"], a_["lead"], advice_pages.render(a_, advice_ctx, e, P),
-              f'<span class="adv-prev">{e(a_["short"][:120].rsplit(" ", 1)[0])}…</span>', a_["more"], extra_head=advice_pages.faq_ld(a_, json))
+              f'<span class="adv-prev">{e(a_["short"][:120].rsplit(" ", 1)[0])}…</span>', a_["more"], extra_head=advice_pages.faq_ld(a_, json), published=a_.get("published", ""))
 
     lap('"Jobs for ..." pages: the kinds of work that fit an audience ')
     # "Jobs for ..." pages (jobs_for_pages.py): the searches "jobs for introverts", "jobs without a degree", "what can you do with a
@@ -13393,7 +13394,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          + f'<h1>Free resume templates <span class="hl">screening software can read</span></h1>'
          + f'<p class="tldr"><strong>All {RB_N} resume templates are free, and so are the PDF and the Word download: no account, no trial, no watermark.</strong> '
            'Each is one column of real text with standard headings, the layout applicant tracking systems read best. Press “Use this template”, fill in the form or upload your old resume, and download.</p>'
-         + rt_filter + rt_grid
+         + f'<h2 class="tg-h">All {RB_N} templates, each filled in with an example</h2>' + rt_filter + rt_grid
          + '<p class="note">The people, companies and numbers in the pictures are invented. Each picture is the template as the builder draws it.</p>'
          + section("Which resume template [[to pick]]", '<p>Start from the work you do and how long you have done it. Every template takes the same content, so you can switch later.</p>' + rt_pick, sid="pick", label="Pick one")
          + section("What makes a resume template [[ATS-friendly]]", rt_ats, sid="ats", label="ATS")

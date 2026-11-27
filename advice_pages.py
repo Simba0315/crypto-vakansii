@@ -849,7 +849,7 @@ ARTICLES += [
 # first page, its AI answer and "People also ask" were read for each (SERP_AI_CHECK.md, 27 Nov); the questions below answer them.
 # The example lines are written for this site and invented; no figure about hiring is claimed that we did not count.
 ARTICLES += [
-    {"slug": "computer-skills-for-resume", "cat": "Resumes and letters",
+    {"slug": "computer-skills-for-resume", "cat": "Resumes and letters", "published": "2026-11-27",
      "title": "Computer skills for a resume: examples and how to list them",
      "faq_h": "Questions about computer skills on a resume",
      "desc": "Which computer skills to put on a resume, grouped by kind, how to show your level, and resume lines that prove them, beside the skills today’s postings name most.",
@@ -883,7 +883,7 @@ ARTICLES += [
              ("How many computer skills should I list?", "Six to twelve that matter for the job. A long list of everything you have ever opened hides the ones the employer asked for.")],
      "more": (("tools/resume-skills/", "Skills to put on a resume, by job"), ("skills/", "Jobs by skill"), ("guides/how-to-write-a-resume/", "How to write a resume"))},
 
-    {"slug": "customer-service-skills", "cat": "Resumes and letters",
+    {"slug": "customer-service-skills", "cat": "Resumes and letters", "published": "2026-11-27",
      "title": "Customer service skills for a resume: 12 skills with example lines",
      "faq_h": "Questions about customer service skills on a resume",
      "desc": "The customer service skills employers look for, how to put them on a resume and a line that proves each, from listening and patience to Zendesk and cash handling.",
@@ -918,7 +918,7 @@ ARTICLES += [
              ("Is customer service a hard skill or a soft skill?", "Both. Listening, patience and calm are soft skills; using Zendesk, Salesforce or a cash register is a hard skill. A good resume shows both kinds.")],
      "more": (("tools/resume-skills/", "Skills to put on a resume, by job"), ("guides/strengths-and-weaknesses/", "Strengths and weaknesses"), ("resume-words/", "Stronger resume words"))},
 
-    {"slug": "how-to-list-references-on-a-resume", "cat": "Resumes and letters",
+    {"slug": "how-to-list-references-on-a-resume", "cat": "Resumes and letters", "published": "2026-11-27",
      "title": "How to list references for a resume, with an example page",
      "faq_h": "Questions about references for a resume",
      "desc": "Where references go, how many to give, who to ask and how to lay out a reference page, with an example and the message that asks someone to be your reference.",
@@ -947,7 +947,7 @@ ARTICLES += [
              ("What should a list of references look like?", "Your name and contact line at the top as on your resume, then for each person: full name, job title, organisation, phone, email and one sentence on how you know them.")],
      "more": (("tools/reference-request-email/", "Reference request email"), ("guides/how-to-write-a-resume/", "How to write a resume"), ("guides/job-interview-tips/", "Job interview tips"))},
 
-    {"slug": "resume-with-no-experience", "cat": "Resumes and letters",
+    {"slug": "resume-with-no-experience", "cat": "Resumes and letters", "published": "2026-11-27",
      "title": "How to write a resume with no experience, with examples",
      "faq_h": "Questions about a resume with no experience",
      "desc": "What to put on a resume with no work experience: education, projects, volunteering and informal work, written as results, with example lines and the order that works.",
@@ -978,7 +978,7 @@ ARTICLES += [
              ("How long should a resume with no experience be?", "One page. A full, focused page reads better than two thin ones.")],
      "more": (("guides/how-to-get-a-job-with-no-experience/", "How to get a job with no experience"), ("entry-level/", "Entry-level jobs"), ("guides/high-school-resume/", "High school resume"))},
 
-    {"slug": "high-school-resume", "cat": "Resumes and letters",
+    {"slug": "high-school-resume", "cat": "Resumes and letters", "published": "2026-11-27",
      "title": "High school resume: what to put on it, with an example",
      "faq_h": "Questions about a high school resume",
      "desc": "A resume for a high school student: the sections, what to write with no job yet, objective examples and activity lines, for a first part-time job, an internship or college.",
@@ -1009,7 +1009,7 @@ ARTICLES += [
              ("Do I need a resume for a part-time job?", "Not always: many shops and restaurants use an application form. A short resume still helps, because it shows you took the job seriously, and you can copy from it into the form.")],
      "more": (("guides/jobs-for-teens/", "Jobs for teens"), ("guides/resume-with-no-experience/", "Resume with no experience"), ("internships/", "Internships"))},
 
-    {"slug": "stay-at-home-parent-resume", "cat": "Resumes and letters",
+    {"slug": "stay-at-home-parent-resume", "cat": "Resumes and letters", "published": "2026-11-27",
      "title": "Stay-at-home mom or dad resume: how to write it, with examples",
      "faq_h": "Questions about a resume after time at home",
      "desc": "How to write a resume after years as a stay-at-home parent: what to call the time at home, what to put under it, a summary that leads with your skills, and example lines.",
@@ -1038,7 +1038,7 @@ ARTICLES += [
              ("What skills from being a stay-at-home parent can I put on a resume?", "The ones you can show with something you did: budgeting as a school treasurer, organising a volunteer rota, bookkeeping for a friend’s business, a course you finished. Name them in the posting’s words.")],
      "more": (("guides/employment-gap/", "How to explain a gap"), ("guides/resume-objective-examples/", "Resume objective examples"), ("part-time/", "Part-time jobs"))},
 
-    {"slug": "resume-objective-examples", "cat": "Resumes and letters",
+    {"slug": "resume-objective-examples", "cat": "Resumes and letters", "published": "2026-11-27",
      "title": "Resume objective examples for every situation",
      "faq_h": "Questions about resume objectives",
      "desc": "Resume objective examples for students, graduates, career changers, parents returning to work and first jobs, with when to use an objective and when a summary is better.",
@@ -1069,7 +1069,7 @@ ARTICLES += [
              ("Do employers still read resume objectives?", "They read the top of the page first, whatever it is called. A short, specific objective is read; a generic one (“a challenging position in a growing company”) is skipped.")],
      "more": (("tools/resume-summary/", "Resume summary generator"), ("guides/resume-with-no-experience/", "Resume with no experience"), ("guides/how-to-write-a-resume/", "How to write a resume"))},
 
-    {"slug": "hobbies-and-interests-on-a-resume", "cat": "Resumes and letters",
+    {"slug": "hobbies-and-interests-on-a-resume", "cat": "Resumes and letters", "published": "2026-11-27",
      "title": "Hobbies and interests on a resume: when to add them, with examples",
      "faq_h": "Questions about hobbies and interests on a resume",
      "desc": "When hobbies and interests belong on a resume, which ones help, how to write them so they say something, and where they go, with examples by what they show.",

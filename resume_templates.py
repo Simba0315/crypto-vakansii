@@ -302,13 +302,13 @@ def sheet_html(d, tpl):
             if cur: total += cur[1] - cur[0] + 1
             cur = r
     if cur: total += cur[1] - cur[0] + 1
-    S = {"summary": f'<h3>Summary</h3><p>{e(d["summary"])}</p>' if d.get("summary") else "",
-         "exp": ("<h3>Experience" + (f" <small>{_span(total)}</small>" if tl and total else "") + "</h3>" + exp) if exp else "",
-         "proj": "<h3>Projects</h3>" + proj if proj else "", "edu": "<h3>Education</h3>" + edu if edu else "", "cert": "<h3>Certifications</h3>" + cert if cert else "",
-         "skills": ("<h3>Skills</h3>" + ('<p class="pv-tags">' + "".join(f"<span>{e(k)}</span>" for k in skills) + "</p>" if tl else "<p>" + " · ".join(e(k) for k in skills) + "</p>")) if skills else "",
-         "lang": "<h3>Languages</h3><p>" + " · ".join(lang) + "</p>" if lang else "", "interests": f'<h3>Interests</h3><p>{e(d["interests"])}</p>' if d.get("interests") else ""}
+    S = {"summary": f'<p class="pv-h">Summary</p><p>{e(d["summary"])}</p>' if d.get("summary") else "",
+         "exp": ('<p class="pv-h">Experience' + (f" <small>{_span(total)}</small>" if tl and total else "") + "</p>" + exp) if exp else "",
+         "proj": '<p class="pv-h">Projects</p>' + "" + proj if proj else "", "edu": '<p class="pv-h">Education</p>' + "" + edu if edu else "", "cert": '<p class="pv-h">Certifications</p>' + "" + cert if cert else "",
+         "skills": ('<p class="pv-h">Skills</p>' + "" + ('<p class="pv-tags">' + "".join(f"<span>{e(k)}</span>" for k in skills) + "</p>" if tl else "<p>" + " · ".join(e(k) for k in skills) + "</p>")) if skills else "",
+         "lang": '<p class="pv-h">Languages</p>' + "<p>" + " · ".join(lang) + "</p>" if lang else "", "interests": f'<p class="pv-h">Interests</p><p>{e(d["interests"])}</p>' if d.get("interests") else ""}
     order = ["summary", "edu", "proj", "exp", "skills", "cert", "lang", "interests"] if tpl == "student" else ["summary", "exp", "proj", "edu", "cert", "skills", "lang", "interests"]
-    return (f'<div class="pv-head"><h2 class="pv-name">{e(d.get("name") or "Your name")}</h2>' + (f'<p class="pv-title">{e(d["title"])}</p>' if d.get("title") else "")
+    return (f'<div class="pv-head"><p class="pv-name">{e(d.get("name") or "Your name")}</p>' + (f'<p class="pv-title">{e(d["title"])}</p>' if d.get("title") else "")
             + (f'<p class="pv-contact">{contact}</p>' if contact else "") + "</div>" + "".join(S[k] for k in order))
 
 
