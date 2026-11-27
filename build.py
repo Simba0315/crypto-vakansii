@@ -1918,34 +1918,35 @@ def job_title(title, company, suffix=""):
     return t + joint + cut_words(company, limit - len(joint) - len(t))
 
 
-def fit_desc(d):
-    """A meta description of at most 160 characters that ends on a whole sentence. 22 Nov 2026: 35,000 of 58,800 job pages ended on a
+def fit_desc(d, tail=True):
+    """A meta description of at most 160 characters that ends on a whole sentence. tail=False (job pages, whose line is all facts, 27 Nov
+    2026): the closing sentence about the site only for a line under 70 characters. 22 Nov 2026: 35,000 of 58,800 job pages ended on a
     cut word ("... Collected from official company…", "... Apply on the…") because the closing sentence was added first and the line
     cut afterwards. Now the longest closing sentence that fits is added, and a line that is still too long loses whole sentences
     (never going below 80 characters) before a word is cut."""
     d = " ".join(d.split())
-    if len(d) < 125:
+    if len(d) < 125 and (tail or len(d) < 70):
         base = d.rstrip(".")
         tails_ = (f". Collected from official company career pages and updated around the clock on {SITE}.",
                   f". From the employer's own career page, updated around the clock on {SITE}.", f". Updated around the clock on {SITE}.")
         if re.search(r"every hour|hourly|around the clock|several times a day", base, re.I):        # the line already says it (/new/, company lists): "Updated every hour" twice read as a slip
             tails_ = ()
-        for tail in tails_:
-            if len(base + tail) <= 160:
-                return base + tail
+        for t_ in tails_:
+            if len(base + t_) <= 160:
+                return base + t_
         d = base + "."
     if len(d) <= 160: return d
     k = max(d.rfind(m_, 0, 161) for m_ in (". ", "! ", "? "))
     if k >= 60:         # 60, not 79 (24 Nov 2026): "Quantitative researcher jobs: 31 open now at Crypto.com, Keyrock and GSR." is 73 long and was cut inside the next sentence
         if k + 1 >= 110: return d[:k + 1]
-        return fit_desc(d[:k + 1])          # a short first sentence (roles, how to become): it gets the closing sentence that fits
+        return fit_desc(d[:k + 1], tail)    # a short first sentence (roles, how to become): it gets the closing sentence that fits
     # 24 Nov 2026: 813 of the 10,700 other pages (interview questions, roles, how to hire, cover letters) still ended on "…" inside a
     # word, because their first sentence alone runs past 160. Cut at the last clause that fits (a semicolon, a colon, a comma or a dash)
     # and close it with a full stop; only a line with no such pause loses a word.
     c_ = max(d.rfind(m_, 0, 158) for m_ in ("; ", ": ", ", ", " – ", " — ", " ("))
     if c_ >= 70:
         head_ = re.sub(r"\s+(?:and|or|with|to|of|for|in|at|the|a|an)$", "", d[:c_].rstrip(" ,;:–—"))
-        return head_ + "." if len(head_) >= 109 else fit_desc(head_ + ".")
+        return head_ + "." if len(head_) >= 109 else fit_desc(head_ + ".", tail)
     return d[:157].rsplit(" ", 1)[0].rstrip(",.;:–—") + "…"
 
 
@@ -2128,7 +2129,7 @@ def sec_labels(path, body):
     return body
 
 
-def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False, cls="", canon=None):
+def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False, cls="", canon=None, desc_tail=True):
     # <!--email_off--> around the body (22 Nov 2026): Cloudflare rewrote every address (abuse@ in "Report a problem with this listing",
     # partners@, press@) into /cdn-cgi/l/email-protection links whose decoding script our pages never load, so a click opened its
     # "Email Protection" page instead of the mail program. The comments tell Cloudflare to leave the addresses alone.
@@ -2137,7 +2138,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False,
     own (a job page that repeats an earlier one, same_text_jobs)."""
     url = f"{FULL}/{canon or path}"
     body = sec_labels(path, frame_first(path, with_toc(path, body)))
-    title, desc = fit_title(title), fit_desc(desc)
+    title, desc = fit_title(title), fit_desc(desc, desc_tail)
     if '"BreadcrumbList"' not in head:                 # every page with a visible trail carries the same trail as markup
         m_ = CRUMB_RX.search(body)
         if m_:
@@ -4048,6 +4049,83 @@ def job_indexable(j):
     return not j.get("tg")
 
 
+US_STATE_NAME = {c_: " ".join(w_ if w_ == "of" else w_.capitalize() for w_ in n_.split()) for n_, c_ in US_STATE_CODE.items()}
+THE_COUNTRY = {"US", "GB", "NL", "AE", "PH", "CZ", "DO", "BS", "GM", "CF", "CD", "CG", "KM", "MV", "SC", "SB", "MH"}
+PAY_PERIOD = re.compile(r"\b(?:an hour|a year|a month|a week|a day)\b")
+LEVEL_SAID = {"Intern": "internship", "Junior": "junior level", "Senior": "senior level", "Lead": "lead level"}
+_REGION = {}
+
+
+def region_of(loc):
+    """(key, name) of the one US state or the one country a location line names ("Fort Worth, TX, USA" -> ("US-TX", "Texas"),
+    "Munich, DE" -> ("DE", "Germany")), or ("", "") when it names none or several. For "N more open roles at X in Texas" (job_desc)."""
+    if loc in _REGION: return _REGION[loc]
+    got, cs = ("", ""), countries_of(loc) if loc else []
+    if len(cs) == 1:
+        code, name = cs[0]
+        sts = part_states(loc) if code == "US" else set()
+        if len(sts) == 1 and next(iter(sts)) in US_STATE_NAME: got = ("US-" + next(iter(sts)), US_STATE_NAME[next(iter(sts))])
+        else: got = (code, ("the " if code in THE_COUNTRY else "") + re.sub(r"\s*\(.*\)", "", name))
+    _REGION[loc] = got
+    return got
+
+
+assert region_of("Fort Worth, TX, USA") == ("US-TX", "Texas") and region_of("Munich, DE") == ("DE", "Germany") and region_of("Remote - United States") == ("US", "the United States")
+assert region_of("Washington, DC") == ("US-DC", "District of Columbia") and region_of("Serbia; Georgia; Armenia") == ("", "") and region_of("") == ("", "")
+
+
+def co_more(active):
+    """For each open job, how many more open jobs its employer has in the same US state or country, with the place's name, as
+    j["co_more"] = [n, name] (only where n is 1 or more). Kept in the record, so a page drawn from it on the server says the same."""
+    key_ = lambda j: (j["company"], region_of(j["location"])[0]) if j.get("location") else None
+    n_ = Counter(k for j in active if (k := key_(j)) and k[1])
+    for j in active:
+        k = key_(j)
+        if k and k[1] and n_[k] >= 2: j["co_more"] = [n_[k] - 1, region_of(j["location"])[1]]
+        else: j.pop("co_more", None)
+
+
+def job_desc(j):
+    """The search line of a job page (Search Console, 27 Nov 2026: 2,130 pages crawled and not indexed, most of them jobs, whose line read
+    "Part-Time Sales Associate at Loris Gifts — Fort Worth, TX, USA. Skills: POS systems and Customer service. Apply on the company
+    site."). Now the facts a searcher compares, each one the page itself states, as many as fit in 155 characters and in this order: the
+    pay as the posting states it, with its period; the employer's own date; where the work is done; the level; how many more open roles
+    the employer has in the same state or country; then the skills. No claim about how often anything is read."""
+    place = re.split(r";|\||•| / ", j["location"])[0].strip(" ,-–") if j.get("location") else ""
+    place = re.sub(r"\s*\([^)]*\)", "", place).strip(" ,-–")
+    head = f"{j['title']} at {j['company']}"
+    if place and place.lower() not in j["title"].lower() and len(head) + len(place) <= 100: head += f", {place}"
+    head += "."
+    if not j["active"]: return head + " This job is closed."
+    facts = []
+    if j.get("salary"):
+        pay = pay_shown(j["salary"])
+        facts.append(f"Pay {pay}{'' if PAY_PERIOD.search(pay) else ' a year'}.")
+    if j.get("posted"):
+        yr_ = j["posted"][:4] != TODAY[:4]
+        facts.append(("Updated " if j.get("posted_from") == "lastmod" else "Posted ") + fdate(j["posted"], year=yr_) + ".")
+    wp = "Remote" if j.get("remote") else "Hybrid" if j.get("hybrid") else "On-site" if j.get("location") else ""
+    if wp and wp.lower() in head.lower().replace(j["title"].lower(), ""): wp = ""       # "Cribl, Remote - United States." says it already
+    lv = LEVEL_SAID.get(j.get("level") or "", "")
+    if wp or lv: facts.append((f"{wp}, {lv}" if wp and lv else wp or lv.capitalize()) + ".")
+    if j.get("co_more"):
+        k_, where_ = j["co_more"]
+        who_ = j["company"] if len(j["company"]) <= 28 else "this employer"
+        facts.append(f"{k_:,} more open role{'' if k_ == 1 else 's'} at {who_} in {where_}.")
+    tg3_ = j.get("tags", [])[:3]
+    if tg3_: facts.append("Skills: " + (tg3_[0] if len(tg3_) == 1 else ", ".join(tg3_[:-1]) + " and " + tg3_[-1]) + ".")
+    facts.append("Apply through the Telegram post." if j.get("tg") else "Apply on the company site.")
+    out = head
+    for f_ in facts:
+        if len(out) + 1 + len(f_) <= 155: out += " " + f_
+    if len(out) < 110:             # a short line says where the posting comes from, as the page does ("Employer's own posting")
+        src_ = ("From a public Telegram job channel, not checked with the employer." if j.get("tg") else
+                "From USAJOBS, the US government's own job site." if j["id"].startswith("usajobs-") else
+                "Posted by the employer on this site." if j.get("direct") or j["id"].startswith("paid-") else f"From {j['company']}'s own careers page.")
+        if len(out) + 1 + len(src_) <= 155: out += " " + src_
+    return out
+
+
 def page_desc(j):
     """The full description an open job's page shows, as HTML, or "" when it shows only the opening lines. The collector reduces a
     description to a few plain tags (DESC_TAGS); one with any other markup is not shown. The job page and the XML feed for job search
@@ -4342,7 +4420,6 @@ def job_page(j, active_by_cat):
             + f'{like_}{paybar}{thline}</div>{help_box}'
             + f'<div class="jcard jfacts"><p class="jcard-h">At a glance</p><dl class="meta">{meta}</dl></div><div class="jfoot">{side_rest}</div>{stick}</aside></div>'
             + (f'<div class="mbar off"><a class="btn primary" href="{e(j["url"])}" target="_blank" rel="nofollow noopener">{"Open the post in Telegram" if j.get("tg") else "Apply on company site"}</a></div>' if j["active"] else ""))
-    where = j["location"] or ("Remote" if j["remote"] else "")
     title = job_title(j["title"], j["company"], " (closed)" if not j["active"] else "")
     place_ = re.split(r";|\||•", j["location"])[0].strip(" ,-–") if j["location"] else ""
     place_ = re.sub(r"\s*\([^)]*\)", "", place_).strip(" ,-–")       # "… at LiveKit (United Kingdom (Remote))" had a bracket in a bracket
@@ -4352,19 +4429,13 @@ def job_page(j, active_by_cat):
     if not j["active"]: title += " (closed)"
     # the search line of a job: what a searcher compares first, the pay, then the place of work and the skills (24 Nov 2026: it read
     # "… — London. Engineering role. Apply on the company site." on every job); fit_desc drops whole sentences from the end when it is long
-    tg3_ = [t_ for t_ in j["tags"][:3]]
-    desc = (f"{j['title']} at {j['company']}" + (f" — {where}" if where else "") + "."
-            + ((f" Pay: {pay_shown(j['salary'])}." if j["salary"] else "")
-               + (" Remote." if j["remote"] and "remote" not in where.lower() else " Hybrid." if j.get("hybrid") and "hybrid" not in where.lower() else "")
-               + (" Skills: " + (tg3_[0] if len(tg3_) == 1 else ", ".join(tg3_[:-1]) + " and " + tg3_[-1]) + "." if tg3_ else "")
-               + (" Apply through the Telegram post." if j.get("tg") else " Apply on the company site.")
-               if j["active"] else " This job is closed."))
+    desc = job_desc(j)          # the pay, the employer's date, where, the level, the employer's other roles nearby (27 Nov 2026)
     # a Telegram post is a few lines of someone else's text: shown to visitors, kept out of search engines and the sitemap
     ok_ = job_indexable(j)
     # a repeat of an earlier posting (same_text_jobs) stays for visitors and names the first one as canonical, out of the sitemap
     dup_ = j.get("dup_of") if ok_ and j.get("active") else None      # a job live.py saw close since the build is a closed page of its own
     page(f"job/{j['slug']}/", title, desc, body, head + ("" if ok_ else '<meta name="robots" content="noindex">'), sitemap=job_in_sitemap(j), compact=True,
-         canon=f"job/{dup_}/" if dup_ else None)
+         canon=f"job/{dup_}/" if dup_ else None, desc_tail=False)
 
 
 def embed_code(spec, label, page_path, limit=6):
@@ -5009,6 +5080,7 @@ def main():
         j["places"] = places_of(j["location"]) if j["active"] and j["location"] else []
         j["t"], j["ts"] = exact(j), stamp(j)
     active = [j for j in jobs if j["active"]]
+    co_more(active)                              # "3 more open roles at Loris Gifts in Texas" on the job page's search line (job_desc)
     ALL_OPEN[0] = len(active)
     MIX_[0] = sum(1 for j in active if j["cat"] in ("engineering", "security", "product", "data-research", "design")) / max(len(active), 1)
     global LIST_PAGES
