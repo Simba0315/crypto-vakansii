@@ -919,6 +919,13 @@ eq('import: "Company — Role (dates)" turned round, and sentences without bulle
 eq('import: school line, then the degree with a year', R2.edu, [{ what: 'Master of Science, Statistics', org: 'University of Vienna', dates: '2018' }]);
 eq('import: no headline invented from an email line', [R2.name, R2.title], ['Max Mustermann', '']);
 eq('import: nothing to read', T.parseResume('').exp, []);
+// 27 Nov 2026, a Word resume as CVMaker was tested with: the phone keeps its bracket, the degree and the school are split, two certificates
+// on one line are two; nothing is added that the file does not say (no country code, no gender)
+const R4 = T.parseResume('Jordan Ellis\nSEO Specialist · Austin, TX · (555) 010-2345 · jordan@example.com\nEDUCATION\nB.A. in Communication, University of North Texas, Denton, TX · 2020\nCERTIFICATIONS\nGoogle Analytics Certification (2024) · HubSpot Content Marketing (2023)\n');
+eq('import: the phone as written, bracket and all', R4.phone, '(555) 010-2345');
+eq('import: degree, then school', [R4.edu[0].what, R4.edu[0].org, R4.edu[0].dates], ['B.A. in Communication', 'University of North Texas, Denton, TX', '2020']);
+eq('import: two certificates on one line', R4.cert.map(function (c) { return [c.name, c.date]; }), [['Google Analytics Certification', '2024'], ['HubSpot Content Marketing', '2023']]);
+eq('import: no field the file does not have', Object.keys(R4).sort(), ['cert', 'edu', 'email', 'exp', 'lang', 'links', 'name', 'phone', 'place', 'proj', 'skills', 'summary', 'title']);
 const own = { basics: { name: 'Alex Morgan', label: 'Data Analyst', email: 'a@b.co', phone: '', summary: 'S', location: { address: 'Lisbon, Portugal' }, profiles: [{ network: 'github.com', url: 'https://github.com/alexm' }] },
   work: [{ name: 'Acme', position: 'Analyst', summary: '2021 – now', highlights: ['Cut costs 10%'] }], education: [{ institution: 'Uni', area: 'Economics', studyType: '', endDate: '2020' }], skills: [{ name: 'SQL' }, { name: 'Excel', keywords: ['Power Query'] }] };
 const J = T.fromJsonResume(own);

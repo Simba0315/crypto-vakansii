@@ -946,6 +946,8 @@
     return out.filter(function (x) { return x.name || x.text; });
   }
   function certsOf(lines) {                                // "AWS Certified Developer – Associate, Amazon Web Services, 2023" -> {name, org, date}
+    // several on one line, as Word resumes often list them: "Google Analytics Certification (2024) · HubSpot Content Marketing (2023)"
+    lines = [].concat.apply([], lines.map(function (l) { var p = l.replace(BULLET, '').split(/\s+[·•|]\s+|;\s+/); return p.length > 1 && p.every(function (x) { return x.trim().length >= 4; }) ? p : [l]; }));
     return lines.map(function (line) {
       var s = line.replace(BULLET, '').trim(), d = s.match(new RegExp('\\(?\\b(?:' + RX_MONTH + '\\s+)?(?:19|20)\\d{2}\\)?\\s*$', 'i')), date = '';
       if (d) { date = d[0].replace(/[()]/g, '').trim(); s = s.slice(0, d.index); }
@@ -976,6 +978,11 @@
       s = s.replace(/^[,|–—\-·•()\s]+|[,|–—\-·•()\s]+$/g, '').trim();
       if (!s) return;
       var p = splitHead(s);
+      if (edu && p.length === 1) {                        // "B.A. in Communication, University of North Texas, Denton, TX": the degree, then the school
+        var sch = s.match(/^(.+?),\s*((?:[^,]*\b(?:university|college|school|institute|academy|polytechnic|conservatory)\b|universit[éäà]|hochschule).*)$/i);
+        if (sch && DEGREE.test(sch[1])) p = [sch[1], sch[2]];
+        else if ((sch = s.match(/^((?:[^,]*\b(?:university|college|school|institute|academy)\b)[^,]*),\s*(.+)$/i)) && DEGREE.test(sch[2])) p = [sch[2], sch[1]];
+      }
       if (edu && p.length === 2 && !DEGREE.test(p[0]) && DEGREE.test(p[1])) p = [p[1], p[0]];
       if (!edu && p.length === 2 && ROLE_WORD.test(p[1]) && !ROLE_WORD.test(p[0])) p = [p[1], p[0]];      // "Acme — Data Analyst": the company came first
       if (edu && p.length === 1 && !cur.what && !DEGREE.test(s) && !cur.org) { cur.org = s; return; }
@@ -1005,7 +1012,7 @@
     var out = { name: '', title: '', email: '', phone: '', place: '', links: '', summary: '', skills: '', exp: [], edu: [], proj: [], cert: [], lang: [] };
     var all = lines.join('\n');
     var em = all.match(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/); if (em) out.email = em[0];
-    var ph = (all.match(/\+?\d[\d ().-]{7,}\d/g) || []).filter(function (x) { return x.replace(/\D/g, '').length >= 9 && !RX_RANGE.test(x); })[0]; if (ph) out.phone = ph.trim();
+    var ph = (all.match(/\+?\(?\d[\d ().-]{7,}\d/g) || []).filter(function (x) { return x.replace(/\D/g, '').length >= 9 && !RX_RANGE.test(x); })[0]; if (ph) out.phone = ph.trim();
     var links = all.match(/(?:https?:\/\/)?(?:www\.)?(?:linkedin\.com\/in\/[\w%-]+|github\.com\/[\w-]+|gitlab\.com\/[\w-]+|behance\.net\/[\w-]+|dribbble\.com\/[\w-]+)\/?|https?:\/\/[^\s,|]+/gi) || [];
     out.links = links.filter(function (x, i) { return links.indexOf(x) === i; }).slice(0, 4).map(function (x) { return x.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, ''); }).join(', ');
     var sec = { head: [] }, at = 'head';
