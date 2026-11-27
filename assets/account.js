@@ -25,12 +25,26 @@
   var promo = null, paintPost = null, shareOpen = '';                // shareOpen: the order whose payment link is open in Billing (kept across reloads of S)                               // a promo code that was applied: { code, percent, quotes: { product id: { amount_usd, full_usd } } }
   var ROLE = (function () { var q = ''; try { q = new URLSearchParams(location.search).get('as') || ''; } catch (e) {} return q === 'employer' || q === 'seeker' ? q : H.get('hrn_role', 'seeker'); })();
   if (ROLE !== 'employer') ROLE = 'seeker';
+  // a company page's "Is this your job? Boost it" (?claim=<name>#company) fills the claim form with the company's name
+  var CLAIM = (function () { try { return (new URLSearchParams(location.search).get('claim') || '').slice(0, 80); } catch (e) { return ''; } })();
   H.set('hrn_role', ROLE);
   var SYNC_KEYS = ['hrn_jobs', 'hrn_saved', 'hrn_searches', 'hrn_follow', 'hrn_hidden', 'hrn_mute'];   // what "My jobs" keeps in this browser
   var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   var KIND = { featured: 'Standard boost', premium: 'Premium boost', spotlight: 'Company spotlight', sponsor: 'Category or skill sponsor', bump: 'Bump to top', urgent: 'Urgently hiring badge' };
 
   function told() { try { document.dispatchEvent(new CustomEvent('hrn:auth')); } catch (e) {} }
+  // The names of the companies on the site, for the company fields (Promote, Company page): about 25,000 names, half a megabyte, so they
+  // come from their own file (D.names) once a screen with such a field is drawn, instead of inside the page for every visitor (27 Nov 2026:
+  // they were 512 KB of the page's 552). A page built before then still carries them in D.companies.
+  var names = null;
+  function fillNames() {
+    if (!root.querySelector('datalist[data-names]')) return;
+    if (!names) names = D.companies ? Promise.resolve(D.companies) : fetch(H.base + D.names).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { names = null; return []; });
+    names.then(function (list) {
+      var opts = list.map(function (c) { return '<option value="' + esc(c) + '">'; }).join('');
+      Array.prototype.forEach.call(root.querySelectorAll('datalist[data-names]'), function (dl) { if (!dl.firstChild) dl.innerHTML = opts; });
+    });
+  }
   function setRole(r) { ROLE = r === 'employer' ? 'employer' : 'seeker'; H.set('hrn_role', ROLE); told(); }
   function flash(html, bad) { notice = html; noticeBad = !!bad; }
   function setPub(p) { pub = p; products = {}; (p.products || []).forEach(function (x) { products[x.id] = x; }); }
@@ -722,7 +736,7 @@
   }
   function promotePanel() {
     var mine = S.jobs.filter(function (j) { return j.status === 'live' || j.status === 'review'; }), claimed = S.claims.filter(function (c) { return c.status === 'verified'; });
-    var data = '<datalist id="acc-companies">' + D.companies.map(function (c) { return '<option value="' + esc(c) + '">'; }).join('') + '</datalist>';
+    var data = '<datalist id="acc-companies" data-names></datalist>';                  // filled by fillNames()
     if (!products.featured) return head('Promote', 'Get <b>more applicants</b>', '') + empty('Nothing is on sale right now.', ' Posting a job stays free.', '<a class="btn primary" href="#post">Post a job free</a>') + data;
     var pick = mine.length || claimed.length ? '<div class="card acc-pick"><label class="fld"><span class="fld-l">Job to promote</span><select id="pr-job">' + mine.map(function (j) {
         return '<option value="id:' + esc(j.id) + '">' + esc(j.title) + (j.status === 'review' ? ' (waiting for review)' : '') + '</option>'; }).join('') + (mine.length ? '' : '<option value="">Loading the jobs of your company…</option>') + '</select>' +
@@ -771,9 +785,9 @@
       '<p class="acc-sub">' + (S.claims.length ? 'Is your company also on the site under another name, read from its own hiring system? Claim that page too.' :
         'New here? <a href="#post">Post your first job</a>: your company page is made with it and appears on this tab at once, ready for your logo and text. ' +
         'Is your company already on the site (we read the jobs of thousands of companies from their own hiring systems)? Claim its page:') + '</p>' +
-      '<div class="acc-inline flat">' + field('Company, as the site names it', 'company', 'type="text" list="acc-companies2" maxlength="80" required data-need="Enter the company name as the site shows it."') + '<button class="btn' + (S.claims.length ? ' ghost' : ' primary') + '" type="submit">Claim the page</button></div>' + err +
+      '<div class="acc-inline flat">' + field('Company, as the site names it', 'company', 'type="text" list="acc-companies2" maxlength="80" required data-need="Enter the company name as the site shows it."' + (CLAIM ? ' value="' + esc(CLAIM) + '"' : '')) + '<button class="btn' + (S.claims.length ? ' ghost' : ' primary') + '" type="submit">Claim the page</button></div>' + err +
       '<p class="note">If the site already knows that ' + esc(me.domain) + ' is the company’s own address, the page is yours at once. If not, a person checks it, usually within a day.</p>' +
-      '<datalist id="acc-companies2">' + D.companies.map(function (c) { return '<option value="' + esc(c) + '">'; }).join('') + '</datalist></form>';
+      '<datalist id="acc-companies2" data-names></datalist></form>';
   }
   function teamPanel() {
     if (me.posts_as.indexOf('employer') < 0) return '';
@@ -913,6 +927,7 @@
     showTab();
     wire();
     watchOrder();
+    fillNames();
   }
 
   function wire() {
