@@ -324,6 +324,7 @@ class Live:
         live_ids = {jid for (jid,) in self.con.execute("SELECT id FROM live WHERE company = ? AND closed = ''", (name,))}
         shut = {jid for (jid,) in self.con.execute("SELECT id FROM live WHERE company = ? AND closed != ''", (name,))}     # closed on an earlier read
         seen, new, dup, back, keep = set(), 0, 0, [], []        # keep: texts to store, in one transaction at the end
+        box = build.sandbox(j.get("title") for j in jobs)       # a hiring system's sandbox (build.sift leaves out all its postings, 27 Nov 2026)
         for j in jobs:
             j.pop("_crypto", None)
             if not j.get("title") or not j.get("url"): continue
@@ -335,7 +336,7 @@ class Live:
                 continue
             # not a job, or not an employer's name (build.sift, teardown 26 Nov 2026): the hourly record leaves these out, so they would
             # otherwise come back here as "new" on every read; a placeholder board known to be an employer's takes the employer's name
-            if build.junk_reason(j): continue
+            if box or build.junk_reason(j): continue
             j["company"] = build.CO_RENAME.get(j["company"], j["company"])
             if build.COPY_OF.match(j["title"]): j["title"] = build.COPY_OF.sub("", j["title"]).strip() or j["title"]
             ats = j["id"].split("-", 1)[0]

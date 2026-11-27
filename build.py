@@ -3065,6 +3065,59 @@ COLD_EMAIL = (re.compile(r"(?i)\b(?:profile|background)\b[^.?!]{0,30}\bsimilar t
               re.compile(r"(?i)\b(?:came across|reviewed|was impressed by) your (?:profile|resume|background|linkedin)\b"),
               re.compile(r"(?i)\bthought it would make sense to (?:connect|reach out|introduce myself)\b"))
 COPY_OF = re.compile(r"(?i)^\s*(?:copy of\s+)+")         # "Copy of Copy of Analyst KYC" too (live, 26 Nov 2026)
+# A hiring system's test or example posting (Search Console, 27 Nov 2026: /job/example-of-pdf-resume-linkedin/ was crawled and not indexed;
+# "LinkedIn" there is a JazzHR sandbox whose 14 postings were test jobs, "Ferret Dentist" and "Test job with correct answer" among them).
+# The titles are the open ones of that day: "Test", "Sample Job", "Template Job", "Demo Job", "Test Req - Do Not Apply", "DUMMY TEST JOB -
+# DO NOT POST", ": For testing purposes only (DO NOT APPLY)", "DO NOT USE Generic Faculty and Administrative Application", "TEMPLATE - Hair
+# Stylist / Colorist", "Digital Designer (Test Job)". The word alone is not enough: "Sample Coordinator", "Demo Technician", "Template
+# Specialist", "Test Engineer", "Testing Coordinator" and "Test & Evaluation Engineer" are jobs, and "(Apply directly to Skyview Academy - DO
+# NOT apply online with DCSD)" is a job to apply for elsewhere.
+TEST_TITLE = re.compile(r"(?i)^\W*(?:test(?:ing)?|dummy|fake|template|placeholder)\W*$"
+                        r"|^\W*(?:test|sample|example|demo|dummy|fake|template|placeholder)\s+(?:job|post(?:ing)?|position|requisition|req|role|opening|listing|vacancy)s?\b"
+                        r"|\b(?:test|dummy|sample|template) job\b"
+                        r"|^\W*(?:test|template)(?:\s+[-–]\s|\s*[:|]\s)"
+                        r"|^\W*(?:an? )?(?:example|sample) of\b"
+                        r"|\bdo not (?:use|post)\b|\bfor testing (?:purposes|only)\b|\btesting purposes\b|\btest(?:ing)? only\b|\bplease ignore\b|\bplaceholder\b"
+                        r"|\btest\b.*\bdo not apply\b")
+SANDBOX_MIN = 3         # a board with at least this many test postings, a third or more of its open ones, is a hiring system's sandbox
+# Boards named as a hiring system's sandbox or staging copy (sources*.json on 27 Nov 2026): Gem's demo boards ("Y Combinator [Sandbox]",
+# "Webflow ATS Sandbox", "Cartwheel [Sandbox]", each with the same six jobs: CFO, Data Scientist ... Software Engineering Intern), "PROSE -
+# Sandbox", "myInterview - Staging" ("Testing close and re-open jobs"), "NCC 2024 - Test 1" ("testjob42"), "ats_sandbox_yello.co", and Gem's
+# own test company "Oats Testing" (106 open: "Adam Oats Test Job (Copy) (Copy)", "Brad bug bash perms"). Not "Sandbox Mutual Insurance",
+# "SandboxAQ", "Learning Sandbox", "The Sandbox" or a testing laboratory ("Atlantic Testing Laboratories", "Inspired Testing").
+SANDBOX_CO = re.compile(r"(?i)[\[(]\s*sandbox\s*[\])]|\bats sandbox$|hr sandbox$|^(?:[a-z]+_)*sandbox_|\s[-–]\s*(?:sandbox|staging)$|\s[-–]\s*test \d+$|^oats testing$")
+# A title the hiring system did not give ("Unavailable": 135 open iCIMS jobs on 27 Nov 2026, 120 of them at S&B Engineers and Constructors);
+# iCIMS writes the real one in the posting's address (/jobs/14717/project-expeditor/job), which is read instead. The record's slug stays.
+LOST_TITLE = re.compile(r"(?i)^\W*(?:unavailable|untitled|no title|n/?a|null|none)\W*$")
+ICIMS_TITLE = re.compile(r"\.icims\.com/jobs/\d+/([a-z0-9]+(?:-[a-z0-9]+)*)/job\b")
+SMALL_WORDS = {"and", "or", "of", "the", "a", "an", "in", "on", "at", "for", "to", "with", "by", "per"}
+UPPER_WORDS = {"ii", "iii", "iv", "vi", "vii", "viii", "rn", "lpn", "lvn", "cna", "hvac", "it", "hr", "qa", "ai", "ui", "ux", "md", "np", "pa",
+               "cdl", "ceo", "cfo", "cto", "vp", "usa", "uk", "ems", "emt", "er", "icu", "pt", "ot", "slp", "bcba", "rbt", "ma", "erp", "crm", "seo"}
+
+
+def lost_title(j):
+    """The title in an iCIMS posting's address, for a record whose title the hiring system did not give ("Unavailable"), else ""."""
+    if not LOST_TITLE.match(j.get("title") or ""): return ""
+    m = ICIMS_TITLE.search(j.get("url") or "")
+    if not m: return ""
+    ws = m.group(1).split("-")
+    words = [w.upper() if w in UPPER_WORDS else w if (w in SMALL_WORDS and i) else w.capitalize() for i, w in enumerate(ws)]
+    return " ".join(words) if len(" ".join(words)) >= 3 else ""
+
+
+assert lost_title({"title": "Unavailable", "url": "https://careers-sbec.icims.com/jobs/14717/project-expeditor/job"}) == "Project Expeditor"
+assert lost_title({"title": "Unavailable", "url": "https://careers-ameritfleet.icims.com/jobs/24071/generator-technician-d/job"}) == "Generator Technician D"
+assert lost_title({"title": "Unavailable", "url": "https://careers-x.icims.com/jobs/1/senior-claim-examiner-ii/job?hub=7"}) == "Senior Claim Examiner II"
+assert lost_title({"title": "Project Expeditor", "url": "https://careers-sbec.icims.com/jobs/14717/project-expeditor/job"}) == lost_title({"title": "Unavailable", "url": "https://x.com/1"}) == ""
+
+
+def sandbox(titles):
+    """True when the titles of a board's open postings are mostly a hiring system's test postings (TEST_TITLE): SANDBOX_MIN or more of them,
+    a third or more of the board. Every posting of such a board is a test, even one with a plausible title ("Ferret Dentist", "Assistant
+    Chef" on the JazzHR sandbox named "LinkedIn"). live.py asks it of each board it reads."""
+    titles = list(titles)
+    k = sum(1 for t in titles if TEST_TITLE.search(t or ""))
+    return k >= SANDBOX_MIN and 3 * k >= len(titles)
 
 
 def junk_reason(j):
@@ -3074,6 +3127,8 @@ def junk_reason(j):
     if PLACEHOLDER_CO.search(co) and co not in CO_RENAME: return "placeholder"
     t = (j.get("title") or "").strip()
     if any(rx.search(t) for rx in CANDIDATE_LIST): return "candidates"
+    if TEST_TITLE.search(t): return "test_posting"
+    if SANDBOX_CO.search(co): return "sandbox"
     text = (j.get("excerpt") or "") + " " + (j.get("desc") or "")
     # the first phrase alone is enough (a recruiter speaking about the reader's profile): the record keeps only the opening lines of
     # most postings, and "TiffanyKnaul" kept only that one (live, 26 Nov 2026); the others need a second
@@ -3083,22 +3138,34 @@ def junk_reason(j):
 
 
 SIFTED = Counter()        # what sift() left out in this build, by reason; FACTS and the methodology page say it
+MENDED = Counter()        # what sift() kept but mended: "Copy of" taken off a title, a title read from the posting's address
 
 
 def sift(jobs):
     """The records the site lists, before anything else reads them. Leaves out what junk_reason() names, the copies of a placeholder board
     that repeats an employer's own board (the same posting id on both: Paylocity's "ALL JOB POSTINGS" held 47 of Louisiana Cat's 48 jobs),
-    and an ATS copy ("Copy of Graphic Designer") of a job the employer also lists under its real title; other "Copy of" titles lose the words."""
+    and an ATS copy ("Copy of Graphic Designer") of a job the employer also lists under its real title; other "Copy of" titles lose the words.
+    Every posting of a hiring system's sandbox goes too (sandbox()), and a title the system did not give takes the one in its address
+    (lost_title)."""
     own = set()
+    open_titles = defaultdict(list)
     for j in jobs:
         co = j.get("company") or ""
         if not PLACEHOLDER_CO.search(co):
             ats = j["id"].split("-", 1)[0]
             own.add((ats, j["id"][len(ats) + len(slugify(co)) + 2:]))
+        if j.get("active"): open_titles[co].append(j.get("title") or "")
+    boxes = {co for co, ts in open_titles.items() if sandbox(ts)}
+    if boxes: print("hiring systems' sandboxes left out: " + ", ".join(f"{co} ({len(open_titles[co])} open)" for co in sorted(boxes)))
     keys = {(j.get("company"), (j.get("title") or "").strip().lower(), (j.get("location") or "").strip().lower()) for j in jobs if not COPY_OF.match(j.get("title") or "")}
     out = []
     for j in jobs:
         co = j.get("company") or ""
+        if co in boxes:
+            SIFTED["sandbox"] += 1; continue
+        if (t_ := lost_title(j)):
+            j["title"] = t_
+            MENDED["title_from_address"] += 1
         if PLACEHOLDER_CO.search(co):
             ats = j["id"].split("-", 1)[0]
             if (ats, j["id"][len(ats) + len(slugify(co)) + 2:]) in own:
@@ -3111,7 +3178,7 @@ def sift(jobs):
             if (co, plain.lower(), (j.get("location") or "").strip().lower()) in keys:
                 SIFTED["copy"] += 1; continue
             j["title"] = plain
-            SIFTED["copy_renamed"] += 1
+            MENDED["copy_renamed"] += 1
         out.append(j)
     return out
 
@@ -3122,6 +3189,27 @@ assert not any(junk_reason({"company": "X", "title": t}) for t in ("Astronaut Ca
 assert junk_reason({"company": "Z. Do Not Use", "title": "Groundskeeper"}) == "" and junk_reason({"company": "DO NOT USE", "title": "Lifeguard"}) == "placeholder" and junk_reason({"company": "Test", "title": "Electrician"}) == "placeholder"
 assert not any(PLACEHOLDER_CO.search(c) for c in ("Testa Produce", "Contest Freight", "Attest Group", "Allstate"))
 assert junk_reason({"company": "Acme", "title": "Account Executive", "excerpt": "Would you have time for a brief conversation? We sell to teams like yours."}) == ""
+# the test postings of 27 Nov 2026, and the jobs whose titles share their words
+assert all(junk_reason({"company": "X", "title": t}) == "test_posting" for t in (
+    "Example of pdf resume", "Test", "TEST", "test", "Sample Job", "Demo Job", "Template Job", "Template", "Test Req - Do Not Apply", "Test - do not apply",
+    "DUMMY TEST JOB - DO NOT POST", ": For testing purposes only (DO NOT APPLY)", "DO NOT USE Generic Faculty and Administrative Application",
+    "TEMPLATE - Hair Stylist / Colorist", "TEST - Loan Originator - Dallas TX (do not use)", "Digital Designer (Test Job)", "Predictive Index TEST Job - DO NOT APPLY",
+    "Test Portal - DO Not Apply", "Test Job EEOC", "Test job with correct answer", "Test create from template job"))
+assert not any(junk_reason({"company": "X", "title": t}) for t in (
+    "Sample Coordinator", "Sample Management Technician", "Sample Login Technician", "Demo Technician", "Demo Engineer", "Demo General Application",
+    "Template Specialist", "Test Engineer", "Test Technician", "Testing Coordinator", "Test & Evaluation Engineer", "Test Engineer, Systems Test",
+    "Test Conductor / Principal Test Conductor - 20772", "Software Development Engineer in Test", "QA Tester", "Front Desk/Host (Do Not Apply)",
+    "Elementary School Teacher - 4th Grade (Apply directly to Skyview Academy - DO NOT APPLY ONLINE WITH DCSD)", "Substance Use Counselor", "Test-Engineer",
+    "Unavailable", "Testing Evergreen", "Physician (MD/DO)"))
+assert sandbox(["Example of pdf resume", "Test Job", "Test job for EEOC", "Test Job EEOC", "Test job sensitive question", "Test job with correct answer",
+                "Ferret Dentist", "Assistant Chef", "QA Tester", "Quality Assurance Tester", "Veteran Disability Job", "Job with every question",
+                "Shawang 1101 Test", "Testing 2000 error to see if it changes job to offsite apply"])
+assert all(SANDBOX_CO.search(c) for c in ("Y Combinator [Sandbox]", "Gem (Gabs) [Sandbox]", "OneTrust LLC [Sandbox]", "Webflow ATS Sandbox", "HumiHR Sandbox", "PROSE - Sandbox",
+                                           "Mayweather Boxing + Fitness - Sandbox", "myInterview - Staging", "NCC 2024 - Test 1", "ats_sandbox_yello.co",
+                                           "integration_sandbox_brighthire.ai", "sandbox_schonfeld.com", "Oats Testing"))
+assert not any(SANDBOX_CO.search(c) for c in ("Sandbox Mutual Insurance", "Sandboxaq", "SandboxAQ", "Learning Sandbox", "The Sandbox", "Sandbox VR", "Inspired Testing",
+                                              "Atlantic Testing Laboratories", "Creative Testing Solutions", "ALLWEST Testing and Engineering", "Altius Test Prep"))
+assert not sandbox(["Test"] * 6 + ["Analyst"] * 161) and not sandbox(["Test", "Consultant", "Senior Consultant"]) and not sandbox(["Sample Job", "Digital Designer (Test Job)"])
 
 
 def focus_list(x):
@@ -4829,8 +4917,9 @@ def main():
     for j_ in jobs:                              # a feed that escaped its text twice ("Health &amp;amp; Safety") showed a literal "&amp;" on the page
         if "&amp;" in (j_.get("desc") or ""): j_["desc"] = DOUBLE_ESC.sub(r"&\1;", j_["desc"])
         if ENTITY_TEXT.search(j_.get("excerpt") or ""): j_["excerpt"] = html.unescape(j_["excerpt"])      # plain text: an entity in it is the same slip
-    jobs = sift(jobs)                            # cold emails, candidate lists, placeholder boards and ATS copies (sift, junk_reason)
-    print("left out as not jobs or not employers: " + (", ".join(f"{k} {v:,}" for k, v in SIFTED.most_common()) or "none"))
+    jobs = sift(jobs)                            # cold emails, candidate lists, placeholder boards, test postings, sandboxes and ATS copies (sift, junk_reason)
+    print("left out as not jobs or not employers: " + (", ".join(f"{k} {v:,}" for k, v in SIFTED.most_common()) or "none")
+          + "; mended: " + (", ".join(f"{k} {v:,}" for k, v in MENDED.most_common()) or "none"))
     for j_ in jobs:                              # Workday entity codes read as names (CO_RENAME); the old address hands over below
         j_["company"] = CO_RENAME.get(j_.get("company"), j_.get("company"))
     paid_file = ROOT / "paid.json"  # employer-submitted listings, kept in the main branch
