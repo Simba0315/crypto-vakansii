@@ -1,6 +1,7 @@
 # Changelog
 
 One line per improvement run, newest first: date and time, what changed, why, which pages.
+- 2026-11-27 15:50 UTC — Header on a phone: at 390 px the row (logo, theme, saved jobs, Sign in, menu) was 43 px wider than the screen, so the menu button was cut off at the right edge and the menu could not be opened (68 px at 360 px). Buttons are 40 px wide (44 px high is kept), the logo a little smaller, and under 400 px "Sign in" is a person icon (the word stays for screen readers); under 340 px a little tighter still. The menu button is now fully on screen from 320 to 700 px and opens the menu. Nothing removed. Pages: every page's header (assets/style.css).
 - 2026-11-27 13:05 UTC — Home page: the Cryptomus merchant ownership tag (<meta name="cryptomus" content="4822060c">, config.json "verify"), so the owner's crypto payment merchant for jobseveryhour.com can be confirmed. build.py and config.json.
 - 2026-11-27 14:10 UTC — Search box (/jobs/, home, category and place pages): the browser's own blue clear cross and the black list arrow that stood next to the microphone looked like a bug; the arrow is hidden (suggestions still appear while typing) and the cross is grey. Style only (assets/style.css); nothing removed.
 - 2026-11-27 12:45 UTC — Headings: the green marker under the ending words (the home's "ghost jobs", every two-weight section heading, every H1 .hl) became green text with no fill behind it, #1f9d55 in the light theme and #5fd486 in the dark theme and on ink panels (owner chose variant 1 of three pictures). style.css only.

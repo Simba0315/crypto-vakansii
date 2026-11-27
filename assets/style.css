@@ -5838,3 +5838,17 @@ header.site .hact .icon:hover,header.site .hact .hmy:hover{border-color:transpar
 :is(.khero h1 .hl,main.sp .khero h1 .hl,.hero.v2 h1 .hl,.sec-head h2.tw b,.sec-head.lst h2.tw b,.kcta h2.tw b:not(.free),.alertf h2.tw b,.guide h2.tw2 b,h1 .hl,h2 .hl){
   background:none!important;padding:0;margin:0;color:var(--brand)}
 :is(.kpanel.ink,.inkband) :is(h1 .hl,h2.tw b:not(.free),h2.tw2 b,h2 .hl){color:var(--pop)!important}
+/* ---- the header on a phone (27 Nov 2026): at 390 px the row (logo, theme, saved jobs, Sign in, menu) needed 43 px more than the screen has, so the menu button was cut off and the menu could not be opened; at 360 px it was 68 px more. Smaller taps in width (44 px high stays), a slightly smaller logo, and below 400 px "Sign in" is a person icon (the word stays for screen readers). Nothing removed. ---- */
+@media(max-width:560px){
+  header.site .wrap{gap:8px}
+  header.site .hact{gap:2px}
+  header.site .hact .icon,header.site .hact .hmy{width:40px;height:44px}
+  header.site .hact .hsign{padding:0 10px;font-size:14px}
+  header.site .logo img{height:21px}
+}
+@media(max-width:400px){
+  header.site .hact .hsign{width:40px;padding:0;justify-content:center;font-size:0;border-color:transparent}
+  header.site .hact .hsign:hover{border-color:transparent;background:var(--bg2)}
+  header.site .hact .hsign::before{content:"";width:21px;height:21px;background:currentColor;-webkit-mask:var(--i) center/contain no-repeat;mask:var(--i) center/contain no-repeat;--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7'/%3E%3C/svg%3E")}
+}
+@media(max-width:340px){header.site .wrap{gap:4px}header.site .hact .icon,header.site .hact .hmy,header.site .hact .hsign{width:36px}header.site .logo img{height:18px}}
