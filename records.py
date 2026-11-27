@@ -81,6 +81,8 @@ def save(path, jobs, b):
         # 26 Nov 2026 (records_test): the pages that keep a search (build.same_as, CAT_HOME): the built job page links its field's page
         # (/categories/product-project/) where a page built from a record linked /jobs/product/, which gives its search to that page
         "cat_home": dict(getattr(b, "CAT_HOME", {}) or {}),
+        # 27 Nov 2026: the figures the site states about itself (build.FACTS); the header's jobs menu shows the share re-checked in 24 hours
+        "facts": dict(getattr(b, "FACTS", {}) or {}),
     }
     con.executemany("INSERT INTO ctx VALUES (?, ?)", ((k, dumps(v)) for k, v in ctx.items()))
     con.commit()
@@ -308,6 +310,8 @@ class Store:
             with guard:
                 for k, v in new.items(): setattr(b, k, v)
                 b.ALL_OPEN[0] = ctx.get("all_open", 0)          # absent in a store built before 25 Nov 2026
+                if hasattr(b, "FACTS"):                          # absent in a store built before 27 Nov 2026: no figure rather than an old one
+                    b.FACTS.clear(); b.FACTS.update(ctx.get("facts") or {})
                 if hasattr(b, "FAM"):                            # absent in a store built before 26 Nov 2026: no estimate rather than the old one
                     b.FAM.clear(); b.FAM.update(ctx.get("fam") or {})
                 if hasattr(b, "same_as"):                        # the links to the page that keeps each search, as the build had them

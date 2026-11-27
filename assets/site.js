@@ -802,11 +802,12 @@
     var svg = function (k) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + I[k] + '</svg>'; };
     var cardHtml = function (c) {
       if (c.search) {
-        var n = +nav.getAttribute('data-n') || 0;
-        return '<div class="np-card"><p class="np-k"><i></i>Checked every hour</p>' +
+        // the schedule and the measured share, as every page states them (build.FACTS: nav data-c); until 27 Nov 2026 it promised an hourly check, which /status/ did not bear out
+        var n = +nav.getAttribute('data-n') || 0, c = nav.getAttribute('data-c');
+        return '<div class="np-card"><p class="np-k"><i></i>Checked around the clock</p>' +
           // the count with commas by hand: toLocaleString here was the page's first use of the browser's number formatting, which loads
           // its locale data (about 60 ms of a phone's main thread at 4x slowdown, inside the script's first run; 26 Nov 2026)
-          (n ? '<p class="np-n"><b>' + String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '</b> open jobs</p>' : '<p class="np-n"><b>Every open job</b></p>') +
+          (n ? '<p class="np-n"><b>' + String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '</b> open jobs' + (c ? ', ' + (+c) + '% re-checked in&nbsp;24&nbsp;h' : '') + '</p>' : '<p class="np-n"><b>Every open job</b></p>') +
           '<form class="np-f" action="' + P + '/jobs/" method="get" role="search">' +
           '<input type="search" name="q" placeholder="Job title or skill" aria-label="What: job title, skill or company" autocomplete="off">' +
           '<input type="search" name="where" placeholder="City or remote" aria-label="Where: city, country or remote" autocomplete="off">' +

@@ -2179,6 +2179,12 @@ def sec_labels(path, body):
     return body
 
 
+def nav_checked():
+    """The share of open jobs re-checked in the last 24 hours (FACTS) for the search card of the header's Find jobs menu (site.js), which
+    said "Checked every hour" until 27 Nov 2026."""
+    return f' data-c="{FACTS["checked_24h_pct"]}"' if FACTS.get("checked_24h_pct") is not None else ""
+
+
 def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False, cls="", canon=None, desc_tail=True):
     # <!--email_off--> around the body (22 Nov 2026): Cloudflare rewrote every address (abuse@ in "Report a problem with this listing",
     # partners@, press@) into /cdn-cgi/l/email-protection links whose decoding script our pages never load, so a click opened its
@@ -2213,7 +2219,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False,
 {"" if compact else f'<link rel="alternate" type="application/rss+xml" title="{e(SITE)} — latest jobs" href="{P}/feed.xml">'}
 <link rel="preload" href="{P}/fonts/publicsans-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="{P}/fonts/schibsted-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{P}/style.css?v={V}"><script>try{{var t=localStorage.getItem("hrn_theme");if(t)document.documentElement.setAttribute("data-theme",t)}}catch(e){{}}</script><script src="{P}/site.js?v={V}" defer></script>{head}</head><body>
-<a class="skip" href="#main">Skip to content</a><header class="site"><div class="wrap"><a class="logo" href="{P}/" aria-label="{e(SITE)}, home">{LOGO}</a><nav id="nav"{f' data-n="{ALL_OPEN[0]}"' if ALL_OPEN[0] else ""}>
+<a class="skip" href="#main">Skip to content</a><header class="site"><div class="wrap"><a class="logo" href="{P}/" aria-label="{e(SITE)}, home">{LOGO}</a><nav id="nav"{f' data-n="{ALL_OPEN[0]}"' if ALL_OPEN[0] else ""}{nav_checked()}>
 <a class="nl" href="{P}/jobs/">Find jobs</a><a class="nl" href="{P}/companies/">Companies</a><a class="nl" href="{P}/salaries/">Salaries</a><a class="nl" href="{P}/resume/">Resume</a><a class="nl" href="{P}/tools/">Career help</a><a class="nl" href="{P}/post-a-job/">For employers</a>{NAV_PLUS}<a class="nl only-m" href="{P}/my-jobs/">My jobs<span id="saved-n"></span></a><a class="nl only-m nl-cta" href="{P}/post-a-job/">Post a job</a></nav>
 <div class="hact"><button class="icon ic-s" id="palbtn" type="button" aria-label="Quick search (Ctrl K)"></button><a class="hmy" href="{P}/my-jobs/" aria-label="My jobs: saved jobs and searches"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg><span class="hmy-t">My jobs</span></a>{ACCT_HEAD}<a class="btn ghost hpost" href="{P}/post-a-job/">Post a job</a>
 <button class="icon ic-m burger" id="menu" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav"></button></div></div></header>
@@ -2246,14 +2252,20 @@ def fpop(name, row):
     return f'<details class="fgrp fpop" open><summary>{name}</summary>{row}</details>' if row else ""
 
 
+def foot_checked():
+    """The measured part of the footer's line (FACTS, the same figure as /status/ and About): ": 61% of open jobs in the last 24 hours".
+    Empty until main() has counted it. The footer said "re-checked every hour" until 27 Nov 2026, which the site's own status page denied."""
+    return f": {FACTS['checked_24h_pct']}% of open jobs in the last 24 hours" if FACTS.get("checked_24h_pct") is not None else ""
+
+
 def FULL_FOOT():
     return f"""<footer><div class="wrap"><div class="fcols">
-<div><a class="logo" href="{P}/" aria-label="{e(SITE)}, home">{LOGO}</a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked every hour.</p></div>
+<div><a class="logo" href="{P}/" aria-label="{e(SITE)}, home">{LOGO}</a><p>Job boards fill up with listings that closed weeks ago. Every role here comes from the company’s own careers page and is re-checked around the clock{foot_checked()}.</p></div>
 <details class="fgrp" open><summary>Find jobs</summary><p class="fhd">Find jobs</p><ul><li><a href="{P}/jobs/">All jobs</a></li><li><a href="{P}/jobs-near-me/">Jobs near me</a></li><li><a href="{P}/map/">Jobs map</a></li><li><a href="{P}/remote/">Remote jobs</a></li><li><a href="{P}/new/">New jobs</a></li><li><a href="{P}/entry-level/">Entry-level</a></li><li><a href="{P}/senior-jobs/">Senior-level</a></li><li><a href="{P}/executive-jobs/">Executive</a></li><li><a href="{P}/with-salary/">Salary listed</a></li><li><a href="{P}/jobs-that-pay/">Jobs by hourly pay</a></li><li><a href="{P}/collections/">Job lists by pay and hours</a></li><li><a href="{P}/tech/">Tech jobs</a></li><li><a href="{P}/crypto/">Crypto &amp; web3 jobs</a></li><li><a href="{P}/for-you/">Jobs for you</a></li><li><a href="{P}/my-jobs/">My jobs</a></li></ul></details>
 <details class="fgrp" open><summary>Browse</summary><p class="fhd">Browse</p><ul><li><a href="{P}/categories/">Job categories</a></li><li><a href="{P}/roles/">Roles A to Z</a></li><li><a href="{P}/skills/">Skills</a></li><li><a href="{P}/locations/">Jobs by country</a></li><li><a href="{P}/companies/">Companies</a></li><li><a href="{P}/perks/">Perks</a></li>{FOOT["cats"]}</ul></details>
-<details class="fgrp" open><summary>Tools and data</summary><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/free-resume-builders/">Free resume builders compared</a></li><li><a href="{P}/how-to-become/">How to become…</a></li><li><a href="{P}/career-quiz/">Career quiz</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/interview-questions/">Interview questions</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/how-long-job-postings-stay-open/">How long jobs stay open</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></details>
+<details class="fgrp" open><summary>Tools and data</summary><p class="fhd">Tools and data</p><ul><li><a href="{P}/tools/">Free tools</a></li><li><a href="{P}/resume/">Resume builder</a></li><li><a href="{P}/resume/examples/">Resume examples</a></li><li><a href="{P}/free-resume-builders/">Free resume builders compared</a></li><li><a href="{P}/how-to-become/">How to become…</a></li><li><a href="{P}/career-quiz/">Career quiz</a></li><li><a href="{P}/cover-letter-examples/">Cover letter examples</a></li><li><a href="{P}/interview-questions/">Interview questions</a></li><li><a href="{P}/resignation-letters/">Resignation letters</a></li><li><a href="{P}/resume-words/">Resume words</a></li><li><a href="{P}/mentors/">Mentors</a></li><li><a href="{P}/salaries/">Salaries</a></li><li><a href="{P}/compare/">Compare skills</a></li><li><a href="{P}/trends/">Hiring trends</a></li><li><a href="{P}/reports/">Monthly reports</a></li><li><a href="{P}/how-long-job-postings-stay-open/">How long jobs stay open</a></li><li><a href="{P}/ghost-jobs/">Ghost jobs index</a></li><li><a href="{P}/insights/">Rankings</a></li><li><a href="{P}/open-hiring-index/">Open hiring index</a></li><li><a href="{P}/status/">Is the data fresh?</a></li></ul></details>
 <details class="fgrp" open><summary>Employers and sites</summary><p class="fhd">Employers and sites</p><ul><li><a href="{P}/post-a-job/">Post a job</a></li><li><a href="{P}/pricing/">Pricing</a></li><li><a href="{P}/job-descriptions/">Job description templates</a></li><li><a href="{P}/how-to-hire/">How to hire…</a></li><li><a href="{P}/widgets/">Jobs for your website</a></li><li><a href="{P}/api/">Data for developers (API)</a></li><li><a href="{P}/feeds/">Job feeds for channels (RSS)</a></li><li><a href="{P}/partners/">Partners</a></li><li><a href="{P}/media-kit/">Media kit</a></li><li><a href="{P}/investors/">Investors</a></li><li><a href="{P}/plus/">Plus</a></li></ul></details>
-<details class="fgrp" open><summary>About</summary><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/about/#contact">Contact</a></li><li><a href="{P}/vs/">Compared with other job sites</a></li><li><a href="{P}/job-search-engines/">Job search engines compared</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/ahead/">What is new here</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/methodology/#editorial-policy">Editorial policy</a></li><li><a href="{P}/guides/">Guides</a></li><li><a href="{P}/help/">Help</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></details>
+<details class="fgrp" open><summary>About</summary><p class="fhd">About</p><ul><li><a href="{P}/about/">About</a></li><li><a href="{P}/about/#contact">Contact</a></li><li><a href="{P}/press/">Press</a></li><li><a href="{P}/vs/">Compared with other job sites</a></li><li><a href="{P}/job-search-engines/">Job search engines compared</a></li><li><a href="{P}/promise/">Our promise</a></li><li><a href="{P}/ahead/">What is new here</a></li><li><a href="{P}/methodology/">How it works</a></li><li><a href="{P}/methodology/#editorial-policy">Editorial policy</a></li><li><a href="{P}/guides/">Guides</a></li><li><a href="{P}/help/">Help</a></li><li><a href="{P}/glossary/">Glossary</a></li><li><a href="{P}/safety/">Job offer safety</a></li><li><a href="{P}/archive/">Closed jobs archive</a></li><li><a href="{P}/privacy/">Privacy</a></li><li><a href="{P}/terms/">Terms</a></li></ul></details>
 </div>{fpop("Popular searches", FOOT.get("pop", ""))}{fpop("Jobs by type", FOOT.get("types", ""))}{ask_ai_row()}{FOOT_TRUST}<p class="fine"><button class="icon ic-t" id="theme" type="button" aria-label="Switch between light and dark"></button><span class="flang"><span class="vh">Language: </span>English</span> © {TODAY[:4]} {e(SITE)}. Listings come from companies' official careers pages. You always apply on the employer's own site.</p><div class="fbig" aria-hidden="true" style="--wm:url('{P}/brand/{brand.APPLIED}-logo-mono-white.svg')"></div></div></footer>"""
 
 
@@ -5188,11 +5200,19 @@ def main():
         try: return int(datetime.datetime.fromisoformat(str(j.get("checked_at") or "").replace("Z", "+00:00")).timestamp())
         except ValueError: return 0
     k24_ = sum(1 for j in active if checked_t(j) >= NOW - 86400 or j.get("last_seen") == TODAY)
+    # Open more than 90 days, by the employer's own date (AI search teardown, 26 Nov 2026: "26% open 90+ days" counted the iCIMS stand-in
+    # dates, two years before the day of reading, and the day we first read a job where a posting had no date). A posting without a date
+    # of its own, or whose date is only the day it last changed (posted_from "lastmod", collect.icims_placeholder), says nothing of its
+    # age: it is left out of the share and counted apart (dated_open + undated_open = open).
+    d90_ = (datetime.date.today() - datetime.timedelta(days=LONG_OPEN)).isoformat()
+    dated_ = [j for j in active if j.get("posted") and j.get("posted_from") != "lastmod"]
+    o90_ = sum(1 for j in dated_ if j["posted"][:10] < d90_)
     FACTS.clear()
     FACTS.update(open=n, companies=m, checked_24h=k24_, checked_24h_pct=round(100 * k24_ / max(n, 1)),
                  posted_today=sum(1 for j in active if (j["posted"] or "")[:10] == TODAY), posted_7d=WEEKNEW,
                  first_read_today=sum(1 for j in active if j.get("first_seen") == TODAY), left_out=sum(SIFTED.values()),
-                 usajobs=sum(1 for j in active if j["id"].startswith("usajobs-")), telegram=sum(1 for j in active if j.get("tg")))
+                 usajobs=sum(1 for j in active if j["id"].startswith("usajobs-")), telegram=sum(1 for j in active if j.get("tg")),
+                 dated_open=len(dated_), undated_open=n - len(dated_), open_90d=o90_, open_90d_pct=round(100 * o90_ / max(len(dated_), 1)))
     CHECK_LINE[0] = f"{FACTS['checked_24h_pct']}% of open jobs were re-checked on the employer’s own list in the last 24 hours"
     # where the jobs come from, said the same way everywhere (teardown: "only from employers' own pages" while USAJOBS and Telegram posts
     # were listed too); the counts are this build's
@@ -12468,9 +12488,14 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
             "<p class=\"lead\">Short version: we do not ask for an account, we do not set tracking cookies, and your saved jobs never leave your browser.</p>")
          + "<h2 class='h2s'>What is stored in your browser</h2><p>Saved jobs, application statuses and notes, saved searches, followed companies, hidden jobs and companies, words you chose to leave out of results, "
          "recently viewed jobs, your skill profile and your answers on For you, the jobs you passed on the swipe page, the place you picked for jobs near you, "
+         + f'<p class="note">Effective {fdate(LEGAL_DATE)}.</p>'
          "the resume you typed into the resume builder, what you entered into the free tools, and the light or dark theme. All of it is kept in your browser's local storage on this device and is not sent to us. "
          f'You can download or erase it on the <a href="{P}/my-jobs/">My jobs</a> page; each tool has its own Clear button; clearing your browser data removes everything.</p>'
          "<h2 class='h2s'>Your time zone</h2><p>To show pay in your own currency and the jobs near you before you pick a place, a script on the page reads the time zone your device reports "
+         # who is responsible (trust teardown, 26 Nov 2026: no operator, no date, no country). Only what is true: the founder by the name he
+         # uses in public; no company and no address are named, because none is registered.
+         + f"<h2 class='h2s'>Who is responsible for your data</h2><p>{e(SITE)} (jobseveryhour.com) is run by {e(FOUNDER)}, its founder, who decides what this site keeps and is responsible for it. "
+           f"Questions and requests about your data: {mail_a('privacy')}. Anything else: {mail_a('support')}.</p>"
          "(for example Europe/Berlin) and looks up its country in a list this site serves to every visitor alike. This happens in your browser; the time zone is not sent to us or kept. "
          "Exchange rates come from the European Central Bank's daily reference rates, which the site copies when it is built, so no request goes to the bank from your browser.</p>"
          "<h2 class='h2s'>Practising out loud</h2><p>On the interview questions pages the page can read a question aloud and listen to your answer. "
@@ -12488,14 +12513,12 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          crumbs(("Terms", "")) + "<h1>Terms of use</h1>"
          "<h2 class='h2s'>What this site is</h2><p>A search service for job postings published by companies on their own careers pages. We are not the employer and not a recruitment agency, and we take no part in hiring decisions.</p>"
          "<h2 class='h2s'>Accuracy</h2><p>Listings are collected automatically, around the clock. A job may change or close between updates, and details such as salary, perks and location are read from the posting text. Always check the employer's own page before you rely on them.</p>"
-         + f'<p class="note">Effective {fdate(LEGAL_DATE)}.</p>'
          "<h2 class='h2s'>Applying</h2><p>Applications are made on the employer's site. Viewing jobs and applying is free.</p>"
          + ("<h2 class='h2s'>Listings from Telegram channels</h2><p>Some listings are read from public Telegram job channels. Each one names its channel, "
+         + f'<p class="note">Effective {fdate(LEGAL_DATE)}.</p>'
+         + f"<h2 class='h2s'>Who runs this site</h2><p>{e(SITE)} (jobseveryhour.com) is run by {e(FOUNDER)}, its founder. "
+           f"Questions about them: {mail_a('support')}. A listing to correct or remove: {mail_a('jobs')}.</p>"
             "links to the original post and shows only the facts of the job and a few lines of the post. They are not checked with the employer. "
-         # who is responsible (trust teardown, 26 Nov 2026: no operator, no date, no country). Only what is true: the founder by the name he
-         # uses in public; no company and no address are named, because none is registered.
-         + f"<h2 class='h2s'>Who is responsible for your data</h2><p>{e(SITE)} (jobseveryhour.com) is run by {e(FOUNDER)}, its founder, who decides what this site keeps and is responsible for it. "
-           f"Questions and requests about your data: {mail_a('privacy')}. Anything else: {mail_a('support')}.</p>"
             f"A channel owner who does not want the channel's posts here can write to {mail_a('partners')}; they are taken off at the next update.</p>"
             if any(j_.get("tg") for j_ in active) else "")       # only while channel posts are shown (telegram_jobs.py)
          + (("<h2 class='h2s'>Job alerts</h2><p>Job alerts are free. You ask for one with your email address and confirm it from the letter we send; then you get the new jobs that match it, "
@@ -12516,9 +12539,6 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
              "or charged. The terms of paid placements will be published here before anything can be bought.</p>") if CFG["api_url"] else "")
          + "<h2 class='h2s'>Names and trademarks</h2><p>Company names belong to their owners and are used only to identify who is hiring. A listing here does not mean the company endorses this site.</p>"
          "<h2 class='h2s'>Salary and hiring data</h2><p>Figures on the salary, trends and insights pages are calculated from advertised ranges. They are estimates for information, not an offer or a guarantee.</p>"
-         + f'<p class="note">Effective {fdate(LEGAL_DATE)}.</p>'
-         + f"<h2 class='h2s'>Who runs this site</h2><p>{e(SITE)} (jobseveryhour.com) is run by {e(FOUNDER)}, its founder. "
-           f"Questions about them: {mail_a('support')}. A listing to correct or remove: {mail_a('jobs')}.</p>"
          "<h2 class='h2s'>Job descriptions</h2><p>Descriptions are the employers’ own text, read from the hiring feeds they publish for display on other sites. They are shown unchanged, with the employer named and a link to the original posting.</p>"
          "<h2 class='h2s'>Removing a listing</h2><p>" + (f"Employers who want a listing or company page removed can write to {mail_a("jobs")}. It is taken down at the next update." if contact
                                                         else "Employers who want a listing or company page removed can ask through the contact details on the employers page.") + "</p>", cls="sp docp")
@@ -14638,7 +14658,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         age_cl = sorted(x for x in (days_between(j["posted"], j["closed"]) for j in cl_real) if x is not None)
         med_cl = age_cl[len(age_cl) // 2] if age_cl else 0
         ages_o = [age_days(j) for j in active]
-        old90 = sum(1 for a in ages_o if a > 90)
+        old90, dated_n = FACTS["open_90d"], FACTS["dated_open"]      # by the employer's own date (FACTS): the same figure as the Ghost Jobs Index
         AGE_B = [(0, 7, "0–7"), (8, 30, "8–30"), (31, 90, "31–90"), (91, 180, "91–180"), (181, 365, "181–365"), (366, 10 ** 6, "366+")]
         age_pts = [(lb, k_, f"{lb} days since posting · {k_:,} open jobs") for lo, hi, lb in AGE_B for k_ in [sum(1 for a in ages_o if lo <= a <= hi)]]
         cl_pts = [(lb, k_, f"{lb} days after posting · {k_:,} closings") for lo, hi, lb in AGE_B for k_ in [sum(1 for a in age_cl if lo <= a <= hi)]]
@@ -14709,12 +14729,12 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         tile_ = lambda label, value, sub: f'<div class="st"><span class="st-l">{label}</span><b class="st-v">{value}</b><span class="st-s">{sub}</span></div>'
         est_note = (f"{'Early estimate: ' if early else 'Estimate: '}from {SURV['closed']:,} closings seen in {days_s} days of hourly checks (since {since_s}). "
                     f"It reaches {reach} days for now" + (", and the 90-day figure appears once the record covers 30 days" if reach < 90 else "") + ". It will move as the record grows.")
-        quote_s = (f"Of {len(active):,} open job postings checked on {fdate(TODAY)}, {pc(old90 / max(1, len(active)))} had been up for more than 90 days; "
+        quote_s = (f"Of {dated_n:,} open job postings checked on {fdate(TODAY)} that carry the employer’s own date, {pc(old90 / max(1, dated_n))} had been up for more than 90 days; "
                    f"the postings that closed since {since_s} had been open a median of {med_cl} days.")
         lead_s = (f"About {med_cl} days at the median, on employers’ own careers pages. "
                   f"Of the {len(age_cl):,} postings that employers took down since {since_s}, half had been open {med_cl} days or more. "
                   + (f"At the closing rates seen in {'the first ' if early else ''}{days_s} days of records, about {pc(c7)} of new postings close within 7 days and {pc(c30)} within 30" + (f", {pc(c90)} within 90" if c90 is not None else "") + ". " if c7 is not None and c30 is not None else "")
-                  + f"{pc(old90 / max(1, len(active)))} of the {len(active):,} jobs open today were posted more than 90 days ago.")
+                  + f"{pc(old90 / max(1, dated_n))} of the {dated_n:,} jobs open today that carry the employer’s own date were posted more than 90 days ago.")
         # Search and AI answers check, 18 Nov 2026 ("how long do job postings stay open"): Bing's answer is built from pages with
         # their own counts (Indeed, 31,590 postings; a tracker with 30,827) and adds what this page lacked: why postings close or stay,
         # what the job boards do, and what it means for someone about to apply. The table answers the last from our own closing rates.
@@ -14747,7 +14767,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
             ("How long do job postings stay open?", lead_s),
             ("Should I apply to a job that was posted a month ago?", (f"Yes. At the closing rates seen since {since_s}, about {pc(w30_[2])} of postings that are 8 to 30 days old close within the next week "
              f"and {pc(w30_[3])} within the next month, so most are still open when you apply. " if w30_ else "Yes: most postings of that age are still open. ")
-             + f"Past 90 days it is worth asking first: {old90:,} of today’s {len(active):,} open jobs are that old."),
+             + f"Past 90 days it is worth asking first: {old90:,} of today’s {dated_n:,} open jobs with the employer’s own date are that old."),
             ("How soon should I apply after a job is posted?", (f"In the first week if you can: about {pc(c7)} of new postings close within 7 days. " if c7 is not None else "In the first week if you can. ")
              + f"The rest stay much longer, and half of all closings come after {med_cl} days or more, so a later application is still read at most employers."),
             ("How long do job postings stay up on LinkedIn and Indeed?", f"On an employer’s own careers page a posting stays until the employer takes it down; the median here is {med_cl} days. "
@@ -14758,8 +14778,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
             ("How do I ask if a job posting is still open?", "Check the employer’s own careers page first: if the role is gone there, it is closed. If it is still there and old, write to the recruiter "
              "or the hiring contact in three lines: “I came across your posting for [job title] and wanted to check whether you are still accepting applications. My experience in [one skill the "
              "posting names] matches it closely. Thank you for your time.” Then apply anyway: the answer may never come."),
-            ("What is a ghost job?", f"A posting the employer keeps up without hiring for it now. No count of postings can prove which ones those are. What can be counted: {old90:,} of today’s {len(active):,} open jobs "
-             f"({pc(old90 / max(1, len(active)))}) were posted more than 90 days ago, and each of their pages on this site says so."),
+            ("What is a ghost job?", f"A posting the employer keeps up without hiring for it now. No count of postings can prove which ones those are. What can be counted: {old90:,} of today’s {dated_n:,} open jobs with the employer’s own date "
+             f"({pc(old90 / max(1, dated_n))}) were posted more than 90 days ago, and each of their pages on this site says so. The Ghost Jobs Index puts this together with the other signs."),
             ("How many job postings are entry level?", f"{len(ent):,} of {len(active):,} open postings ({pc(len(ent) / max(1, len(active)))}) are marked junior or intern in the title or by the employer: "
              f"{ent_int:,} internships and {len(ent) - ent_int:,} junior roles. {ent_exp2:,} of them ({pc(ent_exp2 / max(1, len(ent)))}) still ask for two years of experience or more."),
             ("Why are some postings open for months?", f"The page does not say why: a posting stays open as long as the employer keeps it on its careers page. "
@@ -14791,7 +14811,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
              f'<p class="note">Counted from the careers pages of the employers we read; updated {fdate(TODAY)}. Free to quote with a link.</p>'
              '<div class="stats3 st4">'
              + tile_("Median age at closing", f"{med_cl} days", f"measured: {len(age_cl):,} closings")
-             + tile_("Open more than 90 days", pc(old90 / max(1, len(active))), f"measured: {old90:,} of {len(active):,} open jobs")
+             + tile_("Open more than 90 days", pc(old90 / max(1, dated_n)), f"measured: {old90:,} of {dated_n:,} open jobs with the employer’s date")
              + (tile_("Closed within 7 days", pc(c7), ("early " if early else "") + "estimate, new postings") if c7 is not None else "")
              + (tile_("Closed within 30 days", pc(c30), ("early " if early else "") + "estimate, new postings") if c30 is not None else "")
              + (tile_("Closed within 90 days", pc(c90), "estimate, new postings") if c90 is not None else "")
@@ -14822,7 +14842,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                        ("map/", "Jobs map"), label="Places")
              + section("How these figures [[are counted]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in st_qa) + "</dl>"
                        + f'<p class="note">The data behind the estimate: <a href="{P}/data/survival.json">survival.json</a> (daily closing chance by age band, overall and by field). '
-                       f'How the jobs are collected: <a href="{P}/methodology/">methodology</a>. Today’s run: <a href="{P}/status/">data status</a>.</p>', label="Method")
+                       f'How the jobs are collected: <a href="{P}/methodology/">methodology</a>. Today’s run: <a href="{P}/status/">data status</a>. '
+                       f'Every sign of a ghost job we measure, in one place: the <a href="{P}/ghost-jobs/">Ghost Jobs Index</a>.</p>', label="Method")
              + cite("how-long-job-postings-stay-open/", "How long job postings stay open", quote_s), head=st_ld, cls="hub sp howlong")
 
     lap('Jobs by hourly pay (Upwork has a page per hourly rate; the s')
@@ -14839,6 +14860,130 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     def hr_band(lo_, hi_):
         return [j for j in active if j["id"] in hr_of and lo_ <= hr_of[j["id"]][0] < (hi_ or 10 ** 6)]
     hr_jobs = {lo_: hr_band(lo_, hi_) for lo_, hi_ in HR_BANDS}
+    lap('Ghost Jobs Index: the signs of a posting with no hiring behind it, measured here')
+    # Ghost Jobs Index (AI search teardown, 26 Nov 2026): asked "what share of job postings are ghost jobs", ChatGPT cited the Alion index
+    # (407,585 postings, re-checked every 48 hours), Greenhouse and Huntr, not this site, which reads more postings more often: /ghost-jobs/
+    # was a 404 and no page gave one figure with its method. No other page counted these signs together (/how-long-job-postings-stay-open/
+    # is the study of closings, /insights/long-open-roles/ ranks employers by old postings, /reports/ are the months); this page puts them
+    # side by side and links both. Nothing is counted two ways: the 90-day share is FACTS' (the employer's own date; an iCIMS "last changed"
+    # day and a posting with no date are left out and counted apart); the median at closing is the one of the closings study; closings
+    # leave out the boards that moved to another hiring system on one day (MOVED); a repost is what a job page calls "Posted again".
+    gj_today = datetime.date.fromisoformat(TODAY)
+    csv_cell = lambda v: ('"' + v.replace('"', '""') + '"') if isinstance(v, str) and re.search(r'[",\n]', v) else str(v)
+    gj_closed = [j for j in archived if j.get("closed") and (j["company"], j["closed"]) not in MOVED]
+    gj_cl7 = sum(1 for j in gj_closed if j["closed"][:10] > (gj_today - datetime.timedelta(days=7)).isoformat())
+    gj_pool = sum(1 for j in active if j.get("pool"))
+    gj_rep = Counter()                 # company -> open postings of a role (same title and place) whose earlier posting it took down
+    for j in active:
+        again_ = REPOST.get((j["company"], j["title"].lower(), j["location"].lower()))
+        if again_ and again_ < (j.get("first_seen") or ""): gj_rep[j["company"]] += 1
+    gj_med, gj_ncl = (med_cl, len(age_cl)) if SURV else (None, 0)
+    gj_since = SURV["since"] if SURV else None
+    # closings and postings week by week (Monday to Sunday), from the day the record began; one pass over the jobs
+    cl_day = Counter(j["closed"][:10] for j in gj_closed)
+    po_day = Counter(j["posted"][:10] for j in jobs if j.get("posted") and j.get("posted_from") != "lastmod")
+    wk0_ = gj_today - datetime.timedelta(days=gj_today.weekday())
+    gj_weeks = []
+    for i_ in range(8, -1, -1):
+        a_ = wk0_ - datetime.timedelta(days=7 * i_)
+        if gj_since and a_ + datetime.timedelta(days=6) < gj_since: continue
+        days_ = [(a_ + datetime.timedelta(days=d_)).isoformat() for d_ in range(7) if a_ + datetime.timedelta(days=d_) <= gj_today]
+        gj_weeks.append((a_, sum(cl_day[d_] for d_ in days_), sum(po_day[d_] for d_ in days_), i_ == 0, bool(gj_since and a_ < gj_since)))
+    # the employers with the most reposted open roles, with their other signs
+    gj_dated = defaultdict(lambda: [0, 0])          # company -> [open with the employer's date, of them more than 90 days old]
+    d90s_ = (gj_today - datetime.timedelta(days=LONG_OPEN)).isoformat()
+    for j in active:
+        if j.get("posted") and j.get("posted_from") != "lastmod":
+            gj_dated[j["company"]][0] += 1
+            if j["posted"][:10] < d90s_: gj_dated[j["company"]][1] += 1
+    gj_top = [(c_, k_) for c_, k_ in gj_rep.most_common(25) if k_ >= 5]
+    gj_rows = [trow([rank(i_), cl(c_), f"{OPEN[c_]:,}", f"<strong>{k_:,}</strong>", pctf(gj_dated[c_][1], gj_dated[c_][0]) if gj_dated[c_][0] else "—",
+                     f"+{PULSE.get(c_, (0, 0, ''))[0]:,} / −{PULSE.get(c_, (0, 0, ''))[1]:,}", "Yes" if c_ in CHURN else "—"]) for i_, (c_, k_) in enumerate(gj_top)]
+    pct90 = FACTS["open_90d_pct"]
+    gj_lead = (f"{pct90}% of the {FACTS['dated_open']:,} open job postings on employers’ own careers pages that carry the employer’s date had been up for more than "
+               f"{LONG_OPEN} days on {fdate(TODAY)}. That is the plainest sign of a ghost job we can measure: a posting kept up with no hiring behind it. "
+               f"In the last 7 days employers took {gj_cl7:,} postings down" + (f", and the postings that closed since {fdate(gj_since.isoformat())} had been up a median of {gj_med} days" if gj_med is not None else "") + ".")
+    gj_quote = (f"Of {FACTS['dated_open']:,} open job postings on employers’ own careers pages, {pct90}% had been up for more than {LONG_OPEN} days on {fdate(TODAY)}; "
+                f"{gj_cl7:,} postings were taken down in the 7 days before.")
+    gtile = lambda label, value, sub: f'<div class="st"><span class="st-l">{label}</span><b class="st-v">{value}</b><span class="st-s">{sub}</span></div>'
+    gj_qa = [
+        ("What share of job postings are ghost jobs?", f"No count can prove which postings have no hiring behind them. What can be measured: {pct90}% of the {FACTS['dated_open']:,} open postings "
+         f"we read on employers’ own careers pages, dated by the employer, had been up for more than {LONG_OPEN} days on {fdate(TODAY)}. {gj_pool:,} more are standing "
+         f"invitations (talent pools), and {sum(gj_rep.values()):,} open postings repeat a role the same employer took down before."),
+        ("What is a ghost job?", "A job posting the employer keeps up without hiring for it now: a role already filled, a standing posting that collects resumes all year, "
+         "or a posting nobody took down. A posting can be old and still real, so each sign here is a reason to ask before you spend an evening on an application, not a verdict."),
+        ("How is the 90-day share measured?", f"From the date each employer gives its own posting, against the day of the count. Postings without such a date are left out "
+         f"({FACTS['undated_open']:,} today): some hiring systems (iCIMS) give the day a posting last changed, or a stand-in date two years before the day of reading, "
+         "which says nothing of its age. The careers pages are read in turn, around the clock: " + CHECK_LINE[0] + "."),
+        ("How many job postings close each week?", (f"{gj_cl7:,} postings were taken down by their employers in the last 7 days. " if gj_cl7 else "")
+         + "The week-by-week table counts a posting as closed on the day it left the employer’s list. When a whole job board empties at once, the employer has usually moved to "
+         "another hiring system, so those postings are left out."),
+        ("Which employers repost the same jobs?", ("The ones with the most open roles that repeat a posting they took down before (same title and place): "
+         + ", ".join(f"{c_} ({k_:,})" for c_, k_ in gj_top[:5]) + ". " if gj_top else "")
+         + "Some reposting is normal: a role with many hires, or one filled and opened again. A board that takes down and puts up most of its jobs every two weeks is marked "
+         "“Reposts often” on its page and comes after the others in every list here."),
+        ("Can I use these figures?", f"Yes, free, with a link to this page. The two CSV files below have every figure on the page, recounted with each update of the site."),
+    ]
+    gj_qa_html, gj_qa_ld = qa_sec("Questions about [[ghost jobs]]", gj_qa, label="Questions")
+    # the two files: the index itself, and the employers' table (open data, CC BY 4.0)
+    gj_csv = "measure,value,out_of,share_percent,date,how_it_is_measured\n" + "\n".join(",".join(csv_cell(x_) for x_ in r_) for r_ in [
+        ("open postings with the employer's date, up more than 90 days", FACTS["open_90d"], FACTS["dated_open"], pct90, TODAY, "employer's own posting date against the day of the count"),
+        ("open postings without a date of their own (left out of the share)", FACTS["undated_open"], FACTS["open"], round(100 * FACTS["undated_open"] / max(FACTS["open"], 1), 1), TODAY, "no date, or only the day the posting last changed (iCIMS)"),
+        ("open postings that are standing invitations (talent pools)", gj_pool, FACTS["open"], round(100 * gj_pool / max(FACTS["open"], 1), 1), TODAY, "title words such as talent pool or general application"),
+        ("open postings that repeat a role the employer took down before", sum(gj_rep.values()), FACTS["open"], round(100 * sum(gj_rep.values()) / max(FACTS["open"], 1), 1), TODAY, "same employer, title and place, the earlier posting closed before this one was first read"),
+        ("postings taken down in the last 7 days", gj_cl7, "", "", TODAY, "left the employer's list; whole boards that moved to another hiring system left out"),
+        ("median days a closed posting had been up", gj_med if gj_med is not None else "", gj_ncl, "", TODAY, f"postings closed since {gj_since.isoformat() if gj_since else TODAY}, employer's date to the day it closed"),
+    ]) + "\n" + "\n".join(",".join(csv_cell(x_) for x_ in (f"postings taken down in the week of {a_.isoformat()}" + (" (so far)" if now_ else " (from the start of the record)" if part_ else ""),
+                                                          k_, "", "", TODAY, "Monday to Sunday")) for a_, k_, _, now_, part_ in gj_weeks) + "\n"
+    write("data/ghost-jobs.csv", gj_csv, sitemap=False)
+    write("data/ghost-jobs-employers.csv", "company,open_postings,reposted_open_postings,open_with_employer_date,of_them_up_90_plus_days,posted_last_7_days,closed_last_7_days,reposts_most_jobs_every_two_weeks,page\n"
+          + "".join(",".join(csv_cell(x_) for x_ in (c_, OPEN[c_], k_, gj_dated[c_][0], gj_dated[c_][1], PULSE.get(c_, (0, 0, ""))[0], PULSE.get(c_, (0, 0, ""))[1],
+                                                      "yes" if c_ in CHURN else "no", f"{FULL}/companies/{slugify(c_)}/")) + "\n" for c_, k_ in gj_rep.most_common(500)), sitemap=False)
+    gj_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Dataset", "name": "Ghost Jobs Index",
+             "description": f"Signs of ghost jobs measured on employers’ own careers pages: the share of open postings up more than {LONG_OPEN} days by the employer’s date, "
+                            "talent pools, reposted roles, postings taken down week by week and the employers that repost the most.",
+             "url": f"{FULL}/ghost-jobs/", "dateModified": TODAY, "creator": {"@type": "Organization", "@id": ORG_ID, "name": SITE, "url": FULL + "/"},
+             "isAccessibleForFree": True, "license": "https://creativecommons.org/licenses/by/4.0/",
+             "temporalCoverage": f"{(gj_since.isoformat() if gj_since else TODAY)}/{TODAY}", "spatialCoverage": {"@type": "Place", "name": "Worldwide"},
+             "measurementTechnique": "Employers’ public job lists in their hiring systems, read in turn around the clock; a posting’s age is its employer’s own date; a posting is closed on the day it leaves the list.",
+             "variableMeasured": [f"share of open postings up more than {LONG_OPEN} days", "open talent pool postings", "open postings that repeat a closed role", "postings taken down per week",
+                                  "median days a closed posting had been up"],
+             "keywords": ["ghost jobs", "job postings", "hiring data", "time to fill"],
+             "distribution": [{"@type": "DataDownload", "encodingFormat": "text/csv", "contentUrl": f"{FULL}/data/ghost-jobs.csv"},
+                              {"@type": "DataDownload", "encodingFormat": "text/csv", "contentUrl": f"{FULL}/data/ghost-jobs-employers.csv"}]},
+             ensure_ascii=False).replace("</", "<\\/") + "</script>")
+    gj_week_rows = [trow([f"{fdate(a_.isoformat())}" + (" (so far)" if now_ else ""), f"{k_:,}", f"{p_:,}"]) for a_, k_, p_, now_, part_ in gj_weeks]
+    page("ghost-jobs/", f"Ghost Jobs Index: {pct90}% of Open Jobs Up {LONG_OPEN}+ Days | {SITE}",
+         f"Ghost jobs measured on employers’ own careers pages: {pct90}% of open postings up {LONG_OPEN}+ days, {gj_cl7:,} taken down in 7 days, who reposts most. CSV and method.",
+         crumbs(("Hiring reports", "reports/"), ("Ghost jobs index", "")) + "<h1>Ghost jobs index</h1>"
+         f'<p class="lead">{e(gj_lead)}</p>'
+         f'<p class="note">Counted on {fdate(TODAY)} from the careers pages of the {FACTS["companies"]:,} employers we read; recounted with every update. Free to quote with a link. '
+         f'Files: <a href="{P}/data/ghost-jobs.csv">ghost-jobs.csv</a> (the index) and <a href="{P}/data/ghost-jobs-employers.csv">ghost-jobs-employers.csv</a> (employers).</p>'
+         '<div class="stats3 st4">'
+         + gtile(f"Up more than {LONG_OPEN} days", f"{pct90}%", f"measured: {FACTS['open_90d']:,} of {FACTS['dated_open']:,} open postings with the employer’s date")
+         + gtile("Taken down in 7 days", f"{gj_cl7:,}", "measured: postings that left the employer’s list")
+         + (gtile("Median days up at closing", f"{gj_med}", f"measured: {gj_ncl:,} closings since {fdate(gj_since.isoformat())}") if gj_med is not None else "")
+         + gtile("Repeat a closed role", f"{sum(gj_rep.values()):,}", f"open postings; {gj_pool:,} more are talent pools")
+         + "</div>"
+         + section("The signs we [[measure]]", '<dl class="qa">'
+                   f'<div><dt>Up more than {LONG_OPEN} days</dt><dd>{FACTS["open_90d"]:,} of {FACTS["dated_open"]:,} open postings ({pct90}%) by the employer’s own date. Some roles are hard to fill or hire all year; '
+                   'past three months it is worth asking whether the role is still open. Each such job page here says “Posted” with its month instead of “Hiring now”.</dd></div>'
+                   f'<div><dt>A standing invitation</dt><dd>{gj_pool:,} open postings are talent pools or general applications: an invitation to apply, not one specific opening. Their pages say so.</dd></div>'
+                   f'<div><dt>Posted again</dt><dd>{sum(gj_rep.values()):,} open postings repeat a role (same employer, title and place) whose earlier posting the employer took down. Their pages say “Posted again” with the day the earlier one closed.</dd></div>'
+                   f'<div><dt>Taken down and put up again in bulk</dt><dd>{len(CHURN):,} employers took down and put up most of their jobs in the last two weeks. Their pages say “Reposts often”, and their jobs come after the others in every list.</dd></div>'
+                   "</dl>", label="Signs")
+         + (section("Postings taken down, [[week by week]]", ttable(["Week of", "Taken down", "Posted by employers"], gj_week_rows, "rkt")
+                    + f'<p class="note">Monday to Sunday. A posting counts as taken down on the day it left the employer’s list; whole boards that moved to another hiring system on one day are left out. '
+                    f'“Posted” is the employer’s own date.' + (f' The record began on {fdate(gj_since.isoformat())}, so the first week is partial.' if gj_since else "") + "</p>", sid="weeks", label="Closings") if gj_weeks else "")
+         + (section("Employers that [[repost the most]]", ttable(["#", "Employer", "Open postings", "Posted again", f"Up {LONG_OPEN}+ days", "Posted / taken down, 7 days", "Reposts most jobs every 2 weeks"], gj_rows, "rkt rk1")
+                    + '<p class="note">“Posted again”: open postings whose role the same employer took down before. Reposting is not proof of a ghost job: a role with many hires or one opened again looks the same. '
+                    f'The first 500 employers are in <a href="{P}/data/ghost-jobs-employers.csv">the CSV</a>.</p>', ("insights/long-open-roles/", "Employers with the oldest postings"), sid="employers", label="Employers") if gj_rows else "")
+         + gj_qa_html
+         + f'<p class="note">More: <a href="{P}/how-long-job-postings-stay-open/">how long job postings stay open</a> (closings by age and field), '
+           f'<a href="{P}/insights/long-open-roles/">where postings linger</a> (employers by old postings), <a href="{P}/glossary/ghost-job/">what a ghost job is</a>, '
+           f'<a href="{P}/methodology/">how the jobs are collected</a>, <a href="{P}/status/">today’s data status</a>, <a href="{P}/press/">for the press</a>.</p>'
+         + cite("ghost-jobs/", "Ghost Jobs Index", gj_quote), head=gj_ld + gj_qa_ld, cls="hub sp howlong")
+
     hr_label = lambda lo_, hi_: f"${lo_} to ${hi_} an hour" if hi_ else f"${lo_} an hour or more"
     hr_chips = lambda cur: '<div class="pillrow" role="navigation" aria-label="Other pay">' + "".join(
         (f"<span>{e(hr_label(lo_, hi_))}</span>" if lo_ == cur else f'<a href="{P}/jobs-that-pay/{lo_}-an-hour/">{e(hr_label(lo_, hi_))}</a>') for lo_, hi_ in HR_BANDS if len(hr_jobs[lo_]) >= 20) + "</div>"
@@ -15463,11 +15608,44 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
                    + ("<p>Every placement is bought and switched on in the employer account, paid in crypto at checkout." if CFG["api_url"] else
                       "<p>Placements will be bought and switched on in a self-serve employer account, paid in crypto at checkout. The account is not open yet, so nothing can be bought today.")
                    + f' Posting a job is free: <a href="{P}/post-a-job/">for employers</a>.</p>', label="Advertising")
-         + kpanel(section(f"Press contact for {SITE}", f'<p>Email {mail_a("press")}. Numbers you can quote, each with its method and date: <a href="{P}/how-long-job-postings-stay-open/">how long postings stay open</a>, '
+         + kpanel(section(f"Press contact for {SITE}", f'<p>Email {mail_a("press")}. Numbers you can quote, each with its method and date: <a href="{P}/ghost-jobs/">the Ghost Jobs Index</a>, <a href="{P}/how-long-job-postings-stay-open/">how long postings stay open</a>, '
                    f'<a href="{P}/trends/">hiring trends</a>, <a href="{P}/salaries/">salaries from open postings</a>, <a href="{P}/reports/">monthly reports</a>. '
                    f'Raw data: the <a href="{P}/api/">free JSON API</a>.</p>', sid="press", label="Contact"), "soft"),
-         head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/",
-               "logo": f"{FULL}/brand/icon-512.png", "description": bp50, "sameAs": ORG_SAME_AS}) + "</script>", cls="kp sp mediakit")
+         head='<script type="application/ld+json">' + json.dumps(org_json(bp50)) + "</script>", cls="kp sp mediakit")
+    lap('Press: who we are, the figures to quote, the files and the contact')
+    # /press/ answered 404 (growth teardown, 26 Nov 2026: "the story for the press lies there with no face and no picture"). One short page a
+    # writer can work from: what the site is, who runs it, today's figures (FACTS, the numbers every other page states), the data pages with
+    # a figure to quote, the logo and the share picture, and the contact. The full kit (colors, banners, screenshots) stays on /media-kit/.
+    press_data = [(u_, t_, w_) for u_, t_, w_ in (
+        ("ghost-jobs/", "Ghost Jobs Index", f"{FACTS['open_90d_pct']}% of open postings with the employer’s date up more than {LONG_OPEN} days, closings week by week, who reposts most; CSV"),
+        ("how-long-job-postings-stay-open/", "How long job postings stay open", "closings by the age of the posting and by field, with the method"),
+        ("open-hiring-index/", "Open hiring index", "which employers state pay and close their old postings"),
+        ("trends/", "Hiring trends", "how open jobs move week by week, by field and skill"),
+        ("salaries/", "Salaries from open postings", "advertised pay by role, skill and place, with the sample size"),
+        ("reports/", "Monthly hiring reports", "one dated page per month that stops changing when the month ends"),
+        ("status/", "Data status", "what the latest update read and how fresh the open jobs are")) if u_ in URLS]
+    page("press/", f"Press: Facts, Figures and Contact | {SITE}",
+         f"For journalists writing about {SITE}: what the site is, who runs it, today’s figures with their method, the data pages to quote, the logo and the press contact.",
+         khero(crumbs(("Press", "")), "For the press", f"{e(SITE)} for the press",
+               f'{e(bp50)} It is run by {e(FOUNDER)}, its founder; the jobs are collected and checked by software.',
+               f'<p class="kact">{go("#contact", "Press contact")}<a href="{P}/media-kit/">Media kit</a><a href="{P}/ghost-jobs/">Ghost Jobs Index</a></p>',
+               after=nums([(f"{FACTS['open']:,}", f"open jobs on {fdate(TODAY)}"), (f"{FACTS['companies']:,}", "employers with open jobs, read from their own hiring systems"),
+                           (f"{FACTS['checked_24h_pct']}%", "of open jobs re-checked on the employer’s list in the last 24 hours"),
+                           (f"{FACTS['posted_7d']:,}", "posted by employers in the last 7 days")], src=False)
+               + f'<p class="note">Counted when this page was built, {fdate(TODAY)}: the same figures as every other page of the site. How they are counted: <a href="{P}/methodology/">methodology</a>.</p>')
+         + section(f"What {SITE} is", f'<p>{e(bp100)}</p><p>{SOURCE_LINE[0]}. Searching, saving jobs, job alerts and the resume builder are free; every Apply button opens the employer’s own page. '
+                   f'The site went live in November 2026. What it promises and what it will never do: <a href="{P}/promise/">our promise</a>.</p>', sid="about", label="In short")
+         + section("Figures you can [[quote]]", '<ul class="ticks">' + "".join(f'<li><a href="{P}/{u_}">{e(t_)}</a>: {e(w_)}.</li>' for u_, t_, w_ in press_data) + "</ul>"
+                   f'<p class="note">Each page gives its method, its date and a sentence ready to quote. The figures are free to use with a link. Raw data: the <a href="{P}/api/">free JSON API</a>.</p>',
+                   sid="figures", label="Data")
+         + section(f"{SITE} logo and [[share picture]]", '<div class="brandrow">' + logo_tile(f"{A_}-logo.svg", "Logo, light") + logo_tile(f"{A_}-logo-dark.svg", "Logo, dark", True)
+                   + logo_tile(f"{A_}-mark.svg", "Mark", h=56) + "</div>"
+                   f'<div class="shots"><a href="{P}/og.jpg" download><img src="{P}/og.jpg" alt="{e(SITE)} share picture" loading="lazy" width="600" height="315"><span>Share picture, 1200 × 630</span></a></div>'
+                   f'<p class="note">Every version of the logo, the colors with their hex codes, screenshots and banners: the <a href="{P}/media-kit/">media kit</a> and the <a href="{P}/brand/">brand guide</a>.</p>',
+                   sid="logo", label="Files")
+         + kpanel(section(f"Press contact for {SITE}", f'<p>Email {mail_a("press")}: it reaches {e(FOUNDER)}, the founder. A figure or a listing to correct: {mail_a("jobs")}. '
+                          f'Who runs the site and every other address: <a href="{P}/about/#contact">About</a>.</p>', sid="contact", label="Contact"), "soft"),
+         head='<script type="application/ld+json">' + json.dumps(org_json(bp50), ensure_ascii=False) + "</script>", cls="kp sp mediakit")
     lap('Hiring badges: small live pictures with a count of open role')
     # Hiring badges: small live pictures with a count of open roles, for a README, a footer or a post
     top_co = next((c for c, _ in comp_items if OPEN[c]), "")
@@ -15600,7 +15778,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
 - How often: the lists are read in turn, around the clock; {CHECK_LINE[0]} (today's figure: {FULL}/status/).
 - A closed job: when a company takes a job down, it is marked closed in the next reading and leaves the lists of open jobs; its page stays at the same address and says that it is closed.
 - Cost: searching, saving jobs, job alerts, the resume builder and the tools are free, and no account is needed to search or apply. Every "Apply" button opens the employer's own page.
-- For employers: posting a job is free for 30 days; paid boosts are optional.
+- For employers: posting a job is free for 30 days; paid boosts are optional{"" if CFG.get("payments_live") else " and not on sale yet (payments are not switched on)"}.
+- Who runs it: {FOUNDER}, the founder ({FULL}/about/). Contact: {CFG.get("contact_email", "")}; press: {MAIL.get("press", CFG.get("contact_email", ""))} ({FULL}/press/).
 - How the check works, step by step: {FULL}/guides/how-we-check-jobs-every-hour/ . This site next to other job search engines that read company career pages: {FULL}/job-search-engines/
 
 ## Main sections
@@ -15639,6 +15818,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
 - "What does <skill> pay?" {FULL}/salaries/<skill>/ (median of advertised ranges, with the sample size)
 - Every job has its own page at {FULL}/job/<slug>/ with the title, employer, location, salary if published, the date it was posted and the date it was last
   checked against the employer's careers page. A job that has closed says so at the top of its page.
+- [Ghost Jobs Index]({FULL}/ghost-jobs/): {FACTS["open_90d_pct"]}% of open postings with the employer's own date are up more than {LONG_OPEN} days; talent pools, reposted roles, postings taken down week by week, the employers that repost most; CSV at {FULL}/data/ghost-jobs.csv
 - Please link to the job page when you mention a job: applications always go to the employer's own site from there, free of charge.
 - The feeds list every address that exists: {FULL}/api/v1/index.json
 - The open jobs of the last 14 days with their full descriptions, in Indeed's XML format for job search engines: {FULL}/feeds/index.xml lists the files (fields: {FULL}/feeds/#xml)
@@ -15663,7 +15843,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
 
 ## About
 - [What is free and what we will never do]({FULL}/promise/) · [Job offer safety checklist]({FULL}/safety/)
-- [About]({FULL}/about/) · [Contact]({FULL}/about/#contact) · [Editorial policy]({FULL}/methodology/#editorial-policy) · [Privacy]({FULL}/privacy/) · [Terms]({FULL}/terms/)
+- [About]({FULL}/about/) · [Contact]({FULL}/about/#contact) · [Press]({FULL}/press/) · [Editorial policy]({FULL}/methodology/#editorial-policy) · [Privacy]({FULL}/privacy/) · [Terms]({FULL}/terms/)
 """, sitemap=False)
     for old_, new_ in CO_RENAME.items():          # the old company address: canonical and an immediate refresh to the mended one
         if slugify(old_) != slugify(new_) and not (OUT / "companies" / slugify(old_) / "index.html").exists() and (OUT / "companies" / slugify(new_) / "index.html").exists():

@@ -319,7 +319,7 @@ else:
         if "<" not in u_ and not exists(P + u_): fails["llms.txt"]["names a page that does not exist"] += 1; broken[u_] += 1
 # One set of figures (teardown, 26 Nov 2026: the media kit, /methodology/ and /status/ gave three different accounts of how often jobs are
 # checked). The pages that state it say build.FACTS' line with the same number, and none of them claims "every hour" in its own text
-# (the brand's name, its quoted logo words and the guide's address excepted; the footer is left to its own template).
+# (the brand's name, its quoted logo words and the guide's address excepted; the header and the footer are checked below).
 FACT_RX = re.compile(r"(\d+)% of open jobs were re-checked on the employer’s own list in the last 24 hours")
 HOURLY_RX = re.compile(r"(?<!Jobs )(?<!“jobs )every hour(?!”)(?!/)", re.I)
 fact_pages = ["about/index.html", "methodology/index.html", "media-kit/index.html", "guides/how-we-check-jobs-every-hour/index.html", "safety/index.html", "llms.txt"]
@@ -336,6 +336,25 @@ for rel_ in fact_pages:
     seen_pct |= got_
     if HOURLY_RX.search(body_.replace("how-we-check-jobs-every-hour", "")): fails["one set of figures"][f"{rel_}: says every hour"] += 1
 if len(seen_pct) > 1: fails["one set of figures"][f"different re-checked figures: {sorted(seen_pct)}"] += 1
+# The header and the footer say it the same way (27 Nov 2026: on every page the footer said "re-checked every hour" and the header's
+# Find jobs menu "Checked every hour", while the pages above them said what was measured). Their text on the fact pages and the home
+# page, and the script that draws the header's menus, may not claim "every hour"; the footer gives the same re-checked figure.
+counts["header and footer"] = 0
+for rel_ in fact_pages[:-1] + ["index.html"]:
+    f_ = SITE / rel_
+    if not f_.is_file(): continue
+    counts["header and footer"] += 1
+    t_ = f_.read_text(encoding="utf-8", errors="replace")
+    for where_, part_ in (("header", t_[t_.find("<header"):t_.find("</header>")] if "<header" in t_ else ""), ("footer", t_[t_.rfind("<footer"):] if "<footer" in t_ else "")):
+        txt_ = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", part_)))
+        if HOURLY_RX.search(txt_): fails["header and footer"][f"{rel_}: the {where_} says every hour"] += 1
+        if where_ == "footer" and seen_pct and (m_ := re.search(r"re-checked around the clock: (\d+)% of open jobs", txt_)) and m_.group(1) not in seen_pct:
+            fails["header and footer"][f"{rel_}: the footer's re-checked figure differs from the page's"] += 1
+for js_ in ("site.js",):
+    f_ = SITE / js_
+    if not f_.is_file(): continue
+    counts["header and footer"] += 1
+    if HOURLY_RX.search(f_.read_text(encoding="utf-8", errors="replace")): fails["header and footer"][f"{js_} (the header's menus) says every hour"] += 1
 print(f"checked {len(sample)} pages ({len(others)} non-job pages, {len(sample) - len(others)} job pages sampled" + (", built from records" if STORE else "") + ")")
 for t in sorted(counts):
     bad = fails[t]
