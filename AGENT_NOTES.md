@@ -40,6 +40,13 @@ it from there. After a change of name or palette: `python3 brand.py`, `python3 o
   4 companies at a time, 10 s timeouts, our User-Agent, nothing behind a bot check (403, 429, challenge pages are skipped).
   Files: 96 px and 72 px (`s/`), palette PNGs of about 1.5 KB. Progress in `data/logos_official.jsonl`; `--retry` tries the
   failures again, `--dedupe` drops an icon that two different companies share.
+  27 Nov 2026: when the site we KNOW is the company's (hand-checked `SITES`, `logos.json`, its board's link, or a home page whose
+  title named it) turns scripts away or names only a small icon, `google_icon()` takes the icon Google's favicon service keeps
+  for that same site (same checks; never for an address guessed from the name that we could not read). Google serves website
+  builders' defaults too (Wix, WordPress: their hashes are in `DEFAULT_ICON_MD5`), so the contact-sheet look is still required.
+  `--only=<file>` tries the listed names now (also ones not on the live list yet); a picture once left out by eye is not taken
+  again for that company (its URL is skipped), and after a run only that run's new logos are de-duplicated (the YMCAs' shared
+  mark and WME's two names stay). Record a by-eye drop as a `"dropped by eye: <why>"` line in the progress file.
 
 ## Freshness: exact times and the hourly run
 

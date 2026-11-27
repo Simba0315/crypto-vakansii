@@ -19,6 +19,10 @@ Saved as assets/logos/<slug>.png (96 px) and assets/logos/s/<slug>.png (72 px), 
 Polite: 4 companies at a time, one request at a time for each, 10 s timeouts, a User-Agent naming the site, and a site that answers
 with a bot check (403, 429, 503, a challenge page) is left alone. Progress is kept in data/logos_official.jsonl, so a run can stop
 and go on. Usage: python3 logos_official.py [how many companies, default 3000]
+                  python3 logos_official.py --only=<file of names, one a line>    (those companies now, whatever the log says)
+27 Nov 2026: when the site we know is theirs turns scripts away or names only a small icon, the icon Google's favicon service
+keeps for that same site is taken (google_icon), with the same checks; it is never used for an address guessed from the name
+that we could not read.
 """
 import hashlib, html as H, io, json, os, re, subprocess, sys, threading, time, concurrent.futures as cf
 from pathlib import Path
@@ -707,6 +711,54 @@ SITES = {
     "Kong": "konghq.com",
     "Hawkins": "hawkinsinc.com",
     "Nimble Robotics": "nimble.ai",
+    # 27 Nov 2026: the largest employers without a logo, and the 20 large employers read from their own careers systems that day.
+    # Each address is the employer's own (its home page names it, or its job board's name is the address, or it is the well-known
+    # site of a national brand); google_icon() takes the icon Google keeps for it when the site turns scripts away.
+    "Baylor Scott & White Health": "bswhealth.com", "Children's Health": "childrens.com", "Texas Instruments": "ti.com",
+    "Tenet Healthcare": "tenethealth.com", "Providence": "providence.org", "Mayo Clinic": "mayoclinic.org", "Northwell Health": "northwell.edu",
+    "JPMorgan Chase": "jpmorganchase.com", "Dollar General": "dollargeneral.com", "UT Southwestern Medical Center": "utsouthwestern.edu",
+    "Kaiser Permanente": "kaiserpermanente.org", "Methodist Health System": "methodisthealthsystem.org", "Parkland Health": "parklandhealth.org",
+    "Advocate Health": "advocatehealth.org", "Intermountain Health": "intermountainhealthcare.org", "Cleveland Clinic": "clevelandclinic.org",
+    "Wells Fargo": "wellsfargo.com", "Capital One": "capitalone.com", "Truist": "truist.com", "Comcast": "corporate.comcast.com",
+    "Boxlunch": "boxlunch.com", "NVIDIA": "nvidia.com", "Applied Materials": "appliedmaterials.com", "Northrop Grumman": "northropgrumman.com",
+    "HPE": "hpe.com", "Amgen": "amgen.com", "Amentum": "amentum.com", "Greystar": "greystar.com", "CenterWell": "centerwell.com", "DTLR": "dtlr.com",
+    "Parsons": "parsons.com", "Thriveworks": "thriveworks.com", "Danaher": "danaher.com", "AT&T": "att.com",
+    "Bridgestone Americas": "bridgestoneamericas.com", "United Overseas Bank": "uobgroup.com", "2020 Companies": "2020companies.com",
+    "Ivy Rehab": "ivyrehab.com", "Hitachi": "hitachi.com", "The University of Kansas Health System": "kansashealthsystem.com", "Petco": "petco.com",
+    "Little Caesars": "littlecaesars.com", "Medtronic": "medtronic.com", "Guidehouse": "guidehouse.com", "Boeing": "boeing.com",
+    "Boeing Subsidiaries": "boeing.com", "Gartner": "gartner.com", "GE Vernova": "gevernova.com", "Nordstrom": "nordstrom.com",
+    "Accenture Federal Services": "accenturefederal.com", "Cadence": "cadence.com", "MUFG": "mufgamericas.com", "LSEG": "lseg.com",
+    "Coupang": "coupang.com", "Otis": "otis.com", "Northern Trust": "northerntrust.com", "Ace Hardware": "acehardware.com", "KeyBank": "key.com",
+    "Manulife": "manulife.com", "White Cap": "whitecap.com", "HUB International": "hubinternational.com", "Select Medical": "selectmedical.com",
+    "GE Aerospace": "geaerospace.com", "Langan Engineering & Environmental Services": "langan.com", "Concentra": "concentra.com",
+    "CoxHealth": "coxhealth.com", "nVent": "nvent.com", "Towne Park": "townepark.com", "Kyndryl": "kyndryl.com", "McKesson": "mckesson.com",
+    "Marathon Health": "marathon-health.com", "The Aerospace Corporation": "aerospace.org", "Cigna": "cigna.com", "Lonza": "lonza.com",
+    "Heidelberg Materials": "heidelbergmaterials.com", "Group 1 Automotive": "group1auto.com", "PT Solutions Physical Therapy": "ptsolutions.com",
+    "Desjardins": "desjardins.com", "General Dynamics Mission Systems": "gdmissionsystems.com", "Novolex": "novolex.com",
+    "Hackensack Meridian Health": "hackensackmeridianhealth.org", "Centene": "centene.com", "Wolters Kluwer": "wolterskluwer.com",
+    "Rural King": "ruralking.com", "Allstate": "allstate.com", "Graybar": "graybar.com", "Banner Health": "bannerhealth.com",
+    "DH Pace": "dhpace.com", "AHMC Healthcare": "ahmchealth.com", "Ferrellgas": "ferrellgas.com", "Travelers": "travelers.com",
+    "Brightli": "brightli.com", "FleetPride": "fleetpride.com", "Snowflake": "snowflake.com", "Steampunk": "steampunk.com",
+    "Rocket Companies": "rocketcompanies.com", "DCH Health System": "dchsystem.com", "Dayton Freight": "daytonfreight.com",
+    "Surgery Partners": "surgerypartners.com", "General Mills": "generalmills.com", "Hersha Hospitality Management LP": "hhmlp.com",
+    "H2 Health": "h2health.com", "Natural Grocers": "naturalgrocers.com", "Peraton": "peraton.com", "Agilent Technologies": "agilent.com",
+    "Iron Mountain": "ironmountain.com", "Workday": "workday.com", "Agoda": "agoda.com", "Humana": "humana.com",
+    "Cape Fear Valley Health": "capefearvalley.com", "General Dynamics Ordnance & Tactical Systems": "gd-ots.com", "Suffolk": "suffolk.com",
+    "Cajun Industries": "cajunusa.com", "GBMC HealthCare": "gbmc.org", "Broadridge Financial Solutions": "broadridge.com",
+    "Deckers Brands": "deckers.com", "IFF": "iff.com", "HD Supply": "hdsupply.com", "Holland America": "hollandamerica.com",
+    "The Campbell's Company": "thecampbellscompany.com", "Old National Bank": "oldnational.com", "Loews Hotels": "loewshotels.com",
+    "Dialysis Clinic": "dciinc.org", "Celonis": "celonis.com", "Symbria": "symbria.com", "Samaritan Daytop Village": "samaritanvillage.org",
+    "SentinelOne": "sentinelone.com", "Kraft Heinz": "kraftheinzcompany.com", "Vertex US Distribution": "vrtx.com", "Clarios": "clarios.com",
+    "Berkley": "berkley.com", "Vancouver Coastal Health": "vch.ca", "Northern Arizona Healthcare": "nahealth.com",
+    "JOEY Restaurants": "joeyrestaurants.com", "Lowes Foods": "lowesfoods.com", "Piedmont Healthcare": "piedmont.org", "Lowe's": "lowes.com",
+    "Linesight": "linesight.com", "All My Sons Moving & Storage": "allmysons.com", "New York University": "nyu.edu",
+    "ALTEN Technology USA": "alten.com", "Carbon Health": "carbonhealth.com", "East West Bank": "eastwestbank.com",
+    "Vera Whole Health": "verawholehealth.com", "Amazing Athletes": "amazingathletes.com", "Golden Steps ABA": "goldenstepsaba.com",
+    "Qdoba": "qdoba.com", "Amartha": "amartha.com", "MCI": "mci.world", "Scientific Research": "scires.com", "INFUSE": "infuse.com",
+    "American Senior Benefits": "americanseniorbenefits.com", "Sun Auto Tire and Service": "sunautoservice.com",
+    "Apogee Engineering": "apogeeusa.com", "AdvisaCare": "advisacare.com", "Everstory Partners": "everstorypartners.com", "DCSD": "dcsdk12.org",
+    "HMFP": "hmfphysicians.org", "Jose Andres": "joseandres.com", "National Health Care Associates": "nhca.com",
+    "Baptist Health": "baptisthealthal.com",
 }
 
 ATS_HOSTS = re.compile(r"(greenhouse\.io|greenhouse\.com|lever\.co|ashbyhq\.com|ashbyprd\.com|myworkdayjobs\.com|myworkday\.com|workday\.com|"
@@ -726,7 +778,10 @@ DEFAULT_ICON = re.compile(r"(wp-includes/images/w-logo|themes/genesis/images/fav
 # icons that unrelated sites serve byte for byte (26 Nov 2026: a gears favicon.ico on ccres.org, ccsww.org and compassconnections.org)
 DEFAULT_ICON_MD5 = {"1db747255c64a30f9236e9d929e986ca", "c30c7d42707a47a3f4591831641e50dc",  # gears; the Next.js default favicon.ico;
                     "4d12cc739cd0c7f7d202980d91a09c97",   # Deutsche Telekom's T as dwavequantum.com's touch icon
-                    "e1886270395ed9adf753325af4618d86"}   # a careers platform's purple star (careers.<company> sites)
+                    "e1886270395ed9adf753325af4618d86",   # a careers platform's purple star (careers.<company> sites)
+                    "498feeadd863ed4e1ea0fdb327bebd8e",   # Wix's default favicon as Google's favicon service serves it (27 Nov 2026)
+                    "e8f5f175ac4ba5f256cfc0a59dad15cb",   # WordPress's logo as a site's favicon, as Google serves it
+                    "aee00b7b4421b79afea9d5c9acabd621"}   # a site builder's plain house icon, as Google serves it for unrelated sites
 CHALLENGE = re.compile(r"(cf-chl|challenge-platform|just a moment\.\.\.|attention required|px-captcha|_incapsula_resource|captcha-delivery|"
                        r"pardon our interruption|access denied|request unsuccessful|are you a robot|bot detection|ddos-guard|sgcaptcha)", re.I)
 PARKED = re.compile(r"(domain (?:name )?(?:is )?for sale|namegulf|location\.href=.?/lander|domainmarket\.com|[a-z0-9-]+\.(?:com|net|org|co|io) is for sale|buy this domain|this domain may be for sale|hugedomains|sedoparking|parkingcrew|"
@@ -1074,10 +1129,10 @@ def save_icon(im, slug):
     return paths
 
 
-def site_icon(page_url, text):
+def site_icon(page_url, text, skip=()):
     """(picture, url, why-not list) of the best icon the site publishes."""
     why = []
-    for u in icon_links(text, page_url)[:6]:
+    for u in [u for u in icon_links(text, page_url) if u not in skip][:6]:
         st, final, ctype, data = curl(u, binary=True, limit=2_000_000)
         if st != 200 or len(data) < 200 or "html" in ctype: why.append(f"{st} {u}"); continue
         if DEFAULT_ICON.search(final) or hashlib.md5(data).hexdigest() in DEFAULT_ICON_MD5: why.append(f"default {final}"); continue
@@ -1089,7 +1144,25 @@ def site_icon(page_url, text):
     return None, "", why
 
 
-def board_logo(src, page_text):
+GOOGLE_ICON = "https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://{d}&size=128"
+
+
+def google_icon(domain, skip=()):
+    """(picture, url) of the icon a site publishes, as Google's favicon service keeps it, for a site already known to be the
+    company's own (hand-checked, named by its job board, or whose home page named the company) that turns scripts away or names only
+    a small icon (27 Nov 2026: NVIDIA, AT&T, 3M, Amgen, Wells Fargo, Mayo Clinic had none here). The company's site is not touched;
+    Google answers 404 with its globe when it holds nothing, and the same checks as for the site's own icon apply (48 px at least,
+    square, not blank, not an enlarged 16 or 24 px favicon)."""
+    u = GOOGLE_ICON.format(d=domain)
+    if u in skip: return None, u
+    st, final, ctype, data = curl(u, binary=True, limit=500_000)
+    if st != 200 or len(data) < 200 or "image" not in ctype or hashlib.md5(data).hexdigest() in DEFAULT_ICON_MD5: return None, u
+    try: im = load_image(data)
+    except Exception: return None, u
+    return (None if good_icon(im, 48) else im), u
+
+
+def board_logo(src, page_text, skip=()):
     """The square logo the company uploaded to its job board (only boards whose page we already read)."""
     ats = (src.get("ats") or "").lower()
     urls = []
@@ -1108,7 +1181,7 @@ def board_logo(src, page_text):
         urls = ["https://recruiting.paylocity.com" + u for u in re.findall(r'"LogoUrl":"(/Recruiting/Jobs/GetLogoFileById[^"]+)"', page_text)]
     elif ats == "greenhouse":                                              # the logo on its Greenhouse board
         urls = [H.unescape(u) for u in re.findall(r'(https://[^"\'\s]*greenhouse[^"\'\s]*/logos/[^"\'\s]+)', page_text)]
-    for u in urls[:2]:
+    for u in [u for u in urls if u not in skip][:2]:
         st, final, ctype, data = curl(H.unescape(u), binary=True, limit=3_000_000)
         if st != 200 or len(data) < 300: continue
         try: im = load_image(data)
@@ -1122,6 +1195,7 @@ def work(item):
     name, src = item["name"], item["src"]
     res = {"name": name, "n": item["n"], "ats": src.get("ats"), "token": src.get("token")}
     tried = []
+    skip = set(item.get("skip") or ())             # pictures a look already refused for this company
     sites = []                                      # (domain, how) in order of trust
     if item.get("site"): sites.append((item["site"], "known"))
     if name in SITES: sites.append((SITES[name], "hand"))
@@ -1131,10 +1205,13 @@ def work(item):
         sites.append((bsite, "board-link"))
     if not sites:
         for d in name_candidates(name, src): sites.append((d, "name"))
+    trusted = []                                    # (domain, how) known to be the company's own: Google's copy of their icon may serve
     for d, how in sites:
         st, final, text = home(d)
         if blocked(st, text) or not text:
-            tried.append(f"{d}: {'blocked' if text or st in (403, 429, 503) else 'no page'} {st}"); continue
+            tried.append(f"{d}: {'blocked' if text or st in (403, 429, 503) else 'no page'} {st}")
+            if how != "name": trusted.append((d, how))
+            continue
         if PARKED.search(text[:20000]): tried.append(f"{d}: parked"); continue
         if how == "name":
             names, b = head_names(text), base_name(name)
@@ -1150,12 +1227,20 @@ def work(item):
             if not ev and not (title_ok and own and len(b) >= 6 and not generic(name) and label_of(fhost) in (label_of(d), b, ten)):
                 tried.append(f"{d}: not sure it is theirs (title {'yes' if title_ok else 'no'}, board link no)"); continue
             how = "name+board-link" if ev else "name+title"
-        im, iu, why = site_icon(final, text)
+        im, iu, why = site_icon(final, text, skip)
         if im is not None:
             save_icon(im, slugify(name))
             res.update(ok=True, site=d, how=how, icon=iu)
             return res
         tried.append(f"{d}: no usable icon ({'; '.join(why[:4])})")
+        trusted.append((d, how))
+    for d, how in dict.fromkeys(trusted):
+        im, iu = google_icon(d, skip)
+        if im is not None:
+            save_icon(im, slugify(name))
+            res.update(ok=True, site=d, how=f"{how}+google-copy", icon=iu)
+            return res
+        tried.append(f"{d}: Google's copy no usable icon either")
     ats = (src.get("ats") or "").lower()
     if not btext and ats in ("workable", "paylocity") and src.get("token"):
         btext = declared_site(ats, src["token"])[1]
@@ -1163,7 +1248,7 @@ def work(item):
         bst, _, _, btext = curl(BOARD_PAGE[ats].format(t=src["token"]))    # its board's own logo, even when its site was known
         btext = btext if bst == 200 else ""
     if btext or (src.get("ats") or "").lower() == "workday":
-        im, iu = board_logo(src, btext)
+        im, iu = board_logo(src, btext, skip)
         if im is not None:
             save_icon(im, slugify(name))
             res.update(ok=True, site=f"board:{src.get('ats')}/{src.get('token')}", how="board-logo", icon=iu)
@@ -1194,27 +1279,39 @@ def main():
     known = json.loads(MAP.read_text()) if MAP.exists() else {}
     since = next((int(a.split("=")[1]) for a in sys.argv if a.startswith("--retry-before=")), 10 ** 9)   # retry only records older than this line
     done, last, line_of = set(), {}, {}
+    icons, refused = {}, {}          # a picture once found and then left out after a look is not taken again
     if LOG.exists():
         for i, line in enumerate(LOG.read_text().splitlines(), 1):
             try: r = json.loads(line)
             except ValueError: continue
             last[r["name"]], line_of[r["name"]] = r, i            # the latest word on each company counts
+            if r.get("icon"): icons.setdefault(r["name"], []).append(r["icon"])
+            if any("dropped" in t for t in r.get("tried", [])): refused[r["name"]] = list(icons.get(r["name"], []))
         for r in last.values():
             old = line_of[r["name"]] < since
             again = (r["name"] in SITES and not r.get("site_tried")) or (retry and old and (any("no usable icon" in t or ": blocked 200" in t for t in r.get("tried", [])) or r.get("ats") == "workday"))
             if r.get("ok") or not again: done.add(r["name"])      # a failure is tried again once a hand-checked site is added
     have = {f.stem for f in OUT.glob("*.png")}
     allc = companies()
-    order = sorted(allc[:limit], key=lambda c: (c[0] not in first, -c[1]))
-    todo = [{"name": n, "n": c, "src": srcs.get(n, {}), "site": (known.get(n) or "") if not (known.get(n) or "").startswith("board:") else ""}
-            for n, c in order if slugify(n) not in have and n not in done and n in srcs]
+    site_of = lambda n: (known.get(n) or "") if not (known.get(n) or "").startswith("board:") else ""
+    only = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--only=")), "")
+    if only:      # --only=<file>: these names (one a line), whatever the log says, also ones not on the live list yet (27 Nov 2026)
+        jobs = {}
+        for n, c in allc: jobs.setdefault(n, c)
+        names = [x.strip() for x in Path(only).read_text().splitlines() if x.strip() and not x.startswith("#")]
+        todo = [{"name": n, "n": jobs.get(n, 0), "src": srcs.get(n, {}), "site": site_of(n), "skip": refused.get(n, [])}
+                for n in dict.fromkeys(names) if slugify(n) not in have and (n in srcs or n in SITES)]
+    else:
+        order = sorted(allc[:limit], key=lambda c: (c[0] not in first, -c[1]))
+        todo = [{"name": n, "n": c, "src": srcs.get(n, {}), "site": site_of(n), "skip": refused.get(n, [])}
+                for n, c in order if slugify(n) not in have and n not in done and n in srcs]
     print(f"{len(allc):,} companies; {len(todo):,} of the first {limit:,} to try", flush=True)
-    found = 0
-    with cf.ThreadPoolExecutor(4) as ex, open(LOG, "a") as log:
+    found, found_names = 0, []
+    with cf.ThreadPoolExecutor(int(os.environ.get("HRN_LOGO_WORKERS", 4))) as ex, open(LOG, "a") as log:
         for i, r in enumerate(ex.map(work, todo)):
             log.write(json.dumps(r, ensure_ascii=False) + "\n"); log.flush()
             if r.get("ok"):
-                found += 1
+                found += 1; found_names.append(r["name"])
                 with _lock:
                     known[r["name"]] = r["site"]
             if i % 25 == 24:
@@ -1222,17 +1319,20 @@ def main():
                 print(f"  {i + 1:,} of {len(todo):,}: {found:,} logos", flush=True)
     MAP.write_text(json.dumps(known, ensure_ascii=False, indent=1, sort_keys=True))
     print(f"done: {found:,} new logos of {len(todo):,} tried", flush=True)
-    dedupe()
+    dedupe(found_names)
 
 
-def dedupe():
+def dedupe(found=None):
     """The same picture for two different companies is a website builder's, a host's or a parent company's icon, not each one's own
-    logo: a logo found here that equals another company's file is dropped (two boards of one company, "acme" and "acme-uk", may share)."""
+    logo: a logo found here that equals another company's file is dropped (two boards of one company, "acme" and "acme-uk", may share).
+    After a run only that run's new logos are judged (`found`): logos kept after an earlier look stay (27 Nov 2026: the YMCAs' shared
+    mark and WME's two names were dropped again by a later run)."""
     new = set()
-    for line in LOG.read_text().splitlines():
+    for line in LOG.read_text().splitlines() if found is None else ():
         try: r = json.loads(line)
         except ValueError: continue
         if r.get("ok"): new.add(slugify(r["name"]))
+    if found is not None: new = {slugify(n) for n in found}
     same = {}
     for f in OUT.glob("*.png"): same.setdefault(hashlib.md5((OUT / "s" / f.name).read_bytes() if (OUT / "s" / f.name).exists() else f.read_bytes()).hexdigest(), []).append(f)
     known = json.loads(MAP.read_text())
