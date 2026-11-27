@@ -5683,23 +5683,6 @@ main.lp .sec-head.lst h2{margin:0;font-size:clamp(19px,1.9vw,23px);font-weight:7
 .jdec .alertf.alert1+.paybar{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
 .jdec #apply+.note.goes{margin-bottom:4px}
 
-/* ---- the template's tricks toned down, nothing removed (design critic, 26 Nov 2026: one recipe on every page read as made by AI): no
-   arc and dot in the corner of the first panels; the label over a heading is plain small text, not a green pill; headings in one weight
-   (the home page's H1 keeps its bold words); lines, links and focus rings in ink; green where it means checked, open or new ---- */
-.khero::after,.khero::before,.hero.v2>.wrap:first-child::after,.hero.v2>.wrap:first-child::before,main.nfp .nf::after,main.nfp .nf::before{content:none;display:none}
-.sec-label{padding:0;border:0;border-radius:0;background:none;font-size:13px;font-weight:600;letter-spacing:.01em;color:var(--muted)}
-.kpanel.ink .sec-label{background:none;color:var(--muted)}
-.jhero .sec-label{color:var(--green)}
-.sec-head h2.tw,main.kp .sec-head h2.tw,main.lp .sec-head h2.tw,.sec-head.lst h2.tw,.kcta h2.tw,.alertf h2.tw,.guide h2.tw2,main.skl .sec-head h2.tw{font-weight:700}
-h2.tw b,h2.tw2 b,.kcta h2.tw b,.alertf h2.tw b,.sec-head h2.tw b{font-weight:inherit}
-.khero h1,.khero h1:has(.hl){font-weight:700}
-.khero h1 .hl,main.sp .khero h1 .hl,.khero h1 .lt,h1 .lt{font-weight:inherit}
-:root{--ac:#121110;--ac-ink:#ffffff}
-@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--ac:#f4f1ec;--ac-ink:#121110}}
-:root[data-theme=dark]{--ac:#f4f1ec;--ac-ink:#121110}
-:root[data-theme=light]{--ac:#121110;--ac-ink:#ffffff}
-.pill.perk,.jhero .pill.perk{border:1px solid var(--line);background:var(--card);color:var(--muted)}
-.job .pill.ok{color:var(--muted);font-weight:500}
 
 /* ---- one filled button a screen: the jobs menu's Search (and Search jobs on the home page, Apply on a job page). Post a job is a quiet
    outlined button, in the phone menu too; the menu cards' buttons, the Tech jobs chip and "See all jobs" are quiet. Nothing removed ---- */
