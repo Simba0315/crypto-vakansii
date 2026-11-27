@@ -2563,6 +2563,30 @@
         F.set('resume', text); F.save(); F.draw();
       });
     }
+    // the resumes saved in My jobs (hrn_resumes, site.js): the primary one fills an empty resume field, so "Tailor your resume for this job" on
+    // a job page is one click; "Save to My jobs" keeps the resume pasted here (five at most, kept in this browser, nothing uploaded)
+    var pri = H.cvPrimary ? H.cvPrimary() : null, acts = root.querySelector('.tl-actions');
+    if (pri && !clean(F.read().resume)) {
+      F.set('resume', pri.text); F.save(); F.draw();
+      var pn = document.createElement('p'); pn.className = 'note tl-loaded';
+      pn.innerHTML = 'Your saved resume <b>' + esc(pri.name || 'Resume') + '</b> is filled in. <a href="' + H.base + '/my-jobs/#resumes">Your resumes</a>';
+      var form0 = root.querySelector('.tl-form'); if (form0) form0.parentNode.insertBefore(pn, form0);
+    }
+    if (acts && H.cvSave && H.cvSkillsOf) {
+      var keep = document.createElement('button'), said = document.createElement('span');
+      keep.className = 'btn ghost'; keep.type = 'button'; keep.textContent = 'Save to My jobs';
+      said.className = 'note'; said.setAttribute('role', 'status');
+      acts.appendChild(keep); acts.appendChild(said);
+      keep.addEventListener('click', function () {
+        var v = F.read(), text = String(v.resume || '').trim();
+        if (text.split(/\s+/).length < 30) { said.textContent = 'Paste your whole resume first (at least 30 words).'; return; }
+        said.textContent = 'Saving…';
+        H.cvSkillsOf(text).catch(function () { return []; }).then(function (skills) {
+          var l = H.cvSave({ name: v.title ? 'Resume for ' + String(v.title).slice(0, 48) : 'Resume ' + (H.cvList().length + 1), title: v.title || '', text: text, skills: skills });
+          said.innerHTML = l ? 'Saved in <a href="' + H.base + '/my-jobs/#resumes">My jobs</a>, with ' + skills.length + (skills.length === 1 ? ' skill.' : ' skills.') : 'Five resumes are kept already: remove one in <a href="' + H.base + '/my-jobs/#resumes">My jobs</a> first.';
+        });
+      });
+    }
     var go = $('tl-run');
     if (go) go.addEventListener('click', function () { F.draw(); if (out.scrollIntoView) out.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
     // ?job=<slug>: a job page sent the visitor here; its posting is read from this site's own page and put into the form
@@ -2581,7 +2605,7 @@
         note.className = 'note tl-loaded';
         note.innerHTML = 'The posting <b>' + esc(title) + '</b> is filled in from its page on this site.' +
           (d.classList.contains('desc') ? '' : ' Only its opening lines are here: for a full check, paste the whole description' + (apply ? ' from <a href="' + esc(apply.getAttribute('href')) + '" target="_blank" rel="nofollow noopener">the employer’s page</a>' : '') + '.') +
-          (imp && !imp.hidden ? ' Now press “Use my resume from the builder” or paste your resume.' : ' Now paste your resume.');
+          (clean(F.read().resume) ? ' Your resume is in the form, so the result is below.' : imp && !imp.hidden ? ' Now press “Use my resume from the builder” or paste your resume.' : ' Now paste your resume.');
         var form_ = document.querySelector('.tl-form');
         if (form_) form_.parentNode.insertBefore(note, form_);
       }).catch(function () {});

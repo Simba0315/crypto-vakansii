@@ -1413,5 +1413,74 @@ sv = T.severance({ salary: '52000', years: '3' });
 near('severance: default two weeks a year', sv.weeks, 6);
 eq('severance: no salary', T.severance({ years: '3' }), null); eq('severance: negative years', T.severance({ salary: '50000', years: '-1' }), null); eq('severance: absurd years', T.severance({ salary: '50000', years: '80' }), null);
 
+/* the visitor's fit on every job (assets/site.js: fitAnswers, fitOf, fitNew, fitBadges): the rules of For you, the job page and the cards.
+   site.js is one browser script, so the functions are cut out of it by name, as fresh_test.js does. */
+{
+  const siteJs = path.join(path.dirname(path.resolve(process.argv[2])), 'site.js');
+  const src = fs.readFileSync(siteJs, 'utf8');
+  const cut = (name) => {
+    const at = src.indexOf('\n  function ' + name + '(');
+    if (at < 0) throw new Error('site.js has no function ' + name);
+    const end = src.indexOf('\n  }\n', at);
+    return src.slice(at + 1, end + 4);
+  };
+  const F = new Function(['fitPlace', 'fitCat', 'fitAnswers', 'fitOf', 'fitNew', 'fitBadges'].map(cut).join('\n') +
+    '\nreturn { fitPlace: fitPlace, fitAnswers: fitAnswers, fitOf: fitOf, fitNew: fitNew, fitBadges: fitBadges };')();
+  // a row as site.js keeps it: [0 slug, 1 title, 2 company, 3 place, 4 remote, 5 field, 6 level, 7 skills, 8 pay text, ... 13 top of the pay in USD,
+  // 14 place slugs, ... 16 posted yyyymmdd, ... 20 remote anywhere, ... 25 hybrid, ... 28 first seen, minutes since 1970]
+  const row = (o) => { const j = []; j[0] = 'a-job'; j[1] = o.title || 'Data Analyst'; j[2] = o.co || 'Acme'; j[3] = ''; j[4] = o.remote ? 1 : 0; j[5] = o.cat || 'data-research';
+    j[6] = o.level || ''; j[7] = o.tags || []; j[8] = o.pay || ''; j[13] = o.hi || 0; j[14] = o.places || []; j[16] = o.posted || 0; j[20] = o.anywhere ? 1 : 0; j[25] = o.hybrid ? 1 : 0;
+    j[28] = o.seen || 0; return j; };
+  const states = (w) => w.bits.map((b) => b[2] + ':' + b[0]).join(' ');
+  const prof = { cats: ['data-research'], exp: '1', where: 'remote', whereSet: true, place: 'US', pl: ['united-states', '', 'United States'], pay: 100000, paySet: true, skills: ['Python', 'SQL'] };
+  let A = F.fitAnswers(prof);
+  eq('fit: five answers counted', A.n, 5);
+  eq('fit: no profile, no answers', F.fitAnswers({}).n, 0);
+  eq('fit: an old profile (one category, a level name, remote only, sal) is read as For you reads it', F.fitAnswers({ cat: 'engineering', lvl: 'Senior', remote: true, sal: 90000 }).n, 4);
+  eq('fit: a country guessed from the time zone does not count before question 3', F.fitAnswers({ place: 'US', placeGuess: true, pl: ['united-states', '', 'United States'] }).n, 0);
+  eq('fit: resume skills are added once', F.fitAnswers({ skills: ['Python'] }, { extra: ['Python', 'Excel'] }).skills, ['Python', 'Excel']);
+  let w = F.fitOf(row({ remote: 1, anywhere: 1, hi: 140000, pay: '$110,000 - $140,000', tags: ['Python', 'Tableau'] }), A);
+  eq('fit: every answer met', [w.ok, w.n, w.no, states(w)], [5, 5, 0, 'work:1 level:1 place:1 pay:1 skills:1']);
+  eq('fit: the whole range is above the pay asked', w.bits[3][1], 'Whole range is above $100K');
+  eq('fit: score as For you sorts', w.s, 51);
+  w = F.fitOf(row({ remote: 1, places: ['united-states'], hi: 120000, pay: '$90K - $120K', level: 'Senior' }), A);
+  eq('fit: a step above, the top of the range reaches, no skills named', states(w), 'work:1 level:0 place:1 pay:1 skills:0');
+  eq('fit: reasons', w.bits.map((b) => b[1]), ['Data research', 'Senior level, a step above yours', 'Remote, names United States', 'Top of the range, $120K, reaches $100K', 'Names no skills']);
+  eq('fit: the field name For you gives is used', F.fitOf(row({}), F.fitAnswers(prof, { names: { 'data-research': 'Data & research' } })).bits[0][1], 'Data & research');
+  w = F.fitOf(row({ cat: 'sales', level: 'Lead', hi: 80000, pay: '$60K - $80K' }), A);
+  eq('fit: contradictions are crosses (For you leaves such a job out)', [w.no, states(w)], [4, 'work:-1 level:-1 place:-1 pay:-1 skills:0']);
+  eq('fit: cross reasons', w.bits.slice(0, 4).map((b) => b[1]), ['Another kind of work than you picked', 'Lead level, well above yours', 'On site, you want remote', 'Pay tops out at $80K, under your $100K']);
+  w = F.fitOf(row({ remote: 1, places: ['germany', 'france'] }), A);
+  eq('fit: remote, but not open to your country', w.bits[2], [-1, 'Remote, but not open to United States', 'place']);
+  w = F.fitOf(row({ remote: 1 }), A);
+  eq('fit: remote without countries is a question mark', w.bits[2], [0, 'Remote, does not say from which countries', 'place']);
+  eq('fit: no pay stated is a question mark', w.bits[3], [0, 'Does not state pay', 'pay']);
+  eq('fit: "hide jobs without pay" makes it a cross', F.fitOf(row({ remote: 1 }), F.fitAnswers(Object.assign({}, prof, { nopay: true }))).bits[3][0], -1);
+  eq('fit: an hourly rate is a question mark', F.fitOf(row({ remote: 1, pay: '$30/hour' }), A).bits[3], [0, 'Pay is given per hour or in another currency', 'pay']);
+  eq('fit: starting out fits an internship', F.fitOf(row({ level: 'Intern' }), F.fitAnswers({ exp: '0' })).bits[0], [1, 'Intern level', 'level']);
+  eq('fit: skills as the only answer, none of them named: a cross', F.fitOf(row({ tags: ['Java'] }), F.fitAnswers({ skills: ['Python'] })).bits[0][0], -1);
+  eq('fit: a picked job title matches by its pattern', F.fitOf(row({ title: 'Registered Nurse - ICU', cat: 'healthcare' }), F.fitAnswers({ roles: ['Nurse'], rolePat: { Nurse: '\\bnurs' } })).bits[0], [1, 'Nurse', 'work']);
+  eq('fit: hybrid wanted, on site job', F.fitOf(row({}), F.fitAnswers({ where: 'hybrid' })).bits[0], [-1, 'On site, you want hybrid', 'place']);
+  eq('fit: skipping an answer (For you: "change one answer")', F.fitAnswers(prof, { skip: 'pay' }).n, 4);
+  // New today: first seen by us in the last 24 hours, and the employer dates it that day or the day before
+  const now = Date.UTC(2026, 10, 27, 15, 0), min = (t) => Math.floor(t / 60000);
+  eq('new today: seen 3 h ago, posted today', F.fitNew(row({ posted: 20261127, seen: min(now - 3 * 36e5) }), now), true);
+  eq('new today: seen 3 h ago, posted yesterday', F.fitNew(row({ posted: 20261126, seen: min(now - 3 * 36e5) }), now), true);
+  eq('new today: seen 3 h ago but posted in August', F.fitNew(row({ posted: 20260821, seen: min(now - 3 * 36e5) }), now), false);
+  eq('new today: seen 30 h ago', F.fitNew(row({ posted: 20261126, seen: min(now - 30 * 36e5) }), now), false);
+  eq('new today: no time we first saw it', F.fitNew(row({ posted: 20261127 }), now), false);
+  // the marks of a card: Fits you, New today, H-1B sponsor, at most two, in that order
+  const fresh = row({ co: 'Big Co', posted: 20261127, seen: min(now - 2 * 36e5), remote: 1, anywhere: 1, hi: 150000, pay: '$120K - $150K', tags: ['SQL'] }), H1B = { 'Big Co': [312, 2026] };
+  let b = F.fitBadges(fresh, A, H1B, now, 2);
+  eq('badges: fit first, then new today, two at most', b.map((x) => x[1]), ['Fits you 5/5', 'New today · apply early']);
+  eq('badges: a full fit has its own look', b[0][0], 'fitb all');
+  eq('badges: the fit badge explains itself', b[0][2], '✓ Data research · ✓ Mid-level title · ✓ Remote, open to any country · ✓ Whole range is above $100K · ✓ Your skill: SQL');
+  eq('badges: the job page shows all three', F.fitBadges(fresh, A, H1B, now, 3).map((x) => x[1]), ['Fits you 5/5', 'New today · apply early', 'H-1B sponsor']);
+  eq('badges: the H-1B mark says how many filings, which year, whose data', F.fitBadges(fresh, A, H1B, now, 3)[2][2], '312 certified H-1B filings, fiscal year 2026, US Department of Labor');
+  eq('badges: one answer only gives no fit mark', F.fitBadges(fresh, F.fitAnswers({ where: 'remote' }), H1B, now, 2).map((x) => x[1]), ['New today · apply early', 'H-1B sponsor']);
+  eq('badges: a contradiction gives the quiet look', F.fitBadges(row({ cat: 'sales' }), A, {}, now, 2)[0].slice(0, 2), ['fitb no', 'Fits you 1/5']);
+  eq('badges: nothing to say', F.fitBadges(row({ co: 'Small' }), null, H1B, now, 2), []);
+}
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

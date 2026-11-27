@@ -9192,6 +9192,20 @@ def main():
     page("my-jobs/", f"My Jobs: Saved Jobs, Applications and Notes | {SITE}", "My jobs: the jobs you saved, where each application stands, your notes and saved searches, kept in this browser with no account. Export to CSV any time.",
          crumbs(("My jobs", "")) + '<h1>My jobs: your application tracker</h1><p class="lead">Saved jobs, applications, notes and searches in one place, so you know what you applied to and who answered. It is all kept in this browser; nothing is uploaded.</p>'
          f'<p class="note">Want more to save? <a href="{P}/swipe/">Swipe through the newest jobs</a> one at a time. New here? <a href="{P}/job-application-tracker/">How the tracker works, with an example</a>.</p>'
+         # 27 Nov 2026 (the owner's study of Jobright's account): a short checklist that ticks itself (site.js reads this browser's data and
+         # hides it once all four are done; no prizes), then the match profile and up to five saved resumes, the primary one feeding the
+         # "Fits you" marks on every job. Everything stays in this browser; the backup, restore and erase below include it.
+         '<section class="sec mj-setup" id="mj-setup"><div class="sec-head"><h2>Get set up: four steps to the jobs that fit you</h2><p class="note" id="mj-setup-n"></p></div><ol class="setup" id="mj-setup-list">'
+         + "".join(f'<li data-step="{k_}"><a href="{P}/{u_}"><i aria-hidden="true"></i><span><b>{t_}</b><span>{d_}</span></span></a></li>' for k_, u_, t_, d_ in (
+             ("answers", "for-you/", "Answer the five questions", "Every job then shows how well it fits you"),
+             ("resume", "my-jobs/#resumes", "Add a resume", "Its skills count in every match"),
+             ("alert", "jobs/#alert-search-h", "Turn on an email alert", "New jobs for a search, daily or weekly"),
+             ("save", "jobs/", "Save a job", "It waits here, with where you stand")))
+         + '</ol></section>'
+         '<div class="mj-two mj-me"><section class="sec mj-prof" id="profile"><div class="sec-head"><h2>Your job match profile</h2></div><div id="mj-prof">'
+         f'<p class="note">Answer five questions on <a href="{P}/for-you/">For you</a> (the work, your level, where, the pay you need, your skills) and every job here shows how well it fits you.</p></div></section>'
+         '<section class="sec mj-cvs" id="resumes"><div class="sec-head"><h2>Your saved resumes</h2></div><div id="mj-cvs">'
+         f'<p class="note">Keep up to five resumes in this browser, each for a kind of job. The skills of the primary one count in every match. Paste one in the <a href="{P}/tools/resume-match/">resume match checker</a> to start.</p></div></section></div>'
          '<div id="mj-root"><div class="rbar"><div class="tabs" id="mj-tabs"></div><button class="btn ghost sm" id="mj-view" type="button" aria-pressed="false">Board view</button><button class="btn ghost sm" id="mj-export" type="button">Export CSV</button></div>'
          '<div class="mj-board" id="mj-board" hidden></div>'
          '<p class="note" id="mj-nudge" hidden></p>'

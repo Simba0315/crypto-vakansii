@@ -288,7 +288,7 @@
     };
     plain(); document.addEventListener('DOMContentLoaded', function () { plain(); });
   }
-  var mySkills = (get('hrn_profile', {}).skills || []).filter(function (s) { return typeof s === 'string'; });
+  var mySkills = (get('hrn_profile', {}).skills || []).concat((cvPrimary() || {}).skills || []).filter(function (s, i, a) { return typeof s === 'string' && a.indexOf(s) === i; });
   /* The skills a visitor has: the ones picked on "For you" and, when a resume was made in the builder here, every skill its text
      names (resumai shows a job's skills as "on your resume" and "to grow"). Read once per page; nothing leaves the browser.
      A name of one or two letters (Go, R, C) counts only when it is an item of the resume's skills line: "go" is also a word. */
@@ -437,7 +437,151 @@
       return !skills.length || j[7].some(function (t) { return skills.indexOf(t) >= 0; });
     };
   }
-  window.HRN = { fitTest: fitTest, readPosting: readPosting, sure: sure, askText: askText, mute: mute, saveMute: function () { set('hrn_mute', mute); }, parse: parse, match: match, load: load, loadHead: loadHead, fromApi: fromApi, rowsOf: rowsOf, listOf: listOf, fitQuery: fitQuery, heavyOk: heavyOk, collapse: collapse, card: card, decorate: decorate, get: get, set: set, esc: esc, today: today, base: P };
+  /* ---------- The visitor's fit on every job (27 Nov 2026, from the owner's study of Jobright: a match on every card and job page, not only
+     on For you). One profile, kept in this browser and never sent anywhere:
+       hrn_profile  the For you answers: cats (kinds of work; catN their names), roles (job titles; rolePat their patterns), exp ('0' starting
+                    out, '1' a few years, '2' many years, '3' leads people), where ('remote', 'hybrid', 'office' or ''), place (a country code;
+                    pl = [its place slug, its region, its name]; placeGuess when it came from the time zone), pay (US dollars a year), nopay
+                    (hide jobs without pay), skills (picked by hand, or found in a resume pasted on For you)
+       hrn_resumes  up to five saved resumes, [{id, name, title (the job it is for), text, skills, primary, at}]: the skills of the primary
+                    one count as the visitor's skills too (My jobs, the resume match checker, For you)
+     fitAnswers() turns them into the answers the rules read; fitOf() is the rules, the same for For you, the job page, every card and Swipe:
+     each answer gets a tick (1), a question mark (0, the posting does not say) or a cross (-1, it contradicts the answer), with the reason. */
+  function fitCat(c) {             // a kind of work's name from its slug, where the page does not have it: "data-research" -> "Data research"
+    c = String(c || '').replace(/-/g, ' ');
+    return c.charAt(0).toUpperCase() + c.slice(1);
+  }
+  function fitPlace(p) {           // the country answer as {s: place slug, r: region, n: name}; a country guessed from the time zone counts once question 3 is answered
+    if (!p || !p.place || (p.placeGuess && !p.whereSet) || !p.pl) return null;
+    return { s: p.pl[0] || '', r: p.pl[1] || '', n: p.pl[2] || '' };
+  }
+  function fitAnswers(p, o) {      // o: skip (leave one question out), place (For you: from its menu), rx and names (For you: from the page), extra (resume skills)
+    p = p || {}; o = o || {};
+    var skip = o.skip || '', pl = o.place === undefined ? fitPlace(p) : o.place, cats = p.cats || (p.cat ? [p.cat] : []), roles = p.roles || [];
+    var exp = p.exp != null ? p.exp : { Intern: '0', Junior: '0', Senior: '2', Lead: '3' }[p.lvl] || '';      // older profiles: a level name, "remote only", sal
+    var where = p.where != null ? p.where : p.remote ? 'remote' : '', pay = p.pay != null ? Number(p.pay) || 0 : p.sal > 1 ? Number(p.sal) : 0;
+    var skills = [], has = {}, rx = o.rx;
+    (p.skills || []).concat(o.extra || []).forEach(function (s) { if (typeof s === 'string' && !has[s]) { has[s] = 1; skills.push(s); } });
+    if (!rx) {
+      rx = {};
+      roles.forEach(function (r) { try { rx[r] = new RegExp((p.rolePat || {})[r] || '\\b' + String(r).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i'); } catch (e) {} });
+    }
+    var A = { cats: skip === 'work' ? [] : cats, roles: skip === 'work' ? [] : roles, rx: rx, names: o.names || p.catN || {},
+      exp: skip === 'exp' || exp === '' ? '' : Number(exp), where: skip === 'where' ? '' : where || '',
+      slug: skip === 'where' || skip === 'country' || !pl ? '' : pl.s || '', reg: pl ? pl.r || '' : '', cname: pl ? pl.n || '' : '',
+      pay: skip === 'pay' ? 0 : pay, nopay: skip === 'pay' ? false : !!p.nopay, skills: skip === 'skills' ? [] : skills, set: has,
+      lv: { Intern: -1, Junior: 0, '': 1, Senior: 2, Lead: 3 }, regs: { europe: 1, 'asia-pacific': 1, 'latin-america': 1, africa: 1 } };
+    A.n = (A.cats.length || A.roles.length ? 1 : 0) + (A.exp !== '' ? 1 : 0) + (A.where || A.slug ? 1 : 0) + (A.pay || A.nopay ? 1 : 0) + (A.skills.length ? 1 : 0);
+    return A;
+  }
+  function fitOf(j, A) {           // one job against the answers: {ok, half, no, n, s (For you sorts by it), bits: [[1|0|-1, reason, question]], hit: skills you have}
+    var ok = 0, half = 0, no = 0, bits = [], hit = [], edge = 0, i;
+    var put = function (v, t, q) { if (v > 0) ok++; else if (v < 0) no++; else half++; bits.push([v, t, q]); };
+    var kf = function (v) { return '$' + (v >= 1000 ? Math.round(v / 1000) + 'K' : v); };
+    if (A.cats.length || A.roles.length) {
+      var byRole = '';
+      for (i = 0; i < A.roles.length && !byRole; i++) if (A.rx[A.roles[i]] && A.rx[A.roles[i]].test(j[1])) byRole = A.roles[i];
+      if (byRole || A.cats.indexOf(j[5]) >= 0) put(1, byRole || A.names[j[5]] || fitCat(j[5]), 'work');
+      else put(-1, A.cats.length ? 'Another kind of work than you picked' : 'Not one of the job titles you picked', 'work');
+    }
+    if (A.exp !== '') {
+      var lv = A.lv[j[6]] == null ? 1 : A.lv[j[6]], d = A.exp === 0 && lv <= 0 ? 0 : Math.abs(A.exp - lv), nm = j[6] ? j[6] + ' level' : 'Mid-level title';
+      if (!d) put(1, nm, 'level');
+      else if (d === 1) put(0, j[6] ? nm + ', a step ' + (lv > A.exp ? 'above' : 'below') + ' yours' : 'Title does not name a level', 'level');
+      else put(-1, nm + ', ' + (lv > A.exp ? 'well above' : 'well below') + ' yours', 'level');
+    }
+    if (A.where || A.slug) {
+      var pl = j[14] || [], inC = !!A.slug && pl.indexOf(A.slug) >= 0, res;
+      var fromHome = function () {
+        if (!j[4]) return null;
+        if (!A.slug) return [1, 'Remote'];
+        if (j[20]) return [1, 'Remote, open to any country'];
+        if (inC) return [1, 'Remote, names ' + A.cname];
+        if (A.reg && pl.indexOf(A.reg) >= 0 && pl.every(function (x) { return A.regs[x]; })) return [1, 'Remote across your region'];
+        return pl.length ? null : [0, 'Remote, does not say from which countries'];
+      };
+      var onSite = function () { return j[4] ? null : !A.slug ? [1, 'On site or hybrid'] : inC ? [1, 'In ' + A.cname] : null; };
+      var hybrid = function () { return !j[25] ? null : !A.slug ? [1, 'Hybrid'] : inC ? [1, 'Hybrid, in ' + A.cname] : null; };
+      res = A.where === 'remote' ? fromHome() : A.where === 'hybrid' ? hybrid() : A.where === 'office' ? onSite() : onSite() || fromHome();
+      if (!res) res = [-1, A.where === 'remote' ? (j[4] ? 'Remote, but not open to ' + A.cname : 'On site, you want remote')
+        : A.where === 'hybrid' ? (j[25] ? 'Hybrid, but not in ' + A.cname : (j[4] ? 'Remote' : 'On site') + ', you want hybrid')
+        : A.where === 'office' ? (j[4] ? 'Remote, you want an office' : 'Not in ' + A.cname)
+        : j[4] ? 'Remote, but not open to ' + A.cname : 'Not in ' + A.cname];
+      put(res[0], res[1], 'place');
+    }
+    if (A.pay || A.nopay) {
+      if (j[13]) {
+        if (A.pay && j[13] < A.pay) put(-1, 'Pay tops out at ' + kf(j[13]) + ', under your ' + kf(A.pay), 'pay');
+        else {
+          // the lower end of the yearly US-dollar range, read from the pay line; 0 when it cannot be read
+          var m = /(\d{1,3}(?:[ , ]\d{3})+|\d[\d.]*)\s?(k)?/i.exec(j[8] || ''), lo = m ? parseFloat(m[1].replace(/[ , ]/g, '')) * (m[2] ? 1000 : 1) : 0;
+          if (!(lo >= 10000 && lo <= j[13])) lo = 0;
+          if (!A.pay) put(1, 'States pay', 'pay');
+          else if (lo >= A.pay) put(1, 'Whole range is above ' + kf(A.pay), 'pay');
+          else { edge = 1; put(1, 'Top of the range, ' + kf(j[13]) + ', reaches ' + kf(A.pay), 'pay'); }
+        }
+      } else if (!j[8]) put(A.nopay ? -1 : 0, 'Does not state pay', 'pay');
+      else put(0, 'Pay is given per hour or in another currency', 'pay');
+    }
+    if (A.skills.length) {
+      var tags = j[7] || [];
+      for (i = 0; i < tags.length; i++) if (A.set[tags[i]]) hit.push(tags[i]);
+      if (hit.length) put(1, (hit.length === 1 ? 'Your skill: ' : hit.length + ' of your skills: ') + hit.slice(0, 4).join(', ') + (hit.length > 4 ? ' and more' : ''), 'skills');
+      else if (A.n === 1) put(-1, tags.length ? 'Names none of your skills' : 'Names no skills', 'skills');     // skills are the only answer: no match
+      else put(0, tags.length ? 'Asks for skills you did not pick' : 'Names no skills', 'skills');
+    }
+    return { ok: ok, half: half, no: no, n: A.n, s: ok * 10 + half * 3 + Math.min(hit.length, 5) - edge * 0.5, bits: bits, hit: hit };
+  }
+  function fitNew(j, now) {        // "New today · apply early": we first saw it on the employer's list in the last 24 hours (j[28]), and the employer dates it that day or the day before
+    var seen = (j[28] || 0) * 60000, d = j[16] || 0;
+    if (!seen || !d || now - seen > 864e5 || seen - now > 36e5) return false;
+    var day = Date.UTC(Math.floor(d / 10000), Math.floor(d / 100) % 100 - 1, d % 100);
+    return seen - day < 2 * 864e5 && day - seen < 864e5;
+  }
+  function fitBadges(j, A, h1b, now, max) {   // the marks of a job, best first: [class, text, tip]. A card shows two at most (Fits you, New today, H-1B sponsor)
+    var out = [], w, h = h1b && h1b[j[2]];
+    if (A && A.n >= 2) {
+      w = fitOf(j, A);
+      out.push([w.no ? 'fitb no' : w.ok === w.n ? 'fitb all' : 'fitb', 'Fits you ' + w.ok + '/' + w.n,
+        w.bits.map(function (b) { return (b[0] > 0 ? '✓ ' : b[0] < 0 ? '✗ ' : '? ') + b[1]; }).join(' · ')]);
+    }
+    if (fitNew(j, now)) {
+      var hrs = Math.round((now - j[28] * 60000) / 36e5);
+      out.push(['fitb nw', 'New today · apply early', 'We first saw it on the employer’s careers page ' + (hrs < 1 ? 'within the hour' : hrs === 1 ? 'an hour ago' : hrs + ' hours ago') + '. How many people applied is not known.']);
+    }
+    if (h && h[0] > 0) out.push(['fitb h1b', 'H-1B sponsor', h[0].toLocaleString('en-US') + ' certified H-1B ' + (h[0] === 1 ? 'filing' : 'filings') + ', fiscal year ' + h[1] + ', US Department of Labor']);
+    return out.slice(0, max || 2);
+  }
+  // saved resumes (hrn_resumes): the list, the primary one, the skills a text names, and saving one (null when five are kept already)
+  function cvList() {
+    var x = get('hrn_resumes', []);
+    return Array.isArray(x) ? x.filter(function (r) { return r && typeof r.text === 'string'; }) : [];
+  }
+  function cvPrimary() {
+    var l = cvList();
+    return l.filter(function (r) { return r.primary; })[0] || l[0] || null;
+  }
+  function cvSkillsOf(text) {      // the skills this site tracks that a text names (data/skills.json, read as For you and the resume checker read it)
+    return fetch(P + '/data/skills.json').then(function (r) { return r.json(); }).then(function (pats) {
+      var got = [];
+      pats.forEach(function (x) { try { if (new RegExp(x[1], 'i').test(text)) got.push(x[0]); } catch (e) {} });
+      return got;
+    });
+  }
+  function cvSave(r) {
+    var l = cvList(), i = -1;
+    l.forEach(function (x, k) { if ((r.id && x.id === r.id) || x.text === r.text) i = k; });
+    if (i < 0 && l.length >= 5) return null;
+    var rec = { id: r.id || 'cv' + Date.now().toString(36), name: String(r.name || '').slice(0, 60), title: String(r.title || '').slice(0, 80),
+      text: String(r.text || '').slice(0, 30000), skills: (r.skills || []).slice(0, 200), at: Date.now() };
+    if (i >= 0) { rec.id = l[i].id; rec.primary = !!l[i].primary; if (!rec.name) rec.name = l[i].name; if (!rec.title) rec.title = l[i].title; l[i] = rec; }
+    else { rec.primary = !l.some(function (x) { return x.primary; }); l.push(rec); }
+    set('hrn_resumes', l);
+    return l;
+  }
+
+  window.HRN = { fitAnswers: fitAnswers, fitOf: fitOf, fitNew: fitNew, fitBadges: fitBadges, cvList: cvList, cvPrimary: cvPrimary, cvSave: cvSave, cvSkillsOf: cvSkillsOf,
+    fitTest: fitTest, readPosting: readPosting, sure: sure, askText: askText, mute: mute, saveMute: function () { set('hrn_mute', mute); }, parse: parse, match: match, load: load, loadHead: loadHead, fromApi: fromApi, rowsOf: rowsOf, listOf: listOf, fitQuery: fitQuery, heavyOk: heavyOk, collapse: collapse, card: card, decorate: decorate, get: get, set: set, esc: esc, today: today, base: P };
 
   /* ---------- "Save this list" on a list page: the list goes into My jobs as the search that gives the same jobs, and My jobs counts
      the jobs posted since the last look. A second press takes it out again. Nothing is sent anywhere. ---------- */
@@ -1514,7 +1658,15 @@
     if (profile.pay == null) profile.pay = profile.sal > 1 ? profile.sal : 0;
     var chips = Array.prototype.slice.call(fy.querySelectorAll('#fy-skills .chipbtn'));
     var place = $('fy-place'), payIn = $('fy-pay-in'), noPay = $('fy-nopay'), list = $('fy-list'), count = $('fy-count'), more = $('fy-more'), jump = $('fy-jump');
-    var payNote = $('fy-pay-note'), gap = $('fy-gap');
+    var payNote = $('fy-pay-note'), gap = $('fy-gap'), scanned = [];
+    // the skills of the primary saved resume (My jobs) count as answers to question 5 too: said under the question, with where to change it
+    (function () {
+      var pri = cvPrimary(), box = $('fy-skills');
+      if (!pri || !(pri.skills || []).length || !box) return;
+      var n = document.createElement('p'); n.className = 'ask-h fy-cv';
+      n.innerHTML = 'Also counted: the ' + pri.skills.length + ' skills of your saved resume “' + esc(pri.name || 'Resume') + '” (' + esc(pri.skills.slice(0, 6).join(', ')) + (pri.skills.length > 6 ? ' and more' : '') + '). <a href="' + P + '/my-jobs/#resumes">Your resumes</a>';
+      box.insertBefore(n, box.firstChild);
+    })();
     var shown = 30, found = [], nFull = 0, extra = new Map(), why = new Map(), asked = 0, fromLink = false;
     // The personal radar (plan item 14, 20 Nov 2026): the day of the last visit is kept here, and on the next visit the jobs that fit
     // and were posted after it are counted in the heading and marked in the list. Nothing is sent anywhere.
@@ -1528,17 +1680,10 @@
         fromLink = true;
       }
     } catch (e) {}
-    var LV = { Intern: -1, Junior: 0, '': 1, Senior: 2, Lead: 3 }, REG = { europe: 1, 'asia-pacific': 1, 'latin-america': 1, africa: 1 };
     var DROP = { work: 'Any kind of work', exp: 'Any experience', where: 'Home or office, any country', country: 'Any country', pay: 'Any pay', skills: 'Without the skills' };
     var nf = function (x) { return Number(x).toLocaleString('en-US'); };
     var kfmt = function (v) { return '$' + (v >= 1000 ? Math.round(v / 1000) + 'K' : v); };
     var jobsWord = function (k) { return nf(k) + (k === 1 ? ' job' : ' jobs'); };
-    // the lower end of a yearly US-dollar range, read from the text of the posting's pay line; 0 when it cannot be read
-    var lowOf = function (j) {
-      var m = /(\d{1,3}(?:[ , ]\d{3})+|\d[\d.]*)\s?(k)?/i.exec(j[8] || ''); if (!m) return 0;
-      var v = parseFloat(m[1].replace(/[ , ]/g, '')) * (m[2] ? 1000 : 1);
-      return v >= 10000 && v <= j[13] ? v : 0;
-    };
     var catName = {};
     Array.prototype.forEach.call(fy.querySelectorAll('#fy-work .opt'), function (b) { catName[b.getAttribute('data-v')] = b.querySelector('b').textContent; });
     var press = function (boxId, test) { Array.prototype.forEach.call(fy.querySelectorAll('#' + boxId + ' .opt'), function (b) { b.setAttribute('aria-pressed', test(b.getAttribute('data-v')) ? 'true' : 'false'); }); };
@@ -1552,70 +1697,22 @@
       noPay.checked = !!profile.nopay;
       if (document.activeElement !== payIn) payIn.value = profile.pay && !fy.querySelector('#fy-pay .opt[data-v="' + profile.pay + '"]') ? profile.pay : '';
     };
-    // the answers in the shape the checks need; `skip` leaves one question out (used for "what if I drop this answer")
-    var answers = function (skip) {
-      var o = place.options[place.selectedIndex], set_ = {};
-      if (o && profile.placeGuess && !profile.whereSet) o = null;          // a country guessed from the time zone counts only once question 3 is answered
-      profile.skills.forEach(function (s) { set_[s] = 1; });
-      var A = { cats: skip === 'work' ? [] : profile.cats, roles: skip === 'work' ? [] : (profile.roles || []), exp: skip === 'exp' || profile.exp === '' ? '' : Number(profile.exp),
-        where: skip === 'where' ? '' : profile.where || '', slug: skip === 'where' || skip === 'country' || !o ? '' : o.getAttribute('data-s') || '', reg: o ? o.getAttribute('data-r') || '' : '',
-        cname: o && o.value ? o.textContent : '', pay: skip === 'pay' ? 0 : profile.pay || 0, nopay: skip === 'pay' ? false : !!profile.nopay,
-        skills: skip === 'skills' ? [] : profile.skills, set: set_ };
-      A.n = (A.cats.length || A.roles.length ? 1 : 0) + (A.exp !== '' ? 1 : 0) + (A.where || A.slug ? 1 : 0) + (A.pay || A.nopay ? 1 : 0) + (A.skills.length ? 1 : 0);
-      return A;
+    // the answers in the shape the checks need; `skip` leaves one question out (used for "what if I drop this answer"). The rules are
+    // fitAnswers() and fitOf() at the top of this file, the same for every card, the job page and Swipe; the country comes from the menu here.
+    var placeOf = function () {
+      var o = place.options[place.selectedIndex];
+      return o ? { s: o.getAttribute('data-s') || '', r: o.getAttribute('data-r') || '', n: o.value ? o.textContent.replace(/[\uD83C][\uDDE6-\uDDFF]/g, '').trim() : '' } : null;
     };
-    // one job against the answers: null when it contradicts one, otherwise ticks, question marks and the reasons to show
+    var answers = function (skip) {
+      var pri = cvPrimary();
+      return fitAnswers(profile, { skip: skip, place: profile.placeGuess && !profile.whereSet ? null : placeOf(), rx: roleRx, names: catName, extra: pri ? pri.skills : [] });
+    };
+    // one job against the answers: null when it contradicts one (the list leaves it out), otherwise ticks, question marks and the reasons to show
     var judge = function (j, A) {
       if (mute.c[j[2]] || hidden[j[0]]) return null;
       if (mute.w.length) { var low = j[1].toLowerCase(); for (var w = 0; w < mute.w.length; w++) if (low.indexOf(mute.w[w]) >= 0) return null; }
-      var ok = 0, half = 0, bits = [], k = 0, edge = 0, i;
-      if (A.cats.length || A.roles.length) {
-        var byRole = A.roles.length ? roleHit(j[1], A.roles) : '';
-        if (!byRole && A.cats.indexOf(j[5]) < 0) return null;
-        ok++; bits.push([1, byRole || catName[j[5]] || j[5]]);
-      }
-      if (A.exp !== '') {
-        var lv = LV[j[6]] == null ? 1 : LV[j[6]], d = A.exp === 0 && lv <= 0 ? 0 : Math.abs(A.exp - lv);
-        if (d > 1) return null;
-        if (!d) { ok++; bits.push([1, j[6] ? j[6] + ' level' : 'Mid-level title']); }
-        else { half++; bits.push([0, j[6] ? j[6] + ' level, a step ' + (lv > A.exp ? 'above' : 'below') + ' yours' : 'Title does not name a level']); }
-      }
-      if (A.where || A.slug) {
-        var pl = j[14], inC = A.slug && pl.indexOf(A.slug) >= 0, res;
-        var fromHome = function () {
-          if (!j[4]) return null;
-          if (!A.slug) return [1, 'Remote'];
-          if (j[20]) return [1, 'Remote, open to any country'];
-          if (inC) return [1, 'Remote, names ' + A.cname];
-          if (A.reg && pl.indexOf(A.reg) >= 0 && pl.every(function (p) { return REG[p]; })) return [1, 'Remote across your region'];
-          return pl.length ? null : [0, 'Remote, does not say from which countries'];
-        };
-        var onSite = function () { return j[4] ? null : !A.slug ? [1, 'On site or hybrid'] : inC ? [1, 'In ' + A.cname] : null; };
-        var hybrid = function () { return !j[25] ? null : !A.slug ? [1, 'Hybrid'] : inC ? [1, 'Hybrid, in ' + A.cname] : null; };
-        res = A.where === 'remote' ? fromHome() : A.where === 'hybrid' ? hybrid() : A.where === 'office' ? onSite() : onSite() || fromHome();
-        if (!res) return null;
-        if (res[0]) ok++; else half++;
-        bits.push(res);
-      }
-      if (A.pay || A.nopay) {
-        if (j[13]) {
-          if (A.pay && j[13] < A.pay) return null;
-          var lo = lowOf(j);
-          ok++;
-          if (!A.pay) bits.push([1, 'States pay']);
-          else if (lo >= A.pay) bits.push([1, 'Whole range is above ' + kfmt(A.pay)]);
-          else { edge = 1; bits.push([1, 'Top of the range, ' + kfmt(j[13]) + ', reaches ' + kfmt(A.pay)]); }
-        } else if (!j[8]) { if (A.nopay) return null; half++; bits.push([0, 'Does not state pay']); }
-        else { half++; bits.push([0, 'Pay is given per hour or in another currency']); }
-      }
-      if (A.skills.length) {
-        var hit = []; for (i = 0; i < j[7].length; i++) if (A.set[j[7][i]]) hit.push(j[7][i]);
-        k = hit.length;
-        if (k) { ok++; bits.push([1, (k === 1 ? 'Your skill: ' : k + ' of your skills: ') + hit.slice(0, 4).join(', ') + (k > 4 ? ' and more' : '')]); }
-        else if (A.n === 1) return null;                                   // skills are the only answer: a job with none of them is no match
-        else { half++; bits.push([0, j[7].length ? 'Asks for skills you did not pick' : 'Names no skills']); }
-      }
-      return { ok: ok, s: ok * 10 + half * 3 + Math.min(k, 5) - edge * 0.5, bits: bits };
+      var f = fitOf(j, A);
+      return f.no ? null : f;
     };
     var render = function () {
       var html = '', rows = found.slice(0, shown);
@@ -1653,8 +1750,13 @@
     var run = function () {
       if (!profile.roles) profile.roles = [];
       drawRoles();
-      if (!fromLink) set('hrn_profile', profile);
       paint();
+      // what other pages need to read the answers the same way: the country's place slug, region and name, the names of the kinds of work, the
+      // patterns of the job titles (fitAnswers)
+      var o0 = placeOf(); profile.pl = o0 && o0.n ? [o0.s, o0.r, o0.n] : null;
+      profile.catN = {}; profile.cats.forEach(function (c) { if (catName[c]) profile.catN[c] = catName[c]; });
+      profile.rolePat = {}; profile.roles.forEach(function (r) { if (roleRx[r]) profile.rolePat[r] = roleRx[r].source; });
+      if (!fromLink) set('hrn_profile', profile);
       var A = answers(); asked = A.n;
       if (!asked) {
         payNote.textContent = ''; gap.hidden = true; gap.innerHTML = ''; why = new Map(); nFull = 0;
@@ -1810,6 +1912,11 @@
         if (txt) txt.value = ''; if (sn) sn.textContent = '';
         run(); return;
       }
+      if (t.id === 'fy-keep') {           // the pasted resume joins the saved ones (My jobs); the first one saved is the primary one
+        var kept = cvSave({ name: 'Resume pasted on For you', title: '', text: ($('fy-text') || {}).value || '', skills: scanned });
+        t.outerHTML = kept ? '<b>Kept in <a href="' + P + '/my-jobs/#resumes">My jobs</a>.</b>' : '<b>Five resumes are kept in <a href="' + P + '/my-jobs/#resumes">My jobs</a> already: remove one there first.</b>';
+        return;
+      }
       if (t.id === 'fy-scan') {
         var text = $('fy-text').value, note = $('fy-scan-note');
         if (text.trim().length < 40) { note.textContent = 'Paste a bit more text first.'; return; }
@@ -1821,6 +1928,7 @@
           got = got.filter(function (s) { return known.indexOf(s) >= 0; });
           got.forEach(function (s) { if (profile.skills.indexOf(s) < 0) profile.skills.push(s); });
           note.textContent = got.length ? 'Found ' + got.length + (got.length === 1 ? ' skill: ' : ' skills: ') + got.join(', ') + '.' : 'No known skills found. Pick them by hand above.';
+          if (got.length) { scanned = got; note.insertAdjacentHTML('beforeend', ' <button class="linkbtn" type="button" id="fy-keep">Keep this resume in My jobs</button>'); }
           run();
         }).catch(function () { note.textContent = 'Could not read the skills list. Pick skills by hand above.'; });
       }
@@ -1862,6 +1970,95 @@
         profile.place = code; profile.placeGuess = true; set('hrn_profile', profile);
       }
     }).catch(function () {});
+  }
+
+  /* ---------- My jobs: "Get set up" (four steps that tick themselves and go away when done), the match profile and the saved resumes.
+     All of it is this browser's own data (hrn_profile, hrn_resumes, hrn_alert_on, hrn_jobs); nothing is sent anywhere. ---------- */
+  var mjProf = $('mj-prof'), mjCvs = $('mj-cvs');
+  if (mjProf && mjCvs) {
+    var EXPN = { '0': 'Starting out', '1': 'A few years', '2': 'Many years', '3': 'I lead people' }, WHERE = { remote: 'From home', hybrid: 'Hybrid', office: 'At an office' };
+    var kfmt0 = function (v) { return '$' + Math.round(v / 1000) + 'K'; };
+    var dayOf0 = function (ts) { try { return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); } catch (e) { return ''; } };
+    var drawMe = function () {
+      var p = get('hrn_profile', null) || {}, cvs = cvList(), pri = cvPrimary(), A = fitAnswers(p, { extra: pri ? pri.skills : [] }), own = fitAnswers(p);
+      // 1. the checklist: each step is one click away and ticks itself
+      var steps = { answers: A.n >= 5, resume: cvs.length > 0, alert: !!get('hrn_alert_on', null), save: Object.keys(get('hrn_jobs', {}) || {}).length > 0 }, done = 0;
+      var sec = $('mj-setup');
+      if (sec) {
+        Array.prototype.forEach.call(sec.querySelectorAll('li[data-step]'), function (li) {
+          var k = li.getAttribute('data-step'); li.classList.toggle('done', !!steps[k]); if (steps[k]) done++;
+          if (k === 'answers') { var s = li.querySelector('b + span'); if (s) s.textContent = A.n && A.n < 5 ? A.n + ' of 5 answered: finish the rest' : 'Every job then shows how well it fits you'; }
+        });
+        var n = $('mj-setup-n'); if (n) n.textContent = done + ' of 4 done';
+        sec.hidden = done === 4;
+      }
+      // 2. the profile: the five answers in words, change them on For you, or clear them
+      if (!own.n) {
+        mjProf.innerHTML = '<p>No answers yet. Five questions, about a minute, and every job here shows how well it fits you: on each card and on the job’s page.</p>' +
+          '<p class="mj-act"><a class="btn primary sm" href="' + P + '/for-you/">Answer 5 questions</a></p>';
+      } else {
+        var cn = p.catN || {}, work = own.cats.map(function (c) { return cn[c] || fitCat(c); }).concat(own.roles);
+        var rowsP = [['Work', work.join(', ')], ['Level', own.exp === '' ? '' : EXPN[String(own.exp)] || ''],
+          ['Place', own.where || own.slug ? (WHERE[own.where] || 'Home or office') + (own.cname ? ', ' + own.cname : '') : ''],
+          ['Pay', own.pay ? kfmt0(own.pay) + ' a year or more' + (own.nopay ? ', pay stated' : '') : own.nopay ? 'Jobs that state pay' : ''],
+          ['Skills', (p.skills || []).slice(0, 8).join(', ') + ((p.skills || []).length > 8 ? ' and ' + (p.skills.length - 8) + ' more' : '') + (pri && pri.skills && pri.skills.length ? ((p.skills || []).length ? ' · ' : '') + pri.skills.length + ' from your resume' : '')]];
+        mjProf.innerHTML = '<dl class="mj-dl">' + rowsP.map(function (r) { return '<div><dt>' + r[0] + '</dt><dd' + (r[1] ? '' : ' class="nd"') + '>' + esc(r[1] || 'Not answered') + '</dd></div>'; }).join('') + '</dl>' +
+          '<p class="mj-act"><a class="btn primary sm" href="' + P + '/for-you/">Change my answers</a> <button class="btn ghost sm" type="button" id="mj-prof-clear">Clear my answers</button></p>';
+      }
+      // 3. the resumes: up to five, one primary (its skills count in every match)
+      var html = cvs.length ? '<ul class="cvl">' + cvs.map(function (r) {
+        var isP = pri && pri.id === r.id;
+        return '<li data-cv="' + esc(r.id) + '"><div class="main"><b>' + esc(r.name || 'Resume') + '</b><span class="js">' + (r.title ? 'For ' + esc(r.title) + ' · ' : '') + (r.skills || []).length + ' skills found · saved ' + esc(dayOf0(r.at)) + '</span></div>' +
+          '<div class="ctl">' + (isP ? '<span class="pill ok" title="Its skills count in every match">Primary</span>' : '<button class="linkbtn" type="button" data-cv-pri="1">Make primary</button>') +
+          '<button class="unsave" type="button" data-cv-del="1">Remove</button></div></li>';
+      }).join('') + '</ul>' : '<p class="note">No resume saved yet. Paste one below, or press “Save to My jobs” in the <a href="' + P + '/tools/resume-match/">resume match checker</a>. Its skills then count in every match.</p>';
+      var tool = get('hrn_tool_resume_match', null), toolText = tool && typeof tool.resume === 'string' ? tool.resume.trim() : '';
+      if (toolText.split(/\s+/).length >= 30 && !cvs.some(function (r) { return r.text.trim() === toolText; }) && cvs.length < 5)
+        html += '<p><button class="btn ghost sm" type="button" id="cv-import">Add the resume you pasted in the match checker</button></p>';
+      html += cvs.length >= 5 ? '<p class="note">Five resumes are kept, the most this page holds. Remove one to add another.</p>' :
+        '<details class="cvadd" id="cv-add"' + (location.hash === '#resumes' && !cvs.length ? ' open' : '') + '><summary>Add a resume</summary>' +
+        '<label for="cv-name">Name</label><input id="cv-name" type="text" maxlength="60" placeholder="For example: Data analyst resume">' +
+        '<label for="cv-title">The job it is for</label><input id="cv-title" type="text" maxlength="80" placeholder="For example: Data analyst">' +
+        '<label for="cv-text">The resume’s text</label><textarea id="cv-text" rows="7" placeholder="Paste the text of your resume here"></textarea>' +
+        '<p class="mj-act"><button class="btn primary sm" type="button" id="cv-save">Save the resume</button> <span class="note" id="cv-note" role="status"></span></p></details>';
+      mjCvs.innerHTML = html;
+    };
+    var cvAdd = function (rec, note) {
+      if (String(rec.text || '').trim().split(/\s+/).length < 30) { if (note) note.textContent = 'Paste the whole resume first: at least 30 words.'; return; }
+      if (note) note.textContent = 'Reading the skills…';
+      cvSkillsOf(rec.text).catch(function () { return []; }).then(function (skills) {
+        rec.skills = skills;
+        if (!cvSave(rec)) { if (note) note.textContent = 'Five resumes are kept already. Remove one first.'; return; }
+        drawMe();
+      });
+    };
+    document.addEventListener('click', function (ev) {
+      var t = ev.target, li = t.closest && t.closest('.cvl li');
+      if (t.id === 'mj-prof-clear') {
+        sure(t, 'Clear your five answers from this browser? Your saved resumes stay.', 'Clear my answers').then(function (ok) {
+          if (!ok) return;
+          try { localStorage.removeItem('hrn_profile'); } catch (e) {}
+          drawMe();
+        });
+      } else if (t.id === 'cv-save') {
+        cvAdd({ name: ($('cv-name').value || '').trim() || 'Resume ' + (cvList().length + 1), title: ($('cv-title').value || '').trim(), text: $('cv-text').value }, $('cv-note'));
+      } else if (t.id === 'cv-import') {
+        var tool = get('hrn_tool_resume_match', {}) || {};
+        cvAdd({ name: tool.title ? 'Resume for ' + String(tool.title).slice(0, 48) : 'Resume ' + (cvList().length + 1), title: tool.title || '', text: tool.resume || '' }, null);
+      } else if (li && t.getAttribute('data-cv-pri')) {
+        var id = li.getAttribute('data-cv'), l = cvList(); l.forEach(function (r) { r.primary = r.id === id; }); set('hrn_resumes', l); drawMe();
+      } else if (li && t.getAttribute('data-cv-del')) {
+        var id2 = li.getAttribute('data-cv');
+        sure(t, 'Remove this resume from this browser?', 'Remove').then(function (ok) {
+          if (!ok) return;
+          var l2 = cvList().filter(function (r) { return r.id !== id2; });
+          if (l2.length && !l2.some(function (r) { return r.primary; })) l2[0].primary = true;
+          set('hrn_resumes', l2); drawMe();
+        });
+      }
+    });
+    window.addEventListener('hashchange', function () { var d = $('cv-add'); if (location.hash === '#resumes' && d) { d.open = true; var f = $('cv-name'); if (f) f.focus(); } });
+    drawMe();
   }
 
   /* ---------- My jobs page ---------- */
@@ -1962,7 +2159,7 @@
       $('mj-unhide').addEventListener('click', function () { hidden = {}; set('hrn_hidden', hidden); mute.c = {}; mute.w = []; set('hrn_mute', mute); hiddenNote.hidden = true; });
     }
     // your data: a copy to keep, a way to move it to another device, and a way to wipe it
-    var KEYS = ['hrn_jobs', 'hrn_searches', 'hrn_follow', 'hrn_profile', 'hrn_mute', 'hrn_hidden', 'hrn_seen', 'hrn_resume', 'hrn_resume_set'], dataNote = $('mj-data-note'), fileIn = $('mj-file');
+    var KEYS = ['hrn_jobs', 'hrn_searches', 'hrn_follow', 'hrn_profile', 'hrn_mute', 'hrn_hidden', 'hrn_seen', 'hrn_resume', 'hrn_resume_set', 'hrn_resumes', 'hrn_alert_on'], dataNote = $('mj-data-note'), fileIn = $('mj-file');
     if ($('mj-backup')) {
       $('mj-backup').addEventListener('click', function () {
         var data = {}; KEYS.forEach(function (k) { var v = get(k, null); if (v != null) data[k] = v; });
@@ -1979,7 +2176,7 @@
           try {
             var b = JSON.parse(String(reader.result));
             if (!b || b.app !== 'hiring-right-now' || !b.data || typeof b.data !== 'object') throw new Error('not a backup');
-            var LISTS = { hrn_searches: 1, hrn_seen: 1 };
+            var LISTS = { hrn_searches: 1, hrn_seen: 1, hrn_resumes: 1 };
             KEYS.forEach(function (k) {
               var v = b.data[k];
               if (v == null || typeof v !== 'object' || Array.isArray(v) !== !!LISTS[k]) return;      // wrong shape: leave what is there
@@ -1991,7 +2188,7 @@
         reader.readAsText(file);
       });
       $('mj-erase').addEventListener('click', function () {
-       sure($('mj-erase'), 'Erase everything this site keeps in this browser: saved jobs, applications, notes, searches, hidden items, your skill profile, your resume and what you typed into the tools? This cannot be undone.', 'Erase everything').then(function (ok) {
+       sure($('mj-erase'), 'Erase everything this site keeps in this browser: saved jobs, applications, notes, searches, hidden items, your match profile, your resumes and what you typed into the tools? This cannot be undone.', 'Erase everything').then(function (ok) {
         if (!ok) return;
         try {
           Object.keys(localStorage).forEach(function (k) { if (KEYS.indexOf(k) >= 0 || k.indexOf('hrn_tool_') === 0) localStorage.removeItem(k); });
@@ -2247,6 +2444,7 @@
         .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; }); })
         .then(function (x) {
           out.textContent = x.d.message || (x.ok ? 'Done.' : 'The alert was not saved. Please try again.');
+          if (x.ok) try { localStorage.setItem('hrn_alert_on', JSON.stringify({ at: Date.now() })); } catch (e) {}      // My jobs' "Get set up" ticks it (no address is kept here)
           if (x.ok && f.elements.email) f.elements.email.value = '';
         })
         .catch(function () { out.textContent = 'The alert could not be sent. Check the connection and try again.'; })
@@ -2321,17 +2519,11 @@
 (function () {
   var H = window.HRN, box = document.getElementById('swipe');
   if (!H || !box) return;
-  var P = H.base, esc = H.esc, prof = H.get('hrn_profile', null) || {}, cats = prof.cats || [], skills = prof.skills || [], pay = Number(prof.pay) || 0;
-  var exp = prof.exp === '' || prof.exp == null ? null : Number(prof.exp), LV = { Intern: -1, Junior: 0, '': 1, Senior: 2, Lead: 3 };
+  var P = H.base, esc = H.esc, pri = H.cvPrimary ? H.cvPrimary() : null, A = H.fitAnswers(H.get('hrn_profile', null) || {}, { extra: pri ? pri.skills : [] });
   var queue = [], i = 0, done = 0;
-  function fit(j) {
-    var n = 0, ok = 0;
-    if (cats.length) { n++; if (cats.indexOf(j[5]) >= 0) ok++; }
-    if (exp !== null) { n++; var lv = LV[j[6]] == null ? 1 : LV[j[6]]; if (Math.abs(exp - lv) <= (exp === 0 && lv <= 0 ? 1 : 0)) ok++; }
-    if (prof.where === 'remote' || prof.where === 'hybrid' || prof.where === 'office') { n++; if (prof.where === 'remote' ? j[4] : prof.where === 'hybrid' ? j[25] : !j[4]) ok++; }
-    if (pay) { n++; if (j[13] && j[13] >= pay) ok++; }
-    if (skills.length) { n++; if (j[7].some(function (t) { return skills.indexOf(t) >= 0; })) ok++; }
-    return [ok, n];
+  function fit(j) {                // [answers that fit, answers given], by the rules of For you (HRN.fitOf)
+    var w = H.fitOf(j, A);
+    return [w.ok, w.n];
   }
   function draw() {
     var j = queue[i];

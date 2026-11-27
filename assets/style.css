@@ -5754,3 +5754,38 @@ main.about>.sec-label{margin-bottom:16px}
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]) .khero h1 .hl,:root:not([data-theme=light]) main.sp .khero h1 .hl,:root:not([data-theme=light]) .hero.v2 h1 .hl,:root:not([data-theme=light]) .sec-head h2.tw b,:root:not([data-theme=light]) .sec-head.lst h2.tw b,:root:not([data-theme=light]) .kcta h2.tw b:not(.free),:root:not([data-theme=light]) .alertf h2.tw b,:root:not([data-theme=light]) .guide h2.tw2 b{background:linear-gradient(transparent 82%,var(--hl) 82%,var(--hl) 91%,transparent 91%)}}
 :root[data-theme=dark] .khero h1 .hl,:root[data-theme=dark] main.sp .khero h1 .hl,:root[data-theme=dark] .hero.v2 h1 .hl,:root[data-theme=dark] .sec-head h2.tw b,:root[data-theme=dark] .sec-head.lst h2.tw b,:root[data-theme=dark] .kcta h2.tw b:not(.free),:root[data-theme=dark] .alertf h2.tw b,:root[data-theme=dark] .guide h2.tw2 b,
 .kpanel.ink .khero h1 .hl,.kpanel.ink .sec-head h2.tw b,.kpanel.ink .kcta h2.tw b:not(.free),.kpanel.ink .alertf h2.tw b,.kpanel.ink .guide h2.tw2 b,.inkband .khero h1 .hl,.inkband .sec-head h2.tw b,.inkband .kcta h2.tw b:not(.free),.inkband .alertf h2.tw b,.inkband .guide h2.tw2 b,.kpanel.ink.kcta h2.tw b:not(.free){background:linear-gradient(transparent 82%,var(--hl) 82%,var(--hl) 91%,transparent 91%)}
+/* My jobs: get set up, the profile, the saved resumes */
+main.mjp .mj-setup{margin-top:36px}
+main.mjp .mj-setup .sec-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+main.mjp .mj-setup .sec-head .note{margin:0;font-size:14px}
+.setup{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.setup a{display:grid;grid-template-columns:24px minmax(0,1fr);gap:10px;align-items:start;height:100%;padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--text);text-decoration:none}
+.setup a:hover{border-color:var(--text)}
+.setup i{width:22px;height:22px;border:2px solid var(--line2);border-radius:50%;margin-top:1px}
+.setup b{display:block;font-size:15px;font-weight:650}
+.setup b+span{display:block;margin-top:2px;font-size:13.5px;color:var(--muted)}
+.setup li.done a{background:var(--bg2);border-color:transparent}
+.setup li.done i{border-color:var(--brand);background:var(--brand);position:relative}
+.setup li.done i::after{content:"\2713";position:absolute;inset:0;color:var(--brand-ink);font:700 12px/18px Inter,system-ui,sans-serif;text-align:center}
+.setup li.done b{text-decoration:line-through;text-decoration-color:var(--line2);color:var(--muted)}
+@media(max-width:900px){.setup{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.setup{grid-template-columns:minmax(0,1fr)}.setup a{padding:12px 14px}}
+main.mjp .mj-me .sec{margin-top:44px}
+.mj-dl{margin:0 0 14px}
+.mj-dl div{display:grid;grid-template-columns:70px minmax(0,1fr);gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.mj-dl dt{color:var(--muted);font-size:13.5px}
+.mj-dl dd{margin:0}
+.mj-dl dd.nd{color:var(--faint)}
+.mj-act{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0}
+.mj-act .btn{margin:0}
+.cvl{list-style:none;margin:0 0 12px;padding:0}
+.cvl li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.cvl b{display:block;font-weight:650}
+.cvl .js{font-size:13.5px}
+.cvl .ctl{display:flex;gap:8px;align-items:center}
+.cvadd summary{display:inline-block;cursor:pointer;padding:7px 14px;border:1px solid var(--line2);border-radius:999px;font-size:14px;font-weight:600;list-style:none}
+.cvadd summary::-webkit-details-marker{display:none}
+.cvadd[open] summary{margin-bottom:10px}
+.cvadd label{display:block;margin:10px 0 4px;font-size:13.5px;font-weight:600}
+.cvadd input,.cvadd textarea{width:100%;font:inherit;font-size:14.5px;padding:8px 10px;border:1px solid var(--line2);border-radius:8px;background:var(--card);color:var(--text)}
+.cvadd .mj-act{margin-top:10px}
