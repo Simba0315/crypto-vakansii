@@ -2439,54 +2439,67 @@
   });
 })();
 
-/* job page: how this job fits the visitor's "For you" answers (kept in this browser as hrn_profile), the way Hirify scores a job.
-   Without answers it invites the visitor to give them once. The answers are never sent anywhere; only this job's row is asked of our server. */
+/* job page: how this job fits the visitor (rewritten 27 Nov 2026 on the rules of For you, HRN.fitOf; it had its own copy of them). Its marks
+   (Fits you 4/5, New today, H-1B sponsor), each answer with a tick, a question mark or a cross and the reason, and the posting's skills as
+   "you have" and "missing", with the resume checker one click away when some are missing. The card is drawn at once, a row per answer, and
+   filled when this job's row comes from our server, so it keeps its height. Without a profile: one quiet line that asks for the five answers. */
 (function () {
-  var H = window.HRN, save = document.getElementById('save'), anchor = document.querySelector('.rmbox') || document.getElementById('apply');
-  if (!H || !save || !anchor) return;
-  var p = H.get('hrn_profile', null) || {}, slug = save.getAttribute('data-slug'), P = H.base;
-  var cats = p.cats || [], skills = p.skills || [], exp = p.exp === '' || p.exp == null ? null : Number(p.exp), pay = Number(p.pay) || 0;
-  var box = document.createElement('div');
-  box.className = 'fitbox';
-  if (!cats.length && !skills.length && exp === null && !p.where && !pay) {
-    box.innerHTML = '<a href="' + P + '/for-you/"><b>How well does this job fit you?</b><span>Answer five questions once: every job page then shows it.</span></a>';
-    anchor.parentNode.insertBefore(box, anchor.nextSibling);
+  var H = window.HRN, save = document.getElementById('save'), help = document.querySelector('.rmbox') || document.getElementById('apply');
+  if (!H || !save || !help || !H.fitMine) return;
+  var me = H.fitMine(), slug = save.getAttribute('data-slug'), P = H.base, esc = H.esc;
+  if (!me) {
+    var ask = document.createElement('p'); ask.className = 'note fitask';
+    ask.innerHTML = '<a href="' + P + '/for-you/">See how well each job fits you: answer 5 questions</a>';
+    help.parentNode.insertBefore(ask, help.nextSibling);
     return;
   }
-  H.rowsOf([slug]).then(function (rows) {          // this one job's row from the server (it was found in the list of every job, 22 MB)
-    var j = rows[0] || null;
-    if (!j) return;
-    var bits = [], ok = 0, n = 0, k = function (v) { return '$' + Math.round(v / 1000) + 'K'; };
-    if (cats.length) { n++; if (cats.indexOf(j[5]) >= 0) { ok++; bits.push([1, 'Your kind of work']); } else bits.push([0, 'Another kind of work than you chose']); }
-    if (exp !== null) {
-      var LV = { Intern: -1, Junior: 0, '': 1, Senior: 2, Lead: 3 }, lv = LV[j[6]] == null ? 1 : LV[j[6]], d = exp === 0 && lv <= 0 ? 0 : Math.abs(exp - lv);
-      n++;
-      if (!d) { ok++; bits.push([1, (j[6] || 'Mid') + ' level, like yours']); } else bits.push([0, (j[6] || 'Mid-level') + ' title, ' + (lv > exp ? 'above' : 'below') + ' your level']);
+  var A = me.A, tagsEl = document.getElementById('match'), tags = tagsEl ? (tagsEl.getAttribute('data-tags') || '').split('|').filter(Boolean) : [];
+  var LBL = { work: 'Work', level: 'Level', place: 'Place', pay: 'Pay', skills: 'Skills' }, SIGN = { '1': 'y', '0': 'q', '-1': 'n' };
+  var asked = [A.cats.length || A.roles.length ? 'work' : '', A.exp !== '' ? 'level' : '', A.where || A.slug ? 'place' : '', A.pay || A.nopay ? 'pay' : '', A.skills.length ? 'skills' : ''].filter(Boolean);
+  var rowsHtml = function (bits) {
+    return bits.map(function (b) { return '<li class="' + (SIGN[b[0]] || 'q') + '"><b>' + LBL[b[2]] + '</b><span>' + esc(b[1]) + '</span></li>'; }).join('');
+  };
+  var chips = function (list) {
+    if (!list.length) return '';
+    var known = A.skills.length > 0, miss = list.filter(function (t) { return !A.set[t]; });
+    return '<p class="fit-k">' + (known ? 'Skills this job names: ' + (list.length - miss.length) + ' of ' + list.length + ' are yours' : 'Skills this job names') + '</p><p class="fit-chips">' +
+      list.map(function (t) { return known ? (A.set[t] ? '<span class="chip have" title="You have it">✓ ' + esc(t) + '</span>' : '<span class="chip miss" title="Missing from your skills">' + esc(t) + '</span>') : '<span class="chip">' + esc(t) + '</span>'; }).join('') + '</p>' +
+      (!known ? '<p class="note"><a href="' + P + '/my-jobs/#resumes">Add a resume</a> to see which of them you have.</p>'
+        : miss.length ? '<p class="fit-go"><a class="btn ghost sm" href="' + P + '/tools/resume-match/?job=' + encodeURIComponent(slug) + '">Tailor your resume for this job</a></p>' : '');
+  };
+  var box = document.createElement('div');
+  box.className = 'jcard jfit'; box.id = 'fit'; box.setAttribute('aria-live', 'polite');
+  box.innerHTML = '<p class="jcard-h">How this job fits you</p><p class="fit-top"><span class="pill fitb wait">Checking…</span></p>' +
+    '<ul class="fit-rows">' + rowsHtml(asked.map(function (q) { return [0, '…', q]; })).replace(/class="q"/g, 'class="w"') + '</ul>' + chips(tags) +
+    '<p class="fit-more"><a href="' + P + '/for-you/">' + (asked.length < 5 ? 'Answer the other ' + (5 - asked.length) + (5 - asked.length === 1 ? ' question' : ' questions') : 'Change your answers') + '</a>' +
+    (me.cv ? ' · skills from your resume “' + esc(me.cv.name || 'Primary') + '”, <a href="' + P + '/my-jobs/#resumes">My jobs</a>' : '') + '</p>';
+  var dec = document.querySelector('.jdec');
+  if (dec && dec.parentNode) dec.parentNode.insertBefore(box, dec.nextSibling); else help.parentNode.insertBefore(box, help.nextSibling);
+  // on a phone the card stands after the posting; a line under Apply gives the marks and leads to it
+  var line = null;
+  if (dec) { line = document.createElement('a'); line.className = 'fit1'; line.href = '#fit'; line.innerHTML = '<span class="pill fitb wait">Checking how this job fits you…</span>'; dec.appendChild(line); }
+  Promise.all([H.fitReady(), H.rowsOf([slug])]).then(function (a) {
+    var m2 = a[0], j = a[1][0];
+    if (!m2 || !j) throw new Error('no row');
+    A = m2.A;
+    var w = H.fitOf(j, A), marks = H.fitBadges(j, A, m2.h1b, Date.now(), 3);
+    var pill = function (b) {
+      return b[0].indexOf('h1b') >= 0 ? '<a class="pill ' + b[0] + '" href="' + P + '/perks/visa-sponsorship/" title="' + esc(b[2]) + '">' + esc(b[1]) + '</a>'
+        : '<span class="pill ' + b[0] + '" title="' + esc(b[2]) + '">' + esc(b[1]) + '</span>';
+    };
+    box.querySelector('.fit-top').innerHTML = marks.map(pill).join('') + (A.n < 2 ? '<span class="note">' + w.ok + ' of ' + w.n + (w.n === 1 ? ' answer fits' : ' answers fit') + '</span>' : '');
+    box.querySelector('.fit-rows').innerHTML = rowsHtml(w.bits);
+    var ch = box.querySelectorAll('.fit-k, .fit-chips, .fit-go, .fit-chips + .note');
+    if (!tags.length && j[7].length) {              // the page names no skills of its own: the row's
+      Array.prototype.forEach.call(ch, function (el) { el.remove(); });
+      box.querySelector('.fit-rows').insertAdjacentHTML('afterend', chips(j[7]));
     }
-    if (p.where === 'hybrid') {
-      n++;
-      if (j[25]) { ok++; bits.push([1, 'Hybrid, as you want']); } else bits.push([0, j[4] ? 'Remote, you chose hybrid' : 'On site, you chose hybrid']);
-    }
-    if (p.where === 'remote' || p.where === 'office') {
-      n++;
-      var rem = !!j[4];
-      if ((p.where === 'remote') === rem) { ok++; bits.push([1, rem ? 'Remote, as you want' : 'On site or hybrid, as you want']); } else bits.push([0, rem ? 'Remote, you chose an office' : 'On site, you chose remote']);
-    }
-    if (pay) {
-      n++;
-      if (j[13] && j[13] >= pay) { ok++; bits.push([1, 'Pay reaches ' + k(pay)]); } else bits.push([0, j[13] ? 'Pay tops out at ' + k(j[13]) : 'Does not state pay']);
-    }
-    if (skills.length) {
-      n++;
-      var hit = j[7].filter(function (t) { return skills.indexOf(t) >= 0; });
-      if (hit.length) { ok++; bits.push([1, (hit.length === 1 ? 'Your skill: ' : hit.length + ' of your skills: ') + hit.slice(0, 3).join(', ')]); }
-      else bits.push([0, j[7].length ? 'Names none of your skills' : 'Names no skills']);
-    }
-    if (!n) return;
-    box.innerHTML = '<p class="fit-h"><b>' + ok + ' of ' + n + '</b> of your answers fit this job</p><ul>' +
-      bits.map(function (b) { return '<li class="' + (b[0] ? 'y' : 'q') + '">' + H.esc(b[1]) + '</li>'; }).join('') + '</ul><a href="' + P + '/for-you/">Change your answers</a>';
-    anchor.parentNode.insertBefore(box, anchor.nextSibling);
-  }).catch(function () {});
+    if (line) line.innerHTML = marks.slice(0, 2).map(function (b) { return '<span class="pill ' + b[0] + '">' + esc(b[1]) + '</span>'; }).join('') + '<span class="fit1-go">See why</span>';
+  }).catch(function () {
+    box.querySelector('.fit-top').innerHTML = '<span class="note">This job could not be checked right now. Reload the page to try again.</span>';
+    box.querySelector('.fit-rows').innerHTML = '';
+    if (line) line.remove();
+  });
 })();
 
 

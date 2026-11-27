@@ -5776,6 +5776,37 @@ main.about>.sec-label{margin-bottom:16px}
 .fitask{margin:0 0 10px;font-size:14px}
 .fitask a{color:var(--muted);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
 .fitask a:hover{color:var(--text)}
+.jhelp .fitask{margin:12px 2px 0}
+/* the job page's card: marks, an answer per row (tick, question mark, cross and the reason), the posting's skills */
+.jfit .fit-top{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 12px;min-height:21px}
+.jfit .fit-top a.pill{text-decoration:none}
+.jfit .fit-top a.pill:hover{text-decoration:underline;text-underline-offset:3px}
+.jfit .fit-top .note{margin:0;font-size:13.5px}
+.fit-rows{list-style:none;margin:0 0 12px;padding:0}
+.fit-rows li{display:grid;grid-template-columns:22px 54px minmax(0,1fr);gap:0 6px;align-items:baseline;padding:5px 0;border-top:1px solid var(--line);font-size:14px;line-height:1.4}
+.fit-rows li:first-child{border-top:0}
+.fit-rows li::before{width:18px;height:18px;border-radius:50%;text-align:center;font:700 11px/18px Inter,system-ui,sans-serif;align-self:center}
+.fit-rows li.y::before{content:"\2713";background:var(--hl);color:var(--hl-ink)}
+.fit-rows li.q::before{content:"?";background:var(--bg2);color:var(--muted)}
+.fit-rows li.n::before{content:"\2715";background:var(--bg2);color:var(--amber)}
+.fit-rows li.w::before{content:"";background:var(--bg2)}
+.fit-rows li.w span{color:var(--faint)}
+.fit-rows b{font-weight:650;font-size:13px;color:var(--muted)}
+.fit-k{margin:0 0 8px;font-size:13.5px;font-weight:650}
+.fit-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.chip{display:inline-block;padding:3px 9px;border:1px solid var(--line2);border-radius:999px;font-size:13px;line-height:1.35;color:var(--muted);background:var(--card)}
+.chip.have{border-color:transparent;background:var(--green-soft);color:var(--green);font-weight:600}
+.chip.miss{border-style:dashed;color:var(--text)}
+.fit-go{margin:0 0 10px}
+.fit-go .btn{margin:0}
+.fit-more{margin:0;font-size:13px;color:var(--muted)}
+.fit-more a{color:var(--text)}
+/* on a phone the card stands after the posting: the decision card gets one line with the marks that leads to it */
+.fit1{display:none}
+@media (max-width:860px){
+  .fit1{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:-4px 0 16px;text-decoration:none;color:var(--text);order:-1}
+  .fit1 .fit1-go{font-size:13.5px;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line2)}
+}
 /* My jobs: get set up, the profile, the saved resumes */
 main.mjp .mj-setup{margin-top:36px}
 main.mjp .mj-setup .sec-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
