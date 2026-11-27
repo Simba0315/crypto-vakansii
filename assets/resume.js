@@ -648,7 +648,7 @@
     var T = window.HRNT;
     if (!chk || !T) return;
     var text = asText(), r = T.resumeReview(text), html = '<div class="rbc-score">';
-    if (r.error) html += '<p class="rbc-h"><b>Resume score</b> after 80 words</p><p class="note">You have ' + r.words + ' so far. Add your jobs with one result each, and the score appears here.</p>';
+    if (r.error) html += '<p class="rbc-h"><b>Resume score</b> starts at 80 words</p><p class="note">You have ' + r.words + (r.words === 1 ? ' word' : ' words') + ' so far. Add your jobs, one result for each, and your score appears here.</p>';
     else {
       var v = Math.round(r.score * 10), col = v >= 85 ? 'var(--ac)' : v >= 65 ? '#d4a017' : '#d9534f', len = Math.PI * 80;
       html += '<div class="gauge"><svg viewBox="0 0 200 112" aria-hidden="true"><path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="var(--line)" stroke-width="16" stroke-linecap="round"/>'
