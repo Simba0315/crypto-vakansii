@@ -2237,7 +2237,7 @@ def page(path, title, desc, body, head="", sitemap=True, hero="", compact=False,
     head = LD_RX.sub(ld_small, head)
     if path == "":      # search-engine ownership tags (config.json "verify"): the owner pastes the code each webmaster tool gives him
         vf = CFG.get("verify") or {}
-        head += "".join(f'<meta name="{n_}" content="{e(vf[k_])}">' for k_, n_ in (("google", "google-site-verification"), ("bing", "msvalidate.01")) if vf.get(k_))
+        head += "".join(f'<meta name="{n_}" content="{e(vf[k_])}">' for k_, n_ in (("google", "google-site-verification"), ("bing", "msvalidate.01"), ("cryptomus", "cryptomus")) if vf.get(k_))
     if path.split("/", 1)[0] in SAME_QUERY_ORDER and 'content="noindex' not in head and not re.search(r"/\d+/$", path): SAME_QUERY[query_key(title)].append(path)
     write(path, f"""<!doctype html>
 <html lang="en" data-base="{P}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
