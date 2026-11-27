@@ -687,7 +687,25 @@ def name_canonicals(moved):
         n_ += 1
     return n_
 ORG_LD = [""]
-ORG_SAME_AS = ["https://www.linkedin.com/company/jobseveryhour/"]      # the profiles that are the site's own: one list for every Organization block
+# Who runs the site (owner, 27 Nov 2026): the founder's public name, the one his letters are signed with; no photo. The trust and AI
+# search teardowns (26 Nov 2026) found no person behind the site: About said "a small team", the markup had no founder.
+FOUNDER = "Adam Shanin"
+LEGAL_DATE = "2026-11-27"           # the day /terms/ and /privacy/ last changed in substance: their "Effective" line (not the build's day)
+# the profiles that are the site's own: one list for every Organization block. Each was opened on 27 Nov 2026 and answered with the
+# site's own page (LinkedIn and G2 in a browser: both refuse plain requests with 403). Crunchbase is not here: its profile could not be
+# made (its sign-up page blocked our browser on 27 Nov 2026), and an address that does not exist is no proof.
+ORG_SAME_AS = ["https://www.linkedin.com/company/jobseveryhour/", "https://www.g2.com/products/jobs-every-hour/reviews", "https://devhunt.org/tool/jobs-every-hour",
+               "https://github.com/Simba0315/jobseveryhour-mcp", "https://glama.ai/mcp/connectors/com.jobseveryhour/jobs"]
+ORG_ID = FULL + "/#organization"
+
+
+def org_json(description):
+    """The site's Organization markup, the same on every page that carries it: its @id, the founder, the contacts and the profiles."""
+    mail_ = CFG.get("emails") or {}
+    return {"@context": "https://schema.org", "@type": "Organization", "@id": ORG_ID, "name": SITE, "url": FULL + "/", "logo": FULL + "/brand/icon-512.png",
+            "description": description, "foundingDate": "2026-11", "founder": {"@type": "Person", "name": FOUNDER, "jobTitle": "Founder"},
+            "contactPoint": [{"@type": "ContactPoint", "contactType": t_, "email": a_} for t_, a_ in (("customer support", CFG.get("contact_email", "")), ("press", mail_.get("press", ""))) if a_],
+            "sameAs": ORG_SAME_AS}
 V = hashlib.md5(b"".join((ROOT / "assets" / f).read_bytes() for f in ("style.css", "site.js", "app.js", "account.js", "tools.js", "tools.css", "resume.js", "widget.js", "widgets.js", "map.js", "explorer.js", "fsel.js"))).hexdigest()[:8]   # cache-busting version
 VC = hashlib.md5(b"".join((ROOT / "assets" / f).read_bytes() for f in ("compare.js", "compare.css"))).hexdigest()[:8]     # the comparison table's own files (/vs/compare/)
 # a job page's short footer; the dots between the links are their own spans, so on a phone the links can stand as a row of 44 px taps
@@ -5648,9 +5666,8 @@ def main():
             f'<p class="kact">{go("post-a-job/", "Post a job — free")}<a href="{P}/pricing/#employers">See every price</a></p></div>'
             '<ul class="kgets"><li><b>30 days</b> in the list and in search</li><li><b>Its own page</b>, readable by Google’s job box</li>'
             '<li><b>A link</b> straight to your application page</li><li><b>Checked</b> before it goes live</li></ul></section>')
-    ORG_LD[0] = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/", "logo": FULL + "/brand/icon-512.png",
-        "description": "A job search that reads open jobs around the clock from employers’ own career pages, with a free resume builder.",
-        "sameAs": ORG_SAME_AS}, ensure_ascii=False) + "</script>")
+    ORG_LD[0] = ('<script type="application/ld+json">' + json.dumps(org_json("A job search that reads open jobs around the clock from employers’ own career pages, with a free resume builder."),
+                                                                    ensure_ascii=False) + "</script>")
     wk_ = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
     co_top = Counter(j["company"] for j in active if j["company"] not in CHURN).most_common(10)
     co_new = Counter(j["company"] for j in active if (j.get("posted") or "")[:10] >= wk_)       # "new": the employer's date (FACTS), not our first reading
@@ -5807,7 +5824,7 @@ def main():
          home_desc, home, hero=hero, cls="kp home",
          head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "WebSite", "name": SITE, "url": FULL + "/",
                "description": f"A job search engine that reads the career pages of {m:,} companies {EVERY} and lists only the jobs that are still open.",
-               "potentialAction": {"@type": "SearchAction", "target": FULL + "/jobs/?q={search_term_string}", "query-input": "required name=search_term_string"}}) + "</script>" + faq_ld + ORG_LD[0])
+               "publisher": {"@id": ORG_ID}, "potentialAction": {"@type": "SearchAction", "target": FULL + "/jobs/?q={search_term_string}", "query-input": "required name=search_term_string"}}) + "</script>" + faq_ld + ORG_LD[0])
     rss("feed.xml", f"{SITE} — latest jobs", "", active)
 
     lap('Search page')
@@ -12471,9 +12488,14 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          crumbs(("Terms", "")) + "<h1>Terms of use</h1>"
          "<h2 class='h2s'>What this site is</h2><p>A search service for job postings published by companies on their own careers pages. We are not the employer and not a recruitment agency, and we take no part in hiring decisions.</p>"
          "<h2 class='h2s'>Accuracy</h2><p>Listings are collected automatically, around the clock. A job may change or close between updates, and details such as salary, perks and location are read from the posting text. Always check the employer's own page before you rely on them.</p>"
+         + f'<p class="note">Effective {fdate(LEGAL_DATE)}.</p>'
          "<h2 class='h2s'>Applying</h2><p>Applications are made on the employer's site. Viewing jobs and applying is free.</p>"
          + ("<h2 class='h2s'>Listings from Telegram channels</h2><p>Some listings are read from public Telegram job channels. Each one names its channel, "
             "links to the original post and shows only the facts of the job and a few lines of the post. They are not checked with the employer. "
+         # who is responsible (trust teardown, 26 Nov 2026: no operator, no date, no country). Only what is true: the founder by the name he
+         # uses in public; no company and no address are named, because none is registered.
+         + f"<h2 class='h2s'>Who is responsible for your data</h2><p>{e(SITE)} (jobseveryhour.com) is run by {e(FOUNDER)}, its founder, who decides what this site keeps and is responsible for it. "
+           f"Questions and requests about your data: {mail_a('privacy')}. Anything else: {mail_a('support')}.</p>"
             f"A channel owner who does not want the channel's posts here can write to {mail_a('partners')}; they are taken off at the next update.</p>"
             if any(j_.get("tg") for j_ in active) else "")       # only while channel posts are shown (telegram_jobs.py)
          + (("<h2 class='h2s'>Job alerts</h2><p>Job alerts are free. You ask for one with your email address and confirm it from the letter we send; then you get the new jobs that match it, "
@@ -12494,6 +12516,9 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
              "or charged. The terms of paid placements will be published here before anything can be bought.</p>") if CFG["api_url"] else "")
          + "<h2 class='h2s'>Names and trademarks</h2><p>Company names belong to their owners and are used only to identify who is hiring. A listing here does not mean the company endorses this site.</p>"
          "<h2 class='h2s'>Salary and hiring data</h2><p>Figures on the salary, trends and insights pages are calculated from advertised ranges. They are estimates for information, not an offer or a guarantee.</p>"
+         + f'<p class="note">Effective {fdate(LEGAL_DATE)}.</p>'
+         + f"<h2 class='h2s'>Who runs this site</h2><p>{e(SITE)} (jobseveryhour.com) is run by {e(FOUNDER)}, its founder. "
+           f"Questions about them: {mail_a('support')}. A listing to correct or remove: {mail_a('jobs')}.</p>"
          "<h2 class='h2s'>Job descriptions</h2><p>Descriptions are the employers’ own text, read from the hiring feeds they publish for display on other sites. They are shown unchanged, with the employer named and a link to the original posting.</p>"
          "<h2 class='h2s'>Removing a listing</h2><p>" + (f"Employers who want a listing or company page removed can write to {mail_a("jobs")}. It is taken down at the next update." if contact
                                                         else "Employers who want a listing or company page removed can ask through the contact details on the employers page.") + "</p>", cls="sp docp")
@@ -15500,8 +15525,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          + section("Questions about [[the hiring badge]]", '<dl class="qa">' + "".join(f"<div><dt>{e(q_)}</dt><dd>{e(a_)}</dd></div>" for q_, a_ in hb_faq) + "</dl>", label="Questions"),
          head='<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
              {"@type": "Question", "name": q_, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q_, a_ in hb_faq]}, ensure_ascii=False).replace("</", "<\\/") + "</script>", cls="hub sp hbp")
-    org_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Organization", "name": SITE, "url": FULL + "/",
-              "logo": FULL + "/brand/icon-512.png", "description": "An index of open jobs collected from companies' official careers pages, read around the clock.", "sameAs": ORG_SAME_AS}) + "</script>")
+    org_ld = ('<script type="application/ld+json">' + json.dumps(org_json("An index of open jobs collected from companies' official careers pages, read around the clock.")) + "</script>")
     page("about/", f"About {SITE} — who we are and how the site works", f"What {SITE} is, where its {n:,} job listings come from, how often they are checked and what the site does not do.",
          khero(crumbs(("About", "")), "About", f"About {e(SITE)}",
                f'{e(SITE)} is an index of open jobs. It reads the public hiring feeds of {N_FEEDS:,} companies around the clock, puts their {n:,} open roles into one searchable list and links each one back to the employer.',
@@ -15514,7 +15538,9 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          f'<h2 class="h2s">How often {e(SITE)} is updated</h2><p>Our server reads the companies’ careers pages in turn, around the clock: {CHECK_LINE[0]}. The lists and counts are rebuilt from the full record several times a day. Each job page shows when the job was last found on the employer’s page. Closed jobs are not deleted: they move to the <a href="{P}/archive/">archive</a> and are marked as closed.</p></div>' '<div>'
          f'<h2 class="h2s">What {e(SITE)} costs job seekers</h2><p>Nothing. Searching, saving jobs, tracking applications, the resume builder and applying are free and need no account. A paid <a href="{P}/plus/">Plus</a> plan with extra tools is planned.</p></div></div>'
          '<p class="sec-label">Who is behind it</p><div class="about-grid two"><div>'
-         f'<h2 class="h2s">Who runs {e(SITE)}</h2><p>An independent small team. We are not a recruitment agency and take no part in hiring decisions. Company names and logos belong to their owners and are shown only to identify the employer.</p></div>'
+         f'<h2 class="h2s">Who runs {e(SITE)}</h2><p>{e(SITE)} is run by {e(FOUNDER)}, its founder. There is no larger team behind it: the jobs are collected and checked by software, '
+         f'and mail to the addresses on this page reaches him. Write to {mail_a("support")} about the site, or to {mail_a("press")} for the press. '
+         'We are not a recruitment agency and take no part in hiring decisions. Company names and logos belong to their owners and are shown only to identify the employer.</p></div>'
          f'<div><h2 class="h2s">What {e(SITE)} will never do</h2><p>Charge you to apply for a job, ask for your phone number, hold a job back for paying members or renew a payment by itself. '
          f'The full list, in plain words, is on the <a href="{P}/promise/">promise page</a>.</p></div></div>'
          '<p class="sec-label">Contacts</p><div class="kcontact"><div>'
@@ -15548,7 +15574,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          '<h2 class="h2s">Why is a job listed once when it is open in several cities?</h2><p>Lists show a role once and add “+N more locations”. Each posting still has its own page. Counts on the site are counts of postings.</p>'
          # the editorial policy (perfect-page standard, 26 Nov 2026: E-E-A-T, reachable from the footer). Only what is true of the site today.
          + f'<h2 class="h2s" id="editorial-policy">Editorial policy: who writes the pages of {e(SITE)} and how they are checked</h2>'
-           f'<p>The pages are written by the small independent team that runs this site, as the <a href="{P}/about/">About page</a> says. We name no author who does not exist and print no reviews, quotes or customer logos we did not receive.</p>'
+           f'<p>The pages are published by {e(FOUNDER)}, the founder who runs this site, as the <a href="{P}/about/">About page</a> says. We name no author who does not exist and print no reviews, quotes or customer logos we did not receive.</p>'
            '<p>Numbers come from the open postings we read, and each page says the date they were counted. A fact that does not come from the postings names its source and the date it was read: '
            'the US Bureau of Labor Statistics for job outlook and government pay figures, the US Department of Labor for H-1B filings, each job site’s own pages for the facts in our comparisons.</p>'
            '<p>Resume and CV examples are written to show the form: the people, employers and numbers in them are invented, and each example says so. Cover letter examples leave names and numbers as blanks to fill in. The figures from postings shown beside them are real.</p>'
