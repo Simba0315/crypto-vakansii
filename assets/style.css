@@ -5771,6 +5771,7 @@ main.about>.sec-label{margin-bottom:16px}
 .job .pill.fitb.nw{background:var(--green-soft);color:var(--green)}
 .job .pill.fitb.h1b{color:var(--text);font-weight:600}
 .job .pill.fitb+.pill::before,.job .pill.fitb::before{content:none}
+.job .pills:has(.fitb){row-gap:4px}      /* a mark that wraps to a hidden second line must not show its top edge under the first */
 @media(max-width:720px){.job .pill.fitb{margin:0;font-size:12.5px}}
 /* the quiet line that asks for the five answers (the search page and a job page, for a visitor without them) */
 .fitask{margin:0 0 10px;font-size:14px}
@@ -5804,7 +5805,8 @@ main.about>.sec-label{margin-bottom:16px}
 /* on a phone the card stands after the posting: the decision card gets one line with the marks that leads to it */
 .fit1{display:none}
 @media (max-width:860px){
-  .fit1{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:-4px 0 16px;text-decoration:none;color:var(--text);order:-1}
+  .fit1{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:12px 0 0;text-decoration:none;color:var(--text);order:-1}
+  .jdec .alertf.alert1{flex:none}      /* in the phone's column card its flex-basis of 560 px became a height: the alert stood 560 px tall */
   .fit1 .fit1-go{font-size:13.5px;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line2)}
 }
 /* My jobs: get set up, the profile, the saved resumes */
