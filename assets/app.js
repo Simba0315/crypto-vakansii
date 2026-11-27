@@ -223,7 +223,7 @@
       fwrap.classList.toggle('has-on', active > 0);  // and "All filters" counts the chosen ones it hides
       [cat, lvl, loc, city, sal, age, perk, etype].forEach(function (el) { el.classList.toggle('on', !!el.value); });
       var mfs = fwrap.querySelector('.morefilters summary');
-      var hid = [perk, etype].filter(function (el) { return el.value; }).length + [oldOn, fTi].filter(function (el) { return el && el.checked; }).length + (xlOf().length ? 1 : 0) + skills.length;
+      var hid = [perk].filter(function (el) { return el.value; }).length + [oldOn, fTi].filter(function (el) { return el && el.checked; }).length + (xlOf().length ? 1 : 0) + skills.length;
       if (mfs) mfs.setAttribute('data-n', hid ? String(hid) : '');
     }
     history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));

@@ -5907,6 +5907,8 @@ def main():
               + group("Posted", '<select id="age" aria-label="Posted"><option value="">Any time</option><option value="1">Last 24 hours</option><option value="3">Last 3 days</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select>')
               + group("Category", f'<select id="cat" aria-label="Category"><option value="">All categories</option>{opts}</select>')
               + group("Level", '<select id="lvl" aria-label="Level"><option value="">Any level</option><option>Intern</option><option>Junior</option><option>Senior</option><option value="Lead">Lead and above</option><option value="Exec">Director and above</option></select>')
+              # hours of work is one of the first things a person asks ("part time", "contract"): in the main bar beside Level, not under "All filters" (27 Nov 2026)
+              + group("Job type", '<select id="etype" aria-label="Job type"><option value="">Any type</option><option>Full-time</option><option>Part-time</option><option>Contract</option><option>Internship</option></select>')
               + group("Location", f'<div class="floc"><select id="loc" aria-label="Location"><option value="">Anywhere</option>{loc_opts}</select>'
                       '<input type="search" id="city" list="city-list" placeholder="Any city, e.g. Leeds" aria-label="City" autocomplete="off"></div>'
                       f'<datalist id="city-list">{city_opts}</datalist>'
@@ -5929,7 +5931,6 @@ def main():
                                    '<input type="text" id="xwords" class="xin" placeholder="Words in the title, e.g. senior, sales" aria-label="Words to leave out of results" autocomplete="off">'
                                    '<div id="xcos" class="xcos"></div>')
               + group("Perk", '<select id="perk" aria-label="Perk"><option value="">Any perk</option>' + "".join(f'<option value="{e(nm)}">{e(nm)}</option>' for nm, _, _ in PERKS) + "</select>")
-              + group("Type", '<select id="etype" aria-label="Type"><option value="">Any type</option><option>Full-time</option><option>Contract</option><option>Part-time</option><option>Internship</option></select>')
               + group("Skills", f'<div class="skillbar" id="skills">{skill_chips}</div>')
               + '</div></details><div class="fgroup fclear"><button class="linkbtn" id="fclear" type="button">Clear all</button></div></aside>'
               # the filter menus (fsel.js) run here, as the page is read, not after it (26 Nov 2026): the filters were first drawn as five

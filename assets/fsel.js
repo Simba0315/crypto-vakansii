@@ -152,12 +152,12 @@
     return sync;
   }
 
-  var syncs = [placeMenu(), menu(document.getElementById('age')), menu(document.getElementById('cat'), true), menu(document.getElementById('lvl')),
+  var syncs = [placeMenu(), menu(document.getElementById('age')), menu(document.getElementById('cat'), true), menu(document.getElementById('lvl')), menu(document.getElementById('etype')),
     menu(document.getElementById('sal'))].filter(Boolean);
   // one bar for the five menus (owner, 24 Nov 2026: the row of separate pills still looked cheap): Location, Category, Level, Salary,
   // Posted, each a label over its value, divided by thin lines; the groups are moved, the controls and their ids stay the same
   var bar = document.createElement('div'); bar.className = 'fx-bar'; bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', 'Filters');
-  ['loc', 'cat', 'lvl', 'sal', 'age'].forEach(function (id) {
+  ['loc', 'cat', 'lvl', 'etype', 'sal', 'age'].forEach(function (id) {
     var c = document.getElementById(id), g = c && c.closest('.fgroup');
     if (g && g.parentNode === wrap) bar.appendChild(g);
   });
