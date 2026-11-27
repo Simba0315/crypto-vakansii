@@ -16341,12 +16341,17 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
               cat_list.index(j["cat"]), lvl_list.index(j["level"]) if j["level"] in lvl_list else 0, [ti[t] for t in j["tags"] if t in ti], j["salary"],
               int((j["posted"] or j["first_seen"]).replace("-", "")[:8] or 0), int(j["usd"][1]) if j["usd"] else 0, [pi[p_] for p_ in j["places"]],
               [perk_list.index(x) for x in j.get("perks", []) if x in perk_list], et_list.index(j.get("etype", "")) if j.get("etype", "") in et_list else 0,
-              j["t"] // 60 if j["t"] and NOW - j["t"] < WEEK else 0] for j in order(active)]      # last: exact posting time, minutes since 1970 (0: only the day is known, or older than a week)
+              j["t"] // 60 if j["t"] and NOW - j["t"] < WEEK else 0]
+             # then, for a job we first saw in the last week only, that time in minutes ("New today · apply early", site.js fitNew)
+             + ([fs_ // 60] if (fs_ := search_engine.seen_at(j)) and NOW - fs_ < WEEK else []) for j in order(active)]      # [14]: exact posting time, minutes since 1970 (0: only the day is known, or older than a week)
     idx = {"c": comp_list, "t": tag_list, "p": place_list, "f": [PLACE_CODE.get(p_, "") for p_ in place_list], "k": cat_list, "l": lvl_list, "x": perk_list, "e": et_list, "g": [int(slugify(c) in LOGOS) for c in comp_list]}
     write("data/index.json", json.dumps({**idx, "r": rows_}, ensure_ascii=False, separators=(",", ":")), sitemap=False)
     lap('the newest rows on their own: the search page paints from th')
     # the newest rows on their own: the search page paints from this small file while the full index is still loading
     write("data/head.json", json.dumps({**idx, "n": len(rows_), "r": rows_[:300]}, ensure_ascii=False, separators=(",", ":")), sitemap=False)
+    # The "H-1B sponsor" mark on job cards and job pages (site.js, for a visitor with a match profile): each company with open jobs here and
+    # certified H-1B LCAs in the US Department of Labor's disclosure data (data/h1b.json, h1b_years), as {name: [certified LCAs, fiscal year]}.
+    write("data/h1b-co.json", json.dumps({c: [ys_[0][1], ys_[0][0]] for c in comp_list if (ys_ := h1b_years(slugify(c)))}, ensure_ascii=False, separators=(",", ":")), sitemap=False)
     shutil.copy(ROOT / "assets" / "og.jpg", OUT / "og.jpg")
     if (ROOT / "assets" / "logos").exists(): shutil.copytree(ROOT / "assets" / "logos", OUT / "logos")
     for f_ in (ROOT / "data" / "logos").glob("*.png"):                  # a company's own upload stands in place of the logo we held for it

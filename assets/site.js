@@ -37,7 +37,8 @@
   // row: [0 slug, 1 title, 2 company, 3 location, 4 remote, 5 cat, 6 level, 7 tags, 8 salary, 9 postedText, 10 entry, 11 featured, 12 hue,
   //       13 salaryHigh, 14 places, 15 crypto, 16 postedInt, 17 search text (lazy), 18 perks, 19 type, 20 anywhere, 21 logo, 22 talent pool,
   //       23 exact posting time in minutes since 1970 (0 when only the day is known or the job is over a week old),
-  //       24 country codes of the places the job is in, for the flags, 25 hybrid, 26 "Urgently hiring" badge bought for the job]
+  //       24 country codes of the places the job is in, for the flags, 25 hybrid, 26 "Urgently hiring" badge bought for the job,
+  //       27 'tg' or 'usajobs' for a job not read from the employer's own system, 28 when we first saw it, minutes since 1970 (only in its first week)]
   var cache, headCache;
   function expand(d) {
     var cslug = d.c.map(function (c) { return slugOf(c) || 'job'; });
@@ -49,7 +50,7 @@
           r[11].map(function (i) { return d.p[i]; }), r[4] & 4 ? 1 : 0, pi, '',
           (r[12] || []).map(function (i) { return d.x[i]; }), d.e ? d.e[r[13] || 0] : '', r[4] & 8 ? 1 : 0, d.g && d.g[r[2]] ? slugOf(c) : '', r[4] & 16 ? 1 : 0, r[14] || 0,
           d.f ? r[11].map(function (i) { return d.f[i]; }).filter(function (c, i, a) { return c && a.indexOf(c) === i; }).slice(0, 3) : [], r[4] & 32 ? 1 : 0, r[4] & 64 ? 1 : 0,
-          r[4] & 128 ? 'tg' : r[4] & 256 ? 'usajobs' : ''];
+          r[4] & 128 ? 'tg' : r[4] & 256 ? 'usajobs' : '', r[15] || 0];
     });
   }
   function load() {
@@ -63,11 +64,11 @@
   }
   // A row as the server sends it (search_engine.row: /api/search?list=1, and the first page inside /jobs/) -> the row above:
   // [slug, title, company, place, flags, field, level, skills, pay, posted yyyymmdd, top of the pay in USD, places, perks, type,
-  //  exact time in minutes, country codes, has a logo, other postings of the same role]
+  //  exact time in minutes, country codes, has a logo, other postings of the same role, the time we first saw it in minutes]
   function fromApi(a) {
     var f = a[4], pi = a[9];
     return [a[0], a[1], a[2], a[3], f & 1, a[5], a[6], a[7], a[8], pi ? MONTHS[Math.floor(pi / 100) % 100 - 1] + ' ' + (pi % 100) : '', a[6] === 'Intern' || a[6] === 'Junior' ? 1 : 0,
-      f & 2 ? 1 : 0, hue(a[2]), a[10], a[11], f & 4 ? 1 : 0, pi, '', a[12], a[13], f & 8 ? 1 : 0, a[16] ? slugOf(a[2]) : '', f & 16 ? 1 : 0, a[14], a[15], f & 32 ? 1 : 0, f & 64 ? 1 : 0];
+      f & 2 ? 1 : 0, hue(a[2]), a[10], a[11], f & 4 ? 1 : 0, pi, '', a[12], a[13], f & 8 ? 1 : 0, a[16] ? slugOf(a[2]) : '', f & 16 ? 1 : 0, a[14], a[15], f & 32 ? 1 : 0, f & 64 ? 1 : 0, '', a[18] || 0];
   }
   // The open jobs among these slugs, as rows, from the server (60 to a request): for a page that needs a few jobs, not every job.
   // A slug that is missing from the answer is a job that is closed (or never was).
@@ -321,18 +322,20 @@
       return have(t) ? '<span class="pill have" title="On your resume">✓ ' + esc(t) + '</span>' : '<span class="pill grow" title="To grow: not on your resume yet">' + esc(t) + '</span>';
     }).join('');
   }
-  function card(j, more, badge) {
+  function card(j, more, badge, noFit) {
+    if (ROWS && !j.lite) ROWS[j[0]] = j;             // its marks need no request (fitMark); a live row (j.lite) lacks the field and the pay
     // where a job not read from the employer's own hiring system comes from (j[27], data/index.json flags 128 and 256)
     var src = j[27] === 'tg' ? '<span class="pill" title="A post in a public Telegram job channel, not checked with the employer">Telegram post</span>'
       : j[27] === 'usajobs' ? '<span class="pill" title="A federal job, read from USAJOBS, the US government’s official job site">USAJOBS</span>' : '';
-    var pills = src + (badge ? '<span class="pill acc">' + esc(badge) + '</span>' : '') + skillFit(j) + (j[11] ? '<span class="pill acc">Featured</span>' : '') + (j[26] ? '<span class="pill urg">Urgently hiring</span>' : '') +
+    var fb = !noFit && fitMemo && fitMemo.h1b && !j.lite ? fitBadges(j, fitMemo.A, fitMemo.h1b, Date.now(), 2) : null;     // drawn with the card: nothing grows later
+    var pills = (fb ? fb.map(fitPill).join('') : '') + src + (badge ? '<span class="pill acc">' + esc(badge) + '</span>' : '') + skillFit(j) + (j[11] ? '<span class="pill acc">Featured</span>' : '') + (j[26] ? '<span class="pill urg">Urgently hiring</span>' : '') +
       (j[4] ? '<span class="pill ok">' + (j[20] ? 'Remote, anywhere' : 'Remote') + '</span>' : j[25] ? '<span class="pill">Hybrid</span>' : '') + (j[6] ? '<span class="pill">' + esc(j[6] === 'Lead' ? 'Lead and above' : j[6]) + '</span>' : '') +
       tagPills(j[7]);
     var place = j[3].length > 60 ? j[3].slice(0, 57) + '…' : j[3];
     var ag = ageOf(j[16]);
     // the exact time only when it falls on the employer's day or the day next to it (build.exact says why)
     var tx = j[23] && (!j[16] || Math.abs(j[23] * 60000 - Date.UTC(Math.floor(j[16] / 10000), Math.floor(j[16] / 100) % 100 - 1, j[16] % 100)) < 2 * 864e5) ? j[23] : 0;
-    return '<li class="job' + (j[11] ? ' feat' : '') + '"><a href="' + P + '/job/' + j[0] + '/">' + avatar(j[2], j[21], false) +
+    return '<li class="job' + (j[11] ? ' feat' : '') + '"><a href="' + P + '/job/' + j[0] + '/"' + (fb ? ' data-fb="1"' : '') + '>' + avatar(j[2], j[21], false) +
       '<span><span class="jt">' + esc(j[1]) + '</span><span class="js">' + esc(j[2]) + (place ? ' · ' + flags(j[24]) + esc(place) : '') +
       (more ? ' · +' + more + ' more location' + (more > 1 ? 's' : '') : '') + '</span></span>' +
       '<span class="jr"><span class="jp' + (j[8] ? '' : ' none') + '">' + (j[8] ? esc(j[8].slice(0, 28)) : '—') + '</span><span class="pills">' + pills + '</span><time' + (tx ? ' data-t="' + tx * 60 + '"' : '') + (ag[1] ? ' class="new"' : '') + '>' + esc(ag[0]) + '</time></span></a></li>';
@@ -350,9 +353,11 @@
       var sub = a.querySelector('.js');                       // rows of a company the visitor chose to hide disappear from ready-made lists too
       if (sub && mute.c[sub.textContent.split(' · ')[0]]) { a.parentNode.hidden = true; return; }
       var slug = decodeURIComponent(m[1]), rec = mine[slug], pills = a.querySelector('.pills');
-      if (rec && pills) pills.insertAdjacentHTML('afterbegin', '<span class="pill acc">' + (rec.st === 'saved' ? 'Saved' : rec.st === 'closed' ? 'Closed out' : rec.st === 'offer' ? 'Offer' : rec.st === 'interview' ? 'Interviewing' : 'Applied') + '</span>');
+      var fbs = pills ? pills.querySelectorAll('.fitb') : [];
+      if (rec && pills) (fbs.length ? fbs[fbs.length - 1] : pills).insertAdjacentHTML(fbs.length ? 'afterend' : 'afterbegin', '<span class="pill acc">' + (rec.st === 'saved' ? 'Saved' : rec.st === 'closed' ? 'Closed out' : rec.st === 'offer' ? 'Offer' : rec.st === 'interview' ? 'Interviewing' : 'Applied') + '</span>');
       else if (seen[slug]) a.parentNode.classList.add('seen');
     });
+    fitMark(scope);
   }
   /* "Are you sure?" drawn on the page, next to the button that was pressed. The browser's own confirm() and prompt() windows are
      switched off in some browsers and in-app views; there they answer "no" without showing anything, so a Delete button did
@@ -580,8 +585,68 @@
     return l;
   }
 
-  window.HRN = { fitAnswers: fitAnswers, fitOf: fitOf, fitNew: fitNew, fitBadges: fitBadges, cvList: cvList, cvPrimary: cvPrimary, cvSave: cvSave, cvSkillsOf: cvSkillsOf,
+  /* ---------- "Fits you", "New today" and "H-1B sponsor" on the cards of every list, for a visitor with a profile (the pages are the same
+     for everyone; the marks are added here). A card this script drew has its row already (card() keeps it); for the cards a page was built
+     with, the rows are asked of our server, 60 to a request (rowsOf). Two marks at most, at the start of the card's line of tags. ---------- */
+  var ROWS = {}, fitMemo = null, fitWait = null, fitQ = [], fitT = 0;
+  function fitMine() {             // {p: the answers, A, cv: the primary resume} or null when the visitor has given nothing
+    if (fitMemo === null) {
+      var p = get('hrn_profile', null) || {}, cv = cvPrimary(), A = fitAnswers(p, { extra: cv ? cv.skills : [] });
+      fitMemo = A.n ? { p: p, A: A, cv: cv } : false;
+    }
+    return fitMemo || null;
+  }
+  function fitReady() {            // the profile with its country filled in (profiles saved before 27 Nov 2026 hold only its code) and the H-1B list
+    if (fitWait) return fitWait;
+    var me = fitMine();
+    if (!me) return (fitWait = Promise.resolve(null));
+    var place = me.p.place && !me.p.pl ? fetch(P + '/data/geo.json').then(function (r) { return r.json(); }).then(function (G) {
+      var c = G.c && G.c[me.p.place]; if (!c) return;
+      var p = get('hrn_profile', {}); p.pl = [c[1] || '', c[4] || '', c[0] || '']; set('hrn_profile', p);
+      me.p = p; me.A = fitAnswers(p, { extra: me.cv ? me.cv.skills : [] });
+    }).catch(function () {}) : null;
+    var h1b = fetch(P + '/data/h1b-co.json').then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; });
+    return (fitWait = Promise.all([h1b, place]).then(function (a) { me.h1b = a[0] || {}; return me; }));
+  }
+  function fitPill(b) {            // one mark as a card shows it; "· apply early" gives way on a computer's narrow column of tags (style.css)
+    return '<span class="pill ' + b[0] + '" title="' + esc(b[2]) + '">' + esc(b[1]).replace(' · apply early', '<span class="fx"> · apply early</span>') + '</span>';
+  }
+  function fitMark(scope) {
+    if (!fitMine()) return;
+    Array.prototype.forEach.call((scope || document).querySelectorAll('.job > a'), function (a) {
+      if (a.getAttribute('data-fb') || (a.closest && a.closest('#fy-list,#closed'))) return;      // For you writes its own fit line
+      var m = (a.getAttribute('href') || '').match(/\/job\/([^/?#]+)\/?$/);
+      if (!m) return;
+      a.setAttribute('data-fb', '1'); fitQ.push([a, decodeURIComponent(m[1])]);
+    });
+    clearTimeout(fitT); fitT = setTimeout(fitFlush, 50);          // the rows that slide into a live list one at a time go in one request
+  }
+  function fitFlush() {
+    var q = fitQ.splice(0, fitQ.length);
+    if (!q.length) return;
+    fitReady().then(function (me) {
+      if (!me) return;
+      var need = [];
+      q.forEach(function (x) { if (!ROWS[x[1]] && need.indexOf(x[1]) < 0 && need.length < 180) need.push(x[1]); });
+      return (need.length ? rowsOf(need).then(function (rows) { rows.forEach(function (j) { ROWS[j[0]] = j; }); }, function () {}) : Promise.resolve()).then(function () {
+        var now = Date.now();
+        q.forEach(function (x) {
+          var j = ROWS[x[1]], pills = x[0].querySelector('.pills');
+          if (!j || !pills) return;
+          pills.insertAdjacentHTML('afterbegin', fitBadges(j, me.A, me.h1b, now, 2).map(fitPill).join(''));
+        });
+      });
+    });
+  }
+  if (fitMine()) fitReady();
+  window.HRN = { fitAnswers: fitAnswers, fitOf: fitOf, fitNew: fitNew, fitBadges: fitBadges, fitMine: fitMine, fitReady: fitReady, cvList: cvList, cvPrimary: cvPrimary, cvSave: cvSave, cvSkillsOf: cvSkillsOf,
     fitTest: fitTest, readPosting: readPosting, sure: sure, askText: askText, mute: mute, saveMute: function () { set('hrn_mute', mute); }, parse: parse, match: match, load: load, loadHead: loadHead, fromApi: fromApi, rowsOf: rowsOf, listOf: listOf, fitQuery: fitQuery, heavyOk: heavyOk, collapse: collapse, card: card, decorate: decorate, get: get, set: set, esc: esc, today: today, base: P };
+
+  /* ---------- the search page, for a visitor without answers: one quiet line above the count (not on every card) ---------- */
+  if ($('search') && $('results') && !fitMine()) {
+    var rbar0 = $('count') && $('count').closest ? $('count').closest('.rbar') : null;
+    if (rbar0) { var ask0 = document.createElement('p'); ask0.className = 'note fitask'; ask0.innerHTML = '<a href="' + P + '/for-you/">See how well each job fits you: answer 5 questions</a>'; rbar0.parentNode.insertBefore(ask0, rbar0); }
+  }
 
   /* ---------- "Save this list" on a list page: the list goes into My jobs as the search that gives the same jobs, and My jobs counts
      the jobs posted since the last look. A second press takes it out again. Nothing is sent anywhere. ---------- */
@@ -647,7 +712,7 @@
       j[0] = o.slug; j[1] = o.title; j[2] = o.company; j[3] = o.location || ''; j[4] = o.remote ? 1 : 0; j[6] = o.level || '';
       j[7] = o.tags || []; j[8] = o.salary || ''; j[11] = o.featured ? 1 : 0; j[16] = p ? p[0] * 10000 + p[1] * 100 + p[2] : 0;
       j[20] = o.anywhere ? 1 : 0; j[25] = o.hybrid ? 1 : 0; j[26] = o.urgent ? 1 : 0;
-      j[21] = o.logo || ''; j[23] = o.t && Date.now() / 1000 - o.t < 7 * 86400 ? Math.floor(o.t / 60) : 0; j[24] = o.cc || [];
+      j[21] = o.logo || ''; j[23] = o.t && Date.now() / 1000 - o.t < 7 * 86400 ? Math.floor(o.t / 60) : 0; j[24] = o.cc || []; j.lite = 1;
       var box = document.createElement('ul'); box.innerHTML = card(j);
       var li = box.firstChild, ft = foundText(o);
       li.setAttribute('data-ts', o.ts || 0); if (!still) li.classList.add('lv');
@@ -1721,7 +1786,7 @@
         if (asked && i === nFull && nFull > 0) html += '<li class="fy-div">Fit in part: at least one answer could not be checked</li>';
         var line = w ? '<p class="why"><b>' + w.ok + ' of ' + asked + '</b>' + w.bits.map(function (b) { return '<span class="' + (b[0] ? 'y' : 'q') + '">' + esc(b[1]) + '</span>'; }).join('') + '</p>' : '';
         if (fresh[j[0]]) line = line ? line.replace('<p class="why">', '<p class="why"><span class="y nw">New since your last visit</span>') : '<p class="why"><span class="y nw">New since your last visit</span></p>';
-        html += card(j, extra.get(j[0]) || 0, '').replace(/<\/li>$/, line + '</li>');
+        html += card(j, extra.get(j[0]) || 0, '', 1).replace(/<\/li>$/, line + '</li>');      // For you writes its own fit line
       });
       list.innerHTML = html; more.hidden = found.length <= shown; decorate(list);
     };

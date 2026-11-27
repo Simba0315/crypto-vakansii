@@ -5754,6 +5754,28 @@ main.about>.sec-label{margin-bottom:16px}
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]) .khero h1 .hl,:root:not([data-theme=light]) main.sp .khero h1 .hl,:root:not([data-theme=light]) .hero.v2 h1 .hl,:root:not([data-theme=light]) .sec-head h2.tw b,:root:not([data-theme=light]) .sec-head.lst h2.tw b,:root:not([data-theme=light]) .kcta h2.tw b:not(.free),:root:not([data-theme=light]) .alertf h2.tw b,:root:not([data-theme=light]) .guide h2.tw2 b{background:linear-gradient(transparent 82%,var(--hl) 82%,var(--hl) 91%,transparent 91%)}}
 :root[data-theme=dark] .khero h1 .hl,:root[data-theme=dark] main.sp .khero h1 .hl,:root[data-theme=dark] .hero.v2 h1 .hl,:root[data-theme=dark] .sec-head h2.tw b,:root[data-theme=dark] .sec-head.lst h2.tw b,:root[data-theme=dark] .kcta h2.tw b:not(.free),:root[data-theme=dark] .alertf h2.tw b,:root[data-theme=dark] .guide h2.tw2 b,
 .kpanel.ink .khero h1 .hl,.kpanel.ink .sec-head h2.tw b,.kpanel.ink .kcta h2.tw b:not(.free),.kpanel.ink .alertf h2.tw b,.kpanel.ink .guide h2.tw2 b,.inkband .khero h1 .hl,.inkband .sec-head h2.tw b,.inkband .kcta h2.tw b:not(.free),.inkband .alertf h2.tw b,.inkband .guide h2.tw2 b,.kpanel.ink.kcta h2.tw b:not(.free){background:linear-gradient(transparent 82%,var(--hl) 82%,var(--hl) 91%,transparent 91%)}
+
+/* ---- the visitor's fit on every job (27 Nov 2026, site.js fitBadges): "Fits you 4/5", "New today · apply early", "H-1B sponsor".
+   A small chip at the start of a card's line of tags (one line high, so a card keeps its height), and the same chips on the job page.
+   A full fit is the green marker; a part fit a green outline; a fit with a cross is grey; New today green words; H-1B ink. ---- */
+.pill.fitb{display:inline-block;padding:1px 7px;border:1px solid var(--green);border-radius:999px;background:var(--card);color:var(--green);font-weight:650;line-height:17px}
+.pill.fitb.all{border-color:transparent;background:var(--hl);color:var(--hl-ink)}
+.pill.fitb.no{border-color:var(--line2);color:var(--muted);font-weight:600}
+.pill.fitb.nw{border-color:transparent;background:var(--green-soft);color:var(--green)}
+.pill.fitb.h1b{border-color:var(--line2);color:var(--text);font-weight:600}
+.pill.fitb.wait{border-color:var(--line);color:var(--faint);font-weight:500}
+.job .pill.fitb{margin:0 6px 0 0;padding:0 6px;border-radius:999px;font-size:12px;line-height:19px;font-weight:650;color:var(--green);background:var(--card)}
+.job .pill.fitb .fx{display:none}      /* a card's line of tags is one line (216 px on a computer): "Fits you 4/5" and "New today" both fit whole; the tip and the job page say "apply early" */
+.job .pill.fitb.all{background:var(--hl);color:var(--hl-ink)}
+.job .pill.fitb.no{color:var(--muted);font-weight:600}
+.job .pill.fitb.nw{background:var(--green-soft);color:var(--green)}
+.job .pill.fitb.h1b{color:var(--text);font-weight:600}
+.job .pill.fitb+.pill::before,.job .pill.fitb::before{content:none}
+@media(max-width:720px){.job .pill.fitb{margin:0;font-size:12.5px}}
+/* the quiet line that asks for the five answers (the search page and a job page, for a visitor without them) */
+.fitask{margin:0 0 10px;font-size:14px}
+.fitask a{color:var(--muted);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+.fitask a:hover{color:var(--text)}
 /* My jobs: get set up, the profile, the saved resumes */
 main.mjp .mj-setup{margin-top:36px}
 main.mjp .mj-setup .sec-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}

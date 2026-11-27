@@ -318,7 +318,18 @@ Five plain questions (kind of work, experience, where, pay, skills), answered wi
 `ask()`), the logic in `assets/site.js` (`judge()`): a job that contradicts an answer is left out, a job that agrees gets a tick,
 a posting that is silent on the point gets a question mark and is listed after the full fits. Nothing is sent anywhere; the answers
 live in `hrn_profile` in the browser. This page is the free half of the planned paid "Plus" (`ROADMAP.md` section 33), so keep it
-free and never put a login in front of it. When the index gains a field, add it to `judge()` and to the reasons shown.
+free and never put a login in front of it. When the index gains a field, add it to `fitOf()` and to the reasons shown.
+
+Since 27 Nov 2026 the rules are one shared function for the whole site (`site.js`: `fitAnswers()` reads the profile, `fitOf()` gives each
+answer a tick 1, a question mark 0 or a cross -1 with its reason; For you leaves out a job with a cross, the cards and the job page show
+it). Used by For you, Swipe, the job page's "How this job fits you" card and the "Fits you 4/5" mark that `fitMark()` adds to every card
+of every list for a visitor with answers (with "New today · apply early" and "H-1B sponsor", two marks at most). Keys, all in the browser:
+`hrn_profile` (the answers; For you also stores `pl` = [place slug, region, country name], `catN` and `rolePat` so other pages read them
+the same way), `hrn_resumes` (up to five saved resumes `{id, name, title, text, skills, primary, at}`; the primary one's skills count as
+skills; My jobs, the resume match checker and For you save them), `hrn_alert_on` (an email alert was asked for; ticks My jobs' "Get set
+up"). "New today" needs the time we first saw a job: `search_engine.seen_at()` (from `first_seen_at`), row field 18 of the API and field
+15 of `data/index.json` (only in a job's first week), `j[28]` in site.js. "H-1B sponsor" reads `data/h1b-co.json` ({company: [certified
+LCAs, fiscal year]}). Tests: the fit block at the end of `tools_test.js` cuts these functions out of site.js.
 
 ## Where the jobs could also come from (`SOURCES_RESEARCH.md`)
 

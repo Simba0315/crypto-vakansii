@@ -92,6 +92,15 @@ def day_start(day):
         return 0
 
 
+def seen_at(rec):
+    """When we first saw a job on the employer's list, in seconds since 1970 (collect.py and live.py keep first_seen_at, to the second,
+    since November 2026); 0 for a job first seen before that, which has only the day. The "New today · apply early" mark reads it."""
+    try:
+        return int(datetime.datetime.fromisoformat(str(rec.get("first_seen_at") or "").replace("Z", "+00:00")).timestamp())
+    except (TypeError, ValueError, OverflowError):
+        return 0
+
+
 HOURS = 2080              # working hours in a year: an hourly rate in the pay filter and in "Highest pay" (search page, "$20/h+")
 # The store, mall, cinema or town an employer appends to a title it posts at every address: "Seasonal Key Holder - Oak Park Mall" is the
 # role "Seasonal Key Holder" (data teardown, 26 Nov 2026: BoxLunch's 924 "Seasonal Sales Associate" postings stood as 16 rows on its
@@ -137,7 +146,7 @@ def doc(rec, descr, codes=None, day=""):
             "crypto": bool(rec.get("crypto")), "anywhere": bool(rec.get("anywhere")), "pool": bool(rec.get("pool")), "exec": bool(EXEC.search(title)),
             "featured": bool(rec.get("featured")), "urgent": bool(rec.get("urgent")), "premium": premium, "pinned": bool(rec.get("pinned")),
             # the order of "Newest first", as build.order(): paid first, then the newest, a bumped job as new as its bump
-            "t": int(rec.get("t") or 0), "ts": max(int(rec.get("ts") or 0) or day_start(posted), int(rec.get("bump") or 0)),
+            "t": int(rec.get("t") or 0), "fs": seen_at(rec), "ts": max(int(rec.get("ts") or 0) or day_start(posted), int(rec.get("bump") or 0)),
             "rot": hashlib.md5(f"{day}-{rec['slug']}".encode()).hexdigest() if premium else "",
             "ckey": (company + SEP + (rec.get("rkey") or role_key(title, rec.get("location") or "")))[:2000]}      # the same role posted once per city is one row with "+N more locations"
 
@@ -560,16 +569,18 @@ def listing(p, today=None, timeout=2.5):
 def row(src, extra=0, logo=False, now=None):
     """One row of results as the page reads it (fromApi() in assets/site.js): [slug, title, company, place, flags, field, level, skills,
     pay as written, posted yyyymmdd, top of the pay range in USD, place slugs, perks, type of work, the exact posting time in minutes
-    (only in its first week, else 0), country codes, has a logo, other postings of the same role]. flags as in data/index.json:
+    (only in its first week, else 0), country codes, has a logo, other postings of the same role, the time we first saw it in minutes (only
+    in its first week, else 0; an index loaded before 27 Nov 2026 has none)]. flags as in data/index.json:
     1 remote, 2 featured, 4 crypto, 8 anywhere, 16 talent pool, 32 hybrid, 64 urgently hiring."""
     b = lambda k: int(bool(src.get(k)))
-    t, now = int(src.get("t") or 0), now or int(time.time())
+    t, fs, now = int(src.get("t") or 0), int(src.get("fs") or 0), now or int(time.time())
     posted = (src.get("posted") or "")[:10].replace("-", "")
     return [src["slug"], src.get("title") or "", src.get("company") or "", src.get("place") or "",
             b("remote") | 2 * b("featured") | 4 * b("crypto") | 8 * b("anywhere") | 16 * b("pool") | 32 * b("hybrid") | 64 * b("urgent"),
             src.get("cat") or "", src.get("level") or "", list(src.get("tags") or [])[:8], src.get("salary") or "",
             int(posted) if posted.isdigit() else 0, int(src.get("pay_hi") or 0), list(src.get("places") or []), list(src.get("perks") or []),
-            src.get("etype") or "", t // 60 if t and now - t < WEEK else 0, list(src.get("cc") or [])[:3], int(bool(logo)), int(extra)]
+            src.get("etype") or "", t // 60 if t and now - t < WEEK else 0, list(src.get("cc") or [])[:3], int(bool(logo)), int(extra),
+            fs // 60 if fs and now - fs < WEEK else 0]
 
 
 _READY = {"at": -1e9, "ok": False, "v": 0, "fields": None}

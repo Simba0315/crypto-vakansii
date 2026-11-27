@@ -25,6 +25,8 @@ class Clock extends Date { constructor(...a) { if (a.length) super(...a); else s
 const doc = { querySelectorAll: (sel) => (sel === 'time[data-t]' ? page : []) };
 const S = new Function('document', 'Date', 'P', "var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];" +
   'var flagsOk = true; var mySkills = [], cvText = "", cvSkillsLine = {}, haveMemo = {}, knowsSkills = false;' +
+  'var ROWS = null, fitMemo = null;' +             // card()'s fit marks (27 Nov 2026): no visitor profile here
+
   ['esc', 'slugOf', 'hue', 'avatar', 'expand', 'ageOf', 'ago', 'freshen', 'flag', 'flags', 'have', 'skillFit', 'tagPills', 'card'].map(cut).join('\n') +
   '\nreturn { ago: ago, freshen: freshen, expand: expand, card: card };')(doc, Clock, '');
 const now = () => Math.floor(clock / 1000);
