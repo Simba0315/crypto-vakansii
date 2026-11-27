@@ -4340,6 +4340,18 @@ footer .fask a{text-decoration:underline;text-decoration-thickness:1px;text-deco
   main.srch .fx-bar,main.srch .fx-chips{-webkit-mask-image:linear-gradient(to right,#000 82%,transparent);mask-image:linear-gradient(to right,#000 82%,transparent)}
   main.srch .fx-bar.at-end,main.srch .fx-chips.at-end{-webkit-mask-image:none;mask-image:none}
 }
+/* 27 Nov 2026: on a phone the bar showed Location and Category and half of Level; Salary and Posted sat off screen behind a sideways
+   scroll nobody guessed at, so filtering by pay took a hunt. Now every menu is on screen: Location across the top, the others two to a
+   row (a lone last one takes the whole row), thin lines between them. The menus and their sheets are unchanged. */
+@media (max-width:600px){
+  main.srch #fwrap .fx-bar{display:grid;grid-template-columns:1fr 1fr;gap:1px;overflow:hidden;background:var(--line);
+    -webkit-mask-image:none;mask-image:none}
+  main.srch #fwrap .fx-bar>.fgroup,main.srch #fwrap .fx-bar>.fgroup.f-loc{min-width:0;background:var(--card)}
+  main.srch #fwrap .fx-bar>.fgroup.f-loc{grid-column:1/-1}
+  main.srch #fwrap .fx-bar>.fgroup:last-child:nth-child(even){grid-column:1/-1}
+  main.srch #fwrap .fx-bar>.fgroup+.fgroup::before{display:none}
+  main.srch #fwrap .fx-bar .fx{border-radius:0}
+}
 /* the sticky Apply bar of a job page steps aside while the page's own Apply button is on screen (site.js) */
 .mbar{transition:transform .2s ease,visibility .2s}
 .mbar.off{transform:translateY(110%);visibility:hidden}
