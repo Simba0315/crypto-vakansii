@@ -3981,8 +3981,9 @@ def intern_hub(path, h1, yr, ej):
     own = section("Questions about internships", '<dl class="qa">' + "".join(f"<div><dt>{e(q)}</dt><dd>{e(a_)}</dd></div>" for q, a_ in qa) + "</dl>")
     ld_own = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
         {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a_}} for q, a_ in qa]}, ensure_ascii=False).replace("</", "<\\/") + "</script>")
-    links = labrow("Also see", [f'<a href="{P}/entry-level/">Entry-level jobs</a>', f'<a href="{P}/crypto/internships/">Crypto internships</a>', f'<a href="{P}/categories/internships-entry-level/">Internships and first jobs</a>',
-                                f'<a href="{P}/guides/">Guides</a>', f'<a href="{P}/resume/">Resume builder</a>'])
+    links = season_row() + labrow("Also see", [f'<a href="{P}/entry-level/">Entry-level jobs</a>', f'<a href="{P}/crypto/internships/">Crypto internships</a>', f'<a href="{P}/categories/internships-entry-level/">Internships and first jobs</a>',
+                                f'<a href="{P}/guides/">Guides</a>', f'<a href="{P}/resume/">Resume builder</a>']
+                                + [f'<a href="{P}/{p_}">{e(d_["h1"])}</a>' for p_, d_ in SEASON.items() if d_["kind"] in ("swe", "ng")])
     ld = crumbs_ld([("All jobs", "jobs/"), (h1, "")])
     # the jobs first, as on every list (track "one button", 26 Nov 2026): the trail, the heading and one line; the opening after the jobs
     top = '<div class="lhead">' + crumbs(("All jobs", "jobs/"), (h1, "")) + f"<h1>{e(h1)}{e(yr)}</h1>" + f'<p class="lline">{list_line(ej)}</p></div>'
@@ -4008,6 +4009,377 @@ def intern_hub(path, h1, yr, ej):
         desc = (f"{k:,} open internships{yr}: when they start, whether they pay, which companies hire interns and where, straight from employers’ careers pages. Updated several times a day.")
         if n == 1: page(path, title, desc, body, head=ld + ld_own, cls="lp")
         else: page(f"{path}{n}/", f"{h1}{yr}, page {n} | {SITE}", f"Page {n} of {pages}. {desc}", body, head=ld, sitemap=False, cls="lp")
+
+
+# Season and graduating-class pages (27 Nov 2026). Semrush, 27 Nov 2026 (owner): Jobright.ai takes non-brand Google visits for "fall 2026
+# internships" (2.4K searches a month), "summer 2026 internship program", "2027 internship opportunities", "software engineer 2027 new
+# grads", "swe new grad 2027", "new grad jobs" (2.9K), "software engineering internships" (3.6K). The site had /internships/, /entry-level/,
+# /summer/ and the role lists, and no page per season or graduating class. Each page below holds today's open, fresh postings (stale()
+# left out: a talent pool or an employer's date 90+ days old) whose title or text names the season and year or the class, counted in the
+# build and nowhere else:
+#   /internships/<season>-<year>/      an internship whose title names its term ("Software Engineer Intern (Summer 2027)"), or, when the
+#                                      title names none, whose text does ("internships for the summer of 2027"). A season named as a
+#                                      graduation date ("graduating in Spring 2028", "Grad Year: Winter 2027", "Spring 2027 Graduates")
+#                                      or a career fair ("Fall 2026 Career Fair Applicants") is not a term and does not count.
+#   /internships/software-engineering/ every fresh software engineering internship, any season. /roles/engineering-intern/ ("Engineering
+#                                      Intern Jobs") also holds mechanical, civil and electrical interns: another search, another page.
+#   /new-grad/                         a role for new graduates by its title ("Software Engineer, New Grad", "New Graduate Nurse", "University
+#                                      Grad", "Early Career", "Class of 2027"); internships, senior titles and the recruiters who hire new
+#                                      graduates (FOR_JUNIORS) are left out.
+#   /new-grad/software-engineer/       the software engineering ones of those.
+# Measured before the pages were made, on the local record (13 Nov 2026, 22,546 fresh open jobs): summer 2027 270, spring 2027 45,
+# winter 2027 44, fall 2027 5, fall 2026 0; software engineering internships 156; new grad 107, of them software engineers 61. Every match
+# of spring and winter 2027 and of the new grad set, 60 of summer 2027 and all 156 software internships were read by eye, with 400 titles
+# from the live search (27 Nov 2026): 4 were wrong (two "Grad Year: Winter 2027" titles, a technical writer and a software-defined radio
+# engineer counted as software), and the patterns were mended for them. SERP_AI_CHECK.md has the searches read for these pages.
+# A page is made when SEASON_MIN (20) or more fresh postings fit; under that there is no list page, and the address hands over (below).
+#
+# How the pages move with the calendar (nothing to edit by hand, every build decides again):
+#   a season's page lives until its term is over; then its address hands over to the next year's page of the same season, the way a
+#   renamed company's address does (a canonical link to the new page, noindex and an immediate refresh: season_handover()), so an address
+#   that was ever built never answers 404 and its links lead on:
+#     winter <Y>  January to April           over from May 1 <Y>
+#     spring <Y>  January to May            over from June 1 <Y>
+#     summer <Y>  May or June to August      over from September 1 <Y>: after August 2027 /internships/summer-2027/ hands over to
+#                                            /internships/summer-2028/
+#     fall <Y>    September to December      over from January 1 <Y+1>
+#   When the next year's page does not have 20 postings yet, or a season still to come has fewer than 20, the address hands over to
+#   /internships/ until it has. Every season of every year from SEASON_FIRST_YEAR to the year after next gets its address written in every
+#   build: the page, or the hand-over. /new-grad/ keeps its address; its title names the hiring cycle (NG_CLASS: next year's class from
+#   August on), so it moves by itself. data/season_pages.json lists what this build made, for check.py.
+SEASON_MIN = 20
+SEASON_FIRST_YEAR = 2026            # the year these pages were first built: every season address since then answers
+SEASONS = ("winter", "spring", "summer", "fall")       # in the order the terms come in a year
+SEASON_END = {"winter": (0, 5), "spring": (0, 6), "summer": (0, 9), "fall": (1, 1)}          # (years after <Y>, month) the term is over
+SEASON_START = {"winter": 1, "spring": 1, "summer": 6, "fall": 9}
+SEASON_TERM = {"winter": "January to April", "spring": "January to May", "summer": "May or June to August", "fall": "September to December"}
+SEASON_W = r"(?:summer|fall|autumn|spring|winter)"
+# "Summer 2027", "Summer '27", "Summer of 2027", "Summer-2027", "Spring/Summer 2027", "Summer Internship 2027", "2027 Summer Intern";
+# not "Summer 2027 Graduates", "Fall 2026 Career Fair" or "Summer 2026-2027"
+SEASON_YR = re.compile(rf"\b({SEASON_W}(?:\s*(?:/|&|\+|,|and|or|-|–)\s*{SEASON_W})*)\s*(?:(?:intern(?:ship)?s?|co-?ops?|program(?:me)?|analysts?|associates?|term|session|semester|cohort)\s*)?"
+                       rf"(?:of\s+|,\s*|-\s*|–\s*|:\s*|\(\s*)?(?:(20\d\d)|['’](\d\d))\b(?![-–/]\d)"
+                       rf"(?!\s*[-–,]?\s*(?:grad(?:uate)?s\b|graduat(?:ing|ion)|career fair|recruiting|applicants?\b|hiring event|info(?:rmation)? session))"
+                       rf"|\b(20\d\d)\s*[-–:]?\s*({SEASON_W})\b(?!\s*(?:grad(?:uate)?s\b|graduat(?:ing|ion)|career fair|recruiting))", re.I)
+# the words before a season that make it a graduation or a return to school, not the internship's term
+GRAD_BEFORE = re.compile(r"(?:\bgraduat(?:e|es|ed|ing|ion)\s+(?:date\s+|year\s+|term\s+)?(?:is\s+|of\s+|in\s+|by\s+|between\s+|from\s+|before\s+|after\s+|no later than\s+|prior to\s+|on or before\s+|during\s+|:\s*)"
+                         r"|\bgrad(?:uation)?\s+(?:year|date|term|class)\s*:?\s*|\bexpected\s+(?:to\s+graduate\s+)?(?:in\s+|by\s+)?"
+                         r"|\b(?:degree|diploma|studies)\s+(?:completion\s+)?(?:by|in|before|no later than|prior to)\s+"
+                         r"|\breturn(?:ing)?\s+to\s+(?:school|campus|classes|studies|university|college)\s+(?:in\s+)?)(?:[\w,'’]+(?:\s+|\s*[/&+]\s*)){0,4}$", re.I)
+INTERN_T = re.compile(r"\bintern(?:ship)?s?\b|\bco-?op\b|\bextern(?:ship)?s?\b|\bsummer (?:analyst|associate|scholar|student|law clerk|clerk|undergraduate)s?\b|\bwork term\b|\bplacement (?:student|year)\b", re.I)
+SWE_T = re.compile(r"\b(?:software|swe|sde)\b|\bmember of technical staff\b"
+                   r"|\b(?:full[- ]?stack|front[- ]?end|back[- ]?end|web|mobile|ios|android|platform|infrastructure|cloud|devops|machine learning|ml|ai|data|firmware|embedded|game|gameplay|"
+                   r"application|compiler|kernel|runtime|distributed systems|site reliability|sre|graphics|rendering|tools)\s+(?:software\s+)?(?:engineer(?:ing)?|developer|development engineer|programmer|programming)\b"
+                   r"|\b(?:developer|programmer)s?\b", re.I)
+SWE_NOT = re.compile(r"\bsoftware[- ]defined\b|\bwriter\b|\bsales\b|\brecruit|\bmarketing\b|\baccount (?:executive|manager)\b|\bdeveloper (?:relations|advocate|marketing|community)\b"
+                     r"|\b(?:real estate|land|property|business|residential|commercial)\s+develop|\bsoftware (?:licens|asset|sales|support specialist)", re.I)
+NG_T = re.compile(r"\bnew[- ]?grad(?:uate)?s?\b|\bnew (?:nurse|rn) grad(?:uate)?s?\b|\brecent (?:college |university )?grad(?:uate)?s?\b|\b(?:university|college|campus) (?:grad(?:uate)?s?|hires?)\b|\bearly[- ]careers?\b"
+                  r"|\bgraduate (?:program(?:me)?|scheme|trainee|engineer|developer|software|analyst|consultant|associate|rotation(?:al)?|leadership|development program|nurse|registered nurse|rn|lpn)\b"
+                  r"|\bclass of 20\d\d\b|\b20\d\d (?:new |university |college )?grad(?:uate)?s?\b|\bgrad(?:uate)?s? 20\d\d\b", re.I)
+NG_NOT = re.compile(r"\bgraduate (?:research|teaching|student|assistant|school|admissions|studies|faculty|medical)\b|\bpost[- ]?graduate\b|\bpostdoc", re.I)
+# the class a new-grad posting names ("New Grad 2027", "Class of 2027", "2027 University Graduates", "Early Career (2027)", "Grad 2027")
+NG_YR = re.compile(r"\bclass of (20\d\d)\b|\b(20\d\d)\s+(?:new\s+|recent\s+)?(?:college\s+|university\s+|campus\s+)?grad(?:uate)?s?\b|\bnew[- ]?grad(?:uate)?s?\s*(?:[-–(,:|]\s*)?(?:class of\s+)?(20\d\d)\b"
+                   r"|\bearly[- ]careers?\s*(?:[-–(,:|]\s*)?(?:program\s+)?(20\d\d)\b|\b(20\d\d)\s+early[- ]careers?\b|\bgrad(?:uate)?s?\s+(20\d\d)\b", re.I)
+YEAR_IN_TITLE = re.compile(r"(?<![#\w-])(202[5-9])(?![\d-])")
+MONTH_NO = {m_.lower(): i_ + 1 for i_, m_ in enumerate(MONTHS)}
+DEADLINE_RX = re.compile(r"\b(?:apply by|application deadline|deadline to apply|deadline for applications|applications? (?:are |is )?(?:due|close|closes|will close|must be (?:received|submitted) by)"
+                         r"|closing date|priority deadline|deadline)\s*(?:is|:|-|–|on|of)?\s*(?:on\s+)?(?:(?:mon|tues|wednes|thurs|fri|satur|sun)day,?\s+)?"
+                         r"(?:(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(20\d\d)|(\d{1,2})/(\d{1,2})/(20\d\d)|(20\d\d)-(\d\d)-(\d\d))", re.I)
+ROLLING_RX = re.compile(r"\brolling basis\b|\brolling admissions?\b|\breview(?:ed|ing)? (?:applications )?on a rolling\b", re.I)
+SEASON = {}                 # path -> the page's set: {"h1", "js", "kind", "season", "year", "more", "q"} for every page this build can make
+SEASON_GONE = {}            # path -> the address it hands over to, for the season addresses with no page in this build
+NG_CLASS = [0]              # the graduating class being hired: next year's from August on
+
+
+def season_over(s, y):
+    """True once the season's term is over (SEASON_END): its page hands over to the next year's."""
+    dy, m = SEASON_END[s]
+    return (int(TODAY[:4]), int(TODAY[5:7])) >= (y + dy, m)
+
+
+def season_terms(title, text):
+    """{(season, year)} a posting names for its own term: from its title when the title names one, else from its text. A season named
+    as a graduation date or a return to school does not count, nor one followed by "graduates" or "career fair" (SEASON_YR)."""
+    def find(s_):
+        out = set()
+        for m in SEASON_YR.finditer(s_):
+            if GRAD_BEFORE.search(s_[max(0, m.start() - 70):m.start()]): continue
+            if m.group(5): yrs, seas = int(m.group(4)), [m.group(5)]
+            else: yrs, seas = (int(m.group(2)) if m.group(2) else 2000 + int(m.group(3))), re.findall(SEASON_W, m.group(1), re.I)
+            out |= {(x_.lower().replace("autumn", "fall"), yrs) for x_ in seas}
+        return out
+    # a title that names a season only as a graduation date ("Intern (Grad Year: Winter 2027)") says the text's seasons are dates too
+    return find(title) or (find(text) if text and not SEASON_YR.search(title) else set())
+
+
+for _t, _x, _w in (("Software Engineer Intern (Summer 2027)", "", {("summer", 2027)}), ("Test Engineering Intern - Spring/Summer 2027", "", {("spring", 2027), ("summer", 2027)}),
+                   ("Software Engineering Intern - Summer '27", "", {("summer", 2027)}), ("2027 Summer Intern, PhD, Research Scientist", "", {("summer", 2027)}),
+                   ("Undergrad Software Engineering Intern (Grad Year: Winter 2027)", "", set()), ("Geotechnical Engineer - Spring 2027 Graduates", "", set()),
+                   ("Summer 2027 Energy Engineer Intern **Fall 2026 Career Fair Applicants**", "", {("summer", 2027)}), ("Fall 2026 + Spring 2027 Legal Intern", "", {("fall", 2026), ("spring", 2027)}),
+                   ("PhD Machine Learning Engineer, Intern", "For students graduating in Spring 2028. Internships for the summer of 2027 last 12 weeks.", {("summer", 2027)}),
+                   ("Data Intern", "Applicants must be returning to school in Fall 2027.", set()), ("Summer Associate 2027", "", {("summer", 2027)}),
+                   ("Engineering Intern, SRE", "a degree program with an expected graduation date in Winter 2026/Spring 2027.", set()),
+                   ("Software Engineering Intern (Grad Year: Winter 2027)", "students with Winter 2027 graduation dates; a 12-week summer 2027 internship", set())):
+    assert season_terms(_t, _x) == _w, (_t, season_terms(_t, _x))
+for _t, _w in (("Software Engineer, New Grad", True), ("New Graduate Nurse Residency", True), ("Graduate Research Assistant", False), ("Early Career Recruiter", True),
+               ("University Grad Software Engineer 2027 (USA)", True), ("Senior Software Engineer", False)):
+    assert bool(NG_T.search(_t) and not NG_NOT.search(_t)) == _w, _t
+for _t, _w in (("Software Engineer Intern", True), ("Technical Writer Intern, Developer Experience", False), ("Software Defined Radio Hardware Intern", False),
+               ("Backend Engineer - New Grad", True), ("Kernel Engineer - New Grad", True), ("Design Verification Engineer, New Grad", False), ("Real Estate Developer Intern", False)):
+    assert (bool(SWE_T.search(_t)) and not SWE_NOT.search(_t)) == _w, _t
+
+
+def is_internship(j):
+    """An internship or co-op by the employer's word (its type) or by its title; the people who run intern programs are not interns."""
+    return (j.get("etype") == "Internship" or bool(INTERN_T.search(j["title"]))) and not FOR_JUNIORS.search(j["title"])
+
+
+def is_swe(title):
+    return bool(SWE_T.search(title)) and not SWE_NOT.search(title)
+
+
+def ng_year(j):
+    """The class a new-grad posting names: in its title ("New Grad 2027", "[2027] Associate Product Manager"), else in its text; 0 if none."""
+    if (m_ := NG_YR.search(j["title"])): return int(next(g_ for g_ in m_.groups() if g_))
+    if (m_ := YEAR_IN_TITLE.search(j["title"])): return int(m_.group(1))
+    if (m_ := NG_YR.search((j.get("excerpt") or "") + " " + (j.get("desc") or "")[:6000])): return int(next(g_ for g_ in m_.groups() if g_))
+    return 0
+
+
+def season_sets(active):
+    """Every season, class and software engineering set of today's fresh open jobs (SEASON), the addresses with no page this build
+    (SEASON_GONE, handed over by season_handover()), and the class being hired (NG_CLASS)."""
+    SEASON.clear(); SEASON_GONE.clear()
+    yr, mo = int(TODAY[:4]), int(TODAY[5:7])
+    NG_CLASS[0] = yr + (1 if mo >= 8 else 0)
+    years = range(SEASON_FIRST_YEAR, yr + 3)
+    by, swe_i, ng, ng_swe = defaultdict(list), [], [], []
+    for j in active:
+        if stale(j): continue
+        t = j["title"]
+        if is_internship(j):
+            if is_swe(t): swe_i.append(j)
+            terms = season_terms(t, "")
+            if not terms and not SEASON_YR.search(t) and (j.get("excerpt") or j.get("desc")):
+                tx_ = job_text(j)
+                if SEASON_YR.search(tx_): terms = season_terms(t, tx_)
+            for s_, y_ in terms:
+                if y_ in years: by[(s_, y_)].append(j)
+        elif j["level"] not in ("Senior", "Lead") and NG_T.search(t) and not NG_NOT.search(t) and not FOR_JUNIORS.search(t):
+            ng.append(j)
+            if is_swe(t): ng_swe.append(j)
+    for y_ in years:
+        for s_ in SEASONS:
+            p_, js_ = f"internships/{s_}-{y_}/", by.get((s_, y_), [])
+            if not season_over(s_, y_):
+                SEASON[p_] = {"h1": f"{s_.capitalize()} {y_} internships", "js": js_, "kind": "season", "season": s_, "year": y_,
+                              "more": f"q={quote(f'{s_} {y_}')}&etype=Internship", "q": f"{s_} {y_}"}
+    SEASON["internships/software-engineering/"] = {"h1": "Software engineering internships", "js": swe_i, "kind": "swe", "more": "q=software%20engineer&etype=Internship", "q": "software intern"}
+    SEASON["new-grad/"] = {"h1": f"New grad jobs {NG_CLASS[0] - 1}–{NG_CLASS[0]}", "js": ng, "kind": "ng", "more": "q=new%20grad", "q": "new grad"}
+    SEASON["new-grad/software-engineer/"] = {"h1": f"New grad software engineer jobs {NG_CLASS[0]}", "js": ng_swe, "kind": "ngswe", "more": "q=software%20engineer%20new%20grad", "q": "software new grad"}
+    made = {p_ for p_, d_ in SEASON.items() if len(d_["js"]) >= SEASON_MIN}
+    for y_ in years:
+        for s_ in SEASONS:
+            p_ = f"internships/{s_}-{y_}/"
+            if p_ in made: continue
+            nxt = next((f"internships/{s_}-{y2}/" for y2 in range(y_ + 1, yr + 3) if f"internships/{s_}-{y2}/" in made), "") if season_over(s_, y_) else ""
+            SEASON_GONE[p_] = nxt or "internships/"
+    SEASON_GONE.update({p_: to_ for p_, to_ in (("internships/software-engineering/", "roles/engineering-intern/"), ("new-grad/", "entry-level/"),
+                                                ("new-grad/software-engineer/", "new-grad/" if "new-grad/" in made else "entry-level/")) if p_ not in made})
+    for p_ in [p_ for p_ in SEASON if p_ not in made]: del SEASON[p_]
+    print("season and class pages: " + ", ".join(f"/{p_} {len(d_['js']):,}" for p_, d_ in SEASON.items())
+          + f"; {len(SEASON_GONE):,} addresses hand over (" + ", ".join(f"/{p_} -> /{t_}" for p_, t_ in sorted(SEASON_GONE.items()) if t_ != "internships/") + ")")
+
+
+def season_label(d):
+    """The words of a season page's set inside a sentence: "summer 2027 internships", "new grad jobs"."""
+    return {"season": f"{d.get('season', '')} {d.get('year', '')} internships", "swe": "software engineering internships",
+            "ng": "new grad jobs", "ngswe": "new grad software engineer jobs"}[d["kind"]]
+
+
+def season_row(kinds=("season",), label="By season"):
+    """A row of links to the season and class pages this build makes, each with its count of open postings ("" when there are none)."""
+    return labrow(label, [f'<a href="{P}/{p_}">{e(d_["h1"])} <b>{len(d_["js"]):,}</b></a>' for p_, d_ in SEASON.items() if d_["kind"] in kinds])
+
+
+def deadlines_of(js):
+    """([(date named as an application deadline from today on, company)], postings whose text we hold, postings that say they review on a rolling basis)."""
+    out, full, roll = [], 0, 0
+    lo_, hi_ = datetime.date.fromisoformat(TODAY), datetime.date.fromisoformat(TODAY) + datetime.timedelta(days=400)
+    for j in js:
+        tx = (j.get("excerpt") or "") + " " + TAG_RX.sub(" ", j.get("desc") or "")
+        if j.get("desc"): full += 1
+        if ROLLING_RX.search(tx): roll += 1
+        m = DEADLINE_RX.search(tx)
+        if not m: continue
+        g = m.groups()
+        try:
+            if g[0]: d_ = datetime.date(int(g[2]), MONTH_NO[g[0][:3].lower()], int(g[1]))
+            elif g[3]: d_ = datetime.date(int(g[5]), int(g[3]), int(g[4]))
+            else: d_ = datetime.date(int(g[6]), int(g[7]), int(g[8]))
+        except (ValueError, KeyError): continue
+        if lo_ <= d_ <= hi_: out.append((d_, j["company"]))
+    return sorted(out), full, roll
+
+
+def season_pay(js):
+    """(postings that state pay, sorted hourly figures: an hourly rate, or a yearly US-dollar figure divided by 2,080, sorted yearly figures)."""
+    hr = sorted((h_[0] + h_[1]) / 2 for j in js if (h_ := usd_hourly(j.get("salary"))))
+    yl = sorted((j["usd"][0] + j["usd"][1]) / 2 for j in js if j.get("usd") and not usd_hourly(j.get("salary")))
+    return sum(1 for j in js if j.get("salary")), sorted(hr + [y_ / 2080 for y_ in yl]), yl
+
+
+def name_list(pairs):
+    """"A (12), B (9) and C (4)"."""
+    xs = [f"{n_} ({c_:,})" for n_, c_ in pairs]
+    return ", ".join(xs[:-1]) + " and " + xs[-1] if len(xs) > 1 else "".join(xs)
+
+
+def season_page(path, d):
+    """One season, class or software engineering page: the jobs first and the template of every list (listing()), then what the
+    searches for it ask (SERP_AI_CHECK.md, 27 Nov 2026): when applications open and close, what it pays, who hires and where."""
+    js, kind, h1 = order(d["js"]), d["kind"], d["h1"]
+    k, lab = len(js), season_label(d)
+    n_co = len({j["company"] for j in js})
+    top5 = Counter(j["company"] for j in js).most_common(5)
+    month_ago = (datetime.date.fromisoformat(TODAY) - datetime.timedelta(days=30)).isoformat()
+    new30 = sum(1 for j in js if (j.get("posted") or "") >= month_ago)
+    by_month = sorted(Counter(j["posted"][:7] for j in js if j.get("posted")).items())
+    month_s = lambda ym: f"{MONTHS[int(ym[5:7]) - 1]} {ym[:4]}"
+    dl, full, roll = deadlines_of(js)
+    paid, hr, yl = season_pay(js)
+    r_ = sum(j["remote"] for j in js)
+    pl = [(PLACE_TITLE[p_], c_) for p_, c_ in Counter(p_ for j in js for p_ in j.get("places") or () if PLACE_KIND.get(p_) == "city").most_common(5)]
+    us_ = sum(1 for j in js if "united-states" in (j.get("places") or ()))
+    fields = [(CAT[c_], n_) for c_, n_ in Counter(j["cat"] for j in js if j["cat"] != OTHER[0]).most_common(4)]
+    s_, y_ = d.get("season", ""), d.get("year", 0)
+    S_ = f"{s_.capitalize()} {y_}" if s_ else ""
+    # the opening paragraph: the answer to the search in the words people type, then the figures behind it
+    when_ = (f"{new30:,} of them were posted in the last 30 days" + (f", and {by_month[0][1]:,} as early as {month_s(by_month[0][0])}" if by_month and len(by_month) > 1 else "") + ". ")
+    dl_c = Counter(f"{MONTHS[x_.month - 1]} {x_.year}" for x_, _ in dl).most_common(1)
+    dl_co = len({c_ for _, c_ in dl})
+    dl_ = ((f"Of the {full:,} postings whose full text we hold, {len(dl):,} (from {dl_co:,} {'employer' if dl_co == 1 else 'employers'}) name an application deadline still to come: "
+            + (f"{fdate(dl[0][0].isoformat())}" if dl[0][0] == dl[-1][0] else f"from {fdate(dl[0][0].isoformat())} to {fdate(dl[-1][0].isoformat())}"
+               + (f", most often in {dl_c[0][0]} ({dl_c[0][1]:,})" if dl_c and dl_c[0][1] >= 3 and dl_c[0][1] < len(dl) else ""))
+            + (f"; {roll:,} say they review applications on a rolling basis" if roll >= 3 else "") + ". ")
+           if len(dl) >= 3 and full else (f"Few name a deadline; {roll:,} of the {full:,} whose full text we hold say they review applications on a rolling basis, so a place can go before any date. " if roll >= 3 and full else ""))
+    pay_ = (f"{paid:,} ({round(100 * paid / k)}%) state pay" + (f": the median is ${hr[len(hr) // 2]:,.2f} an hour" if len(hr) >= 10 and kind in ("season", "swe") else
+                                                               f": the median of the yearly ranges is {money(yl[len(yl) // 2])}" if len(yl) >= 10 else "") + ". " if paid else "")
+    who_ = f"{name_list(top5[:3])} have the most" if len(top5) >= 3 else ""
+    where_ = (f"; the places with the most are {name_list(pl[:3])}" if len(pl) >= 3 else "") + (f", and {r_:,} are remote" if r_ else "") + "."
+    begun_ = (f" The {s_} {y_} term has begun ({SEASON_TERM[s_]}); these postings are still open on the employers’ own pages, some for a later start."
+              if kind == "season" and (int(TODAY[:4]), int(TODAY[5:7])) >= (y_, SEASON_START[s_]) else "")
+    what_ = {"season": f"<strong>{e(S_)} internships</strong> are internships and co-ops whose posting names the {e(s_)} {y_} term, usually {SEASON_TERM.get(s_, '')} {y_}.",
+             "swe": "<strong>Software engineering internships</strong>: internships and co-ops for software, web, mobile, data, machine learning and infrastructure engineers, any season.",
+             "ng": "<strong>New grad jobs</strong> are roles for people who have just finished a degree or will finish before the start date: the title says new grad, recent or university graduate, early career or the class.",
+             "ngswe": f"<strong>New grad software engineer jobs</strong>: software engineering roles for the class of {NG_CLASS[0]} and recent graduates, by the posting’s own title."}[kind]
+    intro = (f"{what_} {k:,} are open now at {n_co:,} employers, read from their own careers pages; {e(when_)}{e(dl_)}{e(pay_)}"
+             + (e(who_ + where_) if who_ else "") + e(begun_))
+    # sections after the list
+    after = ""
+    if len(by_month) >= 2:
+        after += section(f"When the {lab} [[were posted]]", '<div class="tablewrap"><table><tr><th>Month posted</th><th>Open postings</th></tr>'
+                         + "".join(f"<tr><td>{e(month_s(ym))}</td><td>{c_:,}</td></tr>" for ym, c_ in by_month)
+                         + f'</table></div><p class="note">The employer’s own date on each open posting. Postings dated more than {LONG_OPEN} days ago are not on this page: '
+                           f'they are often filled or standing invitations (<a href="{P}/methodology/">how we check</a>).</p>', sid="posted", label="Posted")
+    if len(dl) >= 5:
+        dm_ = Counter((x_.year, x_.month) for x_, _ in dl)
+        after += section(f"Application deadlines [[named in the postings]]", '<div class="tablewrap"><table><tr><th>Deadline month</th><th>Postings</th></tr>'
+                         + "".join(f"<tr><td>{MONTHS[m_ - 1]} {y2_}</td><td>{c_:,}</td></tr>" for (y2_, m_), c_ in sorted(dm_.items()))
+                         + f'</table></div><p class="note">Read from the text of the {full:,} postings we hold in full: the first date after “apply by”, “application deadline”, '
+                           f'“applications close” and the like, from today on. {roll:,} say they review applications on a rolling basis.</p>', sid="deadlines", label="Deadlines")
+    it_t = defaultdict(list)
+    for j in js:
+        if (h_ := usd_hourly(j.get("salary"))): it_t[short_title(j["title"])].append((h_[0] + h_[1]) / 2)
+    it_rows = sorted(((t_, sorted(v_)) for t_, v_ in it_t.items() if len(v_) >= 3 and 3 <= len(t_) <= 60), key=lambda x: (-len(x[1]), -x[1][len(x[1]) // 2]))[:12]
+    if len(it_rows) >= 3:
+        after += section(f"{lab[0].upper() + lab[1:]} pay [[by job title]]", '<div class="tablewrap"><table><tr><th>Title</th><th>Open postings with an hourly rate</th><th>Median hourly pay</th><th>Highest</th></tr>'
+                         + "".join(f"<tr><td>{e(t_)}</td><td>{len(v_):,}</td><td>${v_[len(v_) // 2]:,.2f}</td><td>${v_[-1]:,.2f}</td></tr>" for t_, v_ in it_rows)
+                         + '</table></div><p class="note">The middle of each posting’s hourly range in US dollars, for titles with three or more open postings that state one.</p>', sid="pay", label="Pay")
+    seas_links = [(p_, d2_) for p_, d2_ in SEASON.items() if d2_["kind"] == "season"]
+    ids_ = {p_: {j["id"] for j in d2_["js"]} for p_, d2_ in seas_links}
+    cnt_ = Counter(p_ for j in js for p_, _ in seas_links if j["id"] in ids_[p_])          # this page's postings in each season page
+    if kind == "swe":
+        rows_ = [(d2_["h1"], p_, cnt_[p_]) for p_, d2_ in seas_links if cnt_[p_]]
+        if rows_:
+            none_ = sum(1 for j in js if not any(j["id"] in ids_[p_] for p_, _ in seas_links))
+            after += section("Software engineering internships [[by season]]", '<div class="tablewrap"><table><tr><th>Season</th><th>Open software engineering internships</th></tr>'
+                             + "".join(f'<tr><td><a href="{P}/{p_}">{e(nm_)}</a></td><td>{c_:,}</td></tr>' for nm_, p_, c_ in rows_)
+                             + f'</table></div><p class="note">{none_:,} of the {k:,} name no season with a year; one posting can name two seasons.</p>', sid="seasons", label="By season")
+    if kind in ("ng", "ngswe"):
+        cy_ = Counter(ng_year(j) for j in js)
+        rows_ = [(f"Class of {y2_} or a {y2_} start", c_) for y2_, c_ in sorted(cy_.items()) if y2_] + [("No year named", cy_.get(0, 0))]
+        after += section(f"{lab[0].upper() + lab[1:]} [[by graduating class]]", '<div class="tablewrap"><table><tr><th>What the posting names</th><th>Open postings</th></tr>'
+                         + "".join(f"<tr><td>{e(nm_)}</td><td>{c_:,}</td></tr>" for nm_, c_ in rows_ if c_)
+                         + '</table></div><p class="note">A year in the title (“New Grad 2027”, “Class of 2027”, “2027 Start”), else in the posting’s text.</p>', sid="class", label="Class")
+    after += alert_form(f"new {lab}", q=d["q"])
+    # the rows of links: the other seasons, the lists around this one
+    by_season = labrow("By season", [f'<a href="{P}/{p_}">{e(d2_["h1"])} <b>{len(d2_["js"]):,}</b></a>' for p_, d2_ in seas_links if p_ != path])
+    # the lists next to this one: a season page is written later in this loop (SEASON says it will be), the glossary entry always is,
+    # any other list only when this build has written it
+    near_ = [("internships/", "All internships"), ("internships/software-engineering/", "Software engineering internships"), ("roles/engineering-intern/", "Engineering intern jobs")]
+    near_ += [("summer/", "Summer jobs and internships"), ("roles/summer-intern/", "Summer intern jobs")] if kind in ("season", "swe") else []
+    near_ += [("new-grad/", "New grad jobs"), ("new-grad/software-engineer/", "New grad software engineer jobs"), ("entry-level/", "Entry-level jobs"),
+              ("roles/junior-software-engineer/", "Junior software engineer jobs"), ("categories/software-development/entry-level/", "Entry-level software jobs"), ("glossary/new-grad/", "What “new grad” means")]
+    also = labrow("Also see", [f'<a href="{P}/{u_}">{e(t_)}</a>' for u_, t_ in near_
+                               if u_ != path and (u_ in SEASON or u_ == "glossary/new-grad/" or (not u_.startswith(("internships/s", "new-grad/")) and (OUT / u_ / "index.html").exists()))])
+    # three questions people ask (Google's "People also ask" and AI answers, 27 Nov 2026: SERP_AI_CHECK.md), answered from today's postings
+    pay_a = (f"{paid:,} of the {k:,} open {lab} here ({round(100 * paid / k)}%) state pay in the posting"
+             + (f"; together they pay ${hr[len(hr) // 2]:,.2f} an hour at the median, and the middle half ${hr[len(hr) // 4]:,.2f} to ${hr[3 * len(hr) // 4]:,.2f} (a yearly figure divided by 2,080 hours)" if len(hr) >= 10 else "")
+             + (f"; the yearly ranges have a median midpoint of {money(yl[len(yl) // 2])}, the middle half {money(yl[len(yl) // 4])} to {money(yl[3 * len(yl) // 4])}" if len(yl) >= 10 and kind in ("ng", "ngswe") else "")
+             + ". " if paid else "Few of these postings state pay today, so ask in the first call. ")
+    when_a = (f"{new30:,} of the {k:,} open {lab} here were posted in the last 30 days" + (f", by month: " + ", ".join(f"{month_s(ym)} {c_:,}" for ym, c_ in by_month[-4:]) if len(by_month) >= 2 else "") + ". "
+              + (dl_ if dl_ else "") )
+    if kind == "season":
+        qa = [(f"When should I apply for {s_} {y_} internships?", when_a + f"The {s_} term usually runs {SEASON_TERM[s_]}; many employers post months ahead and fill places as they go, so the posting’s own dates are the ones that count."),
+              (f"Which internships are open for {y_}?", f"Today {k:,} {s_} {y_} internships at {n_co:,} employers" + (f"; the fields with the most are {name_list(fields)}" if len(fields) >= 2 else "")
+               + (f", and the employers with the most are {name_list(top5)}" if len(top5) >= 3 else "") + "." + (f" Other seasons: " + ", ".join(f"{d2_['h1']} ({len(d2_['js']):,})" for p2_, d2_ in seas_links if p2_ != path) + "." if len(seas_links) > 1 else "")),
+              (f"What do {s_} {y_} internships pay?", pay_a + "In the United States a for-profit employer must pay an intern at least the minimum wage unless the intern, not the employer, is the main beneficiary (Labor Department Fact Sheet #71).")]
+    elif kind == "swe":
+        sk_ = [(t_, c_) for t_, c_ in Counter(t_ for j in js for t_ in j["tags"]).most_common(6) if c_ >= 3]
+        qa = [("How can I get a software engineering internship?", (f"Know the skills the postings ask for most: {name_list(sk_)}. " if len(sk_) >= 3 else "")
+               + f"Apply early: {new30:,} of the {k:,} open here were posted in the last 30 days, and most name a summer term months ahead. Apply on the employer’s own page, with a resume that names the projects and languages the posting asks for."),
+              ("When do software engineering internships open?", when_a + ("By season: " + ", ".join(f"{d2_['h1']} {cnt_[p_]:,}" for p_, d2_ in seas_links if cnt_[p_]) + "." if any(cnt_.values()) else "")),
+              ("How much do software engineering internships pay?", pay_a)]
+    elif kind == "ng":
+        cy_ = Counter(ng_year(j) for j in js)
+        qa = [("What is a new grad job?", f"A job for someone who has just finished a degree, or will finish before the start date, usually within about a year of graduating. "
+               f"Today {k:,} are open here; {cy_.get(NG_CLASS[0], 0):,} name the class of {NG_CLASS[0]} or a {NG_CLASS[0]} start and {cy_.get(NG_CLASS[0] - 1, 0):,} the class of {NG_CLASS[0] - 1}."),
+              (f"When do companies hire {NG_CLASS[0]} new grads?", when_a + f"Many roles for the class of {NG_CLASS[0]} start between January and the summer of {NG_CLASS[0]}, and the posting says when."),
+              ("What do new grad jobs pay?", pay_a)]
+    else:
+        visa_ = sum(1 for j in js if "Visa sponsorship" in j.get("perks", []))
+        usp_ = sum(1 for j in js if US_PERSON_RX.search(job_text(j)))
+        qa = [("Where are new grad software engineer jobs?", (f"The places with the most today: {name_list(pl)}" if len(pl) >= 3 else "In the places each posting names")
+               + f"; {r_:,} of the {k:,} are remote" + (f" and {us_:,} are in the United States" if us_ else "") + "."),
+              ("How much do new grad software engineer jobs pay?", pay_a + "These are the ranges employers wrote, not verified pay."),
+              ("Do new grad software engineer jobs sponsor visas?", (f"Some do: {visa_:,} of the {k:,} open here mention visa sponsorship" if visa_ else f"None of the {k:,} open here mentions visa sponsorship today")
+               + (f", and {usp_:,} ask for US citizenship, a security clearance or US person status (export control). " if usp_ else ". ")
+               + "Check the posting and ask in the first call; a past sponsorship does not promise one for this role.")]
+    row_, kw_ = list_parts(h1, js)
+    trail = {"season": (("Internships", "internships/"),), "swe": (("Internships", "internships/"),), "ng": (("Entry-level jobs", "entry-level/"),),
+             "ngswe": (("Entry-level jobs", "entry-level/"), ("New grad jobs", "new-grad/"))}[kind]
+    title = {"season": f"{S_} Internships: {k:,} Open Now", "swe": f"Software Engineering Internships: {k:,} Open", "ng": f"New Grad Jobs {NG_CLASS[0] - 1}–{NG_CLASS[0]}: {k:,} Open Now",
+             "ngswe": f"{NG_CLASS[0]} New Grad Software Engineer Jobs: {k:,} Open"}[kind] + f" | {SITE}"
+    desc = lead_desc(h1, js, {"season": f"When applications open, deadlines and hourly pay, from the postings.", "swe": "Seasons, deadlines and hourly pay, from the postings.",
+                              "ng": f"Class of {NG_CLASS[0]}, pay and who hires, from the postings.", "ngswe": "Pay, places and visa sponsorship, from the postings."}[kind])
+    listing(path, h1, title, desc, js, intro, trail=trail, feed=True, more=d["more"], faq=lab, faq_first=qa[0], faq_extra=tuple(qa[1:]),
+            extra=by_season + also, after=after, **{**kw_, "stats": "rest" if row_ else False})
+
+
+def season_handover():
+    """The season and class addresses with no page in this build hand over (SEASON_GONE): a canonical link to the page that takes their
+    place, noindex and an immediate refresh, as a renamed company's address does. Never over a page written in this build."""
+    names_ = {"internships/": "Internships", "entry-level/": "Entry-level jobs", "roles/engineering-intern/": "Engineering intern jobs", "jobs/": "Jobs"}
+    for p_, to_ in list(SEASON_GONE.items()):
+        if (OUT / p_ / "index.html").exists(): continue
+        to_ = next(t_ for t_ in (to_, "internships/", "entry-level/", "jobs/") if (OUT / t_ / "index.html").exists() or t_ == "jobs/")
+        SEASON_GONE[p_] = to_
+        nm_ = SEASON[to_]["h1"] if to_ in SEASON else names_.get(to_, "Jobs")
+        write(p_, f'<!doctype html><html lang="en"><head><meta charset="utf-8"><title>{e(nm_)}</title><link rel="canonical" href="{FULL}/{to_}">'
+              f'<meta name="robots" content="noindex"><meta http-equiv="refresh" content="0; url={P}/{to_}"><script>location.replace({json.dumps(P + "/" + to_)}+location.hash)</script>'
+              f'</head><body><p><a href="{P}/{to_}">{e(nm_)}</a></p></body></html>', sitemap=False)
+    (ROOT / "data" / "season_pages.json").write_text(json.dumps({"pages": {p_: len(d_["js"]) for p_, d_ in SEASON.items()}, "gone": SEASON_GONE, "min": SEASON_MIN, "day": TODAY},
+                                                               ensure_ascii=False, indent=0, sort_keys=True), encoding="utf-8")
 
 
 # What a posting itself says about how soon it hires and what it asks for ("hiring immediately", "no experience jobs"). Recruiters' own
@@ -5319,7 +5691,9 @@ def main():
     NP_PAGE = len(np_) >= 20
     TYPE_NAMES = {"night-shift/": "Night shift jobs", "weekend/": "Weekend jobs", "summer/": "Summer jobs", "temporary/": "Temporary jobs",
                   "hiring-immediately/": "Jobs hiring immediately", "no-experience-jobs/": "No experience jobs", "fair-chance-jobs/": "Fair chance jobs"}
-    TYPE_LINKS = ([("part-time/", "Part-time jobs"), ("contract/", "Contract jobs"), ("internships/", "Internships"), ("hybrid/", "Hybrid jobs"), ("work-from-anywhere/", "Work-from-anywhere jobs")]
+    season_sets(active)                          # the season, class and software engineering internship pages this build makes (SEASON), known before any page is written
+    TYPE_LINKS = ([("part-time/", "Part-time jobs"), ("contract/", "Contract jobs"), ("internships/", "Internships")] + ([("new-grad/", "New grad jobs")] if "new-grad/" in SEASON else [])
+                  + [("hybrid/", "Hybrid jobs"), ("work-from-anywhere/", "Work-from-anywhere jobs")]
                   + [(p_, TYPE_NAMES.get(p_, h_)) for p_, h_, _, _ in HOURS] + ([("government-jobs/", "Government jobs")] if GOV_PAGE else []) + ([("nonprofit-jobs/", "Nonprofit jobs")] if NP_PAGE else []))
     FOOT["types"] = '<p class="pop"><span>Jobs by type:</span>' + "".join(f'<a href="{P}/{u_}">{e(n_)}</a>' for u_, n_ in TYPE_LINKS) + "</p>"
     # the open jobs of each list a "Related lists" row may name (kind_row), by the same filters and the same minimums as the lists below
@@ -5333,6 +5707,13 @@ def main():
                              ("jobs-near-me/", "Jobs near me", len(active), 1), ("full-time-jobs-near-me/", "Full-time jobs near me", et_n["Full-time"], 20),
                              ("part-time-jobs-near-me/", "Part-time jobs near me", et_n["Part-time"], 20)):
         if k_ >= min_: KIND_N[p_] = (l_, k_)
+    # the season and class pages in the "Related lists" rows: each of them names the lists around it, and /summer/ names the summer ones
+    # (links added, none taken away)
+    KIND_N.update({p_: (d_["h1"][0].upper() + d_["h1"][1:], len(d_["js"])) for p_, d_ in SEASON.items()})
+    for p_, d_ in SEASON.items():
+        KIND_REL[p_] = tuple(x_ for x_ in [q_ for q_ in SEASON if q_ != p_] + ["internships/", "entry-level/", "summer/", "no-experience-jobs/"]
+                             if not (d_["kind"] in ("ng", "ngswe") and x_ == "summer/"))
+    KIND_REL["summer/"] = tuple(KIND_REL["summer/"]) + tuple(q_ for q_, d_ in SEASON.items() if d_.get("season") == "summer" and q_ not in KIND_REL["summer/"])     # /internships/ and /entry-level/ get a "By season" row
     comp_items = sorted(companies.items(), key=lambda kv: -sum(j["active"] for j in kv[1]))
     SPONSORS = [sp for sp in CFG.get("sponsors", []) + PAID.get("sponsors", []) if sp.get("until", "") >= TODAY and sp.get("company") in companies]
     spot_cos = [sp["company"] for sp in SPONSORS if sp.get("slot") in ("home", "spotlight", "companies")]
@@ -6652,7 +7033,10 @@ def main():
             intro_for(jr, "entry-level ", row=True), stats="rest",
             extra=labrow("Narrow by", [f'<a href="{P}/internships/">Internships</a>', f'<a href="{P}/remote/entry-level/">Remote entry-level jobs</a>']
                          + ([f'<a href="{P}/no-experience-jobs/">No experience required</a>'] if len(noexp_jobs) >= 20 else [])      # Search Console 25 Nov 2026: "Discovered, not indexed"
-                         + [f'<a href="{P}/categories/internships-entry-level/">Kinds of work open to beginners</a>'])
+                         + [f'<a href="{P}/categories/internships-entry-level/">Kinds of work open to beginners</a>']
+                         + [f'<a href="{P}/{p_}">{e(d_["h1"])}</a>' for p_, d_ in SEASON.items() if d_["kind"] == "swe"])
+                  # internships by season and new grad jobs by class (27 Nov 2026, season_sets)
+                  + season_row(("season", "ng", "ngswe"))
                   # by field (21 Nov 2026): these 22 lists had two links each, from their field and from one guide
                   + labrow("By field", [f'<a href="{P}/categories/{fs_}/entry-level/">Entry-level {e(rlow(fn_))} jobs ({n_:,})</a>'
                                         for fs_, fn_, _, _, js_f in fam_rows if (n_ := sum(1 for j in js_f if j["entry"])) >= 20]),
@@ -8985,6 +9369,9 @@ def main():
                     lead_desc(h1, ej, "W-2 or 1099, how long contracts last and what they pay, from the postings.") if et == "Contract" else
                     f"{roles(len(ej), 'open role')}: {h1.lower()}{yr} at companies, straight from their careers pages. Updated several times a day.", ej,
                     (plain_e + " " if plain_e else "") + intro_for(ej, f"{et.lower()} ", row=row_e), trail=(("All jobs", "jobs/"),), faq=h1[0].lower() + h1[1:], **kw_e)
+    # the season, class and software engineering internship pages (season_sets, season_page): after /internships/, which links them
+    lap('Internships by season, new grad jobs by class')
+    for p_, d_ in SEASON.items(): season_page(p_, d_)
     for et, path, h1, what_ in (("Contract", "remote/contract/", "Remote contract jobs", "fixed-term and freelance work done from home"),
                                 ("Part-time", "remote/part-time/", "Remote part-time jobs", "work from home for fewer hours than a full week"),
                                 ("Full-time", "remote/full-time/", "Remote full-time jobs", "full-week jobs done from home")):
@@ -15226,8 +15613,8 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          cl_pay_ + [("jobs-that-pay/", "Jobs by hourly pay", sum(1 for j in active if usd_hourly(j.get("salary"))))]),
         ("Hours and kind of contract", "Part-time, nights, weekends, a season or a fixed term.",
          [(u_, *KIND_N[u_]) for u_ in ("part-time/", "weekend/", "night-shift/", "temporary/", "summer/", "contract/") if u_ in KIND_N]),
-        ("A first job", "For people with little or no experience, or who need a second chance.",
-         [(u_, *KIND_N[u_]) for u_ in ("entry-level/", "internships/", "no-experience-jobs/", "fair-chance-jobs/") if u_ in KIND_N]),
+        ("A first job", "For students and new graduates, people with little or no experience, or who need a second chance.",
+         [(u_, *KIND_N[u_]) for u_ in ("entry-level/", "internships/", "no-experience-jobs/", "fair-chance-jobs/") if u_ in KIND_N] + [(u_, *KIND_N[u_]) for u_ in SEASON if u_ in KIND_N]),
         ("Where the work is done", "From home, split between home and an office, or from any country.",
          [(u_, *KIND_N[u_]) for u_ in ("remote/", "hybrid/", "work-from-anywhere/") if u_ in KIND_N]),
         ("Who the employer is, and what it offers", "Public bodies, charities, and employers that help with a visa.",
@@ -15823,6 +16210,10 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     llm_visa = (f"\n- [Jobs with visa sponsorship]({FULL}/perks/visa-sponsorship/): postings that mention it, by country and city"
                 + (f"; company pages show the employer's certified H-1B filings from the US Department of Labor ({FULL}/methodology/#h1b)" if H1B else "")
                 if "perks/visa-sponsorship/" in URLS else "")
+    # internships by season and new grad jobs by class (season_sets): the pages this build made, with today's counts
+    llm_season = ((f"\n- [Internships]({FULL}/internships/) by season and field: " + ", ".join(f"[{d_['h1']}]({FULL}/{p_}) ({len(d_['js']):,} open)" for p_, d_ in SEASON.items() if d_["kind"] in ("season", "swe")))
+                  if any(d_["kind"] in ("season", "swe") for d_ in SEASON.values()) else "") + "".join(
+        f"\n- [{d_['h1'][0].upper() + d_['h1'][1:]}]({FULL}/{p_}): {len(d_['js']):,} open, roles for new graduates by the posting's own title" for p_, d_ in SEASON.items() if d_["kind"] in ("ng", "ngswe"))
     write("llms.txt", f"""# {SITE}
 
 > {SITE} is an index of {n:,} open jobs at {m:,} companies, collected from the companies' official careers pages and read around the clock. Every listing links to the employer's own posting. Updated {TODAY}.
@@ -15844,7 +16235,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
 - [Companies hiring]({FULL}/companies/)
 - [Jobs by perk]({FULL}/perks/): visa sponsorship, relocation, equity and more
 - [Tech jobs]({FULL}/tech/): software, AI, data, cloud, security, product and hardware
-- [Crypto and web3 jobs]({FULL}/crypto/){llm_visa}
+- [Crypto and web3 jobs]({FULL}/crypto/){llm_visa}{llm_season}
 
 ## Data
 - [Salaries from live job postings]({FULL}/salaries/)
@@ -16084,6 +16475,7 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     lap('every narrow page linked up, down and across (crosslinks.py)')
     # every narrow page linked up, down and across (crosslinks.py): long-tail pages must not be orphans
     import crosslinks
+    season_handover()                            # season and class addresses with no page this build hand over (never 404), and data/season_pages.json for check.py
     same_ = one_page_per_query()          # first: the cross-link blocks leave out the pages that give up their search and link the one that keeps it
     for twin_, keep_ in DUP_PAGES.items(): same_.setdefault(twin_, keep_)        # the lists of the last three days at two addresses (DUP_PAGES)
     # every kind of work's field (26 Nov 2026): "Remote account executive jobs" links up to "Remote sales jobs" as well as to all remote jobs
@@ -16123,6 +16515,7 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     countryish = {slug_ for _, slug_, rule_ in PLACES if isinstance(rule_, str)}
     # and the guides (25 Nov 2026: 23 of 26 were "URL unknown to Google" while they sat among 10,500 addresses in pages.xml)
     is_core = lambda u: (u == "" or (u.count("/") == 1 and "." not in u) or re.fullmatch(r"(jobs|roles|guides)/[a-z0-9-]+/", u) is not None
+                         or u in SEASON                     # the season and class pages (season_sets), like the hubs beside them
                          or (u.startswith("locations/") and u.count("/") == 2 and u.split("/")[1] in countryish))
     core_urls = [u for u in URLS if not u.startswith("job/") and is_core(u)]
     # A sitemap may hold at most 50,000 addresses (sitemaps.org; Google refuses a bigger file). pages.xml alone held 80,256 on 25 Nov

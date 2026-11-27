@@ -20,7 +20,7 @@ def template(rel):
     if rel == "index.html": return "home"
     if parts[0] == "job": return "job"
     if parts[0] == "companies": return "company" if len(parts) > 2 else "companies index"
-    if parts[0] in ("jobs", "remote", "skills", "locations", "crypto", "perks", "new", "entry-level", "with-salary", "contract", "part-time", "internships", "work-from-anywhere", "archive"):
+    if parts[0] in ("jobs", "remote", "skills", "locations", "crypto", "perks", "new", "entry-level", "with-salary", "contract", "part-time", "internships", "work-from-anywhere", "archive", "new-grad"):
         return "search" if rel == "jobs/index.html" else "listing"
     if parts[0] in ("salaries", "insights", "trends"): return "data"
     return "static"
@@ -135,7 +135,7 @@ def standard2(h):
 # job card but the trail, the H1, the one line under it, the ways to narrow the list, the alert line (with Save this list or Follow) and
 # the list's own heading.
 LIST_FIRST = re.compile(r"^(?:(?:locations|categories|roles|skills|companies|jobs|remote|crypto|perks|new)/[^/]+/(?:[a-z][^/]*/)?|"
-                        r"(?:remote|entry-level|new|part-time|internships|with-salary|contract|hybrid|work-from-anywhere|tech)/)index\.html$")
+                        r"(?:remote|entry-level|new|part-time|internships|with-salary|contract|hybrid|work-from-anywhere|tech)/|internships/[a-z0-9-]+/|new-grad/(?:[a-z0-9-]+/)?)index\.html$")
 BEFORE_OK = [re.compile(x_, re.S) for x_ in (r'<div class="crumbs">.*?</div>', r"<h1[\s>].*?</h1>", r'<p class="lline">.*?</p>', r'<div class="sec-head lst"[^>]*>.*?</div>',
              r'<span class="lsave-n">.*?</span>',
              r'<div class="pillrow lnarrow".*?</div>', r'<form class="alertf alert1".*?</form>', r'<button[^>]*(?:data-save-list|id="follow")[^>]*>.*?</button>',
@@ -307,6 +307,37 @@ for f_ in (SITE / "companies").glob("*/index.html") if (SITE / "companies").is_d
     with f_.open(encoding="utf-8", errors="replace") as fh_: h_ = fh_.read(1200)
     m_ = re.search(r'http-equiv="refresh" content="0; url=([^"]+)"', h_)
     if m_ and not exists(m_.group(1)): fails["gone companies"][f"{f_.parent.name} hands over to a page that does not exist"] += 1
+# The season and class pages (build.season_sets, 27 Nov 2026): each set of 20 or more fresh postings has its page, a real list (not a
+# hand-over) in a sitemap, with no stale posting on it (a talent pool, or an employer's date 90+ days old: build.stale), so the first job
+# is a fresh one; every season address with no page this build hands over to a page that exists, so none answers 404.
+season_f = ROOT / "data" / "season_pages.json"
+if season_f.is_file():
+    import datetime
+    sp_ = json.loads(season_f.read_text(encoding="utf-8"))
+    stale_day_ = (datetime.date.fromisoformat(sp_.get("day") or str(datetime.date.today())) - datetime.timedelta(days=90)).isoformat()
+    in_map_ = set(listed_) if (SITE / "sitemap.xml").is_file() else set()
+    counts["season pages"] = 0
+    for rel_, n_ in sp_.get("pages", {}).items():
+        if n_ < sp_.get("min", 20): continue
+        counts["season pages"] += 1
+        f_ = SITE / rel_ / "index.html"
+        if not f_.is_file(): fails["season pages"][f"{rel_} ({n_} jobs) has no page"] += 1; continue
+        h_ = f_.read_text(encoding="utf-8", errors="replace")
+        if 'http-equiv="refresh"' in h_[:600] or '<li class="job' not in h_: fails["season pages"][f"{rel_} is not a list of jobs"] += 1; continue
+        if rel_ not in in_map_: fails["season pages"][f"{rel_} is not in a sitemap"] += 1
+        cards_ = re.findall(r'<li class="job[^"]*">.*?<span class="jt">(.*?)</span>.*?<time datetime="([^"]*)"', h_.split('id="main">', 1)[-1], re.S)
+        if not cards_: fails["season pages"][f"{rel_}: no job cards read"] += 1
+        old_ = [bool((d_ and d_[:10] < stale_day_) or re.search(r"talent (pool|community|network)|general application|future opportunit", t_, re.I)) for t_, d_ in cards_]
+        if old_ and old_[0]: fails["season pages"][f"{rel_}: the first job is stale ({plain(cards_[0][0])[:60]})"] += 1
+        elif any(old_): fails["season pages"][f"{rel_}: {sum(old_)} stale jobs on the page"] += 1
+    for rel_, to_ in sp_.get("gone", {}).items():
+        counts["season pages"] += 1
+        f_ = SITE / rel_ / "index.html"
+        if not f_.is_file(): fails["season pages"][f"{rel_} answers 404"] += 1; continue
+        h_ = f_.read_text(encoding="utf-8", errors="replace")[:1500]
+        m_ = re.search(r'http-equiv="refresh" content="0; url=([^"]+)"', h_)
+        if not m_ or not exists(m_.group(1)) or f'<link rel="canonical" href="{FULL}/{to_}">' not in h_: fails["season pages"][f"{rel_} does not hand over to a page that exists"] += 1
+        if rel_ in in_map_: fails["season pages"][f"{rel_} hands over and is in a sitemap"] += 1
 # llms.txt (perfect-page standard: present and current): dated with the build's day, and every page it names exists
 llms = SITE / "llms.txt"
 counts["llms.txt"] = 1

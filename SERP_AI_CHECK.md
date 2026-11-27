@@ -1532,3 +1532,73 @@ Before it goes to main: `HRN_RECORDS=both python3 build.py`, check.py, records_t
 ### 26 Nov 2026, later: the twins by address are live in the code
 
 `/skills/<skill>/new/` and `/roles/<role>/new/` name `/new/skills/<skill>/` and `/new/roles/<role>/` as canonical (build.py, `one_page_per_query()`), leave the sitemaps, and links lead to the /new/ page. The other parts of the `bing-quality` fix (thin narrow lists, word-for-word job repeats, lastmod) are still open.
+
+## Season and class pages: "summer 2027 internships", "spring 2027 internships", "software engineering internships", "new grad jobs", "software engineer new grad 2027" (27 Nov 2026)
+
+Why: Semrush (owner, 27 Nov) shows Jobright.ai with non-brand Google visits from season pages for students ("fall 2026 internships" 2.4K a
+month, "2027 internship opportunities", "summer 2026 internship program", "software engineer 2027 new grads", "swe new grad 2027", "new
+grad jobs" 2.9K, "software engineering internships" 3.6K). We had /internships/ and /entry-level/ and no page per season or class.
+Read on 27 Nov 2026: Google (US, the built-in browser, location shown as Texas or New York), Claude's web search, ChatGPT (temporary chat,
+search on, signed-in session).
+
+### "summer 2027 internships" → /internships/summer-2027/
+- **Google top:** SimplifyJobs/Summer2027-Internships (GitHub, "updated daily by Simplify and Pitt CSC"); intern-list.com; Indeed "Intern summer
+  “2027” jobs" (14,748, "$22.50 - $24.00 an hour", "starts in early June 2027 and lasts 10-12 weeks"); LinkedIn "11,000+ Summer Internships";
+  Google's own job box (Keurig Dr Pepper, T-Mobile $27–50 an hour, Marsh); Port Authority (12 weeks, late May or June 2027); Reddit lists of
+  160+ and 650+; Trackr (finance opening dates and deadlines); NBA (10 weeks, June to mid-August).
+- **People also ask:** When should I apply for internships for summer 2027? · Which internships are open for 2027? · Is the Google summer
+  2027 internship open? · What are the available summer internships in the USA in 2027?
+- **AI Overview:** "open across finance, tech, engineering, and business"; single postings with their hourly pay and dates (Keurig Dr Pepper
+  June 7 – August 13, 2027, $31.00 an hour; T-Mobile $27–$50 an hour); then SimplifyJobs, Amazon, Goldman Sachs, Trackr, LinkedIn.
+- **Claude's search:** Intern Dock (10,551 Summer 2027 internships from 1,674 companies), Simplify, the Pitt CSC GitHub list, D.E. Shaw, Lyft,
+  NSA (12 weeks), CMU and Cornell lists; for "when do summer 2027 applications open": no single date, FBI closes March 5, GoGovernment
+  closed November 27, MoMA opens January 2027, consulting and big companies September to October 2026, many review on a rolling basis.
+- **ChatGPT:** names Jobs I Know, GoodInternship, InternScout, Internhood, Intern Dock, Seekable Jobs, SimplifyJobs, the 2027 Tech Jobs
+  GitHub list, LinkedIn, Handshake, RippleMatch, WayUp, Indeed, ZipRecruiter; advice: postings close before the deadline (rolling).
+- **Are we in:** no (no page until today).
+- **Done:** the page: the open, fresh summer 2027 internships first (100 rows), then the answer: when they were posted (by month), the
+  deadlines the postings name and how many review on a rolling basis, how many state pay and the median hourly pay, who hires and where;
+  pay by internship title; the three questions above answered from the postings (when to apply, which are open for 2027, what they pay).
+- **Gap still open:** the postings' own start and end dates ("June 7 – August 13, 2027") as a column; Google's "Is the Google summer 2027
+  internship open?" asks per company, which the company pages could answer.
+
+### "spring 2027 internships" → /internships/spring-2027/ (and /internships/winter-2027/, /internships/fall-<year>/ when 20+ postings name them)
+- **Google top:** AI Overview first ("run roughly from January through May 2027, and many applications close in late fall"; City of Georgetown
+  $15.00 an hour January 11 – May 14; SpaceX Spring 2027 Business Operations Internship/Co-op; Symetra remote $22 an hour; Innocence Project
+  15 weeks from February 8); Jobright "2027 Spring And Summer Internship Program Jobs".
+- **People also ask:** When should I start applying for spring 2027 internships? · Which internships are open for 2027? · Is the Google
+  summer 2027 internship open?
+- **Claude's search:** Extern's guide (102 spring 2027 programs checked on October 15: 64 open or rolling, 26 not posted, 11 closed; window
+  October to early December 2026); Tesla, SpaceX, NVIDIA, Amazon, IBM co-ops; Cornell: employers recruit through early and mid-fall.
+- **Done:** the same page per season. Fall 2026 had no fresh postings in the local record (its term has begun); the build makes a fall page
+  by itself once 20 fresh postings name a fall that is not over.
+
+### "software engineering internships" → /internships/software-engineering/
+- **Google top:** Google's job box (Lockheed Martin $20.14–28.15 an hour, Signet, Blueforge); intern-list.com SWE list; Simplify "Big Tech
+  SWE Internships (2027)"; speedyapply 2027-SWE-College-Jobs (GitHub); JPMorgan's Software Engineer Program.
+- **People also ask:** Can you make $500,000 as a software engineer? · How can I get an internship as a software engineer? · Is a 3.7 GPA
+  good for internships? · Do Big 4 do summer internships?
+- **No AI Overview** shown.
+- **Done:** every fresh software engineering internship (software, web, mobile, data, ML, infrastructure, embedded; not mechanical or civil:
+  /roles/engineering-intern/ keeps "engineering intern jobs"), the count by season with links, pay by title, and "How can I get a software
+  engineering internship?" answered with the skills the postings ask for most.
+
+### "new grad jobs" and "software engineer new grad 2027" → /new-grad/ and /new-grad/software-engineer/
+- **Google top, "new grad jobs":** newgrad-jobs.com ("Top 2027 U.S. Entry Level Jobs for New Grad | Hourly Update"); the job box (an RN "New Grad
+  Welcome" $440–590 a day, Nominal "New Grad (Summer 2027)", Palantir $135K–145K); LinkedIn "Recent College Graduate Jobs"; Simplify "New
+  Grad Jobs in NYC (2027)"; Indeed; r/newgradnurse; SimplifyJobs/New-Grad-Positions; J&J; USAJOBS Recent Graduates; ZipRecruiter
+  ($29-$91/hr). Related searches: remote, NYC, github, RN, tech, Reddit, Jobright, SWE. No People also ask, no AI Overview.
+- **Google, "software engineer new grad 2027":** speedyapply NEW_GRAD_USA.md first; AI Overview: "typical U.S. base salaries ranging from roughly
+  $120,000 to $200,000+", single roles with pay (Ellipsis Labs $150k–$200k, Domino Data Lab $150k–$165k, Sierra $160k–$190k, Pinterest
+  "grads by June 2027"), what 2027 hiring looks for, and work authorization (visa sponsorship versus US person/ITAR); cites Jobright.
+  Then Pinterest, Sentry, Indeed ("700 Software Engineering 2027 New Grad Jobs"), Amazon "Software Development Engineer, Early Career - 2027".
+- **Claude's search:** the GitHub lists (vanshb03/New-Grad-2027, zapplyjobs, speedyapply), Indeed, ZipRecruiter; Roblox "[2027] Software
+  Engineer, Early Career apply by 2/1/27", Goldman Sachs 2027 Engineering New Analyst Program "apply by 4/1/27".
+- **Done:** /new-grad/ (roles for new graduates by the posting's title: new grad, new graduate, recent or university graduate, early career,
+  class of; nurses' new graduate residencies included, interns, senior titles and the recruiters who hire graduates left out) and
+  /new-grad/software-engineer/; each with the count by graduating class named, pay (yearly and hourly), and three questions: "What is a new
+  grad job?", "When do companies hire 2027 new grads?", "What do new grad jobs pay?"; for software engineers "How much do new grad software
+  engineers make?", "Where are new grad software engineer jobs?" and "Do new grad software engineer jobs sponsor visas?" (visa sponsorship
+  and US-person wording counted in the postings).
+- **Gap still open:** "apply by" dates per posting as a column (Roblox, Goldman Sachs), a GitHub list for 2027 new grads like
+  lists/new-grad-software-engineer, and the job box itself (Google's jobs box reads JobPosting markup on the job pages, already there).
