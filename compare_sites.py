@@ -36,6 +36,7 @@ R21 = "2026-11-21"  # read from the site's own page in a real browser (FlexJobs 
 R24 = "2026-11-24"  # the 16 sites added that day, read on their own pages (some in a real browser) or, for ZipRecruiter, its annual report
 R25 = "2026-11-25"  # the 9 sites AI answers name that had no page (Google for Jobs, Ladders, Craigslist, Levels.fyi, GovernmentJobs.com,
                     # HiringCafe, Drivetube, Jobright, Jobscan), read in a real browser on their own pages and help centres
+R27 = "2026-11-27"  # Enhancv, whose job search says "7.5M postings checked every hour": read in a real browser on its own pages
 
 QUESTIONS = [
     "Who pays",
@@ -1819,6 +1820,65 @@ SITES += [
              "just a 65% match rate.\"", "https://www.jobscan.co/", R25),
         ],
     ),
+    # ------------------------------------------------------------------ Enhancv
+    # Track 5 (27 Nov 2026): Enhancv's job search says "7.5M postings checked every hour" and flags likely ghost jobs, the claims nearest
+    # to ours. Read on its own pages in a browser; its job search page draws its results with a script, so a search was run there.
+    dict(
+        slug="enhancv",
+        name="Enhancv",
+        url="https://enhancv.com/",
+        what="Enhancv is a resume builder founded in Sofia, Bulgaria; its job search flags likely ghost jobs and says it checks 7.5 million "
+             "postings every hour.",
+        rows=_rows(
+            ("Who pays", "Job seekers, for Pro. Searching the jobs is free; the resume builder's free plan is valid for 7 days."),
+            ("Price for job seekers", "Free plan for 7 days. Pro is billed once a month, every 3 months or every 6 months; the pricing page's "
+                                      "title says \"Starting from $16.50\", and it showed us $7.64 a month, or $13.52 every 3 months."),
+            ("Where you apply", "On the employer's site: \"Apply Now opens the employer's own application page\"."),
+            ("Account needed to apply", "Yes: pressing Apply Now on a job showed \"Sign in to continue\" (\"Sign in to apply with your match "
+                                        "score\"). Searching works without one."),
+            ("How fresh the listings are", "\"Enhancv checks postings every hour, and every job shows how long ago it went up\"; its jobs page "
+                                           "states 7.5M postings checked every hour."),
+            ("Kinds of jobs", "Millions of postings in many countries and fields, with pages such as Software Engineer (58,210) and Registered "
+                              "Nurse (41,980) jobs."),
+            ("Payment methods", "Mastercard, Maestro, Visa, American Express and PayPal."),
+        ),
+        them_better=[
+            "Far larger: it states 7.5M postings checked every hour.",
+            "A ghost job risk label (Low, Moderate, High) on every posting, from 25 checks such as its age, the salary, company reviews and "
+            "the description, with the reasons shown.",
+            "A match score for each job against your resume, with the resume builder, tailoring and interview help in the same account.",
+        ],
+        us_better=[
+            "No account needed to apply: every Apply button goes to the employer's own page. On Enhancv, Apply Now asked us to sign in.",
+            "Every job here names the employer's own careers page it was read from. The Enhancv job pages we read do not say where its "
+            "postings come from.",
+            "The resume builder here is free with no time limit. Enhancv's free plan is valid for 7 days, and Pro is billed every month or "
+            "every 3 or 6 months.",
+        ],
+        pick="Use Enhancv if you want ghost job risk labels and match scores over millions of postings beside a resume builder, use Jobs "
+             "Every Hour if you want jobs read from employers' own careers pages and to apply there with no account.",
+        sources=[
+            ("[what|How fresh the listings are|Kinds of jobs|them_better 1|them_better 2|us_better 2|pick] Jobs page \"Job Search That Flags "
+             "Ghost Jobs\": \"7.5M postings checked every hour\", \"25 checks on every posting\"; \"We check posting age, salary, company "
+             "reviews, description and requirements. Nothing is hidden: likely ghost jobs stay in your results, flagged with the reasons.\" "
+             "FAQ: \"Enhancv checks postings every hour, and every job shows how long ago it went up.\" Risk labels Low, Moderate and High. "
+             "Pages \"Software Engineer Jobs (58,210)\", \"Registered Nurse Jobs (41,980)\", jobs in New York, London and Australia. "
+             "The page does not say where the postings come from.", "https://enhancv.com/jobs/", R27),
+            ("[Who pays|Where you apply|them_better 3] Jobs page: \"Create Free Account\", \"Free. No credit card.\"; \"Match scores. Add "
+             "your resume and see your fit on every job.\" FAQ: \"Apply Now opens the employer's own application page, and you apply there "
+             "directly.\" \"Searching jobs through the connector works on Enhancv's free plan. Saving jobs, tailoring a copy of your resume, "
+             "and writing cover letters through it need Enhancv Pro.\"", "https://enhancv.com/jobs/", R27),
+            ("[Account needed to apply|us_better 1|pick] A search for \"registered nurse\" listed jobs without signing in; pressing Apply Now "
+             "on one showed \"Sign in to continue\": \"Sign in to apply with your match score. Save jobs, apply with match score and get "
+             "ghost-job-free alerts. Free, no credit card.\"", "https://enhancv.com/jobs/search/?q=registered%20nurse", R27),
+            ("[Who pays|Price for job seekers|Payment methods|us_better 3] Title \"Resume Builder Starting from $16.50 and 7-Day Free "
+             "Plan\". FREE PLAN \"$0\", \"Valid for 7 days\", \"Enhancv branding\", \"Maximum 12 section items\". Pro Monthly \"$7.64/mo\", "
+             "\"Billed once a month\"; Pro Quarterly \"$13.52 billed every 3 months\"; a Pro Semiannual choice. \"We accept:\" Master Card, "
+             "Maestro Card, Visa Card, American Express, Paypal.", "https://enhancv.com/pricing/", R27),
+            ("[what] \"Enhancv was founded in Sofia, Bulgaria, by three friends\"; it says it has helped more than 7,000,000 people.",
+             "https://enhancv.com/about/", R27),
+        ],
+    ),
 ]
 
 # The kind of each site, for the "alternatives" pages (similar sites first) and the chips of the comparison tool. Our own label, not a
@@ -1835,7 +1895,9 @@ KIND = {"indeed": "general", "linkedin-jobs": "general", "ziprecruiter": "genera
         "cryptojobslist": "crypto", "web3-career": "crypto",
         # 25 Nov 2026
         "google-for-jobs": "engine", "hiringcafe": "engine", "drivetube": "engine", "ladders": "general", "craigslist": "hourly",
-        "levels-fyi": "tech", "governmentjobs": "government", "jobright": "ai", "jobscan": "ai", "secretjobs": "engine"}
+        "levels-fyi": "tech", "governmentjobs": "government", "jobright": "ai", "jobscan": "ai", "secretjobs": "engine",
+        # 27 Nov 2026
+        "enhancv": "ai"}
 OUR_KIND = "engine"          # we read employers' careers pages and drop closed jobs: a job search engine, shown with the others of that kind
 # The sites people compare most; a pair with one of them is built for every other site (see pairs()).
 BIG = ("indeed", "linkedin-jobs", "ziprecruiter", "glassdoor")
@@ -1921,6 +1983,9 @@ NOT_SOURCED = {
     "secretjobs": ["Price to post one job", "Account needed to apply", "Payment methods", "the AI plan's price is behind its sign-up"],
     "jobright": ["Payment methods", "jobright.ai/pricing was a 404; the Premium price is from its own blog post of June 2025"],
     "jobscan": ["Price to post one job", "How fresh the listings are", "Kinds of jobs"],
+    # read on 27 Nov 2026
+    "enhancv": ["Price to post one job (its pages offer employers no job posts)", "Where the jobs come from (its job pages do not say)",
+                "the price of Pro differs between the pricing page's title and its plan card, so both are given"],
 }
 
 _TAG = re.compile(r"^\[([^\]]+)\]\s*")
@@ -1962,7 +2027,7 @@ def test():
             keys.update(source_keys(fact))
             if not url.startswith("https://"):
                 problems.append(f"{p}: bad url {url!r}")
-            if date not in (R13, R14, R21, R24, R25):
+            if date not in (R13, R14, R21, R24, R25, R27):
                 problems.append(f"{p}: bad date {date!r}")
         rows = s["rows"]
         if len(rows) < 4:      # build.py gives such a site no page until a fourth fact is sourced
