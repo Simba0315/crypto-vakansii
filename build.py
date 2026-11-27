@@ -968,7 +968,8 @@ CO_CLOSE = {}      # company -> (closed roles counted, median days they stayed o
 REPOST = {}        # (company, title, location) -> date an earlier posting of the same role closed
 SOURCE_NAME = {"greenhouse": "Greenhouse", "lever": "Lever", "ashby": "Ashby", "workable": "Workable", "recruitee": "Recruitee", "teamtailor": "Teamtailor",
                "personio": "Personio", "workday": "Workday", "smartrecruiters": "SmartRecruiters", "jazzhr": "JazzHR",
-               "breezy": "Breezy", "bamboohr": "BambooHR", "paylocity": "Paylocity", "pinpoint": "Pinpoint", "gem": "Gem", "trakstar": "Trakstar", "rippling": "Rippling", "icims": "iCIMS"}     # hiring systems the listings are read from (collect.fetch_feed, fetch_jazzhr)
+               "breezy": "Breezy", "bamboohr": "BambooHR", "paylocity": "Paylocity", "pinpoint": "Pinpoint", "gem": "Gem", "trakstar": "Trakstar", "rippling": "Rippling", "icims": "iCIMS",
+               "oracle": "Oracle Recruiting Cloud"}     # hiring systems the listings are read from (collect.fetch_feed, collect.READERS); Phenom is a careers site, not a hiring system, so its jobs say only "own posting"
 LONG_OPEN = 90     # days after which a posting is flagged as open unusually long
 DESC_TAGS = re.compile(r"</?(?:p|ul|ol|li|h3|strong|em)>")       # the only markup a stored job description may contain
 # a paragraph that is only a drawn line ("_____", "-----", "=====", "─────"): shown as a thin rule, because a run of 60 underscores
@@ -11794,6 +11795,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     # How the hourly check works: counted from the build's own data, written as a plain account of the method (ROADMAP: engineering-style post).
     ats_name = {"greenhouse": "Greenhouse", "ashby": "Ashby", "lever": "Lever", "workable": "Workable", "workday": "Workday", "personio": "Personio", "recruitee": "Recruitee",
                 "teamtailor": "Teamtailor", "smartrecruiters": "SmartRecruiters", "jazzhr": "JazzHR", "breezy": "Breezy", "bamboohr": "BambooHR", "paylocity": "Paylocity", "pinpoint": "Pinpoint", "gem": "Gem", "trakstar": "Trakstar", "rippling": "Rippling", "icims": "iCIMS",
+                "oracle": "Oracle Recruiting Cloud", "phenom": "Phenom (the employer's own careers site)",
                 "usajobs": "USAJOBS (US federal jobs)", "tg": "Public Telegram job channels (not checked with the employer)"}       # every source collect.py reads; the table shows those with open jobs today, so it adds up to the total
     ats_jobs, ats_cos = Counter(), defaultdict(set)
     for j_ in active:

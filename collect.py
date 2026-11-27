@@ -39,7 +39,7 @@ RULES = hashlib.md5(_rules_text().encode()).hexdigest()[:8]
 # Boards read in turn rather than every hour (main): the large lists added once the 1 GB limit of GitHub Pages was gone.
 ROTATING = ("sources_more.json", "sources_ats.json", "sources_gov.json", "sources_jazz.json", "sources_breezy.json", "sources_bamboo.json",
             "sources_paylocity.json", "sources_pinpoint.json", "sources_gem.json", "sources_trakstar.json", "sources_rippling.json",
-            "sources_icims.json", "sources_hn.json")
+            "sources_icims.json", "sources_hn.json", "sources_phenom.json", "sources_oracle.json")
 # Politeness per hiring system: how many of its boards are read at the same time, and the shortest gap in seconds between two of our
 # requests to it (across all boards; Workday's tenants each have their own address, so there the gap is per board).
 # Workday: 48 boards at a time since 18 Nov 2026 (12 before). Each tenant has its own address and still gets one request every 0.3 s.
@@ -54,10 +54,12 @@ ROTATING = ("sources_more.json", "sources_ats.json", "sources_gov.json", "source
 # Pinpoint (20 Nov 2026): every board a subdomain of pinpointhq.com, the whole board with its texts in one request: 4 at a time.
 # Gem and Trakstar (20 Nov 2026): one API each for all their boards, the texts in the list: the same. Rippling the same, with one
 # request a posting for its text.
+# Phenom and Oracle (27 Nov 2026): a handful of large employers each, a request per posting's text; Phenom's pages take two or three
+# seconds, so a read of 120 texts is about five minutes, with half a second between requests across all its sites.
 ATS_LIMIT = {"usajobs": 2, "workday": 48, "smartrecruiters": 2, "workable": 4, "recruitee": 6, "teamtailor": 6, "personio": 6, "jazzhr": 4,
-             "breezy": 4, "bamboohr": 8, "paylocity": 8, "pinpoint": 4, "gem": 4, "trakstar": 4, "rippling": 4, "icims": 4}
+             "breezy": 4, "bamboohr": 8, "paylocity": 8, "pinpoint": 4, "gem": 4, "trakstar": 4, "rippling": 4, "icims": 4, "phenom": 2, "oracle": 4}
 ATS_GAP = {"usajobs": 0.5, "workday": 0.3, "smartrecruiters": 0.5, "workable": 0.25, "recruitee": 0.1, "teamtailor": 0.1, "personio": 0.1, "jazzhr": 0.5,
-           "breezy": 0.3, "bamboohr": 0.3, "paylocity": 0.4, "pinpoint": 0.3, "gem": 0.3, "trakstar": 0.3, "rippling": 0.3, "icims": 0.5}
+           "breezy": 0.3, "bamboohr": 0.3, "paylocity": 0.4, "pinpoint": 0.3, "gem": 0.3, "trakstar": 0.3, "rippling": 0.3, "icims": 0.5, "phenom": 0.5, "oracle": 0.3}
 # Workday and SmartRecruiters list a board's postings without their text, which takes one more request per posting. Only new or
 # changed postings are asked for, at most this many per board in one read (the newest first); the rest wait for the next read.
 # 120 since 18 Nov 2026 (40 before): a board of 1,000 jobs released from hold got 40 texts on each of its reads, and its turn comes
@@ -75,7 +77,7 @@ LIST_MAX = 3000
 SLOW_ATS = {"workday", "smartrecruiters"}     # many requests a board: the hourly run reads them half as often as the other rotating boards
 # JazzHR too: its list is one request a board, but there are thousands of boards on one service, each new posting is a page of its
 # own, and live.py would otherwise read a board that changed in the last day every 10 minutes. Every 8 hours here, hourly in live.py.
-SLOW_ATS |= {"jazzhr", "breezy", "bamboohr", "paylocity", "rippling", "icims"}
+SLOW_ATS |= {"jazzhr", "breezy", "bamboohr", "paylocity", "rippling", "icims", "phenom", "oracle"}
 # <<< not rules
 
 # Same-name companies that are not crypto, and trading firms where most roles are not crypto.
@@ -2187,9 +2189,129 @@ assert not icims_placeholder("2026-11-03T05:00:00.000Z", "2027-11-03T04:00:00.00
 assert icims_placeholder("2024-11-20", None, "2026-11-20") and not icims_placeholder("2025-06-01", None, "2026-11-20")
 
 
+# Phenom (27 Nov 2026; sources_phenom.json, "token": the careers site's host and its locale path, such as jobs.bswhealth.com/us/en, or the
+# host alone, jobsearch.childrens.com). Phenom runs the careers site on the employer's own domain, in front of its hiring system (Taleo at
+# Baylor Scott & White, Infor at Children's Health); the critics' Dallas hospitals were missing because of it. robots.txt of each site
+# keeps crawlers out of the apply, chatbot, tracking and widget pages only, and names the sitemap: every open posting, rebuilt daily.
+# A posting's page carries what the site itself shows (phApp.ddo: date, places, type, text). Its JobPosting data for search engines gives
+# the day of the request as datePosted (8 of 8 postings read at both sites; the page's own dates were 18 Sep to 24 Nov), so it is not used.
+# The sitemap's lastmod moves every day for nearly every posting, so only the address (which carries the title) tells a changed posting.
+PHENOM_JOB = re.compile(r"<loc>\s*(https://[^<\s]+?/job/([A-Za-z0-9_.-]+)/[^<\s]*)\s*</loc>")
+
+
+def phenom_job(page):
+    """The posting a Phenom job page shows (its phApp.ddo), or {}."""
+    i = (page or "").find("phApp.ddo = ")
+    if i < 0: return {}
+    try: d, _ = json.JSONDecoder().raw_decode(page, i + len("phApp.ddo = "))
+    except ValueError: return {}
+    job = ((d.get("jobDetail") or {}).get("data") or {}).get("job") if isinstance(d, dict) else None
+    return job if isinstance(job, dict) else {}
+
+
+def fetch_phenom(src, reuse=None):
+    name, tok = src["name"], src["token"].strip("/")
+    host = tok.split("/", 1)[0]
+    found = {}
+
+    def sitemap(url, depth=0):
+        """Adds the postings of a sitemap to found, following a sitemap index one level down (on the site's own host only); False on no answer."""
+        polite("phenom")
+        x = _net.get_text(url, 60, accept="application/xml", compressed=True)
+        if not x or ("<urlset" not in x and "<sitemapindex" not in x): return False
+        if "<sitemapindex" in x:
+            subs = [u for u in re.findall(r"<loc>\s*([^<\s]+)\s*</loc>", x) if u.split("/")[2:3] == [host]][:40]
+            return not depth and bool(subs) and all(sitemap(u, 1) for u in subs)      # one sitemap missing would close its postings
+        for url_, jid in PHENOM_JOB.findall(x):
+            found.setdefault(jid, url_)
+        return True
+    for first in (f"https://{tok}/sitemap_index.xml", f"https://{tok}/sitemap.xml"):
+        found.clear()                                   # what a failed attempt found is not the whole board
+        if sitemap(first) and found: break
+    else:
+        return name, None                               # no sitemap with postings: the board stays as it was
+
+    def read(jid, raw):
+        j = phenom_job(_net.get_text(raw["url"], 40, accept="text/html", compressed=True))
+        title = re.sub(r"\s+", " ", str(j.get("title") or "")).strip()
+        main, more = str(j.get("description") or ""), str(j.get("externalDescription") or "")
+        desc = main + (more if strip_html(more).strip()[:200] not in strip_html(main) else "")     # the second part is the qualifications, unless the first has them
+        if not title or not strip_html(desc).strip(): return None
+        text = strip_html(desc)
+        if not english(f"{title}\n{text}"): return "not english"
+        locs = [l for l in (j.get("multi_location") if isinstance(j.get("multi_location"), list) else []) if isinstance(l, dict)]
+        place = "; ".join(dict.fromkeys(p for p in ([str(l.get("location") or l.get("cityStateCountry") or "").strip() for l in locs[:3]]
+                                                    or [str(j.get("location") or "").strip()]) if p))
+        posted = str(j.get("postedDate") or j.get("dateCreated") or "")
+        exact = posted if posted and "T00:00:00" not in posted else None     # Children's Health gives the day at midnight: a day, not a time
+        return parse(name, "phenom", jid, title, raw["url"], place, False, str(j.get("category") or ""), posted[:10], text, "",
+                     str(j.get("type") or ""), desc, False, posted_at=exact)
+    return detail_board(src, reuse, "phenom", [(jid, {"url": u}) for jid, u in found.items()], read)
+
+
+# Oracle Recruiting Cloud (27 Nov 2026; sources_oracle.json, "token": the instance's host and the careers site's number, such as
+# edbz.fa.us2.oraclecloud.com/CX for careers.ti.com). The careers site of Oracle Fusion HCM reads its jobs from the instance's public REST
+# resources, as its own pages do: recruitingCEJobRequisitions (200 postings a request, newest first, with the title, places and day) and,
+# for a posting's text, recruitingCEJobRequisitionDetails (one request a posting: read with the slow systems, at most DETAILS a read).
+# No sign-in; the instances read have no robots.txt (404 at all five on 27 Nov 2026).
+def fetch_oracle(src, reuse=None):
+    name, tok = src["name"], src["token"]
+    host, site = tok.split("/", 1)
+    api = f"https://{host}/hcmRestApi/resources/latest/"
+    posts, total, at = {}, None, 0
+    while at < LIST_MAX:
+        polite("oracle")
+        d = get_json(f"{api}recruitingCEJobRequisitions?onlyData=true&expand=requisitionList.secondaryLocations&finder=findReqs;siteNumber={site},"
+                     f"limit=200,offset={at},sortBy=POSTING_DATES_DESC", 60)
+        try: it = d["items"][0]; rows = it["requisitionList"]
+        except (KeyError, IndexError, TypeError): return name, None        # a list cut short would close the jobs on its later pages
+        if not isinstance(rows, list): return name, None
+        if total is None: total = int(it.get("TotalJobsCount") or 0)
+        at += len(rows)
+        for r in rows:
+            if isinstance(r, dict) and r.get("Id") and r.get("Title"): posts.setdefault(str(r["Id"]), r)
+        if not rows or at >= total: break
+
+    def places(r):
+        more = [str(x.get("Name") or "").strip() for x in (r.get("secondaryLocations") or []) if isinstance(x, dict)]
+        return "; ".join(dict.fromkeys(p for p in [str(r.get("PrimaryLocation") or "").strip()] + more[:2] if p))
+
+    def read(jid, raw):
+        d = get_json(f"{api}recruitingCEJobRequisitionDetails?expand=all&onlyData=true&finder=ById;Id=%22{jid}%22,siteNumber={site}", 40)
+        x = (d.get("items") or [None])[0] if isinstance(d, dict) else None
+        if not isinstance(x, dict) or not x.get("Title"): return None
+        desc = "".join((f"<h3>{h}</h3>" if h else "") + str(x.get(k)) for h, k in (("", "ExternalDescriptionStr"), ("Responsibilities", "ExternalResponsibilitiesStr"),
+                                                                                    ("Qualifications", "ExternalQualificationsStr")) if strip_html(x.get(k)).strip())
+        text = strip_html(desc)
+        if not text.strip(): return None
+        if not english(f"{x['Title']}\n{text}"): return "not english"
+        kind = str(x.get("WorkplaceType") or raw.get("workplace") or "").lower()
+        posted = str(x.get("ExternalPostedStartDate") or raw.get("posted") or "")
+        return parse(name, "oracle", jid, x["Title"], f"https://{host}/hcmUI/CandidateExperience/en/sites/{site}/job/{jid}", raw["places"],
+                     "remote" in kind, str(x.get("Category") or x.get("JobFunction") or ""), posted[:10], text, "", str(x.get("JobSchedule") or ""),
+                     desc, "hybrid" in kind, posted_at=posted or None)
+    items = [(jid, {"title": r["Title"], "posted": r.get("PostedDate"), "places": places(r), "workplace": r.get("WorkplaceType")}) for jid, r in posts.items()]
+    return detail_board(src, reuse, "oracle", items, read)
+
+
 _fetch_any = fetch
 READERS = {"usajobs": fetch_usajobs, "jazzhr": fetch_jazzhr, "breezy": fetch_breezy, "bamboohr": fetch_bamboohr, "paylocity": fetch_paylocity,
-           "pinpoint": fetch_pinpoint, "gem": fetch_gem, "trakstar": fetch_trakstar, "rippling": fetch_rippling, "icims": fetch_icims}      # the systems read outside fetch_feed
+           "pinpoint": fetch_pinpoint, "gem": fetch_gem, "trakstar": fetch_trakstar, "rippling": fetch_rippling, "icims": fetch_icims,
+           "phenom": fetch_phenom, "oracle": fetch_oracle}      # the systems read outside fetch_feed
+
+
+def in_city(src, got):
+    """A board whose places are buildings, not towns ("Main Hospital Bldg - 2nd Floor": Parkland Health, every site in Dallas County),
+    names its city in its sources entry ("where": "Dallas, TX"). A job whose place names no state then gets that city added, so that a
+    search for jobs in Dallas finds it. Only for employers all of whose sites are in that city (27 Nov 2026)."""
+    where, (name, jobs) = src.get("where"), got
+    if not where or not jobs: return got
+    st = where.rsplit(",", 1)[-1].strip()
+    named = re.compile(rf"\b{re.escape(st)}\b|\b{re.escape(US_STATE_NAME.get(st, st))}\b")
+    for r in jobs:
+        loc = str(r.get("location") or "").strip()
+        if not named.search(loc) and not r.get("remote"): r["location"] = f"{loc}, {where}" if loc else where
+    return got
 
 
 def fetch(src, reuse=None):              # noqa: F811  (the hiring systems above, plus USAJOBS and JazzHR)
@@ -2198,13 +2320,13 @@ def fetch(src, reuse=None):              # noqa: F811  (the hiring systems above
         gate = _gate.get(src.get("ats"))
         try:
             if gate: gate.acquire()
-            return read(src, reuse)
+            return in_city(src, read(src, reuse))
         except Exception as ex:
             print(f"feed error for {src.get('name')}: {type(ex).__name__}: {ex}")
             return src["name"], None
         finally:
             if gate: gate.release()
-    return _fetch_any(src, reuse)
+    return in_city(src, _fetch_any(src, reuse))
 
 
 def rename_records(db, files=None):
