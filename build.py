@@ -2,7 +2,7 @@
 
 Closed jobs keep their pages forever (archive); only the JobPosting markup and the apply button are removed.
 """
-import datetime, hashlib, html, json, os, re, shutil, time
+import contextlib, datetime, hashlib, html, io, json, os, re, shutil, time
 from urllib.parse import quote, unquote, urlparse
 from collections import Counter, defaultdict
 from functools import lru_cache
@@ -1405,6 +1405,38 @@ def h1b_block(c, slug):
             + f'<p class="note">Today’s jobs that mention sponsorship, and the employers that file the most H-1B applications: <a href="{P}/perks/visa-sponsorship/">jobs with visa sponsorship</a>.</p>')
     sec_ = section(f"{c} [[H-1B visa filings]]", body, sid="h1b", label="H-1B")
     return sec_.replace('<section class="sec hsec"', '<section class="sec hsec kpanel soft h1bp"', 1)
+
+
+def write_gone_companies():
+    """The pages of companies whose every record sift() left out (GONE_CO), so none of their addresses answers 404 (owner's rule: never
+    remove a page). A name we hold H-1B filings for keeps a page of those filings alone, with no job on it (/companies/linkedin/: the
+    JazzHR sandbox named "LinkedIn" had only test postings, while the page showed LinkedIn Corporation's 1,178 certified LCAs, and
+    "linkedin careers" is searched); any other hands its address over to the companies directory, as a renamed company's does. A page
+    written under the same address by a company that stays is never replaced. data/companies_gone.json lists them for check.py."""
+    done_ = {}
+    for slug, c in sorted(GONE_CO.items()):
+        if (OUT / "companies" / slug / "index.html").exists(): continue
+        ys, d = h1b_years(slug), H1B.get(slug)
+        if ys and d:
+            name_ = d.get("name") or c
+            y0, n0, _ = ys[0]
+            page(f"companies/{slug}/", f"{name_} H-1B Filings: {n0:,} in FY{y0}, Roles and Wages | {SITE}",
+                 f"{name_} filed {n0:,} certified H-1B Labor Condition Applications in fiscal year {y0}: the jobs, yearly wages and places, "
+                 "from US Department of Labor data.",
+                 crumbs(("Companies", "companies/"), (name_, "")) + f"<h1>{e(name_)} H-1B visa filings</h1>"
+                 + f'<p class="lead">No open {e(name_)} jobs are listed on this site today. Below are the US Department of Labor’s records of the H-1B '
+                   f'applications {e(name_)} filed: how many, for which jobs, at what yearly wage and where.</p>'
+                 + h1b_block(name_, slug)
+                 + section(f"Jobs like those {name_} files for",
+                           f'<p>Open jobs that mention visa sponsorship, and the employers that file the most H-1B applications: <a href="{P}/perks/visa-sponsorship/">jobs with visa sponsorship</a>. '
+                           f'Every employer with open jobs: <a href="{P}/companies/">the companies directory</a>. Pay by job title: <a href="{P}/salaries/">salaries</a>.</p>'))
+            done_[slug] = {"name": c, "page": "h1b"}
+        else:
+            write(f"companies/{slug}/", f'<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Companies hiring now</title><link rel="canonical" href="{FULL}/companies/">'
+                  f'<meta name="robots" content="noindex"><meta http-equiv="refresh" content="0; url={P}/companies/"></head><body><p><a href="{P}/companies/">Companies hiring now</a></p></body></html>', sitemap=False)
+            done_[slug] = {"name": c, "page": "companies/"}
+    (ROOT / "data" / "companies_gone.json").write_text(json.dumps(done_, ensure_ascii=False, indent=0, sort_keys=True), encoding="utf-8")
+    if done_: print(f"companies with no record left: {len(done_):,} ({sum(1 for v in done_.values() if v['page'] == 'h1b'):,} keep an H-1B page, the rest hand over to /companies/)")
 
 
 LOGO_S = 72          # px: the copy of each logo the 28 to 42 px squares show (twice their size for sharp screens)
@@ -3145,6 +3177,11 @@ MENDED = Counter()        # what sift() kept but mended: "Copy of" taken off a t
 # /job/custodian-part-time-catholic-schools/). records.save() stores it in data/jobs.db, and the page server answers such an address with a
 # 301 to the posting (records.Store.moved), as it does for a job published live under one address and given another by the hourly record.
 MOVED_JOB = {}
+# A company whose every record sift() leaves out -> its name (27 Nov 2026: the JazzHR sandbox "LinkedIn" and Gem's "Oats Testing" lost
+# their pages with their test postings). Its address never answers 404: write_gone_companies() keeps a page of the H-1B filings we hold
+# for the name (/companies/linkedin/: LinkedIn Corporation's filings), or hands the address over to /companies/. check.py tests it from
+# data/companies_gone.json.
+GONE_CO = {}
 
 
 def sift(jobs):
@@ -3170,6 +3207,7 @@ def sift(jobs):
             k_ = (j.get("company"), (j.get("title") or "").strip().lower(), (j.get("location") or "").strip().lower())
             if k_ not in keys or (j.get("active") and not keys[k_][1]): keys[k_] = (j["slug"], bool(j.get("active")))
     MOVED_JOB.clear()
+    GONE_CO.clear()
     out = []
     for j in jobs:
         co = j.get("company") or ""
@@ -3196,6 +3234,11 @@ def sift(jobs):
         out.append(j)
     kept_ = {j["slug"] for j in out}
     for old_ in [o_ for o_, n_ in MOVED_JOB.items() if o_ in kept_ or n_ not in kept_]: del MOVED_JOB[old_]     # never over a page that stays
+    # companies left with no record (a renamed placeholder board hands over to its new name instead: write_renamed_companies)
+    stay_ = {slugify(CO_RENAME.get(j.get("company") or "", j.get("company") or "")) for j in out} | {slugify(c_) for c_ in CO_RENAME}
+    for j in jobs:
+        co_ = j.get("company") or ""
+        if co_ and slugify(co_) and slugify(co_) not in stay_: GONE_CO.setdefault(slugify(co_), co_)
     return out
 
 
@@ -3212,7 +3255,14 @@ def _sift_test():
     assert [j["slug"] for j in out_] == ["custodian-part-time-catholic-schools", "accounting-billing-coordinator-z-do-not-use", "graphic-designer-acme", "unavailable-s-b"], [j["slug"] for j in out_]
     assert MOVED_JOB == {"custodian-part-time-z-do-not-use": "custodian-part-time-catholic-schools", "copy-of-graphic-designer-acme": "graphic-designer-acme"}, MOVED_JOB
     assert out_[-1]["title"] == "Project Expeditor" and out_[-1]["slug"] == "unavailable-s-b"
-    SIFTED.clear(); SIFTED.update(keep_[0]); MENDED.clear(); MENDED.update(keep_[1]); MOVED_JOB.clear()
+    assert GONE_CO == {}, GONE_CO          # the copies' boards keep their pages ("Z. Do Not Use" through its new name)
+    with contextlib.redirect_stdout(io.StringIO()): sift(js_ + [{"id": "jazzhr-linkedin-1", "company": "LinkedIn", "title": "Example of pdf resume", "location": "", "slug": "example-of-pdf-resume-linkedin", "active": True},
+                {"id": "jazzhr-linkedin-2", "company": "LinkedIn", "title": "Test Job", "location": "", "slug": "test-job-linkedin", "active": True},
+                {"id": "jazzhr-linkedin-3", "company": "LinkedIn", "title": "Test job for EEOC", "location": "", "slug": "test-job-for-eeoc-linkedin", "active": True},
+                {"id": "jazzhr-linkedin-4", "company": "LinkedIn", "title": "Ferret Dentist", "location": "", "slug": "ferret-dentist-linkedin", "active": True},
+                {"id": "gem-oats-testing-1", "company": "Oats Testing", "title": "Brad bug bash perms", "location": "", "slug": "brad-bug-bash-perms-oats-testing", "active": True}])
+    assert GONE_CO == {"linkedin": "LinkedIn", "oats-testing": "Oats Testing"}, GONE_CO
+    SIFTED.clear(); SIFTED.update(keep_[0]); MENDED.clear(); MENDED.update(keep_[1]); MOVED_JOB.clear(); GONE_CO.clear()
 
 
 _sift_test()
@@ -15593,6 +15643,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
         if slugify(old_) != slugify(new_) and not (OUT / "companies" / slugify(old_) / "index.html").exists() and (OUT / "companies" / slugify(new_) / "index.html").exists():
             write(f"companies/{slugify(old_)}/", f'<!doctype html><html lang="en"><head><meta charset="utf-8"><title>{e(new_)} careers</title><link rel="canonical" href="{FULL}/companies/{slugify(new_)}/">'
                   f'<meta name="robots" content="noindex"><meta http-equiv="refresh" content="0; url={P}/companies/{slugify(new_)}/"></head><body><p><a href="{P}/companies/{slugify(new_)}/">{e(new_)} careers</a></p></body></html>', sitemap=False)
+    write_gone_companies()
     page("404.html", f"Page not found | {SITE}", "This page does not exist: the address may have changed or the job may have been renamed. Search open jobs by title, skill or company instead.",
          f'<div class="nf"><p class="sec-label">404</p><h1>Page not found</h1><p class="lead">The address may have changed, or the job may have been renamed. Search for it here:</p>'
          f'<form class="searchbar wide" action="{P}/jobs/" method="get">{ICON_SEARCH}<input type="search" name="q" placeholder="Customer service, nurse, data analyst…" aria-label="Search jobs"><button class="btn primary">Search</button></form>'

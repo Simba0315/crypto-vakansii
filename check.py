@@ -288,6 +288,25 @@ if (SITE / "feeds" / "index.xml").is_file():
     import job_feed
     counts["job feed"] = len(list((SITE / "feeds").glob("jobs-*.xml")))
     for p_ in job_feed.check(SITE / "feeds", FULL)[:20]: fails["job feed"][p_] += 1
+# company pages that sift() left without a record (27 Nov 2026, owner's rule: never remove a page): each address still answers, with the
+# page of the H-1B filings held for the name (an H1, the filings, no job and no noindex) or an immediate hand-over to /companies/; and
+# every hand-over page under companies/ points to a page that exists
+gone_f = ROOT / "data" / "companies_gone.json"
+counts["gone companies"] = 0
+for sl_, v_ in (json.loads(gone_f.read_text(encoding="utf-8")) if gone_f.is_file() else {}).items():
+    counts["gone companies"] += 1
+    f_ = SITE / "companies" / sl_ / "index.html"
+    if not f_.is_file(): fails["gone companies"][f"companies/{sl_}/ answers 404"] += 1; continue
+    h_ = f_.read_text(encoding="utf-8", errors="replace")
+    if v_.get("page") == "h1b":
+        if 'id="h1b"' not in h_ or len(re.findall(r"<h1[\s>]", h_)) != 1 or '<li class="job' in h_ or 'content="noindex' in h_[:8000]:
+            fails["gone companies"][f"companies/{sl_}/ is not a page of its H-1B filings alone"] += 1
+    elif f'http-equiv="refresh" content="0; url={P}/companies/"' not in h_ or f'<link rel="canonical" href="{FULL}/companies/">' not in h_:
+        fails["gone companies"][f"companies/{sl_}/ does not hand over to /companies/"] += 1
+for f_ in (SITE / "companies").glob("*/index.html") if (SITE / "companies").is_dir() else ():
+    with f_.open(encoding="utf-8", errors="replace") as fh_: h_ = fh_.read(1200)
+    m_ = re.search(r'http-equiv="refresh" content="0; url=([^"]+)"', h_)
+    if m_ and not exists(m_.group(1)): fails["gone companies"][f"{f_.parent.name} hands over to a page that does not exist"] += 1
 # llms.txt (perfect-page standard: present and current): dated with the build's day, and every page it names exists
 llms = SITE / "llms.txt"
 counts["llms.txt"] = 1
