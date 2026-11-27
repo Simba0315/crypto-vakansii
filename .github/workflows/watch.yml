@@ -1,0 +1,49 @@
+name: Watch the site
+# Every 10 minutes: the home page, the job list, search, a job page built by serve.py, new jobs arriving, the HTTPS certificate and the
+# Google indexing chain (watch.sh). A problem opens one issue labelled "site-watch", and GitHub emails the owner; the issue closes by
+# itself when everything answers normally again. Added on 27 Nov 2026, after job pages and search were down 06:57-08:09 UTC on 26 Nov
+# and nobody knew until the owner did.
+# Like indexing.yml, one run lives about 5.5 hours and starts the next one itself: GitHub starts this repository's scheduled runs only
+# every few hours. The schedule stays as a second way in.
+
+on:
+  schedule:
+    - cron: "41 */2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write       # open, comment on and close the "site-watch" issue
+  actions: write      # restart the indexing chain, start the next run of this one
+
+concurrency:
+  group: site-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            /watch.sh
+          sparse-checkout-cone-mode: false
+      - name: A round every 10 minutes, 32 rounds
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          for i in $(seq 1 32); do
+            start=$(date +%s)
+            bash watch.sh || true
+            [ "$i" -lt 32 ] || break
+            spent=$(( $(date +%s) - start ))
+            [ "$spent" -lt 600 ] && sleep $(( 600 - spent ))
+          done
+      - name: Start the next run
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run watch.yml --repo "${{ github.repository }}" --ref main
