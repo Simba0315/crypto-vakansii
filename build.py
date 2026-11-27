@@ -15362,7 +15362,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
          + ", ".join(f"{c_} ({k_:,})" for c_, k_ in gj_top[:5]) + ". " if gj_top else "")
          + "Some reposting is normal: a role with many hires, or one filled and opened again. A board that takes down and puts up most of its jobs every two weeks is marked "
          "“Reposts often” on its page and comes after the others in every list here."),
-        ("Can I use these figures?", f"Yes, free, with a link to this page. The two CSV files below have every figure on the page, recounted with each update of the site."),
+        ("Can I use these figures?", f"Yes, free under CC BY 4.0: credit {SITE} with a link to this page. The two CSV files below have every figure on the page, recounted with each update of the site."),
     ]
     gj_qa_html, gj_qa_ld = qa_sec("Questions about [[ghost jobs]]", gj_qa, label="Questions")
     # the two files: the index itself, and the employers' table (open data, CC BY 4.0)
@@ -15376,28 +15376,52 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
     ]) + "\n" + "\n".join(",".join(csv_cell(x_) for x_ in (f"postings taken down in the week of {a_.isoformat()}" + (" (so far)" if now_ else " (from the start of the record)" if part_ else ""),
                                                           k_, "", "", TODAY, "Monday to Sunday")) for a_, k_, _, now_, part_ in gj_weeks) + "\n"
     write("data/ghost-jobs.csv", gj_csv, sitemap=False)
-    write("data/ghost-jobs-employers.csv", "company,open_postings,reposted_open_postings,open_with_employer_date,of_them_up_90_plus_days,posted_last_7_days,closed_last_7_days,reposts_most_jobs_every_two_weeks,page\n"
-          + "".join(",".join(csv_cell(x_) for x_ in (c_, OPEN[c_], k_, gj_dated[c_][0], gj_dated[c_][1], PULSE.get(c_, (0, 0, ""))[0], PULSE.get(c_, (0, 0, ""))[1],
-                                                      "yes" if c_ in CHURN else "no", f"{FULL}/companies/{slugify(c_)}/")) + "\n" for c_, k_ in gj_rep.most_common(500)), sitemap=False)
+    gj_emp_csv = ("company,open_postings,reposted_open_postings,open_with_employer_date,of_them_up_90_plus_days,posted_last_7_days,closed_last_7_days,reposts_most_jobs_every_two_weeks,page\n"
+                  + "".join(",".join(csv_cell(x_) for x_ in (c_, OPEN[c_], k_, gj_dated[c_][0], gj_dated[c_][1], PULSE.get(c_, (0, 0, ""))[0], PULSE.get(c_, (0, 0, ""))[1],
+                                                              "yes" if c_ in CHURN else "no", f"{FULL}/companies/{slugify(c_)}/")) + "\n" for c_, k_ in gj_rep.most_common(500)))
+    write("data/ghost-jobs-employers.csv", gj_emp_csv, sitemap=False)
+    # Google Dataset Search listed 14 other "ghost job index" datasets and not this one (27 Nov 2026): the markup now has every field its
+    # guide names (developers.google.com/search/docs/appearance/structured-data/dataset), each file its name, description and size, and
+    # the countries the postings are in instead of "Worldwide" (most are in the US). check.py holds the fields to it.
+    gj_ctry = sorted(((nm_.removeprefix("the "), len(by_place_.get(sl_, ()))) for nm_, sl_, r_ in PLACES if isinstance(r_, str) and r_ != "region"
+                      and by_place_.get(sl_)), key=lambda x: -x[1])
+    gj_all = max(len(active), 1)
+    gj_us = next((round(100 * k_ / gj_all) for nm_, k_ in gj_ctry if nm_ == "United States"), 0)
+    gj_places = [{"@type": "Country", "name": nm_} for nm_, k_ in gj_ctry if k_ >= gj_all / 100] or [{"@type": "Country", "name": "United States"}]
+    gj_measure = lambda name_, unit_, what_: {"@type": "PropertyValue", "name": name_, "unitText": unit_, "description": what_}
     gj_ld = ('<script type="application/ld+json">' + json.dumps({"@context": "https://schema.org", "@type": "Dataset", "name": "Ghost Jobs Index",
+             "alternateName": ["Ghost Job Index", f"{SITE} Ghost Jobs Index"],
              "description": f"Signs of ghost jobs measured on employers’ own careers pages: the share of open postings up more than {LONG_OPEN} days by the employer’s date, "
-                            "talent pools, reposted roles, postings taken down week by week and the employers that repost the most.",
-             "url": f"{FULL}/ghost-jobs/", "dateModified": TODAY, "creator": {"@type": "Organization", "@id": ORG_ID, "name": SITE, "url": FULL + "/"},
+                            "talent pools, reposted roles, postings taken down week by week and the employers that repost the most. "
+                            f"Counted from the public job lists of {FACTS['companies']:,} employers, read in turn around the clock; "
+                            + (f"{gj_us}% of the open postings are in the United States, the rest in {len(gj_ctry) - 1} other countries or remote. " if gj_us else "")
+                            + "Recounted with every update of the site; two CSV files: the index and the 500 employers with the most reposted open roles.",
+             "url": f"{FULL}/ghost-jobs/", "version": TODAY, "datePublished": "2026-11-27", "dateModified": TODAY,
+             "creator": {"@type": "Organization", "@id": ORG_ID, "name": SITE, "url": FULL + "/", "sameAs": ORG_SAME_AS},
+             "publisher": {"@type": "Organization", "@id": ORG_ID, "name": SITE, "url": FULL + "/"},
+             "includedInDataCatalog": {"@type": "DataCatalog", "name": f"{SITE} hiring reports and data", "url": f"{FULL}/reports/"},
              "isAccessibleForFree": True, "license": "https://creativecommons.org/licenses/by/4.0/",
-             "temporalCoverage": f"{(gj_since.isoformat() if gj_since else TODAY)}/{TODAY}", "spatialCoverage": {"@type": "Place", "name": "Worldwide"},
+             "temporalCoverage": f"{(gj_since.isoformat() if gj_since else TODAY)}/{TODAY}", "spatialCoverage": gj_places,
              "measurementTechnique": "Employers’ public job lists in their hiring systems, read in turn around the clock; a posting’s age is its employer’s own date; a posting is closed on the day it leaves the list.",
-             "variableMeasured": [f"share of open postings up more than {LONG_OPEN} days", "open talent pool postings", "open postings that repeat a closed role", "postings taken down per week",
-                                  "median days a closed posting had been up"],
-             "keywords": ["ghost jobs", "job postings", "hiring data", "time to fill"],
-             "distribution": [{"@type": "DataDownload", "encodingFormat": "text/csv", "contentUrl": f"{FULL}/data/ghost-jobs.csv"},
-                              {"@type": "DataDownload", "encodingFormat": "text/csv", "contentUrl": f"{FULL}/data/ghost-jobs-employers.csv"}]},
+             "variableMeasured": [gj_measure(f"share of open postings up more than {LONG_OPEN} days", "percent", "open postings with the employer’s own date, up more than "
+                                             f"{LONG_OPEN} days on the day of the count, of all open postings with such a date"),
+                                  gj_measure("open talent pool postings", "postings", "standing invitations such as talent pools or general applications"),
+                                  gj_measure("open postings that repeat a closed role", "postings", "same employer, title and place as a posting the employer took down before"),
+                                  gj_measure("postings taken down per week", "postings", "postings that left the employer’s list, Monday to Sunday"),
+                                  gj_measure("median days a closed posting had been up", "days", "from the employer’s date to the day the posting left the list")],
+             "keywords": ["ghost jobs", "ghost job index", "job postings", "reposted jobs", "talent pools", "hiring data", "time to fill", "job market", "United States"],
+             "distribution": [{"@type": "DataDownload", "name": "ghost-jobs.csv", "description": "The index: each measure with its value, base, share, date and method, and postings taken down week by week.",
+                               "encodingFormat": "text/csv", "contentUrl": f"{FULL}/data/ghost-jobs.csv", "contentSize": f"{len(gj_csv.encode())} B"},
+                              {"@type": "DataDownload", "name": "ghost-jobs-employers.csv", "description": "The 500 employers with the most open postings that repeat a closed role: open, reposted, "
+                               f"up {LONG_OPEN}+ days, posted and taken down in 7 days, whether they repost most jobs every two weeks, and their page here.",
+                               "encodingFormat": "text/csv", "contentUrl": f"{FULL}/data/ghost-jobs-employers.csv", "contentSize": f"{len(gj_emp_csv.encode())} B"}]},
              ensure_ascii=False).replace("</", "<\\/") + "</script>")
     gj_week_rows = [trow([f"{fdate(a_.isoformat())}" + (" (so far)" if now_ else ""), f"{k_:,}", f"{p_:,}"]) for a_, k_, p_, now_, part_ in gj_weeks]
     page("ghost-jobs/", f"Ghost Jobs Index: {pct90}% of Open Jobs Up {LONG_OPEN}+ Days | {SITE}",
          f"Ghost jobs measured on employers’ own careers pages: {pct90}% of open postings up {LONG_OPEN}+ days, {gj_cl7:,} taken down in 7 days, who reposts most. CSV and method.",
          crumbs(("Hiring reports", "reports/"), ("Ghost jobs index", "")) + "<h1>Ghost jobs index</h1>"
          f'<p class="lead">{e(gj_lead)}</p>'
-         f'<p class="note">Counted on {fdate(TODAY)} from the careers pages of the {FACTS["companies"]:,} employers we read; recounted with every update. Free to quote with a link. '
+         f'<p class="note">Counted on {fdate(TODAY)} from the careers pages of the {FACTS["companies"]:,} employers we read; recounted with every update. Free to quote and reuse with a link to this page (<a href="https://creativecommons.org/licenses/by/4.0/" rel="license nofollow noopener">CC BY 4.0</a>). '
          f'Files: <a href="{P}/data/ghost-jobs.csv">ghost-jobs.csv</a> (the index) and <a href="{P}/data/ghost-jobs-employers.csv">ghost-jobs-employers.csv</a> (employers).</p>'
          '<div class="stats3 st4">'
          + gtile(f"Up more than {LONG_OPEN} days", f"{pct90}%", f"measured: {FACTS['open_90d']:,} of {FACTS['dated_open']:,} open postings with the employer’s date")

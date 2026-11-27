@@ -386,6 +386,42 @@ for js_ in ("site.js",):
     if not f_.is_file(): continue
     counts["header and footer"] += 1
     if HOURLY_RX.search(f_.read_text(encoding="utf-8", errors="replace")): fails["header and footer"][f"{js_} (the header's menus) says every hour"] += 1
+# The Ghost Jobs Index as a dataset (27 Nov 2026: Google Dataset Search listed 14 other "ghost job index" datasets, not ours). The Dataset
+# markup of /ghost-jobs/ parses and has the fields of Google's guide (developers.google.com/search/docs/appearance/structured-data/dataset):
+# a name, a description of 50 to 5,000 characters, the page's address, a creator with an address, a license, free access, keywords, the
+# dates from the start of the record to the day of the build, real countries, the measures and the method; and both CSV files, named,
+# typed text/csv and present in the build.
+gj_f = SITE / "ghost-jobs" / "index.html"
+counts["ghost jobs dataset"] = 1
+if not gj_f.is_file(): fails["ghost jobs dataset"]["ghost-jobs/ was not built"] += 1
+else:
+    ds_ = []
+    for blk in LD_RX.findall(gj_f.read_text(encoding="utf-8", errors="replace")):
+        try: ds_ += [it for it, _ in ld_items(json.loads(blk)) if it.get("@type") == "Dataset"]
+        except ValueError: fails["ghost jobs dataset"]["JSON-LD that does not parse"] += 1
+    if len(ds_) != 1: fails["ghost jobs dataset"][f"{len(ds_)} Dataset blocks, not one"] += 1
+    for d_ in ds_[:1]:
+        miss_ = [k_ for k_ in ("name", "description", "url", "creator", "license", "isAccessibleForFree", "keywords", "temporalCoverage", "spatialCoverage",
+                               "variableMeasured", "measurementTechnique", "distribution", "dateModified", "version") if not d_.get(k_)]
+        if miss_: fails["ghost jobs dataset"]["missing " + ", ".join(miss_)] += 1
+        if not 50 <= len(str(d_.get("description") or "")) <= 5000: fails["ghost jobs dataset"]["description not 50 to 5,000 characters"] += 1
+        if d_.get("url") != f"{FULL}/ghost-jobs/": fails["ghost jobs dataset"]["url is not the page's own"] += 1
+        cr_ = d_.get("creator") or {}
+        if not (isinstance(cr_, dict) and cr_.get("@type") == "Organization" and cr_.get("name") and str(cr_.get("url") or "").startswith("https://")):
+            fails["ghost jobs dataset"]["creator is not an Organization with a name and url"] += 1
+        if d_.get("isAccessibleForFree") is not True: fails["ghost jobs dataset"]["isAccessibleForFree is not true"] += 1
+        tc_ = re.fullmatch(r"(\d{4}-\d\d-\d\d)/(\d{4}-\d\d-\d\d)", str(d_.get("temporalCoverage") or ""))
+        if not tc_ or tc_.group(1) > tc_.group(2) or tc_.group(2) != str(d_.get("dateModified")):
+            fails["ghost jobs dataset"]["temporalCoverage is not start/day of the build"] += 1
+        sc_ = d_.get("spatialCoverage") if isinstance(d_.get("spatialCoverage"), list) else [d_.get("spatialCoverage")]
+        if not sc_ or any(not isinstance(x_, dict) or not x_.get("name") or x_["name"] == "Worldwide" for x_ in sc_):
+            fails["ghost jobs dataset"]["spatialCoverage is not named countries"] += 1
+        got_ = {}
+        for x_ in d_.get("distribution") or []:
+            if isinstance(x_, dict) and x_.get("@type") == "DataDownload" and x_.get("encodingFormat") == "text/csv" and x_.get("name"): got_[x_.get("contentUrl")] = x_
+        for csv_ in ("ghost-jobs.csv", "ghost-jobs-employers.csv"):
+            if f"{FULL}/data/{csv_}" not in got_: fails["ghost jobs dataset"][f"no named text/csv DataDownload for {csv_}"] += 1
+            if not (SITE / "data" / csv_).is_file(): fails["ghost jobs dataset"][f"data/{csv_} was not built"] += 1
 print(f"checked {len(sample)} pages ({len(others)} non-job pages, {len(sample) - len(others)} job pages sampled" + (", built from records" if STORE else "") + ")")
 for t in sorted(counts):
     bad = fails[t]
