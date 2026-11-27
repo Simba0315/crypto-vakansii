@@ -261,15 +261,34 @@ jobs:
         with:
           path: .indexnow-sent
           key: indexnow-${{ steps.inday.outputs.d }}
-      # Google's Indexing API, the fast way it offers for job pages: the best 20 jobs new in this run (indexing.py), after the upload so
+      # Google's Indexing API, the fast way it offers for job pages: the best jobs new in this run (indexing.py), after the upload so
       # that each address opens. Google allows 200 a day by default; at "quota exceeded" the script stops. The owner keeps the service
       # account's key as the secret GOOGLE_INDEXING_KEY (added 20 Nov 2026 on); without it the step sends nothing.
+      # Since 27 Nov 2026 the hourly workflow indexing.yml does this from the live site; this step is its fallback: it sends only when
+      # indexing.yml has not run for two hours, never an address either of them sent in the last 30 days, and never more than Google's
+      # day has left. The record of what was sent is the same Actions cache entry indexing.yml reads and writes.
+      - name: Restore what was sent to Google
+        if: ((env.SWITCHED == '1' && steps.upload.outcome == 'success') || (env.SWITCHED != '1' && steps.deploy.outcome == 'success')) && (github.event_name != 'push' || env.STALE == 'true')
+        continue-on-error: true
+        uses: actions/cache/restore@v4
+        with:
+          path: data/indexing_sent.json
+          key: indexing-sent-${{ github.run_id }}
+          restore-keys: indexing-sent-
       - name: Tell Google about new jobs
+        id: google
         if: ((env.SWITCHED == '1' && steps.upload.outcome == 'success') || (env.SWITCHED != '1' && steps.deploy.outcome == 'success')) && (github.event_name != 'push' || env.STALE == 'true')
         continue-on-error: true
         env:
           GOOGLE_INDEXING_KEY: ${{ secrets.GOOGLE_INDEXING_KEY }}
         run: python3 indexing.py
+      - name: Keep what was sent to Google
+        if: (steps.google.outcome == 'success' || steps.google.outcome == 'failure') && hashFiles('data/indexing_sent.json') != ''
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: data/indexing_sent.json
+          key: indexing-sent-${{ github.run_id }}-${{ github.run_attempt }}
       # The owner's own channels (Telegram, X): post.py sends the jobs first seen today. It runs only when channels.json lists a
       # channel, after the deploy, so that the link in a post opens. A channel whose secret is missing is skipped; a failed post
       # never fails the run. The owner adds the secrets himself in the repository settings (see CHANNELS.md).

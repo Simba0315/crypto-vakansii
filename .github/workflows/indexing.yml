@@ -1,0 +1,53 @@
+name: Tell Google about new jobs
+# Google's Indexing API, every hour, on its own (27 Nov 2026). Until then the notifications went only with the collecting runs of
+# update.yml, after a successful upload: a run takes 1.5 to 3.5 hours, every push cancels the run waiting, and about 5 runs a day got
+# that far, so Google heard of 20 to 100 jobs a day of the 200 its quota allows (380 in the week of 20 to 26 Nov). This workflow needs
+# no build: it reads the newest jobs of the live site (live.py publishes a job within minutes of finding it), opens each page (200,
+# its own canonical, valid JobPosting markup), and sends this hour's part of the day's 200, about 8 or 9 (indexing.py --live).
+# What was sent is one record shared with update.yml's own step, kept in the Actions cache: an address is never sent twice in 30 days,
+# and update.yml sends only when this workflow has not run for two hours.
+# Two starts an hour: GitHub skips or delays many scheduled starts. The second start of an hour the first one served sends nothing
+# (indexing.hourly_share); one that comes after skipped hours sends more, up to 20.
+
+on:
+  schedule:
+    - cron: "23 * * * *"
+    - cron: "53 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# one at a time, so two runs never start from the same record and send the same addresses
+concurrency:
+  group: google-indexing
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            /indexing.py
+            /jobsdb.py
+            /config.json
+          sparse-checkout-cone-mode: false
+      - name: Restore what was sent
+        uses: actions/cache/restore@v4
+        with:
+          path: data/indexing_sent.json
+          key: indexing-sent-${{ github.run_id }}
+          restore-keys: indexing-sent-
+      - name: Tell Google about the newest jobs
+        env:
+          GOOGLE_INDEXING_KEY: ${{ secrets.GOOGLE_INDEXING_KEY }}
+        run: python3 indexing.py --live
+      - name: Keep what was sent
+        if: always() && hashFiles('data/indexing_sent.json') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: data/indexing_sent.json
+          key: indexing-sent-${{ github.run_id }}-${{ github.run_attempt }}
