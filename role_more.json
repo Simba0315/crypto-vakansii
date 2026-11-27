@@ -1291,6 +1291,40 @@
    }
   ]
  },
+ "bank-teller": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Tellers take deposits, cash checks, process withdrawals, loan payments and transfers, and sell money orders and cashier’s checks. They balance their cash drawer, watch for fraud and counterfeit money, and refer customers to bankers for accounts and loans."
+   },
+   {
+    "label": "A typical day",
+    "text": "Tellers count their drawer before the branch opens, then serve customers at the window and the drive-up. Quiet times go to filing, ordering cash, calling customers and processing the night deposit. At closing they balance the drawer to the cent and lock cash in the vault."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with other tellers, a head teller, personal bankers and the branch manager. Every day they help customers in person and on the phone, and they work with the bank’s fraud and compliance teams on unusual transactions."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Tellers use the bank’s teller system, cash counters and coin machines, check scanners, counterfeit detection pens and lights, the vault and cash recyclers, plus forms for large cash transactions required by the Bank Secrecy Act."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Banks look at a drawer that balances, few errors, following holds, identification and Bank Secrecy Act rules, catching fraud, polite and quick service, and how many customers are referred to bankers. Honesty is the first requirement."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Is bank teller a good first job?",
+    "a": "For many people, yes. Banks and credit unions hire tellers with a high school diploma, train them on the job and often offer regular hours and benefits. The work teaches cash handling, fraud prevention and customer service, and leads to jobs as a personal banker, loan officer or branch manager."
+   },
+   {
+    "q": "Are bank teller jobs going away?",
+    "a": "Their number is shrinking, as customers bank on phones and use ATMs and branches close. The government projects fewer teller jobs over the next decade, but many openings still come up each year as tellers move on, and banks increasingly hire universal bankers who do teller work and open accounts."
+   }
+  ]
+ },
  "banking-operations": {
   "day": [
    {
@@ -7683,6 +7717,40 @@
    }
   ]
  },
+ "hair-stylist": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Hair stylists consult with clients, then shampoo, cut, color, highlight and style hair, and may do treatments, extensions, perms or relaxers. They clean and disinfect tools and stations, recommend products and book clients’ next visits."
+   },
+   {
+    "label": "A typical day",
+    "text": "Stylists see a mix of booked clients and walk-ins, often seven to ten a day, with color processing times used for a blowout or a quick cut. Between clients they sweep, disinfect tools, mix color and answer messages from clients."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with other stylists, salon assistants, the front desk and the salon manager or owner, and sometimes with color educators from product companies. Their regular clients are the center of the job."
+   },
+   {
+    "label": "Where they work",
+    "text": "Most work in hair salons, from value chains to high-end salons, and others in spas, resorts, cruise ships, senior living communities and theaters. Many are self-employed, renting a booth or owning a salon. Evenings and Saturdays are the busiest times."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Salons look at client satisfaction, how many clients rebook and return, the size of a stylist’s book, average ticket and retail sales, clean and safe work under state board rules, and punctuality with the schedule."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What is the difference between a hair stylist and a cosmetologist?",
+    "a": "A cosmetologist holds a state license that usually covers hair, skin and nails. A hair stylist is anyone who cuts and styles hair, and in most states that requires the cosmetology license or a hair-only license. In everyday use, most cosmetologists who work on hair call themselves hair stylists."
+   },
+   {
+    "q": "Is being a hair stylist hard on the body?",
+    "a": "It can be. Stylists stand most of the day, hold their arms up and repeat the same hand movements, and work with chemicals. Good shears, a chair at the right height, comfortable shoes, gloves for chemical services and stretching help prevent back, shoulder and wrist pain and skin problems."
+   }
+  ]
+ },
  "hardware-engineer": {
   "day": [
    {
@@ -8020,6 +8088,40 @@
    {
     "q": "Is help desk a stressful job?",
     "a": "It can be. Technicians often handle many requests at once, and callers may be frustrated or under deadline. Outages can flood the queue in minutes. Stress is lower with good documentation, clear escalation paths and reasonable ticket targets. Many people find it a solid entry point into an IT career."
+   }
+  ]
+ },
+ "home-health-aide": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Home health aides help clients bathe, dress, use the bathroom, eat and move around their homes. They may check vital signs, remind clients to take medicines, do light housekeeping and laundry, and tell the nurse about any change in the client’s health."
+   },
+   {
+    "label": "A typical day",
+    "text": "An aide may spend a whole shift with one client or visit several in a day. A visit often starts with personal care and breakfast, then exercises, errands or a walk, and ends with notes and clocking out on the agency’s app."
+   },
+   {
+    "label": "Who they work with",
+    "text": "Aides report to a registered nurse who writes the care plan, and work alongside therapists, hospice teams and the agency’s scheduling staff. They spend most of their time with clients and their families, often alone in the home."
+   },
+   {
+    "label": "Where they work",
+    "text": "Most work for home health and home care agencies and hospices in clients’ private homes. Others work in assisted living, group homes or for families who hire them directly. Many drive between clients and work weekends, evenings or live-in shifts."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Agencies look at reliability and punctuality, safe personal care and transfers, careful notes and visit times, prompt reporting of changes, respect for the client’s home and wishes, and following the care plan."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What is the difference between a home health aide and a personal care aide?",
+    "a": "Both help people at home with bathing, dressing and daily tasks. A home health aide works for an agency that provides medical care, under a nurse’s care plan, and at Medicare- or Medicaid-certified agencies must meet federal training rules. A personal care aide gives non-medical help, and training rules vary by state."
+   },
+   {
+    "q": "Is a home health aide job hard?",
+    "a": "It can be physically and emotionally demanding. Aides lift and turn clients, work alone in other people’s homes, and care for people who are very ill, have dementia or are dying. Many find it deeply rewarding, and good training in safe transfers and support from the nurse make a big difference."
    }
   ]
  },
@@ -10641,6 +10743,40 @@
    }
   ]
  },
+ "medical-assistant": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Medical assistants bring patients to exam rooms, take vital signs and histories, and help doctors with exams and procedures. Depending on state law and the clinic, they draw blood, give injections, run EKGs and simple lab tests, and handle scheduling, referrals and insurance forms."
+   },
+   {
+    "label": "A typical day",
+    "text": "The day starts with a look at the schedule and the rooms. Then come waves of patients to room, results to file, prescription refill requests to send to the provider, and calls back to patients. Between visits they clean rooms, restock supplies and log fridge temperatures for vaccines."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work most closely with one or a few physicians, nurse practitioners or physician assistants, and with nurses, front desk staff and the practice manager. They talk with patients and families all day and with pharmacies, labs and insurers by phone."
+   },
+   {
+    "label": "Tools of the trade",
+    "text": "Medical assistants use an electronic health record, blood pressure cuffs, thermometers and pulse oximeters, EKG machines, needles and blood tubes, rapid test kits and autoclaves for sterilizing instruments, plus phones and scheduling systems at the front desk."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Clinics look at accurate vital signs and charting, how quickly patients get roomed, safe blood draws and injections, clean rooms, privacy kept under HIPAA, and how well patients are treated. Staying within what the state and the provider allow is required."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What is the difference between a medical assistant and a nurse?",
+    "a": "A nurse is licensed by the state after a nursing degree or diploma and an exam, and can assess patients, give medicines on their own license and plan care. A medical assistant usually trains for about a year, works under a provider’s direction and does tasks the state allows, such as vital signs, injections and office work."
+   },
+   {
+    "q": "Do medical assistants work in hospitals?",
+    "a": "Some do, mostly in hospital outpatient clinics, but most work in doctors’ offices, urgent care centers and other outpatient practices. Hospital wards rely more on nurses, nursing assistants and patient care technicians, while clinics rely on medical assistants for rooming patients and office work."
+   }
+  ]
+ },
  "medical-coder": {
   "day": [
    {
@@ -11729,6 +11865,40 @@
    }
   ]
  },
+ "patient-care-technician": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Patient care technicians help nurses care for patients: vital signs, bathing, feeding, turning and walking patients, and taking them to the bathroom. Depending on the hospital, they also draw blood, run EKGs, check blood sugar, and measure fluids in and out."
+   },
+   {
+    "label": "A typical day",
+    "text": "A shift starts with a report from the nurse and the outgoing tech. Then come rounds of vital signs, morning blood draws, baths and meals, answering call lights, turning patients and helping with admissions and discharges, with every task charted as it is done."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work under registered nurses and alongside other techs, unit secretaries, therapists, phlebotomists and doctors. In dialysis clinics they work with nurses, dietitians and social workers who look after the same patients three times a week."
+   },
+   {
+    "label": "Where they work",
+    "text": "Most work in hospitals, on medical-surgical, cardiac, intensive care and emergency units, often in 12-hour shifts that include nights and weekends. Many others work in dialysis clinics, rehabilitation hospitals and long-term acute care hospitals."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Hospitals look at accurate vital signs and charting, quick reporting of changes to the nurse, safe blood draws and EKGs, fall and pressure injury prevention, infection control, kindness to patients and teamwork on the unit."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Is a patient care technician the same as a CNA?",
+    "a": "Not quite. Both help patients with bathing, moving, eating and vital signs, and many hospitals ask PCTs to be certified nursing assistants. PCTs usually also do technical tasks such as blood draws and EKGs. Some hospitals use the two titles for the same job, so read each posting’s duties."
+   },
+   {
+    "q": "Is patient care technician a good step toward nursing?",
+    "a": "Many people use it that way. The work teaches patient care, vital signs and how a hospital unit runs, and nursing schools value that experience. Many hospitals help pay for nursing school and offer schedules that fit around classes."
+   }
+  ]
+ },
  "payments": {
   "day": [
    {
@@ -12239,6 +12409,40 @@
    }
   ]
  },
+ "police-officer": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Police officers patrol assigned areas, answer emergency and other calls, enforce traffic and criminal laws, make arrests, and write reports. They also help people in crisis, direct traffic at crashes and events, and testify in court about their cases."
+   },
+   {
+    "label": "A typical day",
+    "text": "A shift starts with roll call and a briefing on recent crimes and warrants. Then come calls from dispatch, from alarms and thefts to crashes and disputes, with patrol and traffic stops in between. Much of a shift goes into writing reports and handling evidence."
+   },
+   {
+    "label": "Who they work with",
+    "text": "Officers work with partners, sergeants, dispatchers and detectives, and with firefighters, paramedics and mental health workers on calls. Prosecutors, judges and court staff rely on their reports and testimony, and community groups and business owners on their help."
+   },
+   {
+    "label": "Where they work",
+    "text": "Most work for city police departments, county sheriff’s offices or state police. Others work for universities, hospitals, airports, transit systems, tribal nations and federal agencies such as military bases. Shifts cover nights, weekends and holidays."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Agencies look at sound judgment under pressure, lawful stops, searches and arrests, force used only as policy and law allow, accurate reports, response times, professional treatment of the public and how well cases hold up in court."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What is the difference between a police officer and a sheriff’s deputy?",
+    "a": "Both are certified law enforcement officers. Police officers usually work for a city or town and patrol inside its limits. Sheriff’s deputies work for a county sheriff, who in most states is elected, and often patrol areas outside cities, run the county jail, guard courts and serve court papers."
+   },
+   {
+    "q": "Is being a police officer a stressful job?",
+    "a": "Often, yes. Officers face danger, angry or injured people and traumatic scenes, and work nights, weekends and overtime. Much of a shift is routine, but the risk is always there. Many departments offer peer support, counseling and wellness programs, and good sleep and support at home make a real difference."
+   }
+  ]
+ },
  "policy": {
   "day": [
    {
@@ -12542,6 +12746,40 @@
    {
     "q": "What is the difference between a prediction market and a sportsbook?",
     "a": "A sportsbook sets the odds and takes the other side of each bet, and states regulate it as gambling. A prediction market is an exchange where traders buy and sell event contracts with each other, so prices reflect what the crowd expects. The exchange earns trading fees, and in the US it is regulated federally."
+   }
+  ]
+ },
+ "preschool-teacher": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Preschool teachers plan and lead activities that build children’s language, early reading and math, motor and social skills, mostly through play. They watch and record each child’s progress, keep children safe, and talk with families every day."
+   },
+   {
+    "label": "A typical day",
+    "text": "The day follows a set routine: arrival and free play, circle time, learning centers, outdoor play, lunch, rest time and afternoon activities. Teachers also prepare materials, change diapers or help with toileting for younger children, and write notes for families."
+   },
+   {
+    "label": "Who they work with",
+    "text": "They work with an assistant teacher, other teachers and the center director, and with specialists such as speech therapists who serve some children. Families are partners every day, at drop-off, at pickup and at conferences."
+   },
+   {
+    "label": "Where they work",
+    "text": "Most work in child care centers, and many in Head Start programs, public school pre-K classes, faith-based preschools and private schools. Child care centers are often open long hours, while school programs follow the school year."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Programs look at children’s safety and supervision, a warm and orderly classroom, plans that meet state early learning standards, children’s progress, strong family relationships, and passing state licensing and quality rating visits."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What is the difference between a preschool teacher and a daycare worker?",
+    "a": "Both care for young children, and in many centers the roles overlap. Preschool teachers focus on teaching children aged about three to five before kindergarten through planned lessons, while child care workers focus on care and supervision, often for infants and toddlers or school-age children before and after school."
+   },
+   {
+    "q": "Is being a preschool teacher stressful?",
+    "a": "It can be. Teachers stay alert all day to keep young children safe, manage tears and conflicts, and often work long hours for modest pay. Many find it very rewarding to see children learn and grow, and a good assistant, clear routines and a supportive director make a big difference."
    }
   ]
  },
@@ -15806,6 +16044,40 @@
    {
     "q": "What is the difference between sponsorship sales and partnership activation?",
     "a": "Sponsorship sales focuses on finding partners and closing new or renewed contracts. Partnership activation, sometimes called partnership services, makes sure the signed deal is delivered: signage, events, social posts, hospitality and reports. Smaller organizations often combine both roles, while pro teams and large events usually keep separate sales and activation staff."
+   }
+  ]
+ },
+ "sports-coach": {
+  "day": [
+   {
+    "label": "Main duties",
+    "text": "Coaches plan and run practices, teach skills and tactics, pick lineups and make decisions during games. They also keep athletes safe, watch film, work with parents and school staff, and in college programs recruit players."
+   },
+   {
+    "label": "A typical day",
+    "text": "In season a coach’s day centers on practice in the afternoon or evening, with planning, film and messages before it and games on evenings and weekends. Off season goes to conditioning, camps, clinics and recruiting."
+   },
+   {
+    "label": "Who they work with",
+    "text": "Coaches work with athletes, assistant coaches, athletic directors and athletic trainers, and with parents, teachers and officials. College coaches also work with compliance staff on NCAA rules."
+   },
+   {
+    "label": "Where they work",
+    "text": "Coaches work for high schools, colleges, youth clubs and leagues, recreation centers, YMCAs, private academies and professional teams. Many school coaching jobs are part time and seasonal, and many high school coaches also teach."
+   },
+   {
+    "label": "How the work is judged",
+    "text": "Programs look at athletes’ growth and safety, player conduct, academic eligibility, relationships with families, following league and safety rules and, at higher levels, wins, championships and recruiting."
+   }
+  ],
+  "qa": [
+   {
+    "q": "Is sports coaching a full-time job?",
+    "a": "Sometimes. Many youth and high school coaching jobs are part time or seasonal and paid by the hour, the session or a stipend, and many high school coaches teach as their main job. Full-time coaching jobs are more common at colleges, private academies, large clubs and professional teams."
+   },
+   {
+    "q": "What does a sports coach do day to day?",
+    "a": "In season, a coach plans and runs practice, teaches skills, reviews film, talks with players and parents, and leads the team in games. Off season, the work turns to conditioning, camps, planning the next season and, for college coaches, recruiting. Keeping athletes safe runs through all of it."
    }
   ]
  },

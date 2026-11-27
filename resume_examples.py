@@ -2114,6 +2114,30 @@ def asked(slug, tags, n):
 PLACE = {"fellowship-residency": {"org": "Example University Hospital", "org2": "Example General Hospital", "edu": "Medical degree (MBBS or MD)",
                                   "school": "Example Medical School", "intern": "Foundation Doctor", "proj": ("Research, electives and volunteering", "Example Medical School"),
                                   "summary": "{title} with five years of clinical and research experience since medical school. Strongest in {three}."}}
+# The eight kinds of work added on 27 Nov 2026 train in a program, an academy or on the job, not at a university, and "five years of experience
+# in legal and compliance" (the field's name) read wrong for a police officer. "dates" is the training's own span (the default fits a degree),
+# "entry_dates" the same for the beginner's example.
+PLACE |= {
+    "medical-assistant": {"org": "Example Family Medicine", "org2": "Example Urgent Care", "edu": "Medical Assisting Certificate", "school": "Example Community College",
+                          "entry_dates": "2025 – 2026", "dates": "2019 – 2020", "summary": "{title} with five years in family practice and urgent care clinics. Strongest in {three}."},
+    "police-officer": {"org": "Example City Police Department", "org2": "Example County Sheriff’s Office", "edu": "Basic Police Academy, state certified",
+                       "school": "Example Regional Training Academy", "entry_dates": "2026", "dates": "2019", "summary": "{title} with five years on patrol. Strongest in {three}."},
+    "bank-teller": {"org": "Example Community Bank", "org2": "Example Credit Union", "edu": "High School Diploma", "school": "Example High School", "entry_dates": "2022 – 2026", "dates": "2015 – 2019",
+                    "summary": "{title} with five years at bank and credit union branches. Strongest in {three}."},
+    "home-health-aide": {"org": "Example Home Health Agency", "org2": "Example Home Care", "edu": "Home Health Aide Training Program (75 hours)",
+                         "school": "Example Career School", "entry_dates": "2026", "dates": "2019",
+                         "summary": "{title} with five years of home care for older and disabled adults. Strongest in {three}."},
+    "patient-care-technician": {"org": "Example General Hospital", "org2": "Example Dialysis Center", "edu": "Patient Care Technician Certificate",
+                                "school": "Example Community College", "entry_dates": "2025 – 2026", "dates": "2019 – 2020",
+                                "summary": "{title} with five years on hospital and dialysis units. Strongest in {three}."},
+    "preschool-teacher": {"org": "Example Early Learning Center", "org2": "Example Head Start", "edu": "Associate Degree in Early Childhood Education",
+                          "school": "Example Community College", "entry_dates": "2025 – 2026", "dates": "2017 – 2019",
+                          "summary": "{title} with five years of teaching three- to five-year-olds. Strongest in {three}."},
+    "hair-stylist": {"org": "Example Salon", "org2": "Another Example Salon", "edu": "Cosmetology Program and State License", "school": "Example Beauty Academy",
+                     "entry_dates": "2025 – 2026", "dates": "2018 – 2019", "summary": "{title} with five years behind the chair in full-service salons. Strongest in {three}."},
+    "sports-coach": {"org": "Example High School", "org2": "Example Youth Soccer Club", "edu": "Bachelor’s Degree in Kinesiology", "school": "Example University",
+                     "entry_dates": "2022 – 2026", "dates": "2016 – 2020", "summary": "{title} with five years of coaching high school and youth teams. Strongest in {three}."},
+}
 
 
 def and_list(items, n=3):
@@ -2153,7 +2177,7 @@ def example(slug, name, family, rows, field_name):
         pl_ = PLACE[slug]
         d["summary"] = pl_["summary"].format(title=title, three=and_list(plain))
         d["exp"][0]["org"], d["exp"][1]["org"] = pl_["org"], pl_["org2"]
-        d["edu"] = [{"what": pl_["edu"], "org": pl_["school"], "dates": "2014 – 2020"}]
+        d["edu"] = [{"what": pl_["edu"], "org": pl_["school"], "dates": pl_.get("dates", "2014 – 2020")}]
     if slug == "intern":
         d["summary"] = f"Final-year computer science student looking for a first engineering job. Strongest in {first[0]}, {first[1]} and {first[2]}."
         d["exp"] = [{"role": "Software Engineering Intern", "org": "Example Company", "dates": "Summer 2026", "text": bullets[0]},

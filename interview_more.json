@@ -57365,5 +57365,621 @@
     "A config change entered a spread in percent instead of basis points, so our quotes on one pair were far wider than intended. Nobody lost money, but we missed our spread obligation on that exchange for two hours. I rolled it back, told our exchange contact and checked the other pairs. Then we added a check that compares new configs with live ones and blocks large changes without a second reviewer."
    ]
   ]
+ },
+ "medical-assistant": {
+  "heading": "Medical assistant questions",
+  "qs": [
+   [
+    "What do you check and write down when you room a patient?",
+    "Whether you know the full intake routine.",
+    "Two identifiers, vital signs, allergies, the medication list, the reason for the visit and any screenings, charted before the provider comes in.",
+    "I confirm two identifiers, usually name and date of birth. I take height, weight, blood pressure, pulse, temperature and oxygen level, then review allergies and the medication list and ask the reason for the visit in the patient’s own words. I do the screenings the visit calls for and chart everything before the provider walks in."
+   ],
+   [
+    "A patient’s blood pressure reads 182/112 at intake. What do you do?",
+    "How you act on a reading far outside the normal range.",
+    "A correct recheck after rest, then telling the provider at once instead of only charting it, and asking about symptoms.",
+    "I let the patient sit quietly for a few minutes, feet flat and arm supported, check the cuff size and take it again. If it is still that high I tell the provider right away rather than just charting it. I ask about headache, chest pain, shortness of breath or vision changes, and if any of those are present I get the provider immediately."
+   ],
+   [
+    "Which tests do you run in the clinic, and what does CLIA-waived mean?",
+    "Your knowledge of point-of-care testing and its rules.",
+    "Examples such as rapid strep, urine dipstick, glucose and pregnancy tests, and that waived tests are simple, low-risk tests run under a certificate of waiver.",
+    "I run rapid strep, flu and COVID tests, urine dipsticks, fingerstick glucose and urine pregnancy tests. CLIA-waived means the test is simple, with little risk of a wrong result, so a site with a CLIA certificate of waiver may run it. We still follow the manufacturer’s instructions exactly and run the quality controls they call for."
+   ],
+   [
+    "What is the order of draw, and why does it matter?",
+    "Whether you know why tubes are filled in a set order.",
+    "The standard order and the reason: an additive carried into the next tube can change its results.",
+    "Blood cultures first, then the light blue citrate tube, then serum tubes such as red or gold, then green heparin, lavender EDTA and gray fluoride last. The order keeps one tube’s additive from carrying into the next. EDTA carried into a chemistry tube, for example, can make potassium read falsely high."
+   ],
+   [
+    "Walk me through drawing blood from a patient who is nervous.",
+    "Your venipuncture routine and how you keep a patient calm.",
+    "Identification, telling the patient each step, asking about fainting, a short tourniquet time and labeling tubes in front of the patient.",
+    "I confirm two identifiers and the order, then tell the patient what I am about to do. I ask if they have ever fainted and have them lie back if so. I pick a vein, clean the site and let it dry, draw the tubes in order, release the tourniquet within a minute and label every tube in front of the patient before they get up."
+   ],
+   [
+    "How do you give an intramuscular vaccine, and what do you check first?",
+    "Your medication safety habits and the documentation a vaccine needs.",
+    "The order, the patient, screening answers, the vaccine, dose and expiry, the Vaccine Information Statement, then the site and full documentation.",
+    "I confirm the provider’s order or standing order, the patient’s identity, allergies and screening answers, and check the vaccine, dose and expiration date. I give the Vaccine Information Statement. For an adult I use the deltoid at a 90-degree angle, then record the vaccine, maker, lot, site, date, my name and title, and the statement’s edition and date given."
+   ],
+   [
+    "A patient asks whether they should stop a medicine because of a side effect. What do you say?",
+    "Whether you stay inside a medical assistant’s scope.",
+    "No advice of your own: ask them not to change anything yet, take down the details and get the provider’s answer to them the same day.",
+    "I tell them I can’t advise on that, but I will make sure the provider sees the question today, and ask them not to stop or change anything until they hear back. I write down the medicine, the dose, what they are feeling and since when, and send it to the provider. If they describe anything serious, such as swelling of the face or trouble breathing, I get the provider right away."
+   ],
+   [
+    "A prior authorization for a patient’s MRI is denied the day before the scan. What do you do?",
+    "How you handle insurance work under time pressure.",
+    "Reading the denial reason, telling the provider, sending what the plan needs or asking for a peer-to-peer review, and keeping the patient informed.",
+    "I read the denial letter for the reason, often missing notes or a treatment the plan wants tried first. I tell the provider, gather the notes or request a peer-to-peer review with the plan’s doctor, and resubmit. I call the patient the same day so they are not surprised, and move the scan if the answer will not come in time."
+   ],
+   [
+    "How do you clean an exam room between patients?",
+    "Your infection control routine.",
+    "Hand hygiene, a registered disinfectant left wet for its full contact time, fresh table paper, and sharps and waste in the right containers.",
+    "I wash my hands or use sanitizer, put sharps in the sharps container and waste in the right bin, and wipe the table, counter, chair arms, cuff and anything else the patient touched with our disinfectant, leaving it wet for the contact time on the label. Then fresh table paper, a quick check of supplies, and hand hygiene again before the next patient."
+   ],
+   [
+    "What do you do right after a needlestick injury?",
+    "Whether you know the exposure steps and how fast they matter.",
+    "Washing with soap and water, reporting at once, getting evaluated quickly because preventive treatment works best within hours, and the source patient testing per protocol.",
+    "I wash the site with soap and water and tell my supervisor right away; I do not wait for the end of the shift. I follow our exposure plan: an evaluation the same day, since preventive medicine works best when started within hours, and testing of the source patient with consent as our protocol says. Then I fill in the incident report."
+   ],
+   [
+    "How do you protect patient privacy at the front desk and in the halls?",
+    "How you apply HIPAA in daily work.",
+    "Concrete habits: low voices, locked screens, no details in public areas, checking who may receive information, and sharing only what is needed.",
+    "I keep my voice down at check-in, lock my screen when I step away and never leave charts or labels where others can see them. I talk about results only with the patient or someone they have listed, check identity on the phone before giving any information, and share only what the task needs."
+   ],
+   [
+    "A patient arrives 25 minutes late for a 20-minute visit. What do you do?",
+    "How you balance the schedule, the policy and the patient.",
+    "Following the clinic’s policy, asking the provider rather than turning the patient away yourself, and offering the next slot politely.",
+    "I greet them without blame and check our late policy. I ask the provider whether they can still be seen or worked in. If not, I offer the first open slot, and if the reason for the visit sounds urgent, such as chest pain, I make sure a clinician hears about it before the patient leaves."
+   ]
+  ]
+ },
+ "police-officer": {
+  "heading": "Police officer questions",
+  "qs": [
+   [
+    "What is the difference between reasonable suspicion and probable cause?",
+    "Your grasp of the legal standards behind stops and arrests.",
+    "Reasonable suspicion allows a brief stop on specific facts; probable cause, a higher standard, is needed for an arrest or a search warrant.",
+    "Reasonable suspicion means specific facts I can put into words that a crime is happening or about to happen. It lets me briefly stop and question someone, and pat them down for weapons if I reasonably suspect they are armed and dangerous. Probable cause is higher: facts that would make a reasonable person believe a crime was committed by this person. I need it to arrest or to get a search warrant."
+   ],
+   [
+    "When do you have to read someone their Miranda rights?",
+    "Whether you know when the warnings are required.",
+    "Before custodial interrogation: when a person is in custody and you are about to question them about the crime, not at every arrest.",
+    "When two things are true at once: the person is in custody and I am going to question them. An arrest alone does not require the warnings if I ask nothing, and a person who is free to leave is not in custody. If I plan to ask about the crime after an arrest, I give the warnings first and make sure the waiver is clear and recorded."
+   ],
+   [
+    "A suspect asks for a lawyer during questioning. What happens next?",
+    "Whether you respect a clear request for counsel.",
+    "Questioning stops until a lawyer is present, unless the suspect starts talking about the case again on their own.",
+    "I stop the questioning. Once a suspect in custody clearly asks for a lawyer, I can’t question them about this or any other crime while they stay in custody unless their lawyer is there or they start talking about it again on their own. I note the exact words and the time in my report."
+   ],
+   [
+    "When can you search a car without a warrant?",
+    "Your knowledge of the main exceptions to the warrant rule.",
+    "Probable cause that evidence is in the car, consent, a search tied to an arrest within its narrow limits, and an inventory under department policy.",
+    "With probable cause that evidence of a crime is inside, under the automobile exception. With the driver’s voluntary consent, which they can limit or withdraw. After an arrest, only if the person can still reach the car or it is reasonable to believe evidence of that crime is inside. And an inventory when we impound the car, done by our written policy."
+   ],
+   [
+    "How is a use of force judged?",
+    "Whether you know the legal standard and the factors it weighs.",
+    "Objective reasonableness from the view of a reasonable officer at the scene, weighing how serious the crime is, the immediate threat and resistance or flight.",
+    "Courts ask whether the force was objectively reasonable from the view of a reasonable officer at the scene, without hindsight. They weigh how serious the crime was, whether the person posed an immediate threat and whether they were resisting or trying to flee. Department policy is often stricter than the law, so I train to policy and use the least force that ends the threat."
+   ],
+   [
+    "Your partner uses force that you believe goes too far. What do you do?",
+    "Your duty to intervene and to report.",
+    "Stepping in to stop it, getting medical help if needed, and reporting it to a supervisor, as most agencies’ policies and many state laws require.",
+    "I step in and stop it, by voice first and physically if I have to, and make sure the person gets medical care. Then I report it to a supervisor that shift and write exactly what I saw. Most departments’ policies, and many states’ laws, require an officer to intervene and report. Staying quiet would make me part of it."
+   ],
+   [
+    "You arrive at a domestic disturbance call. What do you do first?",
+    "How you handle one of the most dangerous and sensitive calls.",
+    "Safety first: wait for backup if possible, separate the parties, check for injuries, weapons and children, then follow the state’s arrest rules.",
+    "I get what I can from dispatch, such as earlier calls and weapons, and wait for my backup if I can. Once inside, we separate the people out of sight and earshot of each other, check for injuries and children and look for weapons. I take statements, photograph injuries and follow our state’s rules, which in many states require or prefer an arrest when there is probable cause."
+   ],
+   [
+    "How do you calm a person in a mental health crisis?",
+    "Your de-escalation skills.",
+    "Time, distance and a calm single voice, listening more than ordering, no needless threats, and calling the crisis team or clinician where one exists.",
+    "I slow things down. I keep a safe distance, have one officer do the talking in a calm, low voice, and ask what is going on and what they need. I avoid quick moves and threats that leave them no way out. If our area has a crisis team or a clinician who rides along, I call them early, and I look for a way to end it with treatment rather than an arrest."
+   ],
+   [
+    "Walk me through a traffic stop at night.",
+    "Your safety routine and how you treat the driver.",
+    "Calling in the stop, a safe position and lighting, watching hands, a polite opening with the reason for the stop, and a clean end.",
+    "I call in the location and plate before I stop the car, park offset behind it and light it up. I approach watching the driver’s hands and the back seat, introduce myself and give the reason for the stop, and ask for license, registration and insurance. Back in my car I run the checks, decide the outcome, explain it clearly and help the driver merge back safely."
+   ],
+   [
+    "What makes a good police report?",
+    "Whether your writing will hold up in court.",
+    "Facts in order, who, what, when, where and how, each element of the offense, your own observations kept apart from statements, and no opinion.",
+    "It tells the story in order so that a prosecutor who wasn’t there can follow it. It answers who, what, when, where and how, covers every element of the offense, and keeps what I saw apart from what people told me, with quotes where they matter. No guesses or opinions, and I write it the same shift while it is fresh."
+   ],
+   [
+    "How do you keep evidence usable in court?",
+    "Your understanding of the chain of custody.",
+    "Collecting, packaging, sealing and labeling evidence, logging every hand it passes through, and photographing it in place first.",
+    "I photograph it where it lies, then collect it with gloves, package it in the right container, seal it and label it with the case number, date, time and my initials. I log it into evidence before the end of my shift. Every person who handles it after that signs for it, so nobody can question where it has been."
+   ],
+   [
+    "A driver you stop turns out to be a city council member who asks you to let it go. What do you do?",
+    "Your integrity under pressure.",
+    "Treating them exactly as anyone else, staying polite, following policy and documenting the request.",
+    "I stay polite and handle it the way I would handle any driver for the same thing, warning or citation. I don’t argue about who they are. I note the request in my report and let my supervisor know, so there is a record and nobody can later say I was pressured or that I gave a favor."
+   ]
+  ]
+ },
+ "bank-teller": {
+  "heading": "Bank teller questions",
+  "qs": [
+   [
+    "Your drawer is $20 short at the end of the day. What do you do?",
+    "Your honesty and how you look for a cash difference.",
+    "Recounting, checking the day’s transactions, never covering it with your own money, and reporting it to the supervisor by the bank’s policy.",
+    "I recount the drawer, then go through the day’s transactions looking for a slip keyed wrong, a check cashed twice or cash given in the wrong bills. If I can’t find it, I tell my supervisor right away and fill in the difference report. I would never put in my own money or carry it to tomorrow: the bank needs the true number."
+   ],
+   [
+    "A customer wants to deposit $9,500 in cash today and says the rest will come tomorrow so it stays under $10,000. What do you do?",
+    "Whether you recognize structuring and handle it correctly.",
+    "Knowing that splitting cash to avoid a report is a crime, not advising the customer, and telling the bank’s BSA officer without tipping the customer off.",
+    "Splitting cash on purpose to stay under the $10,000 report is called structuring, and it is a federal crime even when the money is clean. I do not help plan the deposits or tell the customer how to avoid a report. I process what the rules allow and tell our BSA officer, who decides whether to file a suspicious activity report. I never tell a customer about such a report."
+   ],
+   [
+    "What do you check before you cash a check?",
+    "Your fraud and accuracy checks on every item.",
+    "Identity, endorsement, date, amounts in words and figures, signs of changes, the account’s funds and the bank’s hold rules.",
+    "I check the customer’s ID and the endorsement, the date, and that the amount in words matches the figures. I look for erasures, different inks or a changed payee, and for the check’s security features. Then I check the account or the paying bank for funds, and follow our hold and verification rules for large or unusual items."
+   ],
+   [
+    "How do you spot a counterfeit $100 bill?",
+    "Your knowledge of the note’s security features.",
+    "Several features checked together: the blue 3-D security ribbon, the color-shifting bell and 100, the portrait watermark, the security thread and raised printing.",
+    "I check more than one feature. The blue 3-D ribbon shows bells and 100s that move when I tilt the note, and the bell in the inkwell and the 100 in the corner shift from copper to green. Held to the light there is a Franklin watermark and a security thread that glows pink under UV. The printing on the shoulder feels raised. If anything fails, I keep the note and call my supervisor."
+   ],
+   [
+    "An older customer wants $15,000 in cash, and a man you don’t know does all the talking. What do you do?",
+    "How you respond to signs of elder financial exploitation.",
+    "Calmly talking to the customer alone, asking open questions, following the bank’s elder exploitation policy and escalating to a manager.",
+    "I stay friendly and find a reason to speak with the customer on their own, for example to sign a form. I ask open questions about what the money is for. If the story doesn’t fit, the man seems to control it or the customer seems confused or scared, I bring in my manager and follow our elder exploitation policy, which can include delaying the withdrawal where the law allows and reporting it."
+   ],
+   [
+    "A customer is told a deposited check is on hold and gets angry. How do you explain it?",
+    "Whether you understand holds and can explain them clearly.",
+    "Explaining when the money will be available and why, giving the written notice, and checking whether any of it can be released sooner by policy.",
+    "I tell them exactly when the funds will be available and why the hold was placed, for example a large check or a new account, and I give them the written hold notice. I check whether the first part of the deposit is available sooner under our policy, and if they need the money urgently I ask my supervisor whether an exception is possible."
+   ],
+   [
+    "Why do banks use dual control for the vault?",
+    "Whether you understand basic cash controls.",
+    "Two people for vault access and cash shipments, so no one person can take money or make an error that goes unnoticed.",
+    "So that no one person is ever alone with the vault cash. Two employees open it, count shipments and sign the log together, often with each knowing only half of the combination. It protects the bank from theft and mistakes, and it protects each of us, because there is always a witness to every count."
+   ],
+   [
+    "A customer without ID wants to withdraw money from their own account. What do you do?",
+    "How you follow identification rules while staying helpful.",
+    "Declining the withdrawal politely by policy and offering the options the bank allows.",
+    "I explain that I can’t release cash without valid ID, because the rule protects their own money. I tell them which IDs we accept and our hours so they can come back, and if our policy allows another way to verify them, I offer it. I stay polite: most people are not trying anything, they just forgot their wallet."
+   ],
+   [
+    "What would you do during a robbery?",
+    "Whether you know the safety routine banks train for.",
+    "Complying calmly, no resistance, triggering the alarm only when it is safe, noting a description, then securing the scene and writing it down alone.",
+    "I do what the robber says, calmly and without sudden moves, and give the money our training says to give. I trigger the alarm only when it is safe. I try to note height, clothing, voice and direction of escape. Afterward we lock the doors, keep everyone away from what the robber touched and each write our own description before talking about it."
+   ],
+   [
+    "How do you suggest a bank product without being pushy?",
+    "How you turn a transaction into help for the customer.",
+    "Listening for a real need in the transaction and making a short, relevant suggestion, then accepting a no.",
+    "I listen for a need. A customer who keeps a large balance in checking might earn more in savings, and one paying a fee for every cashier’s check might like an account that includes them. I mention it in one sentence and offer to introduce a banker. If they say no, I drop it and thank them."
+   ],
+   [
+    "The line is out the door. How do you stay fast and accurate?",
+    "Your speed and accuracy under pressure.",
+    "A steady routine on every transaction, counting back in the same way, and asking for help rather than skipping checks.",
+    "I keep the same routine for every customer, however long the line: verify, process, count the cash twice and count it back to the customer. I greet the people waiting so they feel seen, and if the line keeps growing I tell my lead so another window opens. Rushing past a check is how drawers go out of balance."
+   ],
+   [
+    "A customer is upset about an overdraft fee. How do you handle it?",
+    "How you deal with a complaint about money.",
+    "Listening, explaining what caused the fee, checking the policy for a refund, and offering ways to avoid the next one.",
+    "I let them explain, then go through the transactions with them so they see what happened and in what order. I check whether our policy lets me or my supervisor refund the fee, for example for a first one. Then I show them alerts, overdraft protection or a link to savings so it doesn’t happen again."
+   ]
+  ]
+ },
+ "home-health-aide": {
+  "heading": "Home health aide questions",
+  "qs": [
+   [
+    "What do you do on your first visit to a new client?",
+    "How you start safely and respectfully in someone’s home.",
+    "Introducing yourself with your ID, reading the care plan, learning the client’s routine and wishes, and checking the home for hazards.",
+    "I introduce myself and show my agency badge, then go over the care plan with the client and family: what I help with, at what times, and what they like done their way. I look around for hazards such as loose rugs, poor lighting or a blocked path to the bathroom, and tell my nurse about anything that needs changing."
+   ],
+   [
+    "Which tasks are outside a home health aide’s scope?",
+    "Whether you know your limits.",
+    "Tasks that need a nurse, such as giving most medicines, sterile wound care or assessing a client, with the note that exact rules vary by state and agency.",
+    "I can remind clients to take their medicines and help with personal care, meals and moving around. I do not give injections, start or change medicines, do sterile wound care or decide what a symptom means; those belong to the nurse. Exact rules vary by state and by agency, so I follow the care plan and ask my supervisor when a task is not on it."
+   ],
+   [
+    "How do you move a client from the bed to a wheelchair?",
+    "Your safe transfer technique.",
+    "Explaining first, locking the wheels, using a gait belt, bending the knees and pivoting, and using a lift or a second person when the care plan says so.",
+    "I explain each step, put the bed low and lock the wheelchair close at an angle on the client’s stronger side. I help them sit on the edge, put on a gait belt, bend my knees and keep my back straight, and we stand and pivot on a count. If the care plan calls for a mechanical lift or two people, I never do it alone."
+   ],
+   [
+    "Your client has hardly eaten for two days and seems more confused than usual. What do you do?",
+    "Whether you notice a change in condition and report it at once.",
+    "Treating it as a possible sign of illness, calling the nurse the same day, and calling 911 for signs of an emergency.",
+    "A sudden change in confusion can be a sign of infection, dehydration or another illness, so I call my nurse right away rather than waiting for the next visit. I tell her what I saw, since when, and what the client has drunk and eaten. If there are signs of an emergency, such as trouble breathing, chest pain or not waking normally, I call 911 first."
+   ],
+   [
+    "How do you give a bed bath and keep the client’s dignity?",
+    "Your personal care skills and respect for privacy.",
+    "Privacy, covering the parts not being washed, warm water checked first, washing from clean areas to dirtier ones and checking the skin.",
+    "I close the door and blinds, explain what I will do and let them do what they can. I check the water temperature, keep them covered with a towel except the part I am washing, and work from the cleanest areas to the dirtiest, changing the water when I need to. I dry well, check the skin for redness and talk with them the whole time."
+   ],
+   [
+    "What signs of a pressure injury do you look for?",
+    "Whether you can spot skin breakdown early.",
+    "Red areas that stay red when pressed, warmth, pain or broken skin over bony spots, and reporting them and repositioning as the care plan says.",
+    "I check the bony spots, such as heels, hips, the tailbone and elbows. A red area that doesn’t fade when I press it lightly, skin that is warmer or softer than around it, a blister or an open spot all go to the nurse the same day. Meanwhile I keep pressure off the spot, help the client change position as the care plan says and keep the skin clean and dry."
+   ],
+   [
+    "A client’s son asks you to clean his apartment next door too. What do you say?",
+    "Whether you keep to the care plan and agency rules.",
+    "Declining politely, explaining that you work to the client’s care plan, and passing the request to the agency.",
+    "I tell him kindly that I can only do the tasks in his mother’s care plan, because that is what the agency and the payer cover and what I am insured for. I suggest he call the agency if he would like more services, and I let my supervisor know about the request so nobody is caught by surprise."
+   ],
+   [
+    "You see bruises on your client, and she seems afraid of a family member. What do you do?",
+    "Whether you report suspected abuse properly.",
+    "Making sure she is safe, reporting to the supervisor at once, following the agency’s abuse reporting rules and the state’s law, and not investigating yourself.",
+    "If she is in danger right now, I call 911. Otherwise I note exactly what I saw and what she said, in her words, and report it to my supervisor the same day. Many states require home care workers to report suspected abuse to adult protective services, and our agency has a procedure for it. I don’t confront the family member or try to investigate it myself."
+   ],
+   [
+    "A client with dementia refuses a bath. How do you handle it?",
+    "Your patience and skill with dementia care.",
+    "Not forcing it, finding the reason, trying again later in a calmer way, offering choices, and reporting a pattern of refusals.",
+    "I never force it. I stop, stay calm and try to find the reason: cold, fear of falling, embarrassment or just the wrong time of day. Later I try again with a warm room, a towel over the shoulders and simple choices, like a bath now or after lunch. If refusals keep happening, I tell the nurse so the plan can change."
+   ],
+   [
+    "What do you record after each visit?",
+    "Your documentation habits.",
+    "The tasks done or refused, what you observed, any changes reported, and accurate times through electronic visit verification.",
+    "I record the tasks I did and any the client refused, what I noticed, such as appetite, mood, skin and bowel movements, and anything I reported to the nurse. I clock in and out through the electronic visit verification app at the client’s home, which Medicaid-funded visits require, so my times are exact."
+   ],
+   [
+    "Your client falls while you are there. What do you do?",
+    "How you respond to a fall safely.",
+    "Not lifting the client right away, checking for injury, calling 911 for a head strike or a possible fracture, then telling the nurse and documenting.",
+    "I stay with them and keep them still while I check whether they hit their head, are in pain or can’t move a limb. If they hit their head, have hip or severe pain or seem confused, I call 911 and don’t move them. If they are unhurt, I help them up the safe way or wait for help, then report the fall to my nurse and write it up."
+   ],
+   [
+    "How do you prevent infections in a client’s home?",
+    "Your infection control outside a hospital.",
+    "Hand hygiene before and after care, gloves for body fluids, clean-to-dirty order, safe handling of laundry and waste, and staying home when sick.",
+    "I wash my hands when I arrive, before and after care and before I leave, and wear gloves for any contact with body fluids. I carry soiled linens away from my body and wash them as the care plan says, bag waste properly, clean surfaces in the bathroom and kitchen, and I don’t come to work with a fever or a stomach bug."
+   ]
+  ]
+ },
+ "patient-care-technician": {
+  "heading": "Patient care technician questions",
+  "qs": [
+   [
+    "What are normal adult vital signs, and which readings do you report right away?",
+    "Whether you know the normal ranges and when to call the nurse.",
+    "The usual ranges, and that anything outside the unit’s set limits or any sudden change goes to the nurse at once.",
+    "For most adults at rest: a heart rate of 60 to 100, 12 to 20 breaths a minute, an oxygen saturation of 95% or more, a temperature around 97 to 99 °F and a blood pressure under about 120/80. I report anything outside the limits the nurse or the unit has set, and any sudden change, right away, even if it is still in the normal range."
+   ],
+   [
+    "Where do you place the chest leads for a 12-lead EKG?",
+    "Your EKG technique.",
+    "The standard positions of V1 to V6, limb leads on the limbs, clean dry skin and a patient lying still.",
+    "V1 goes in the fourth intercostal space at the right edge of the sternum and V2 in the same space on the left. V4 goes in the fifth space at the midclavicular line, V3 halfway between V2 and V4, V5 at the anterior axillary line level with V4 and V6 at the midaxillary line. The limb leads go on the arms and legs, and the patient lies still while I record."
+   ],
+   [
+    "A patient’s fingerstick glucose reads 52. What do you do?",
+    "How you act on a low blood sugar.",
+    "Recognizing hypoglycemia, telling the nurse at once, staying with the patient and following the unit’s hypoglycemia protocol only as trained.",
+    "That is low, so I tell the nurse immediately and stay with the patient. I check how they are: sweaty, shaky, confused or drowsy. If our unit’s protocol lets techs give juice or glucose gel to a patient who can swallow, I do what it says, then recheck at the time the protocol sets. I never leave a low reading for the end of my rounds."
+   ],
+   [
+    "A patient faints while you are drawing blood. What do you do?",
+    "Your safety response during a blood draw.",
+    "Removing the tourniquet and needle, applying pressure, protecting the patient from falling, calling for help and documenting.",
+    "I release the tourniquet, take the needle out and hold pressure on the site, and keep the patient from falling, lowering their head if they are sitting. I call for the nurse and stay with them until they come around and their vital signs are checked. I note it in the chart so the next draw is done lying down."
+   ],
+   [
+    "How do you help prevent falls on your unit?",
+    "Your fall prevention habits.",
+    "Hourly rounding, the call light and needed items in reach, a low bed and alarms where ordered, nonskid socks and a toileting schedule.",
+    "I round on my patients every hour and ask about pain, toileting and position. I leave the call light, phone and water within reach, the bed low and locked, and the bed alarm on for patients who need one. They wear nonskid socks, and I take high-risk patients to the bathroom on a schedule instead of waiting for them to try alone."
+   ],
+   [
+    "A nurse asks you to give a patient their pills because she is busy. What do you say?",
+    "Whether you stay within your scope under pressure.",
+    "Declining because medication administration is not a tech’s task in most hospitals, and offering other help.",
+    "I tell her I can’t give medications, because it is outside my role at this hospital, and offer to take over something else so she has time, such as vital signs on her other patients or getting the patient ready. If she still asks, I would talk with the charge nurse. Giving medicines outside my scope puts the patient, her license and my certification at risk."
+   ],
+   [
+    "How do you measure and record intake and output?",
+    "Your accuracy with fluid balance.",
+    "Measuring every fluid in milliliters, using a graduated container or a collection hat, recording by shift and reporting unusual totals.",
+    "I record everything the patient drinks and any IV or tube intake the nurse gives me, in milliliters. For output I measure urine in a graduated container or a hat in the toilet, plus drains or emesis, and empty the catheter bag on schedule. I total it at the end of the shift and tell the nurse if output is low or the numbers look off."
+   ],
+   [
+    "How do you care for a patient on contact precautions?",
+    "Your isolation practice.",
+    "Gown and gloves before entering, equipment that stays in the room, hand hygiene, and soap and water for C. diff.",
+    "I put on a gown and gloves before I enter and take them off at the door before I leave, then clean my hands. The patient has their own stethoscope and blood pressure cuff in the room. For C. diff I wash my hands with soap and water, because alcohol gel does not kill its spores, and the room is cleaned with a product that does."
+   ],
+   [
+    "What do you watch for during a hemodialysis treatment?",
+    "Whether you know the risks of a dialysis run.",
+    "Blood pressure drops, cramps, bleeding at the access, machine alarms and the patient’s comfort, checked often and reported to the nurse.",
+    "I check vital signs and the access at the start and at the intervals our policy sets, and keep the access visible. I watch for a drop in blood pressure, cramps, nausea, dizziness and bleeding or swelling at the needle sites, and I answer every machine alarm. Any drop in pressure or bleeding goes to the nurse at once."
+   ],
+   [
+    "How do you turn and reposition a patient to prevent pressure injuries?",
+    "Your skin care and safe handling.",
+    "Turning as ordered, often every two hours, a side-lying tilt with pillows, heels floated, a draw sheet and a second person, and checking the skin each time.",
+    "I turn patients as the care plan orders, usually every two hours, with a second person and a draw sheet so the skin doesn’t drag. I tilt them about 30 degrees to the side with pillows behind the back and between the knees, float the heels off the bed, and check the skin over the bony spots each time. Redness that doesn’t fade goes to the nurse."
+   ],
+   [
+    "A patient refuses a bath and the morning blood draw. What do you do?",
+    "How you respect a patient’s right to refuse.",
+    "Asking why, explaining calmly, offering another time, telling the nurse and documenting the refusal.",
+    "I ask why, because there is often a reason I can fix, like pain, cold or being too tired. I explain why the draw matters and offer another time for the bath. If they still refuse, I don’t push. I tell the nurse right away, because a missed lab can change the doctor’s plan, and document the refusal."
+   ],
+   [
+    "What is your role in a rapid response or a code?",
+    "Whether you know how to help in an emergency.",
+    "Calling for help, starting CPR if trained and needed, bringing the crash cart, doing compressions in rotation and recording times.",
+    "If I find a patient who is not responding, I call for help, press the code button and start CPR if they have no pulse, since I keep my BLS current. When the team arrives I bring the crash cart, take turns on compressions or keep the time record, clear the room of extra furniture and look after the roommate or the family."
+   ]
+  ]
+ },
+ "preschool-teacher": {
+  "heading": "Preschool teacher questions",
+  "qs": [
+   [
+    "How do you plan a week of lessons for four-year-olds?",
+    "How you plan learning through play.",
+    "Goals in several areas of development tied to the state’s early learning standards, a theme, play centers, group times and room for the children’s interests.",
+    "I start from our state’s early learning standards and what I observed the week before. I pick a theme, such as the garden, and plan goals for language, math, motor and social skills. The goals show up in centers, read-alouds, songs and outdoor play rather than worksheets, and I leave room to follow what the children get excited about."
+   ],
+   [
+    "A child bites another child. What do you do?",
+    "How you handle a common and upsetting incident.",
+    "Caring for the bitten child first, first aid, a calm talk with the child who bit, an incident report and informing both families without naming the other child.",
+    "I comfort the child who was bitten and clean the bite with soap and water. I tell the child who bit, calmly, that biting hurts, and help them use words. I write an incident report and tell both families the same day, without naming the other child. If it happens again I look for a pattern, such as crowding at one time of day, and change the routine."
+   ],
+   [
+    "A child cries every morning at drop-off. How do you help?",
+    "How you support separation and work with families.",
+    "A short, steady goodbye routine agreed with the parent, a warm handover to a familiar adult and activity, and sharing how the child settles.",
+    "I agree a short goodbye routine with the parent, such as a hug, a wave at the window and a clear ‘I’ll be back after nap’. Long goodbyes make it harder. I greet the child by name and hand them straight to a favorite activity. Then I send the parent a quick note or photo once the child settles, which helps both of them."
+   ],
+   [
+    "How do you build early reading skills in children who can’t read yet?",
+    "Your knowledge of early literacy.",
+    "Phonological awareness, letter knowledge, daily read-alouds with talk, a print-rich room and writing through play.",
+    "We play with sounds every day: rhymes, clapping syllables and finding words that start like ‘ball’. We learn letters through names and songs, and I read aloud daily and ask questions about the story. The room has labels and a writing center, and children ‘write’ menus and signs in their play. Reading comes later; these are the foundations."
+   ],
+   [
+    "What do you do if you think a child may have a developmental delay?",
+    "Whether you know how to raise a concern and where to refer.",
+    "Observing and recording over time, sharing it with the family privately without diagnosing, and pointing them to a screening by early intervention or the school district.",
+    "I watch and write down specific examples over a few weeks, and use our screening tool if we have one. Then I meet the family privately, share what I see, ask what they see at home, and never use a label. I give them the contact for a free evaluation: early intervention for children under three, or the local school district for three to five."
+   ],
+   [
+    "Which safety routines do you follow every day?",
+    "Your supervision and safety habits.",
+    "Headcounts at every move, staying within ratios, sign-in and sign-out with only authorized adults, an allergy list in view, hand washing and safe sleep for infants.",
+    "I count the children at every transition: leaving the room, coming in from the playground, before and after a walk. We stay within our licensed ratios. Children leave only with an adult on their pickup list, after an ID check if I don’t know the person. Allergy and medical plans are posted, and we wash hands before meals and after the bathroom and outdoor play."
+   ],
+   [
+    "A parent arrives at pickup and seems to be drunk. What do you do?",
+    "How you protect a child in a hard situation.",
+    "Not releasing the child to an unsafe adult, calling the director, offering to call another authorized adult, and following policy and the law if the parent insists.",
+    "I stay calm and keep the child with me, and call my director. We tell the parent we are concerned and offer to call another adult on the pickup list or a ride. If they insist on driving off with the child, we follow our policy, which means calling the police. Afterward I write down exactly what I saw."
+   ],
+   [
+    "What do you do if you suspect a child is being abused or neglected?",
+    "Whether you know your duty as a mandated reporter.",
+    "Reporting promptly to child protective services or the police as state law requires, telling the director, recording facts and not questioning the child at length.",
+    "Teachers and child care staff are mandated reporters in every state. I write down exactly what I saw and what the child said, in their words, tell my director and make the report to child protective services myself as our state law requires. I don’t question the child at length or confront the family; the investigators do that."
+   ],
+   [
+    "How do you track a child’s progress without tests?",
+    "Your observation and assessment skills.",
+    "Regular observations, notes, work samples and photos measured against developmental checklists, and sharing them with families.",
+    "I keep short notes and photos of what children say and do during play, and save work samples such as drawings and early writing. Several times a year I compare them with our developmental checklist in each area. That shows me who needs more support or challenge, and gives families real examples at conferences instead of a score."
+   ],
+   [
+    "How do you include a child with an IEP in your class?",
+    "How you work with special education plans and specialists.",
+    "Knowing the child’s goals, building them into daily routines, working with the specialists and the family, and adapting activities so the child joins in.",
+    "I read the plan and meet the specialists who serve the child, such as the speech therapist, so I know the goals and how to practice them. I build those goals into our day, for example practicing requests at snack. I adapt materials and give extra time or picture cues so the child can take part with the others, and I share progress with the family."
+   ],
+   [
+    "Sixteen children, one assistant and a hard transition to lunch. How do you keep order?",
+    "Your classroom management.",
+    "Predictable routines, a visual schedule, warnings before changes, songs or jobs for transitions and positive guidance instead of punishment.",
+    "Transitions go smoother when children know what comes next, so we have a picture schedule and I give a five-minute and a one-minute warning. We clean up to the same song, children have jobs like table helper, and my assistant and I split the group so nobody waits long. I praise what children are doing right, which works better than calling out what is wrong."
+   ],
+   [
+    "How do you bring up a behavior concern with a family?",
+    "How you talk with parents about a hard subject.",
+    "A private, timely talk that starts with the child’s strengths, gives specific examples, asks what the family sees and ends with a shared plan.",
+    "I ask for a private time to talk, not a rushed word at pickup. I start with what the child does well, then describe specific moments, such as hitting during block play, without labels. I ask what they see at home, and we agree on one or two things to try at school and at home, with a date to check in."
+   ]
+  ]
+ },
+ "hair-stylist": {
+  "heading": "Hair stylist questions",
+  "qs": [
+   [
+    "Walk me through a consultation with a new client.",
+    "How you find out what a client really wants before you start.",
+    "Hair and color history including home dye, lifestyle and upkeep, photos, honest expectations, price and time agreed before starting.",
+    "I ask about their hair history: past color, box dye, treatments and how they style it each day. I ask for photos of what they like and what they don’t, because words like ‘a trim’ mean different things to people. I tell them honestly what their hair can do today, how much upkeep it needs and the price and time, before I pick up the scissors."
+   ],
+   [
+    "A client with black box dye wants platinum blonde in one visit. What do you tell them?",
+    "Whether you are honest about color limits and hair health.",
+    "That lifting old dye safely usually takes several sessions, a strand test first, bond-building care and a realistic plan with prices.",
+    "I explain that lifting box dye to platinum in one visit could badly damage or break the hair, and that it usually takes several sessions a few weeks apart. I do a strand test to see how it lifts, use a bond builder and give them a plan with the steps and the price of each. If they won’t accept that, I would rather lose the booking than ruin their hair."
+   ],
+   [
+    "When do you do a patch test, and how?",
+    "Whether you protect clients from allergic reactions.",
+    "Following the color maker’s instructions, often a skin test about 48 hours before an oxidation color service, and the state board’s rules.",
+    "I follow the color manufacturer’s instructions, which for most permanent and oxidation colors ask for a skin test about 48 hours before the service, even for regular clients. I apply a little of the mixed color behind the ear or inside the elbow and ask them to check for itching, redness or swelling. If there is a reaction, I don’t color, and I suggest they see a doctor."
+   ],
+   [
+    "What is the difference between a toner and a permanent color?",
+    "Your color knowledge.",
+    "A toner deposits tone, usually with a demi- or semi-permanent formula, to adjust lightened hair; permanent color can lift and deposit and grows out rather than fading.",
+    "A toner is usually a demi- or semi-permanent color that only deposits. I use it after lightening to cancel yellow or orange or to give a tone like ash or gold, and it fades over a few weeks. Permanent color is mixed with a developer that opens the cuticle, so it can lift and deposit at once. It stays until it grows out or is cut."
+   ],
+   [
+    "How do you clean and disinfect your tools between clients?",
+    "Your sanitation habits and state board rules.",
+    "Removing hair and debris, cleaning, then a registered disinfectant for its full contact time, throwing away single-use items, and following the state board.",
+    "I remove the hair and clean combs, brushes and clips with soap and water, then put them fully in an EPA-registered disinfectant for the full contact time on the label. Shears and clippers get wiped and sprayed. Single-use items like neck strips go in the trash. Our state board sets the exact rules, and I keep the station the way an inspector expects to see it."
+   ],
+   [
+    "A client looks in the mirror at the end and says she hates the cut. What do you do?",
+    "How you recover a client who is unhappy.",
+    "Staying calm, asking exactly what she dislikes, fixing what can be fixed now or offering a free adjustment, and learning from the consultation.",
+    "I stay calm and ask what exactly she doesn’t like: the length, the shape or how it was styled. If I can fix it now, I do. If it needs time, I book her free adjustment soon. Often the issue is styling, so I show her how to do it at home. Afterward I think about what I missed in the consultation."
+   ],
+   [
+    "How do you get clients to book their next visit before they leave?",
+    "How you build a steady book of clients.",
+    "Recommending a timing for the next visit at the chair, explaining why, and booking it while finishing the service.",
+    "While I finish the style, I tell them when the cut or color will need attention, for example six weeks for a short cut, and why. Then I offer to book that date before they leave so they get the time they want. Most say yes. I send a reminder before the visit, and that steady rebooking is what fills my book."
+   ],
+   [
+    "How do you recommend products without sounding like a salesperson?",
+    "How you sell retail as part of the service.",
+    "Using the products during the service, explaining what each does for that client’s hair, and suggesting one or two, not a whole line.",
+    "I use the products on their hair while I work and explain what each one does, so they see the result. At the end I suggest one or two that solve the problem they told me about, like frizz, and show them how much to use. If they say no, that’s fine; they often come back for it later."
+   ],
+   [
+    "What do you check on the scalp before a chemical service?",
+    "Whether you put client safety before the service.",
+    "Looking for cuts, abrasions, irritation or signs of a scalp condition, and not applying chemicals to broken skin.",
+    "I look at the scalp and ask about sensitivity, recent shaving, scratching or skin conditions. If I see cuts, abrasions, open sores or irritation, I don’t apply relaxer or color that day. If something looks like a scalp condition, I suggest they see a doctor, because diagnosing isn’t my job."
+   ],
+   [
+    "How do you cut curly hair differently from straight hair?",
+    "Your technical range with textured hair.",
+    "Respecting shrinkage, cutting dry or curl by curl, avoiding thinning techniques that cause frizz, and shaping by how the curls fall.",
+    "I look at the curls dry and in their natural pattern first, because curly hair can shrink a lot when it dries. I often cut dry, curl by curl, and shape by how the curls fall rather than one even line. I avoid thinning shears and razors on most curly hair because they cause frizz, and I teach the client how to style it at home."
+   ],
+   [
+    "You’re running 20 minutes late and your next client is waiting. What do you do?",
+    "How you manage your time and your clients.",
+    "Telling the waiting client right away, apologizing, offering a drink or an option to rebook, and changing your schedule so it doesn’t repeat.",
+    "I go out and tell them myself, apologize and give an honest time. I offer a drink and, if they are short on time, a later slot or a shorter service today. Then I look at why it happened, such as booking color too tightly, and fix my schedule so it isn’t a habit."
+   ],
+   [
+    "Commission, hourly or booth rent: what have you worked under, and what did it change?",
+    "Whether you understand salon pay models and their trade-offs.",
+    "The differences between employee pay plans and renting a booth, and what each means for clients, supplies, schedule and taxes.",
+    "I’ve been paid commission with an hourly guarantee, and a friend of mine rents a booth. As an employee the salon supplies the products, books clients and sets prices, and I build my book with their help. A booth renter is in business for herself: she pays rent, buys products, sets prices and pays self-employment tax, but keeps everything she makes."
+   ]
+  ]
+ },
+ "sports-coach": {
+  "heading": "Sports coach questions",
+  "qs": [
+   [
+    "How do you plan a practice?",
+    "How you turn goals into a structured session.",
+    "One or two goals, a warm-up, skill work that builds into game-like drills, conditioning, a cool-down and time limits for each block.",
+    "I set one or two goals from the last game, for example defending in transition. The session starts with a dynamic warm-up, moves to a skill drill, then a small-sided game that uses the skill under pressure, then a full-team scrimmage. Each block has a time limit, water breaks are built in and we end with a cool-down and two minutes on what we learned."
+   ],
+   [
+    "A player takes a hard hit to the head and says they are fine. What do you do?",
+    "Whether you follow concussion rules without exception.",
+    "Removing the player from play, no return that day, informing the family and written clearance from a licensed health care provider, as most state laws require.",
+    "I take them out and they don’t go back in that day, whatever they say or the score. I watch for symptoms such as headache, dizziness or confusion and call for medical help if they get worse. I tell the parents and give them the concussion sheet. Every state has a youth sports concussion law, and most require that removal and written clearance from a licensed health care provider before the player returns."
+   ],
+   [
+    "A parent argues with you about playing time after a game. How do you handle it?",
+    "How you deal with parents and keep your decisions fair.",
+    "Not discussing it on the spot, meeting later as set in team rules, explaining the criteria and never discussing other players.",
+    "I tell the parent I am happy to talk, but not right after a game. Our team rules ask for a 24-hour wait and a meeting, which I explain at the preseason meeting. When we meet, I explain how I decide playing time, such as effort in practice and skill in a position, and what the player can work on. I don’t discuss other players."
+   ],
+   [
+    "How do you coach players of very different levels on one team?",
+    "How you keep every player learning.",
+    "Grouping by level for some drills, setting different challenges within one drill, and giving each player a goal of their own.",
+    "I split the team into groups by level for part of each practice, with harder versions of the same drill for the stronger players. In team drills I give individual targets, like a weaker shooter aiming for form, not makes. Stronger players sometimes help teach a skill, which also sharpens their own understanding. Everyone gets a goal of their own each week."
+   ],
+   [
+    "What does SafeSport training cover, and who has to take it?",
+    "Your knowledge of athlete protection rules.",
+    "Training from the U.S. Center for SafeSport on abuse prevention and reporting, required for adults in Olympic and Paralympic sport organizations who work with minors, and used by many clubs.",
+    "It is training from the U.S. Center for SafeSport on recognizing and reporting abuse and on keeping proper boundaries with young athletes, such as rules for one-on-one contact, travel and messages. Adults in Olympic and Paralympic sport organizations who work with minors must complete it, and many clubs and schools require it of every coach. It also covers the duty to report abuse."
+   ],
+   [
+    "How do you keep athletes safe in the heat?",
+    "Whether you can prevent and respond to heat illness.",
+    "Acclimatizing over the first days, adjusting practice to the heat index, water breaks, watching for warning signs, and cooling first with cold water immersion for heat stroke.",
+    "In the first days of preseason I build up practice length and gear gradually. I check the heat index or wet bulb reading and shorten or move practice when it is high, with shade and water breaks. I watch for cramps, dizziness and confusion. A player who may have heat stroke gets cooled at once in cold water, while someone calls 911: cool first, then transport."
+   ],
+   [
+    "What do you say to your team after a tough loss?",
+    "How you lead through disappointment.",
+    "Keeping it short and calm, naming effort and one or two lessons, saving the detail for practice and film.",
+    "Right after the game I keep it short. I say what they did well, name one or two things we will work on, and remind them that the next practice is where we fix it. I don’t single anyone out in front of the team. The detailed review happens with film the next day, when everyone is calmer."
+   ],
+   [
+    "Tell me about a player you helped improve. What did you change?",
+    "Whether you can develop individual players.",
+    "A specific player, the problem you saw, the plan, the measurable change and how you kept them motivated.",
+    "One of my midfielders lost the ball under pressure. I filmed a few games and saw she always took her first touch toward the defender. We added ten minutes of first-touch work at each practice and I gave her one cue, ‘touch away’. Over the season her lost balls per game roughly halved and she started every game in the second half of the season."
+   ],
+   [
+    "A player keeps missing practice. What do you do?",
+    "How you hold players accountable.",
+    "Talking to the player privately to find the reason, applying team rules set at the start of the season consistently, and involving parents for minors.",
+    "I talk to the player privately first, because there may be a real problem, like a job or something at home. If not, I apply the attendance rule we set at the start of the season, the same for the star as for the twelfth player. For a minor I also call the parents. If there is a real problem, I try to find a way for them to stay involved."
+   ],
+   [
+    "How do you plan conditioning across a season?",
+    "Your understanding of training load.",
+    "Building a base before the season, keeping it up during the season, lighter weeks and rest, and adjusting for injuries and games.",
+    "Before the season I build a base of fitness and strength, increasing the load step by step. During the season I keep it up with shorter sessions, put the harder ones early in the week and keep the day before a game light. I plan easier weeks after heavy stretches and adjust for players coming back from injury."
+   ],
+   [
+    "You see an assistant coach messaging a player late at night. What do you do?",
+    "Whether you act on a boundary concern.",
+    "Taking it seriously, following the program’s communication policy and SafeSport rules, reporting it to the right person, and not ignoring it to keep the peace.",
+    "Most programs’ policies, and SafeSport rules where they apply, ask that messages with minors be open, with a parent or another coach copied, and at sensible hours. I would not ignore it. I report it to the athletic director or the club’s safeguarding contact, who decides what happens next. If I saw signs of abuse, I would report it to the authorities as the law requires."
+   ],
+   [
+    "How do you use game film or statistics?",
+    "How you turn information into coaching decisions.",
+    "Choosing a few statistics that matter, reviewing clips with players, and turning findings into practice plans.",
+    "I track only a few numbers that tell me something, like turnovers and shots allowed after our mistakes. After each game I pick five to ten clips, good and bad, and show them to the team or to one player. What I see on film becomes the focus of the next practice, so the review always leads to work on the field."
+   ]
+  ]
  }
 }

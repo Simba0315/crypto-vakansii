@@ -468,7 +468,7 @@ SUBJECTS = [
          "What brings customers at the lowest cost stays; what cannot show a result goes.",
          "I rank every program by customers per dollar. The bottom third goes first, which is usually sponsorships, and I protect what feeds the pipeline this quarter."),
     ]),
-    ("Accounting and finance questions", dict(fams={"accounting-finance"}, roles=set(), tags=set(), not_roles={"trader", "quant", "fraud-risk", "payments", "insurance", "lending"}), [
+    ("Accounting and finance questions", dict(fams={"accounting-finance"}, roles=set(), tags=set(), not_roles={"trader", "quant", "fraud-risk", "payments", "insurance", "lending", "bank-teller"}), [
         ("How do the three financial statements link together?", "The foundation of the work.",
          "Net income flows to equity and to the cash flow statement; cash ends on the balance sheet.",
          "Net income from the income statement goes into retained earnings on the balance sheet and is the first line of the cash flow statement. The cash flow statement then explains the change in cash, which is the cash line on the balance sheet."),
@@ -633,7 +633,7 @@ SUBJECTS = [
          "What stops others first, and an honest time for the rest.",
          "The job that stops other people or the line comes first. For the rest I give a time I can keep and say so early if it moves."),
     ]),
-    ("Legal and compliance questions", dict(fams={"legal-compliance"}, roles=set(), tags=set()), [
+    ("Legal and compliance questions", dict(fams={"legal-compliance"}, roles=set(), tags=set(), not_roles={"police-officer"}), [
         ("How do you explain a legal risk to people who are not lawyers?", "Being useful to the business.",
          "The risk, how likely, what it would cost, and what you recommend, in plain words.",
          "One paragraph: what could happen, how likely it is, what it would cost, and what I would do. I give a recommendation, not a list of cases."),
@@ -650,7 +650,7 @@ SUBJECTS = [
          "What you saw, whom you told, what changed.",
          "A standard contract had lost its limit on liability in an edit. I checked the last six months of signed contracts, told the general counsel the same day, and we corrected the template and wrote to the four customers affected."),
     ]),
-    ("Retail and hospitality questions", dict(fams={"retail-hospitality"}, roles={"retail"}, tags=set()), [
+    ("Retail and hospitality questions", dict(fams={"retail-hospitality"}, roles={"retail"}, tags=set(), not_roles={"hair-stylist"}), [
         ("Tell me about a time you gave a customer more than they expected.", "Service.",
          "A small real example and what came of it.",
          "A guest’s order was wrong at closing time. I remade it myself and added a drink; she came back the next week with three colleagues."),

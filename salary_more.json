@@ -1495,6 +1495,40 @@
    }
   ]
  },
+ "bank-teller": {
+  "factors": [
+   {
+    "label": "Employer",
+    "text": "Large national banks, credit unions and community banks set teller pay differently, and some large banks have raised their minimum hourly pay. Compare the base rate, bonuses and benefits rather than the title alone."
+   },
+   {
+    "label": "Location",
+    "text": "Tellers in large metro areas and high-wage states usually earn more than those in small towns. Some states and cities set minimum wages well above the federal one."
+   },
+   {
+    "label": "Experience and role",
+    "text": "Lead, head and vault tellers earn more than tellers starting out, and universal bankers who also open accounts often earn more still. Moving into a personal banker or loan role is a common raise."
+   },
+   {
+    "label": "Languages and incentives",
+    "text": "Bilingual tellers often earn extra, and many banks pay small incentives for referrals that lead to new accounts or loans. Ask how incentives are earned and how much tellers typically get."
+   },
+   {
+    "label": "Hours",
+    "text": "Many teller jobs are part time, which lowers yearly pay even at the same hourly rate. Full-time jobs usually bring benefits such as health coverage and a retirement plan."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a bank teller earn more?",
+    "a": "Become a lead or head teller, learn to open accounts as a universal banker, or move into a personal banker, loan assistant or branch role. Being bilingual, meeting referral goals and working full time at a larger bank or credit union in a high-wage area also raise pay."
+   },
+   {
+    "q": "Is a bank teller paid hourly or salary?",
+    "a": "Almost always hourly. Tellers are usually non-exempt under federal law, so they earn time and a half for hours over 40 in a workweek. Many teller jobs are part time, and some banks add small incentives for referrals on top of the hourly rate."
+   }
+  ]
+ },
  "banking-operations": {
   "factors": [
    {
@@ -8665,6 +8699,40 @@
    }
   ]
  },
+ "hair-stylist": {
+  "factors": [
+   {
+    "label": "Pay structure",
+    "text": "Stylists may earn an hourly wage, commission on services, a mix of both, or rent a booth and keep what they charge. Commission and booth rent reward a full book of clients; hourly pay is steadier for new stylists."
+   },
+   {
+    "label": "Clientele and rebooking",
+    "text": "The size of a stylist’s book and how often clients rebook matter more than anything else. Building a loyal clientele raises earnings year after year."
+   },
+   {
+    "label": "Tips and retail",
+    "text": "Tips add a large part of many stylists’ income, and many salons pay commission on product sales. Under federal law, tips belong to the employee and an employer may not keep them."
+   },
+   {
+    "label": "Services and skills",
+    "text": "Color, balayage, color correction, extensions and textured hair skills command higher prices than basic cuts. Advanced education from product companies and a strong portfolio help raise prices."
+   },
+   {
+    "label": "Location and salon type",
+    "text": "High-end salons in large cities charge more per service than value chains in small towns. Choosing where to work shapes both prices and how many clients come in."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a hair stylist earn more?",
+    "a": "Build a steady book of clients who rebook before they leave, learn color, extensions or textured hair, and raise prices as demand grows. Selling the products you use, earning tips with great service and, once your book is full, moving to commission, booth rent or your own salon can raise income."
+   },
+   {
+    "q": "Do hair stylists get paid overtime?",
+    "a": "Employee stylists generally must get at least the minimum wage and overtime for hours over 40 a week, but a federal exemption covers some commission workers at retail or service businesses who earn well above the minimum wage. Stylists who rent a booth are self-employed and get no overtime."
+   }
+  ]
+ },
  "hardware-engineer": {
   "factors": [
    {
@@ -8968,6 +9036,40 @@
    {
     "q": "How can a help desk technician earn more?",
     "a": "Move up the support tiers by handling escalations and learning networking, scripting, and cloud or identity tools. Earn certifications that match the next role you want. Desktop support, system administration and security analyst jobs usually pay more. Night or on-call shifts and employers in regulated industries can also raise your pay."
+   }
+  ]
+ },
+ "home-health-aide": {
+  "factors": [
+   {
+    "label": "Who pays for care",
+    "text": "Much home care is paid by Medicaid, whose rates are set by each state and strongly shape aide pay. Agencies serving private-pay clients or with higher state rates can often pay more."
+   },
+   {
+    "label": "Location",
+    "text": "Pay varies widely by state and city, and some states and cities set minimum wages for home care workers above the general minimum wage. Check local postings and state rules."
+   },
+   {
+    "label": "Certification and skills",
+    "text": "Certified home health aides and certified nursing assistants usually earn more than aides with only personal care training. Dementia, hospice or Hoyer lift experience and a second language also help."
+   },
+   {
+    "label": "Hours, overtime and travel",
+    "text": "Weekend, overnight and live-in shifts often pay more. Federal overtime rules for agency aides were put in doubt in 2025, so check your state’s overtime law and the agency’s policy. Travel time between clients during the day counts as work time, so ask how it is paid."
+   },
+   {
+    "label": "Employer type",
+    "text": "Hospice and Medicare-certified home health agencies, hospitals and assisted living communities may pay differently from private home care agencies or families who hire directly. Compare benefits and guaranteed hours too."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a home health aide earn more?",
+    "a": "Get certified as a home health aide or nursing assistant, build skills in dementia or hospice care, and take weekend, overnight or live-in shifts that pay more. Working enough hours for overtime helps. Many aides raise pay over time by training to become licensed practical nurses or registered nurses."
+   },
+   {
+    "q": "Do home health aides get paid overtime?",
+    "a": "Since 2015 a federal rule has entitled aides employed by home care agencies to overtime for hours over 40 a week, but in 2025 the Labor Department paused enforcing it against agencies and proposed exempting them again. Check the current federal rule and your state’s wage law, which may require overtime anyway. Travel time between clients during a workday counts as hours worked."
    }
   ]
  },
@@ -11929,6 +12031,40 @@
    }
   ]
  },
+ "medical-assistant": {
+  "factors": [
+   {
+    "label": "Certification",
+    "text": "Certified medical assistants often earn more than those without a credential, and some employers pay only certified staff for tasks such as injections. Earning the CMA, RMA, CCMA or NCMA can raise pay and open more jobs."
+   },
+   {
+    "label": "Work setting",
+    "text": "Pay differs by setting. Outpatient care centers and hospitals often pay more than single doctors’ offices, and specialty clinics such as dermatology, cardiology or oncology may pay more than primary care."
+   },
+   {
+    "label": "Clinical skills",
+    "text": "Medical assistants who draw blood, run EKGs, assist with procedures or hold a limited X-ray license where the state allows often earn more. Bilingual medical assistants are paid extra in many clinics."
+   },
+   {
+    "label": "Location",
+    "text": "Pay follows the local cost of living and demand, so medical assistants in large metro areas and high-wage states usually earn more than those in rural areas. Compare offers with local postings, not national averages."
+   },
+   {
+    "label": "Experience and lead roles",
+    "text": "Lead medical assistant, clinical supervisor and office manager roles pay more. Training new staff and learning the electronic health record well prepare you for them."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a medical assistant earn more?",
+    "a": "Get certified, learn skills like blood draws and EKGs, and move toward specialty clinics, outpatient centers or hospital clinics, which often pay more. Bilingual skills, lead or supervisor roles and further training, such as nursing or medical coding, are common ways to raise pay over time."
+   },
+   {
+    "q": "Do medical assistants get paid overtime?",
+    "a": "Usually, yes. Most medical assistants are paid by the hour and are not exempt under federal law, so they must get time and a half for hours over 40 in a workweek. Some states, such as California, also require overtime after 8 hours in a day."
+   }
+  ]
+ },
  "medical-coder": {
   "factors": [
    {
@@ -13255,6 +13391,40 @@
    }
   ]
  },
+ "patient-care-technician": {
+  "factors": [
+   {
+    "label": "Setting and unit",
+    "text": "Hospitals, dialysis clinics, emergency departments and intensive care units may pay differently, and technicians who draw blood and run EKGs often earn more than those doing basic care only."
+   },
+   {
+    "label": "Certifications",
+    "text": "A nursing assistant certificate, a CPCT/A, phlebotomy or EKG certification, or dialysis certification such as the CCHT can raise pay and is required for many jobs. Keep BLS current."
+   },
+   {
+    "label": "Shift differentials",
+    "text": "Night, weekend and holiday shifts usually pay a differential, and many hospitals use 12-hour shifts. Ask how differentials and overtime are paid before you choose a schedule."
+   },
+   {
+    "label": "Location",
+    "text": "Pay tracks local wages and the cost of living. Large metro areas and high-wage states pay more, and hospitals competing for staff may offer sign-on bonuses."
+   },
+   {
+    "label": "Union and step plans",
+    "text": "Many hospital technicians are in unions with set pay steps by years of service. Check the contract or pay scale when comparing offers."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a patient care technician earn more?",
+    "a": "Add certifications in phlebotomy, EKG or dialysis, work nights or weekends for differentials, and move to units or hospitals that pay more. Many technicians use hospital tuition help to go to nursing school, the most common way to raise pay a lot."
+   },
+   {
+    "q": "Do patient care technicians get paid overtime?",
+    "a": "Yes, in most cases. They are usually paid hourly and are not exempt under federal law. Hospitals may use a 14-day pay period with overtime after 8 hours in a day and 80 hours in the period, instead of 40 hours a week, if workers agree in advance."
+   }
+  ]
+ },
  "payments": {
   "factors": [
    {
@@ -13867,6 +14037,40 @@
    }
   ]
  },
+ "police-officer": {
+  "factors": [
+   {
+    "label": "Agency and location",
+    "text": "Pay is set by each city, county or state, often in a public pay schedule. Large cities, wealthy suburbs and states with high living costs usually pay more than small towns. Many agencies post their full salary scale online."
+   },
+   {
+    "label": "Steps and rank",
+    "text": "Most departments raise pay in steps for each year of service, so pay grows steadily in the first years. Promotion to corporal, sergeant, lieutenant or detective brings higher pay grades."
+   },
+   {
+    "label": "Overtime and special pay",
+    "text": "Overtime, court time, off-duty details and extra pay for nights, bilingual skills, field training, K-9 or SWAT duty can add a lot to base pay. Ask how overtime and details are shared out."
+   },
+   {
+    "label": "Education and certification",
+    "text": "Many departments pay extra for an associate or bachelor’s degree, advanced state certification or military service. Hiring bonuses for lateral officers who are already certified are common."
+   },
+   {
+    "label": "Benefits and pension",
+    "text": "Most officers have a public pension and health coverage, which are worth a lot beyond pay. Compare retirement rules, contribution rates and years needed to retire when you weigh offers."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a police officer earn more?",
+    "a": "Move up the department’s pay steps, take promotional exams for sergeant or detective, and earn extra pay for a degree, field training, bilingual skills or special units. Overtime and off-duty details add income. Some officers move to larger agencies or departments with higher pay scales as lateral hires."
+   },
+   {
+    "q": "Do police officers get paid overtime?",
+    "a": "Yes. Federal law covers most officers, but lets departments use a work period of up to 28 days, with overtime after 171 hours in a 28-day period, instead of the usual 40-hour week. Public employers may give comp time instead of cash, and union contracts often set better overtime rules."
+   }
+  ]
+ },
  "policy": {
   "factors": [
    {
@@ -14136,6 +14340,40 @@
    {
     "q": "Do prediction market jobs pay in equity?",
     "a": "Many do. Most prediction market firms are startups, so offers often include stock options or other equity on top of a salary. Equity can grow in value but may also be worth nothing. Ask about vesting, strike price, the last funding round and what happens if you leave early."
+   }
+  ]
+ },
+ "preschool-teacher": {
+  "factors": [
+   {
+    "label": "Type of program",
+    "text": "Public school pre-K and many Head Start programs usually pay more than private child care centers, and often follow teacher pay scales. Faith-based and private schools vary widely."
+   },
+   {
+    "label": "Education and credentials",
+    "text": "A bachelor’s degree, a state teaching license, an associate degree or a CDA credential usually brings higher pay or a lead teacher job. Some states run programs that raise pay for teachers who earn more credentials."
+   },
+   {
+    "label": "Location",
+    "text": "Pay follows local wages, state funding for early education and the cost of living. Some states and cities fund pre-K programs that pay teachers on a scale closer to public school teachers."
+   },
+   {
+    "label": "Role",
+    "text": "Lead teachers earn more than assistant teachers and floaters, and moving into curriculum coordinator, coach or center director roles brings a larger raise."
+   },
+   {
+    "label": "Hours and calendar",
+    "text": "Some programs run on the school year and others all year. Compare yearly pay, paid time off and benefits, not just the hourly rate."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a preschool teacher earn more?",
+    "a": "Earn a CDA, then an associate or bachelor’s degree in early childhood education, and a state teaching license if you want public pre-K. Lead teacher, Head Start and public school jobs usually pay more than assistant roles in private centers. Some states also offer wage bonuses for earning credentials."
+   },
+   {
+    "q": "Do preschool teachers get paid in the summer?",
+    "a": "It depends on the program. Teachers in child care centers that run all year are paid year-round. Public school pre-K teachers on a school-year contract may get their salary spread over twelve months or only during the school year, depending on the district."
    }
   ]
  },
@@ -18046,6 +18284,40 @@
    {
     "q": "Do sponsorship sales managers earn commission?",
     "a": "Many do. Sales roles at teams, leagues and events often pay a base salary plus commission on new and renewed deals. Plans differ widely, so read the terms, including rates, caps and when payouts happen. Managers who buy sponsorships for brands are usually paid a salary, sometimes with a bonus."
+   }
+  ]
+ },
+ "sports-coach": {
+  "factors": [
+   {
+    "label": "Level",
+    "text": "College and professional coaches usually earn far more than high school and youth coaches. At each level, head coaches earn more than assistants."
+   },
+   {
+    "label": "Sport and program",
+    "text": "Pay depends on how much money a program brings in. Coaches in sports with large crowds and media money, and in well-funded schools and clubs, usually earn more."
+   },
+   {
+    "label": "Full-time or seasonal",
+    "text": "Many school coaching jobs pay a stipend for each season, and youth coaches are often paid per hour or per session. Full-time coaching jobs pay a salary with benefits."
+   },
+   {
+    "label": "Teaching and other roles",
+    "text": "Many high school coaches also teach, so coaching adds a stipend to a teacher’s salary. Adding duties such as athletic director, strength coach or camp director raises total pay."
+   },
+   {
+    "label": "Record and reputation",
+    "text": "Winning records, developed players and a strong network lead to better jobs. Camps, clinics and private lessons can add income outside the season."
+   }
+  ],
+  "qa": [
+   {
+    "q": "How can a sports coach earn more?",
+    "a": "Move up from assistant to head coach, coach at higher levels or in better-funded programs, and add roles such as teaching, strength coaching or athletic director. Running camps, clinics and private lessons adds income. A strong record and good references lead to better jobs."
+   },
+   {
+    "q": "Are sports coaches paid hourly or salary?",
+    "a": "Both are common. Youth and recreation coaches are often paid by the hour or session, high school coaches usually get a stipend for each season, and college and professional coaches usually earn a salary. Hourly coaches who are employees are owed overtime for hours over 40 a week."
    }
   ]
  },

@@ -1649,3 +1649,40 @@ Google (US, English) read for each before writing; what the pages answer:
   CSAT, volume and time. `/guides/customer-service-skills/` gives 12 with a line each.
 Not written, because a page already answers the search: "send resume by email" (`/tools/application-email/`), "resume summary examples"
 (`/tools/resume-summary/`), "application letter sample" (`/tools/cover-letter/`, `/cover-letter-examples/`).
+
+## Eight jobs that had no role: "<job> resume example" and "<job> salary" (27 Nov 2026)
+
+Roles added: medical assistant, police officer, bank teller, home health aide, patient care technician, preschool teacher, hair stylist,
+sports coach (`roles_info.py`; open postings whose title the role's own rule matches, full record of 27 Nov: 4,801 / 302 / 941 / 1,826 /
+1,005 / 1,136 / 308 / 980). Each now has a role page, a resume example, interview questions, how to become, how to hire, a job
+description template, a salary page and the other role families. Checked first: no page of ours targeted any of the 16 searches (the
+sitemaps had only `/skills/patient-care/`, a skill list, and `/roles/law-enforcement/`, a field).
+
+How it was read: Google answered this Mac's headless Chrome with its "unusual traffic" CAPTCHA (not passed); Bing in headless Chrome
+returned results for the word "medical" alone. So the 16 searches were read with Claude's web search and the first result pages opened
+(vivian.com, glassdoor.com and, after five pages, bls.gov answered 403; zety and livecareer timed out).
+
+- **Resume examples (all eight):** monster, novoresume, enhancv, resumegenius, resumebuilder, zety, huntr lead. The best pages list the
+  job's credentials (CMA, RMA, CCMA; POST license; CDA; state cosmetology license; CPCT/A, CCHT; CPR/BLS), write every bullet with a
+  number from the trade (rooming time, drawer balance record, prebook rate, calls for service, letter-naming scores), and offer entry and
+  senior variants. Their FAQs: do you need to be certified (medical assistant, teller, hair stylist), can you start without a degree
+  (police, preschool), is there a license (hair stylist), how to list a credential not yet earned. None of the pages read named the
+  75-hour federal training for home health aides, electronic visit verification, SafeSport, or structuring and currency transaction
+  reports for tellers.
+- **Salary (all eight):** Indeed's template (average, range, cities, companies, entry vs senior), Salary.com, Zippia, PayScale; BLS
+  rarely near the top. Figures quoted are mixed periods and often implausible (Salary.com: teller $78K, coach $91.7K). Factors named:
+  state and city, setting (outpatient vs office, hospital vs retail), certification, shift differentials, tips and commission (hair),
+  pay steps and overtime (police). Patient care technicians have no BLS occupation, and the first pages do not say so.
+
+What the pages do with it: each resume example names the job's real credentials and writes every line with a trade number, at three
+levels (entry, five years, senior); the questions found are answered on how-to-become and role pages ("Do you need to be certified to work
+as a medical assistant?", "Do you need a college degree to be a police officer?", "Do you need experience to become a bank teller?",
+"Do bank tellers need a license or certification?", "Do you need a license to be a hair stylist?", "Do you need a degree to be a
+preschool teacher?", "What is a CDA credential?"); the salary pages show the BLS May 2025 national figures (median, lowest and top tenth,
+people employed) beside the advertised pay, with a note where the match is not exact (patient care technicians are compared with nursing
+assistants; stylists who rent a booth are not in the survey; many coaching jobs are part time), and say what moves pay in each trade,
+including the federal overtime rules (police 28-day period, hospital 8-and-80, the 2025 pause for home care agencies, the commission
+exemption for salons). The gaps others leave are filled where they are true: the 75-hour aide training and visit verification,
+SafeSport, structuring and the federal bar on some past convictions for bank work, dialysis certification within 18 months.
+Not done: specialty variants (dermatology medical assistant, K-9 officer, head teller), a Word download, and named reviewers (we have none
+and do not invent them). Every text was read by a second, separate fact check; its 14 corrections are in.

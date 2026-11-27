@@ -1223,6 +1223,40 @@
    }
   ]
  },
+ "bank-teller": {
+  "look": [
+   {
+    "label": "Background to verify",
+    "text": "Run the background check your bank requires. Federal law bars people convicted of certain crimes of dishonesty or money laundering from working at an insured bank without the FDIC’s consent, or at an insured credit union without the NCUA’s, so check this before an offer is final."
+   },
+   {
+    "label": "Skills to test",
+    "text": "Test counting cash and making change, balancing a short mock drawer, and spotting an altered check or a fake bill. A short role play shows how they explain a hold or refer a customer to a banker."
+   },
+   {
+    "label": "Signs of a strong candidate",
+    "text": "Strong candidates are accurate and calm when the line is long, follow procedures every time, speak warmly with customers and report a mistake right away. Cashier experience with balanced drawers is a good sign."
+   },
+   {
+    "label": "Red flags",
+    "text": "Watch for careless counting, impatience with rules, pushing customers hard to buy, or suggesting ways around identification or cash reporting rules. Any dishonesty in the application should end the process."
+   },
+   {
+    "label": "Questions that reveal experience",
+    "text": "Ask: Your drawer is short at the end of the day. What do you do? A customer wants to deposit cash in pieces to stay under $10,000. What do you do? How do you spot a counterfeit $100 bill? Strong answers follow procedure every time."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What should I look for when hiring a bank teller?",
+    "a": "Look for honesty, accuracy with cash and numbers, and friendly service. Cashier or retail experience with balanced drawers helps. Test counting and balancing, check their judgment on fraud and cash reporting, and make sure they pass the background check banks require, including the federal rule on certain past convictions."
+   },
+   {
+    "q": "How do I test a bank teller before hiring?",
+    "a": "Give a short paid skills test: count a mixed set of bills and coins, balance a mock drawer, spot an altered check and a fake bill, and role play a customer whose check is on hold. Score accuracy first, then speed, clarity and how they follow procedure."
+   }
+  ]
+ },
  "banking-operations": {
   "look": [
    {
@@ -7105,6 +7139,40 @@
    }
   ]
  },
+ "hair-stylist": {
+  "look": [
+   {
+    "label": "Credentials to verify",
+    "text": "Check the candidate’s cosmetology or hair license on your state board’s website, including the expiration date. Stylists licensed in another state may need a license in yours before they can work."
+   },
+   {
+    "label": "Skills to test",
+    "text": "Ask for a working interview or model: a consultation, a haircut and a blowout, and color if the role includes it. Look at their portfolio and ask about recent color formulas and corrections."
+   },
+   {
+    "label": "Signs of a strong candidate",
+    "text": "Strong candidates run a real consultation, explain upkeep and price honestly, keep a clean station and rebook clients naturally. Their portfolio shows a range of hair types and steady recent work."
+   },
+   {
+    "label": "Red flags",
+    "text": "Watch for an expired license, poor sanitation, promising results the hair cannot take, rushing the consultation and talking badly about past salons or clients. A stylist who cannot explain a color formula needs more training."
+   },
+   {
+    "label": "Questions that reveal experience",
+    "text": "Ask: A client with box dye wants platinum today. What do you say? When do you do a patch test? How do you get clients to rebook? How do you cut curly hair? Strong answers are honest about what the hair can take."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What should I look for when hiring a hair stylist?",
+    "a": "Look for a current state license, solid cutting and color skills shown in a working interview, a recent portfolio and good habits with sanitation. Listen to how they run a consultation and talk about rebooking and retail. If they bring clients, ask how many visit regularly."
+   },
+   {
+    "q": "How do I test a hair stylist before hiring?",
+    "a": "Book a paid working interview on a model: a full consultation, a cut and blowout, and color if needed. Watch sanitation, time management and how they talk with the client. Ask the model afterward how the stylist made them feel."
+   }
+  ]
+ },
  "hardware-engineer": {
   "look": [
    {
@@ -7408,6 +7476,40 @@
    {
     "q": "How do I test a help desk technician before hiring?",
     "a": "Run a short role play of a real support call, such as a locked account or a laptop that will not join Wi-Fi. Then ask them to write the ticket notes. Review how they ask questions, verify the user, explain steps simply, and know when to escalate."
+   }
+  ]
+ },
+ "home-health-aide": {
+  "look": [
+   {
+    "label": "Credentials to verify",
+    "text": "Check that the aide completed training that meets federal rules for Medicare- or Medicaid-certified agencies, at least 75 hours including 16 of supervised practice, or passed a competency evaluation. Check the state registry or certificate where your state keeps one."
+   },
+   {
+    "label": "Skills to test",
+    "text": "Watch a candidate do a bed-to-chair transfer with a gait belt, a partial bed bath on a manikin and a set of vital signs. Ask them to write a visit note, and check they can use your visit verification app."
+   },
+   {
+    "label": "Signs of a strong candidate",
+    "text": "Strong candidates are reliable, patient and respectful of a client’s home and choices. They know what to report to the nurse, stay within their tasks and speak kindly about past clients without sharing private details."
+   },
+   {
+    "label": "Red flags",
+    "text": "Watch for missed shifts in past jobs, unsafe lifting, offering medical advice, carelessness with clients’ money or belongings, and talking about past clients by name. Be careful with anyone who dismisses abuse reporting."
+   },
+   {
+    "label": "Questions that reveal experience",
+    "text": "Ask: Your client is more confused than usual and has not eaten. What do you do? How do you move a client from bed to wheelchair? A client with dementia refuses a bath. What do you try? Strong answers put safety first and bring in the nurse."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What should I look for when hiring a home health aide?",
+    "a": "Look for training that meets federal and state rules, a clean background check, reliability and real kindness. Watch them do a transfer and a bath, and check they report changes to the nurse and respect the client’s home, money and privacy. References from past nurses or families say a lot."
+   },
+   {
+    "q": "How do I test a home health aide before hiring?",
+    "a": "Run a skills check with your nurse: a bed-to-chair transfer with a gait belt, a partial bed bath on a manikin, vital signs and a written visit note. Then ask how they would handle a fall, a refusal and a sudden change, and listen for safe, calm steps."
    }
   ]
  },
@@ -9893,6 +9995,40 @@
    }
   ]
  },
+ "medical-assistant": {
+  "look": [
+   {
+    "label": "Credentials to verify",
+    "text": "Check medical assistant certification such as CMA, RMA, CCMA or NCMA with the issuing body, and a current BLS card. Confirm what your state lets medical assistants do, such as injections or X-rays, and any state credential it requires."
+   },
+   {
+    "label": "Skills to test",
+    "text": "Watch a candidate take vital signs, room a mock patient and chart it. Check injection and blood draw technique on a training arm, and test scheduling and prior authorization tasks in your system."
+   },
+   {
+    "label": "Signs of a strong candidate",
+    "text": "Strong candidates are accurate under time pressure, explain each step to patients, stay within their scope and ask the provider when unsure. They keep rooms clean and protect patient privacy without being reminded."
+   },
+   {
+    "label": "Red flags",
+    "text": "Watch for vague answers about injections or blood draws, giving medical advice, careless talk about patients, or not knowing which tasks state law allows. Gaps in sharps and infection control habits are a serious concern."
+   },
+   {
+    "label": "Questions that reveal experience",
+    "text": "Ask: A blood pressure reads 182/112 at intake. What do you do? What is the order of draw? A patient asks if they can stop a medicine. What do you say? How do you handle a denied prior authorization? Strong answers name each step and stay within scope."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What should I look for when hiring a medical assistant?",
+    "a": "Look for certification or a recent accredited program, a current BLS card and solid clinical skills: vital signs, rooming, injections and blood draws where your state allows them. Check front-office skills, kindness with patients and privacy habits, and ask references from providers about accuracy and reliability."
+   },
+   {
+    "q": "How do I test a medical assistant before hiring?",
+    "a": "Run a short paid working interview or skills check: room a mock patient, take vital signs, chart the visit, show injection technique on a training arm and handle a scheduling or prior authorization task. Watch for accuracy, how they explain steps and whether they stay within their scope."
+   }
+  ]
+ },
  "medical-coder": {
   "look": [
    {
@@ -10913,6 +11049,40 @@
    }
   ]
  },
+ "patient-care-technician": {
+  "look": [
+   {
+    "label": "Credentials to verify",
+    "text": "Check the state nurse aide registry for nursing assistant certification, any national PCT, phlebotomy or EKG certificates, and a current BLS card. For dialysis roles, confirm certification or a plan to certify within 18 months of hire."
+   },
+   {
+    "label": "Skills to test",
+    "text": "Have candidates take vital signs, place leads for a 12-lead EKG on a manikin, show blood draw technique on a training arm and do a safe transfer. Ask them to chart the results correctly."
+   },
+   {
+    "label": "Signs of a strong candidate",
+    "text": "Strong candidates report changes to the nurse at once, stay within their scope, work steadily on a busy unit and treat patients with patience. They know fall and pressure injury prevention and infection control."
+   },
+   {
+    "label": "Red flags",
+    "text": "Watch for willingness to give medications, careless identification before a blood draw, sitting on abnormal readings, poor hand hygiene and rough handling of patients. Gaps in BLS or certification need explaining."
+   },
+   {
+    "label": "Questions that reveal experience",
+    "text": "Ask: A glucose reads 52. What do you do? Where does V1 go? A nurse asks you to give pills. What do you say? How do you care for a patient on contact precautions? Strong answers bring in the nurse at once."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What should I look for when hiring a patient care technician?",
+    "a": "Look for nursing assistant or PCT certification, current BLS, and real skill in vital signs, blood draws and EKGs. Check that they report changes quickly and know their scope. References from nurses who worked with them are the best guide to how they handle a busy unit."
+   },
+   {
+    "q": "How do I test a patient care technician before hiring?",
+    "a": "Run a short skills station: vital signs, EKG lead placement on a manikin, venipuncture on a training arm, a safe transfer and charting. Add two scenarios, a low blood sugar and a patient who refuses care, and score safety, speed and how they involve the nurse."
+   }
+  ]
+ },
  "payments-engineer": {
   "look": [
    {
@@ -11389,6 +11559,40 @@
    }
   ]
  },
+ "police-officer": {
+  "look": [
+   {
+    "label": "Credentials to verify",
+    "text": "Confirm state peace officer certification for lateral hires, or eligibility for your academy. Check the state certification board for any decertification, and run the full background investigation your state and agency require."
+   },
+   {
+    "label": "Skills to test",
+    "text": "Use scenario tests for judgment, de-escalation and decisions about force, a report-writing exercise and the physical fitness test. Ride-along feedback or field training records show how a lateral officer works."
+   },
+   {
+    "label": "Signs of a strong candidate",
+    "text": "Strong candidates stay calm, listen before acting, explain the law clearly, write precise reports and treat people with respect. They admit mistakes and show a record of honest, steady conduct."
+   },
+   {
+    "label": "Red flags",
+    "text": "Watch for dishonesty anywhere in the application, a pattern of complaints or use-of-force problems at past agencies, a resignation while under investigation, and enthusiasm for force or contempt for the public."
+   },
+   {
+    "label": "Questions that reveal experience",
+    "text": "Ask: What is the difference between reasonable suspicion and probable cause? Your partner uses too much force: what do you do? Walk me through a domestic call. When must you give Miranda warnings? Strong answers cite both the law and department policy."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What should I look for when hiring a police officer?",
+    "a": "Look for integrity first, then sound judgment, calm communication and respect for the public. Check certification and decertification records, past agencies’ files and the full background. Scenario tests, report writing and the fitness test show skills; references from supervisors and the community show character."
+   },
+   {
+    "q": "How do I check a lateral police officer’s record?",
+    "a": "Get written consent and request the officer’s personnel, internal affairs and training files from every prior agency, check the state certification board for decertification and search the national decertification index where your state uses it. Interview past supervisors, and ask why the officer is leaving."
+   }
+  ]
+ },
  "policy": {
   "look": [
    {
@@ -11624,6 +11828,40 @@
    {
     "q": "How do I test a prediction markets specialist before hiring?",
     "a": "Give a paid task: ask them to draft terms for two event contracts, such as a weather market and an economic data market, including settlement sources and edge cases. Add a mock dispute after an unclear result. Review precision, fairness, surveillance thinking and awareness of regulatory limits."
+   }
+  ]
+ },
+ "preschool-teacher": {
+  "look": [
+   {
+    "label": "Credentials to verify",
+    "text": "Check that the candidate meets your state’s licensing rules for the role, such as a CDA, an early childhood degree or a teaching license for public pre-K. Run the background checks with fingerprints that child care licensing requires before they start."
+   },
+   {
+    "label": "Skills to test",
+    "text": "Watch the candidate lead circle time or a small group activity in a real classroom, and ask them to plan a short lesson for your age group. Ask how they would observe and record a child’s progress."
+   },
+   {
+    "label": "Signs of a strong candidate",
+    "text": "Strong candidates get down to children’s level, use calm and positive guidance, keep constant headcounts and talk warmly with families. Their lesson ideas use play and fit the children’s ages."
+   },
+   {
+    "label": "Red flags",
+    "text": "Watch for harsh discipline, losing track of children, worksheet-heavy plans for preschoolers, unclear answers about reporting abuse and speaking badly about past families or coworkers."
+   },
+   {
+    "label": "Questions that reveal experience",
+    "text": "Ask: A child bites another child. What do you do? How do you build early reading skills? What would you do if you suspected abuse? How do you bring up a behavior concern with a family? Strong answers keep children safe and families informed."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What should I look for when hiring a preschool teacher?",
+    "a": "Look for the education and training your state requires, a clean background check and real warmth with children. Watch a classroom activity, check that their plans use play, and listen for safe supervision, positive guidance and respect for families. References from directors and families help."
+   },
+   {
+    "q": "How do I test a preschool teacher before hiring?",
+    "a": "Invite them for a paid classroom visit to lead a story or small group activity and help with a transition, with your lead teacher watching. Ask them to write a short weekly plan and to talk through a biting incident and a family conversation about behavior."
    }
   ]
  },
@@ -14854,6 +15092,40 @@
    {
     "q": "How do I test a sponsorships manager before hiring?",
     "a": "Give a short, paid task: describe an event or team and a target partner, and ask for a one-page proposal with benefits, activation ideas, key contract terms and how success will be measured. Judge whether the package fits the partner’s goals and whether every promise can be delivered and proven."
+   }
+  ]
+ },
+ "sports-coach": {
+  "look": [
+   {
+    "label": "Credentials to verify",
+    "text": "Run a background check and confirm CPR, first aid and concussion training. Check SafeSport training where it applies, any coaching certificates your state association or league requires, and the sport’s own coaching licenses."
+   },
+   {
+    "label": "Skills to test",
+    "text": "Have candidates run a short practice with your athletes while you watch. Ask for a written practice plan and a season plan, and ask how they would handle an injury and a parent complaint."
+   },
+   {
+    "label": "Signs of a strong candidate",
+    "text": "Strong candidates teach clearly, keep every athlete moving, correct with specific cues, put safety before winning and talk respectfully with players and parents. Former players and assistants speak well of them."
+   },
+   {
+    "label": "Red flags",
+    "text": "Watch for yelling or shaming players, playing hurt athletes, ignoring concussion or heat rules, private one-on-one messages with minors, and a history of leaving programs suddenly."
+   },
+   {
+    "label": "Questions that reveal experience",
+    "text": "Ask: A player takes a hit to the head and says they are fine. What do you do? How do you plan a practice? How do you handle a playing time complaint? What does SafeSport training cover? Strong answers put athlete safety ahead of the score."
+   }
+  ],
+  "qa": [
+   {
+    "q": "What should I look for when hiring a sports coach?",
+    "a": "Look for safety training, a clean background check, real knowledge of the sport and the ability to teach it. Watch them run a practice, check how they handle injuries and parents, and talk with former players, assistants and athletic directors about their conduct and how they develop athletes."
+   },
+   {
+    "q": "How do I check a coach’s background?",
+    "a": "Run a criminal background check, check the U.S. Center for SafeSport’s disciplinary records where the sport is covered, and call past schools or clubs directly, not only the references the candidate gives. Ask about conduct with athletes and why the coach left each program."
    }
   ]
  },

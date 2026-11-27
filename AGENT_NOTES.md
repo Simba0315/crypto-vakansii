@@ -773,3 +773,27 @@ plain HTML, so the page is readable without the map.
   it with its own key: add that certificate's SHA-256 (Play Console, App signing) to the list, keep the current one.
 - **Store screenshots** for the manifest are `assets/brand/app-*.jpg` (1080 x 1920, live pages on a 360 px phone). The 360 px header fix
   at the end of style.css came from them: at that width (most Galaxy phones) the menu button was cut by 3 px.
+  examples: medical assistant, police officer, bank teller...) is done: eight roles added on 27 Nov 2026 (next section).
+
+## Adding a role with all its pages (27 Nov 2026)
+
+Done for medical assistant, police officer, bank teller, home health aide, patient care technician, preschool teacher, hair stylist and
+sports coach.
+
+
+- Count first on the full record, not the local one (the local data/jobs.json of 13 Nov has almost no non-tech jobs): `git fetch origin
+  data`, then stream it without unpacking (`git show FETCH_HEAD:jobs.json.gz.NN | gunzip` into `jobsdb._records`) and keep the titles a
+  wide word matches; run the role's rule on them with the build's own test (`NOT_TECH` for "nt" roles), read a random sample with the
+  companies, and add a leading `^(?!...)` for the trades it catches ("Armed Patrol Officer", "Physical Therapist HHA", "3D Hair Artist").
+  "Stylist" alone, "Patrol Officer" alone, "Clinical Assistant" and a bare "CMA" (certified medication aide) were left out on purpose.
+- What one role needs, all keyed by its slug: the tuple in `roles_info.MORE_ROLES` (pattern, plural, plain line, "nt") and its slug in
+  `FAMILIES` (the first family decides the field questions, see `not_roles` in interview_bank.SUBJECTS when the field's questions do not
+  fit: bank-teller, police-officer, hair-stylist); the last word of its name in `PERSON_WORDS` if it is a person; titles it must take and
+  leave in the assertion list after `role_hit` in build.py; then resume_examples_more.json, interview_more.json, become_more.json,
+  role_more.json, salary_more.json, jd_more.json, hire_more.json in the shapes ai_fill.py writes (its `problems()`, `ib.problem()`,
+  `bm_problems()` and `sec_problems()` check them), and the BLS occupation in bls_wages.py (OCC, ROLE, NOTE when the match is not exact).
+- The texts of the eight were written by hand and read by a separate fact check (14 corrections). The home care overtime rule is in flux
+  (the Labor Department paused enforcement for agencies and proposed an exemption in July 2025): re-check salary_more.json and
+  become_more.json for home-health-aide when a final rule comes out.
+- To see the pages locally, the build ran on the local record plus 3,010 open postings of the eight roles taken from the full record
+  (data/jobs.json was a symlink to the main checkout's file: remove the link before writing a sample, never write through it).

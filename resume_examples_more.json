@@ -7872,5 +7872,181 @@
   ],
   "entry_title": "Junior Trader",
   "tech": false
+ },
+ "medical-assistant": {
+  "title": "Certified Medical Assistant",
+  "plain": "patient intake and vital signs, blood draws and injections, EKGs and point-of-care tests, scheduling and prior authorizations, infection control",
+  "lines": [
+   "Roomed about 30 patients a day for 2 family physicians, keeping the wait from check-in to exam room under 10 minutes",
+   "Drew blood and ran point-of-care tests for 15 to 20 patients a day, with redraws under 2% of samples",
+   "Gave about 1,200 flu and routine vaccines a season under standing orders with no administration errors",
+   "Cut prior authorization turnaround from 6 days to 3 by tracking every request on one shared daily list"
+  ],
+  "entry": [
+   "Finished a 9-month medical assisting certificate with 30 supervised venipunctures and 10 EKGs logged",
+   "Roomed 12 to 15 patients a day during a 160-hour externship at a pediatric clinic",
+   "Took blood pressures for about 200 visitors at 4 community health fairs as a volunteer"
+  ],
+  "senior": [
+   "Led a team of 8 medical assistants across 2 clinic sites, setting daily rooming and lab assignments",
+   "Ran the clinic’s vaccine program for about 3,000 patients a year, from ordering and fridge logs to recall lists",
+   "Trained 12 new medical assistants on rooming and blood draws; 10 worked on their own within 4 weeks"
+  ],
+  "entry_title": "Medical Assistant",
+  "tech": false
+ },
+ "police-officer": {
+  "title": "Police Officer",
+  "plain": "patrol and emergency response, report writing, de-escalation, traffic enforcement, community policing",
+  "lines": [
+   "Answered about 1,400 calls for service a year on a patrol beat, from traffic crashes to domestic disputes",
+   "Wrote incident and arrest reports that supervisors sent back for corrections less than 3% of the time over 5 years",
+   "Handled about 40 mental health crisis calls a year with crisis intervention training, using no force in any of them",
+   "Cut repeat calls to one apartment complex by 35% in a year through monthly meetings with its manager and residents"
+  ],
+  "entry": [
+   "Graduated from a 22-week police academy, first in report writing in a class of 31 recruits",
+   "Completed 14 weeks of field training with 3 training officers on day and night shifts",
+   "Directed traffic at 25 community events in 2 years as a volunteer police explorer"
+  ],
+  "senior": [
+   "Supervised a patrol shift of 9 officers as sergeant, reviewing every use-of-force report within 24 hours",
+   "Ran the department’s field training program for 3 years; 21 of 24 recruits finished it on schedule",
+   "Set up joint crisis calls with county mental health staff, who now go out on about 300 calls a year"
+  ],
+  "entry_title": "Police Officer Recruit",
+  "tech": false
+ },
+ "bank-teller": {
+  "title": "Bank Teller",
+  "plain": "cash handling and drawer balancing, deposits and withdrawals, check fraud detection, customer service, product referrals",
+  "lines": [
+   "Processed about 140 deposits, withdrawals and check cashings a day at a 5-window branch",
+   "Balanced the cash drawer on 98% of shifts over 3 years, with every difference under $5",
+   "Completed currency transaction reports for all cash over $10,000 in a business day, with none returned in 2 audits",
+   "Referred about 75 customers a year to personal bankers for new accounts and loans, 120% of the branch goal"
+  ],
+  "entry": [
+   "Completed a 40-hour teller course on cash handling, check endorsements and the signs of fraud",
+   "Counted and balanced a $1,500 register on about 150 shifts as a part-time cashier",
+   "Kept the books of a $3,000 student club budget for 2 years as its volunteer treasurer"
+  ],
+  "senior": [
+   "Led 6 tellers as head teller, setting window schedules and approving overrides and large withdrawals",
+   "Ran a branch vault of about $400,000 under dual control, with no shortages in 4 surprise audits",
+   "Trained 9 new tellers on cash handling and fraud checks; all balanced on their own within 3 weeks"
+  ],
+  "entry_title": "Teller I",
+  "tech": false
+ },
+ "home-health-aide": {
+  "title": "Certified Home Health Aide",
+  "plain": "personal care and bathing, safe transfers, vital signs, meal preparation, observing and reporting changes",
+  "lines": [
+   "Cared for 5 to 6 clients a week in their homes, from bathing and dressing to meals and light housekeeping",
+   "Moved clients with gait belts and mechanical lifts as their care plans said, with no client falls in 3 years of visits",
+   "Reported changes in skin, appetite or breathing to the nurse the same day; 4 reports led to early treatment",
+   "Clocked in and out through electronic visit verification on all of about 1,500 visits a year"
+  ],
+  "entry": [
+   "Completed a 75-hour home health aide course with 16 hours of supervised practical training",
+   "Assisted 8 residents a shift with meals and dressing as a part-time aide in an assisted living home",
+   "Visited 2 older neighbors every week for a year as a volunteer, helping with groceries and errands"
+  ],
+  "senior": [
+   "Coordinated 4 aides on a 24-hour live-in case, writing the shift handoff notes for the supervising nurse",
+   "Kept a daily routine sheet for each of 12 clients with dementia, agreed with their families and the nurse",
+   "Trained 10 new aides on transfers and bathing during shadow shifts; 9 stayed past 6 months"
+  ],
+  "entry_title": "Home Health Aide",
+  "tech": false
+ },
+ "patient-care-technician": {
+  "title": "Patient Care Technician",
+  "plain": "vital signs, blood draws, EKGs, patient hygiene and mobility, intake and output charting",
+  "lines": [
+   "Cared for 8 to 10 patients a shift on a 32-bed medical-surgical unit, working with 2 nurses",
+   "Drew about 25 blood samples a shift, getting about 95% on the first stick",
+   "Ran 12-lead EKGs for about 15 patients a shift and handed every abnormal tracing to the nurse at once",
+   "Turned high-risk patients every 2 hours as ordered; the unit went 9 months with no new pressure injuries"
+  ],
+  "entry": [
+   "Completed a 6-month patient care technician program with 30 blood draws and 10 EKGs signed off",
+   "Bathed and fed 6 to 8 patients a shift as a nursing assistant during a summer job",
+   "Delivered meals and water to about 40 patients a week as a hospital volunteer for 1 year"
+  ],
+  "senior": [
+   "Led 6 patient care technicians on night shift as charge tech, assigning patients by how much care they needed",
+   "Ran the unit’s fall prevention rounds for a year; falls went from 9 to 4 a quarter",
+   "Precepted 11 new technicians through a 3-week orientation; all passed the unit’s skills check"
+  ],
+  "entry_title": "Patient Care Technician I",
+  "tech": false
+ },
+ "preschool-teacher": {
+  "title": "Preschool Teacher",
+  "plain": "play-based lesson planning, early literacy and math, classroom management, developmental observation, family communication",
+  "lines": [
+   "Taught a class of 16 four-year-olds with 1 assistant, planning weekly themes around play and centers",
+   "Raised the share of children who could name every capital letter from 40% to 85% between fall and spring",
+   "Kept developmental checklists for 16 children 3 times a year and went through them at family conferences",
+   "Kept the room ready for state licensing visits; 3 inspections in a row found no violations"
+  ],
+  "entry": [
+   "Earned a CDA credential after 120 hours of early childhood training and 480 hours in a classroom",
+   "Led circle time and centers for 10 toddlers as an assistant teacher at a child care center",
+   "Read aloud to groups of about 12 children every week for a year as a library story time volunteer"
+  ],
+  "senior": [
+   "Led 4 classrooms and 9 teachers as education coordinator, setting a shared curriculum for 60 children",
+   "Raised the center’s state quality rating from 3 to 4 stars by rewriting lesson plans and assessments",
+   "Mentored 5 assistant teachers through the CDA credential; all 5 passed on the first try"
+  ],
+  "entry_title": "Assistant Preschool Teacher",
+  "tech": false
+ },
+ "hair-stylist": {
+  "title": "Hair Stylist",
+  "plain": "precision cuts, color and highlights, blowouts and styling, client consultations, rebooking and retail",
+  "lines": [
+   "Built a book of 160 regular clients in 3 years, with 65% booking their next visit before they left",
+   "Served 8 to 10 clients a day across cuts, color and blowouts with an average ticket of $95",
+   "Raised retail sales to 15% of service sales by suggesting 1 or 2 products for each client’s routine",
+   "Corrected about 40 home color jobs a year with strand tests and step-by-step plans, with no breakage complaints"
+  ],
+  "entry": [
+   "Completed 1,500 hours of cosmetology school and passed the state board exam on the first try",
+   "Shampooed and blow-dried about 20 clients a day as a salon assistant for 8 months",
+   "Styled hair for 12 students before a school dance as a volunteer during cosmetology school"
+  ],
+  "senior": [
+   "Led a team of 7 stylists as salon lead, setting the weekly schedule and the color standards",
+   "Ran the salon’s color program and cut product waste by 20% by weighing every mix",
+   "Trained 6 assistants to the floor in about 9 months each through weekly cut and color classes"
+  ],
+  "entry_title": "",
+  "tech": false
+ },
+ "sports-coach": {
+  "title": "Sports Coach",
+  "plain": "practice planning, skill and technique instruction, game strategy, athlete safety and conditioning, parent communication",
+  "lines": [
+   "Coached a varsity girls’ soccer team of 24 players to 3 winning seasons and 2 conference titles",
+   "Planned 5 practices a week with skill, tactics and conditioning blocks for 3 age groups",
+   "Grew a youth program from 60 to 140 players in 2 years by adding a beginner league",
+   "Kept an emergency action plan for each venue and had all 6 staff certified in CPR and trained in concussion response"
+  ],
+  "entry": [
+   "Completed a 20-hour youth coaching course with CPR, first aid and concussion training",
+   "Assisted the head coach of a high school track team of 45 athletes for 1 season",
+   "Coached a recreation league team of 12 eight-year-olds as a volunteer for 2 seasons"
+  ],
+  "senior": [
+   "Led a staff of 5 assistant coaches across varsity and junior varsity, giving each a clear practice role",
+   "Built a 3-year player development plan for 120 athletes from middle school to varsity",
+   "Placed 14 players on college rosters in 4 years by sharing game film with college coaches"
+  ],
+  "entry_title": "Assistant Coach",
+  "tech": false
  }
 }

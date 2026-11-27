@@ -35,6 +35,15 @@ NOT_ABA_TECH = (NOT_ABA + r"(?!.*\b(?:behaviou?r(?:al)?|rbt|pharmacy|veterinary|
                 r"telemetry|psychiatric|mental health|ophthalmic|optometric|emergency room|er|ed|anesthesia|radiology|radiologic|x-?ray|mri|cardiovascular|cardiac|"
                 r"orthopa?edic|histology|phlebotomy|animal care|medication|rehab\w*|physical therapy|occupational therapy|respiratory|ultrasound|sonography|endoscopy|"
                 r"nail|dental|lab(?:oratory)?|research|clinical|nursing|monitor|optical|eye|sleep|polysomnograph\w*|neurodiagnostic)\s+tech)(?!.*\b(?:rbt|bcba)\b)")
+# The sports a coach is named by ("Head Volleyball Coach", "Coach - Track & Field"): a coach with none of them is a life, career,
+# health, job or instructional coach. The second list is for titles where the sport comes after the word coach.
+COACH_SPORTS = (r"basketball|football|soccer|baseball|softball|volleyball|tennis|golf|track(?: and field| & field)?|cross[- ]country|wrestling|lacrosse|"
+                r"(?:ice |field )?hockey|gymnastics?|cheer(?:leading)?|swim(?:ming)?|diving|water polo|rowing|ski(?:ing)?|snowboard(?:ing)?|(?:figure )?skating|climbing|"
+                r"pickleball|padel|squash|badminton|fencing|archery|bowling|martial arts|karate|judo|jiu[- ]?jitsu|taekwondo|boxing|ninja|rugby|cycling|triathlon|"
+                r"running|e-?sports|equestrian|sailing|dance|athletics?|sports?|strength (?:and|&) conditioning|varsity|jv|junior varsity|head|assistant|pitching|"
+                r"hitting|throws|throwing|jumps|sprints?|goalkeeper|goalie|quarterbacks?|linebackers?|offensive line|defensive line")
+COACH_SPORTS_ONLY = (r"basketball|football|soccer|baseball|softball|volleyball|tennis|golf|track (?:and|&) field|cross[- ]country|wrestling|lacrosse|hockey|gymnastics|"
+                     r"cheer(?:leading)?|swim(?:ming)?|diving|water polo|rowing|pickleball|fencing|rugby|esports|athletics|sports")
 MORE_ROLES = [
     # software
     ("Web developer", "web-developer", r"web (developer|engineer|designer|design|master|producer)|wordpress|webflow|shopify (developer|engineer|expert)|html|javascript (developer|engineer)|php (developer|engineer)|website",
@@ -462,6 +471,8 @@ MORE_ROLES = [
      "intelligence analysts", "collects and analyzes information about threats, people and events, and writes assessments for decision makers", "nt"),
     ("Law enforcement and public safety", "law-enforcement", r"law enforcement|police|sheriff|corrections (officer|specialist)|correctional|probation|parole|detective|trooper|border (patrol|protection)|customs and border|special agent|public safety|emergency (dispatch|communications)|crime scene|forensic (scientist|examiner|accountant)|court (officer|liaison)",
      "law enforcement and public safety staff", "works in policing and public safety, or for a company as the contact for police and courts"),
+    ("Police officer", "police-officer", r"^(?!.*\b(?:mobile patrol|armed (?:security|patrol|vehicle)|unarmed|security patrol|security/patrol|special police)\b).*(?:police (?:officers?|recruits?|cadets?|trainees?|patrol|patrolm[ae]n|corporals?|constables?)|(?:police|certified|lateral|entry[- ]level|probationary)\s+patrol officers?|patrol officers?\s+(?:recruit|trainee)|patrol officers?\b.*\bpolice\b|patrol deput(?:y|ies)|deputy sheriffs?|sheriff'?s? (?:deput(?:y|ies)|patrol)|state (?:police )?troopers?|police troopers?|highway patrol (?:officer|trooper)s?|^troopers?\b)",
+     "police officers", "patrols an area, answers emergency and other calls, enforces the law and writes up what happened", "nt"),
     # product and projects
     ("Technical product manager", "technical-product-manager", r"technical product (manager|owner|lead)|product manager,?\s*(-|–)?\s*(technical|platform|api|apis|infrastructure|developer|data platform|core|systems)|platform product manager|product manager.*\b(infrastructure|platform|apis?|developer tools|developer experience)\b",
      "technical product managers", "is a product manager for technical products such as platforms, APIs and infrastructure, whose users are often engineers"),
@@ -670,6 +681,8 @@ MORE_ROLES = [
      "claims adjusters", "investigates insurance claims, decides what is covered and agrees how much is paid", "nt"),
     ("Banking partnerships and operations", "banking-operations", r"banking (operations|partnerships|product|relations|services|as a service|infrastructure|compliance)|bank (partnerships|relations|relationships|operations|integrations)|sponsor bank|\bbaas\b|correspondent banking|deposit (operations|products?)|core banking|open banking",
      "banking operations specialists", "runs a company’s relationships and daily operations with its partner banks: accounts, deposits, transfers", "nt"),
+    ("Bank teller", "bank-teller", r"(?<!story )(?<!fortune )\btellers?\b",
+     "bank tellers", "handles customers’ cash, deposits, withdrawals and checks at a bank or credit union branch and balances the cash drawer", "nt"),
     ("Wealth management", "wealth-management", r"wealth|private (bank|banking|client|wealth)|high net worth|\bhnw\b|family office|trust (officer|administrator|services)|estate planning",
      "wealth managers", "manages and plans the money of wealthy people and families: investments, taxes, trusts and inheritance", "nt"),
     ("Mortgage loan officer", "mortgage-loan-officer", r"mortgage|loan (officer|processor|originator|closer|specialist|consultant|underwriter|servicing|operations|coordinator)|home lending|\bheloc\b|\bnmls\b",
@@ -941,6 +954,13 @@ MORE_ROLES = [
      "pharmacists", "checks and dispenses medicines, advises patients and doctors on them and runs the pharmacy", "nt"),
     ("Pharmacy technician", "pharmacy-technician", r"pharmacy (technician|tech|assistant|associate|clerk|intern)|\bcpht\b|compounding|dispensing",
      "pharmacy technicians", "prepares and packs prescriptions under a pharmacist’s supervision and helps patients with orders", "nt"),
+    # 27 Nov 2026, roles added for their resume examples (each had 300 to 4,800 open postings in the full record that day)
+    ("Medical assistant", "medical-assistant", r"^(?!.*\b(?:instructor|faculty|professor|educator|program director)\b).*(?:medical (?:office )?assistants?\b|\bccmas?\b)",
+     "medical assistants", "takes patients’ vital signs and histories, helps doctors with exams and keeps a clinic’s schedule and records", "nt"),
+    ("Patient care technician", "patient-care-technician", r"^(?!.*\b(?:patent|paralegal|docket\w*|trademark|instructor|educator|faculty)\b).*(?:patient care (?:technicians?|techs?|technologists?)\b|\bpcts?\b|(?:hemo)?dialysis (?:technicians?|techs?|patient care)\b|\bccht\b)",
+     "patient care technicians", "cares for hospital and dialysis patients alongside nurses: vital signs, bathing, moving patients, blood draws and EKGs", "nt"),
+    ("Home health aide", "home-health-aide", r"^(?!.*\b(?:therapist|therapy|patholog\w*|nurse|lpn|lvn|rn|supervisor|coordinator|manager|director|compliance|scheduler|recruiter|instructor)\b).*(?:home health (?:aides?|assistants?|attendants?|caregivers?|care aides?|care workers?)|\bc?hhas?\b|home care (?:aides?|assistants?|attendants?|workers?|providers?|caregivers?)|personal care (?:aides?|assistants?|attendants?|workers?)|in-?home (?:caregivers?|aides?|care (?:aides?|workers?|providers?)))",
+     "home health aides", "helps older, ill or disabled people at home with bathing, dressing, meals and reminders to take their medicines", "nt"),
     ("Physical and occupational therapist", "rehab-therapist", r"physical therap|physiotherap|\bdpt\b|occupational therap|speech(-| |-language )?(therap|patholog)|\bslp\b|respiratory therap|rehab(ilitation)? (therapist|specialist|aide|technician)|athletic trainer|chiropract|exercise physiolog",
      "physical and occupational therapists", "helps people recover movement and everyday skills after injury, illness or surgery", "nt"),
     ("Mental health technician and counselor", "mental-health-counselor", r"mental health (technician|tech|worker|associate|counselor|specialist|clinician|professional|therapist|coach|advocate)|behavioral health (technician|tech|specialist|counselor|clinician|coach|associate|therapist)|psych(iatric)? (tech|technician|aide)|substance (use|abuse)|addiction|\blpc\b|\blmhc\b|\blcpc\b|licensed (professional |clinical |mental health )?counsel|crisis (counselor|specialist|line)|peer (support|specialist|recovery)|recovery coach",
@@ -986,6 +1006,10 @@ MORE_ROLES = [
      "education program managers", "runs learning programs for students, customers or the public: content, partners, schedules and results"),
     ("Corporate trainer", "corporate-trainer", r"\btrainer\b|training (specialist|manager|coordinator|lead|consultant|facilitator|officer|associate|program|partner|delivery|instructor|director|analyst)|facilitator|learning (and|&) development|\bl&d\b|learning (specialist|partner|consultant|manager|program|lead)|technical (instructor|trainer)",
      "corporate trainers", "teaches employees new skills and processes, in classrooms, workshops and online courses"),
+    ("Preschool teacher", "preschool-teacher", r"^(?!.*\b(?:faculty|professor|lecturer|instructor)\b).*(?:(?:pre-?school|pre-?k\b(?!-?\d)|pre-?kindergarten|\bupk\b|early childhood|head start)\b.*\b(?:teachers?|educators?|teaching)\b|\b(?:teachers?|educators?)\b.*\b(?:pre-?school|pre-?k\b(?!-?\d)|pre-?kindergarten|\bupk\b|early childhood|head start)\b)",
+     "preschool teachers", "teaches and cares for children under five before kindergarten: play, early reading and numbers, getting along with others", "nt"),
+    ("Sports coach", "sports-coach", r"\b(?:" + COACH_SPORTS + r")\s+(?:(?:head|assistant|associate|position)\s+)?coach(?:es)?\b|\bcoach(?:es)?\b.*\b(?:" + COACH_SPORTS_ONLY + r")\b",
+     "sports coaches", "trains athletes or a team in a sport: plans practices, teaches skills and tactics and leads the team in games", "nt"),
     # hospitality and retail
     ("Barista", "barista", r"barista|coffee|café|\bcafe\b|espresso",
      "baristas", "makes coffee and drinks, serves customers and keeps the café clean and stocked"),
@@ -1003,6 +1027,8 @@ MORE_ROLES = [
      "grocery store associates", "works in a grocery or liquor store: stocks shelves, serves at the counters and helps customers", "nt"),
     ("Visual merchandiser", "visual-merchandiser", r"visual merchandis|merchandiser|planogram|window dress|display (designer|specialist|coordinator)|store (design|planning|fixtures|layout)|merchandising (associate|specialist|coordinator|assistant|lead|manager|analyst|executive|planner)|allocation (analyst|specialist|manager)|assortment (planner|planning|manager|analyst)",
      "visual merchandisers", "decides what a store sells and how it is displayed, so customers find it and buy it"),
+    ("Hair stylist", "hair-stylist", r"^(?!.*\b(?:3d|cg|cgi|games?|vfx|digital|animation|character|instructor|educator)\b).*(?:hair ?stylists?|hair (?:dressers?|designers?|artists?|colou?rists?|cutters?|professionals?|technicians?)|hairdressers?|cosmetologists?|salon (?:stylists?|professionals?|assistants?)|barbers?\s*/\s*stylists?|stylists?\s*/\s*barbers?|stylists?\b.*\b(?:salon|hair)\b|\b(?:salon|hair)\b.*\bstylists?)",
+     "hair stylists", "cuts, colors and styles hair in a salon and builds a book of regular clients", "nt"),
     # crypto and markets
     ("Crypto custody and wallet specialist", "custody-wallets", r"custody|custodial|\bwallets?\b|safekeeping|cold storage|key (ceremony|custody)|digital asset (operations|custody|safekeeping|services)|self[- ]custody",
      "custody and wallet specialists", "builds or runs the wallets and vaults that hold crypto assets safely for users and institutions"),
@@ -1115,11 +1141,12 @@ FAMILIES = [
       "erp-specialist", "investigations", "insurance-agent", "accounts-payable", "accounts-receivable", "billing-specialist", "revenue-accountant", "financial-reporting",
       "controller", "cost-accountant", "fund-accountant", "bookkeeper", "senior-accountant", "indirect-tax", "investment-banking", "portfolio-manager", "investor-relations",
       "credit-analyst", "risk-manager", "fraud-analyst", "aml-kyc", "internal-controls", "actuary", "underwriter", "claims-adjuster", "banking-operations",
-      "wealth-management", "mortgage-loan-officer", "finance-manager", "spend-analyst", "stablecoins-tokenization", "prediction-markets", "market-maker", "cfo"]),
+      "wealth-management", "mortgage-loan-officer", "finance-manager", "spend-analyst", "stablecoins-tokenization", "prediction-markets", "market-maker", "cfo", "bank-teller"]),
     ("legal-compliance", "Legal and compliance", "contracts, regulators and the rules a company must follow",
      ["legal-counsel", "paralegal", "compliance", "privacy", "policy", "security-compliance", "government",
       "aml-kyc", "internal-controls", "contract-manager", "general-counsel", "commercial-counsel", "employment-counsel", "litigation", "intellectual-property",
-      "regulatory-affairs", "legal-intern", "corporate-governance", "compliance-officer", "policy-analyst", "government-contracts", "law-enforcement", "public-administration"]),
+      "regulatory-affairs", "legal-intern", "corporate-governance", "compliance-officer", "policy-analyst", "government-contracts", "law-enforcement", "public-administration",
+      "police-officer"]),
     ("hr-recruiting", "HR and recruiting", "hiring people and looking after them once they are in",
      ["recruiter", "technical-recruiter", "human-resources", "compensation-benefits", "training", "payroll",
       "workday", "internal-communications", "employment-counsel", "hr-business-partner", "hr-generalist", "hr-coordinator", "people-operations", "employee-relations",
@@ -1155,14 +1182,14 @@ FAMILIES = [
       "quantum", "environmental-engineer", "geologist-mining", "nurse-practitioner", "physician", "physician-assistant", "pharmacist", "pharmacy-technician",
       "rehab-therapist", "mental-health-counselor", "care-coordinator", "health-coach", "medical-coder", "healthcare-administrator", "medical-director", "medical-writer",
       "clinical-research-coordinator", "medical-science-liaison", "public-health", "clinical-informatics", "lab-technician", "bioinformatics", "chemist", "biologist",
-      "process-development", "phd", "research-program-manager"]),
+      "process-development", "phd", "research-program-manager", "medical-assistant", "patient-care-technician", "home-health-aide"]),
     ("education-training", "Education and training", "teaching people, in classrooms, online or at work",
      ["education", "training", "ai-trainer",
-      "customer-education", "instructional-designer", "professor", "education-program-manager", "corporate-trainer"]),
+      "customer-education", "instructional-designer", "professor", "education-program-manager", "corporate-trainer", "preschool-teacher", "sports-coach"]),
     ("retail-hospitality", "Retail, food and facilities", "shops, kitchens, buildings and the people who run them",
      ["retail", "hospitality", "workplace", "physical-security", "technician",
       "brand-ambassador", "retail-sales-associate", "facilities-manager", "maintenance-technician", "janitor-cleaner", "property-manager", "pharmacy-technician", "barista",
-      "chef-cook", "food-service-worker", "hotel-guest-services", "casino", "store-manager", "grocery-associate", "visual-merchandiser"]),
+      "chef-cook", "food-service-worker", "hotel-guest-services", "casino", "store-manager", "grocery-associate", "visual-merchandiser", "hair-stylist"]),
     ("languages", "Jobs by language", "work that needs a second language besides English",
      ["bilingual", "german-speaking", "french-speaking", "spanish-speaking", "japanese-speaking", "portuguese-speaking", "chinese-speaking", "italian-speaking", "dutch-speaking", "korean-speaking", "localization",
       "arabic-speaking", "polish-speaking", "turkish-speaking", "russian-speaking", "hebrew-speaking", "thai-speaking", "vietnamese-speaking", "indonesian-speaking",
@@ -1324,7 +1351,8 @@ PERSON_WORDS = ("accountant actuary adjuster administrator advocate agent ambass
                 "generalist grad hire inspector instructor intern lawyer lead lecturer liaison machinist manager marketer mechanic merchandiser "
                 "nurse officer operator owner paralegal partner pharmacist physician pipefitter planner practitioner producer professional "
                 "programmer receptionist recruiter representative researcher scientist secretary sourcer speaker specialist statistician "
-                "superintendent supervisor technician tester therapist trader trainee trainer underwriter vp welder worker writer").split()
+                "superintendent supervisor technician tester therapist trader trainee trainer underwriter vp welder worker writer "
+                "aide coach stylist teacher teller").split()
 PERSON_NAME = re.compile(r"\b(?:" + "|".join(PERSON_WORDS) + r")$|^(?:Head|Chief|Director) |\bVP of\b|^speaker of ", re.I)
 
 

@@ -393,7 +393,21 @@ for _t, _on, _off in (
         ("Night Auditor", (), ("audit",)), ("Internal Auditor", ("audit",), ()), ("Licensed Architect", (), ("software-architect",)), ("Software Architect", ("software-architect",), ()),
         ("Service Writer", (), ("content-writer",)), ("Content Writer", ("content-writer",), ()), ("Target Analyst Reporter", (), ("operators", "content-writer")),
         ("Porter", ("operators",), ()), ("Customer Support Specialist", ("customer-support",), ()), ("Direct Support Professional", (), ("customer-support",)),
-        ("Sales Engineer", ("sales-engineer",), ()), ("", (), ("analyst", "nursing"))):
+        ("Sales Engineer", ("sales-engineer",), ()),
+        # the roles added on 27 Nov 2026 for their resume examples: titles from the full record they must take and must leave
+        ("Certified Medical Assistant (CMA)", ("medical-assistant", "healthcare"), ()), ("Clinical Assistant Professor", (), ("medical-assistant",)),
+        ("Medical Assistant Instructor", (), ("medical-assistant",)), ("Certified Medication Aide (CMA)", (), ("medical-assistant",)),
+        ("Police Officer - Lateral", ("police-officer", "law-enforcement"), ()), ("Deputy Sheriff", ("police-officer",), ()), ("Maine State Police Trooper", ("police-officer",), ()),
+        ("Armed Patrol Officer", (), ("police-officer",)), ("Special Police Officer", (), ("police-officer",)), ("Police Dispatcher", (), ("police-officer",)),
+        ("Store Supervisor - 2623 West Ridge Pike, Trooper, PA", (), ("police-officer",)), ("Part Time Teller", ("bank-teller",), ()), ("Product Storyteller", (), ("bank-teller",)),
+        ("Home Health Aide (HHA)", ("home-health-aide",), ()), ("In-Home Caregiver", ("home-health-aide",), ()), ("Physical Therapist HHA", (), ("home-health-aide",)),
+        ("LPN Supervisor (Must have CHHA)", (), ("home-health-aide",)), ("Dialysis Patient Care Technician-PCT", ("patient-care-technician",), ("technician",)),
+        ("PCT Paralegal", (), ("patient-care-technician",)), ("Lead Preschool Teacher", ("preschool-teacher", "education"), ()), ("Early Head Start Teacher", ("preschool-teacher",), ()),
+        ("PreK-12 Art Teacher", (), ("preschool-teacher",)), ("Preschool Director", (), ("preschool-teacher",)), ("Licensed Hairstylist", ("hair-stylist",), ()),
+        ("Hair Stylist / Colorist", ("hair-stylist",), ()), ("3D Hair Artist", (), ("hair-stylist",)), ("Retail Stylist", (), ("hair-stylist",)),
+        ("Head Volleyball Coach", ("sports-coach",), ()), ("Athletic Coach - Wrestling, Assistant Coach", ("sports-coach",), ()), ("Career Coach", (), ("sports-coach",)),
+        ("Agile Coach", (), ("sports-coach",)), ("Motor Coach Operator", (), ("sports-coach",)), ("Health Coach", (), ("sports-coach",)),
+        ("", (), ("analyst", "nursing"))):
     for s_ in _on: assert role_hit(_role_of[s_], None, _t), (_t, s_)
     for s_ in _off: assert not role_hit(_role_of[s_], None, _t), (_t, s_)
 
@@ -10117,11 +10131,14 @@ def main():
                        exp=[{"role": f"{d['title']} Intern", "org": "Example Company", "dates": "Summer 2026", "text": ent_l[0]},
                             {"role": "Projects", "org": "Course and personal projects", "dates": "2025 – 2026", "text": "\n".join(ent_l[1:3])}],
                        edu=[{"what": "Bachelor’s degree", "org": "Example University", "dates": "2022 – 2026"}])
-            if pl_:
+            if pl_ and "intern" in pl_:
                 d_e = dict(d_e, summary=f"{et_} looking for a first post, with clinical placements and research in {resume_examples.and_list(skills_)}.",
                            exp=[{"role": pl_["intern"], "org": pl_["org"], "dates": "2026 – now", "text": ent_l[0]},
                                 {"role": pl_["proj"][0], "org": pl_["proj"][1], "dates": "2020 – 2026", "text": "\n".join(ent_l[1:3])}],
                            edu=[{"what": pl_["edu"], "org": pl_["school"], "dates": "2020 – 2026"}])
+            elif pl_:       # a trade trained in a program or an academy (27 Nov 2026): its own kind of employer and its training, not a degree
+                d_e = dict(d_e, exp=[dict(d_e["exp"][0], org=pl_["org"])] + d_e["exp"][1:],
+                           edu=[{"what": pl_["edu"], "org": pl_["school"], "dates": pl_.get("entry_dates", "2025 – 2026")}])
             rex_lv[slug_r]["entry"] = d_e
             levels_ += section(f"Entry-level {low} resume example (no experience)", paper(d_e) + '<p class="note">With no job of this kind yet, lead with projects, an internship or part-time work, each with a number.</p>')
         if len(sen_l) >= 3 and slug_r != "intern":
@@ -10131,7 +10148,10 @@ def main():
                        exp=[{"role": st_, "org": "Example Company", "dates": "2021 – now", "text": "\n".join(sen_l)},
                             {"role": d["title"], "org": "Another Example Ltd", "dates": "2016 – 2021", "text": d["exp"][0]["text"].split("\n")[0] if d["exp"] else ""}])
             pl_ = getattr(resume_examples, "PLACE", {}).get(slug_r)
-            if pl_:
+            if pl_ and "intern" not in pl_:     # the training six years earlier too, so it comes before the first job (2016)
+                d_s = dict(d_s, exp=[dict(d_s["exp"][0], org=pl_["org"]), dict(d_s["exp"][1], org=pl_["org2"])],
+                           edu=[dict(d["edu"][0], dates=re.sub(r"\d{4}", lambda m_: str(int(m_.group()) - 6), d["edu"][0]["dates"]))])
+            elif pl_:
                 d_s = dict(d_s, summary=f"{st_} with ten years in hospital medicine and research, leading junior doctors and audit. Strongest in {resume_examples.and_list(skills_)}.",
                            exp=[dict(d_s["exp"][0], org=pl_["org"]), dict(d_s["exp"][1], org=pl_["org2"])])
             rex_lv[slug_r]["senior"] = d_s

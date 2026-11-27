@@ -76,6 +76,15 @@ OCC = {
     "51-4041": ("Machinists", 287050, 39200, 58750, 80010),
     "51-4121": ("Welders, Cutters, Solderers, and Brazers", 416210, 39240, 53750, 77530),
     "53-3032": ("Heavy and Tractor-Trailer Truck Drivers", 2062040, 40140, 58640, 79380),
+    # read 27 Nov 2026 from the same service, May 2025 figures, for the eight roles added that day for their resume examples
+    "25-2011": ("Preschool Teachers, Except Special Education", 478780, 28990, 38140, 61390),
+    "27-2022": ("Coaches and Scouts", 248950, 28790, 47320, 98860),
+    "31-1120": ("Home Health and Personal Care Aides", 4305810, 27040, 35800, 45040),
+    "31-1131": ("Nursing Assistants", 1448910, 33940, 42260, 51980),
+    "31-9092": ("Medical Assistants", 817870, 36050, 45690, 59310),
+    "33-3051": ("Police and Sheriff's Patrol Officers", 670520, 47510, 76210, 115120),
+    "39-5012": ("Hairdressers, Hairstylists, and Cosmetologists", 305710, 27040, 35790, 71190),
+    "43-3071": ("Tellers", 329480, 34360, 43030, 49680),
 }
 
 ROLE = {
@@ -167,6 +176,9 @@ ROLE = {
     # high-school diploma and an apprenticeship, a school certificate or a CDL lead to; each read from the same service that day
     "database-administrator": "15-1242", "electrician": "47-2111", "plumber-pipefitter": "47-2152", "hvac-technician": "49-9021",
     "welder": "51-4121", "machinist": "51-4041", "maintenance-technician": "49-9071", "fiber-technician": "49-9052",
+    # 27 Nov 2026: the roles added that day for their resume examples
+    "medical-assistant": "31-9092", "police-officer": "33-3051", "bank-teller": "43-3071", "home-health-aide": "31-1120",
+    "patient-care-technician": "31-1131", "preschool-teacher": "25-2011", "hair-stylist": "39-5012", "sports-coach": "27-2022",
 }
 
 # what a reader must know about the match
@@ -184,6 +196,12 @@ NOTE = {
     "database-administrator": f"The government counts database architects (median ${OCC['15-1243'][3]:,}) apart from administrators; this site's database jobs include both, and database engineers.",
     "maintenance-technician": f"The closest category is general maintenance and repair workers; industrial machinery mechanics, who keep factory machines running, have their own (median ${OCC['49-9041'][3]:,}).",
     "fiber-technician": "The closest category is telecommunications line installers and repairers; technicians who work inside buildings are counted elsewhere.",
+    "police-officer": "The category covers police patrol officers and sheriff’s deputies; detectives and police supervisors are counted apart.",
+    "home-health-aide": "The government counts home health aides and personal care aides together.",
+    "patient-care-technician": "The government has no category for patient care technicians; this is the nearest one, nursing assistants, who do the same bedside care without the blood draws and EKGs many technician postings add.",
+    "preschool-teacher": "Special education preschool teachers are counted apart.",
+    "hair-stylist": "The survey counts employees only: stylists who rent a booth or own their salon are not in it.",
+    "sports-coach": "The category covers coaches and scouts. Many coaching jobs are part time or seasonal, so what a coach is paid in a year is often less than these yearly figures.",
     "localization": "The government counts translators and interpreters together; localization engineers and managers at software companies fall in other categories, so the advertised pay on this page also covers them.",
 }
 

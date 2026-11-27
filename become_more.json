@@ -1335,6 +1335,40 @@
    ]
   ]
  },
+ "bank-teller": {
+  "steps": [
+   [
+    "Education",
+    "Most banks and credit unions ask for a high school diploma or GED. Math, careful counting and customer service experience matter more than a degree; work as a cashier or in retail is a common way in."
+   ],
+   [
+    "Background checks",
+    "Banks run criminal background checks and many check credit history. Federal law bars a person convicted of certain crimes of dishonesty, breach of trust or money laundering from working at an insured bank without the FDIC’s consent, or at a federally insured credit union without the NCUA’s, so be ready to explain your record."
+   ],
+   [
+    "On-the-job training",
+    "New tellers are trained by the bank, usually for a few weeks, on cash handling, the teller system, check holds, fraud signs, the Bank Secrecy Act and the bank’s products. Some take optional courses, such as the American Bankers Association’s teller training."
+   ],
+   [
+    "First job",
+    "Many start as part-time or float tellers who cover several branches. Credit unions and community banks hire tellers often, and bilingual tellers are in demand in many areas."
+   ],
+   [
+    "Moving up",
+    "Tellers can become lead or head tellers, then personal or universal bankers, loan assistants or branch managers. Some banks pay for college courses in finance for staff who want to move up."
+   ]
+  ],
+  "qa": [
+   [
+    "Do you need experience to become a bank teller?",
+    "Usually not. Most banks and credit unions hire tellers with a high school diploma and train them on the job for a few weeks. Experience handling cash, as a cashier or in retail, and good customer service help an application, and so does a clean background check."
+   ],
+   [
+    "Do bank tellers need a license or certification?",
+    "No license is required. Banks train their own tellers, and optional courses, such as those from the American Bankers Association, exist for people who want them. What banks do require is a background check, and a past conviction for a crime of dishonesty can keep a person from working at an insured bank or credit union without federal consent."
+   ]
+  ]
+ },
  "banking-operations": {
   "steps": [
    [
@@ -7709,6 +7743,44 @@
    ]
   ]
  },
+ "hair-stylist": {
+  "steps": [
+   [
+    "Cosmetology school",
+    "Every state requires a license to cut and color hair for pay. Most people get it by finishing a state-approved cosmetology program, where the number of training hours is set by each state, often from about 1,000 to 1,600, covering cutting, color, chemical services, sanitation and state law."
+   ],
+   [
+    "Apprenticeship",
+    "Some states let people train as an apprentice in a licensed salon instead of, or as well as, school. Apprentices work under a licensed stylist for a set number of hours before taking the state exams."
+   ],
+   [
+    "State board exam",
+    "After training, candidates take their state board’s exams, usually a written theory test and a practical test of hands-on skills. Many states use exams from the National-Interstate Council of State Boards of Cosmetology. Some states set a minimum age or education level."
+   ],
+   [
+    "License and renewal",
+    "Once licensed, stylists renew the license on the state’s schedule, and some states require continuing education. Moving to another state may mean applying for a license there. Barbering is a separate license in most states."
+   ],
+   [
+    "First job",
+    "Most new stylists start as an assistant or new talent stylist in a salon, shampooing, blow-drying and taking walk-ins while they build a clientele. With a steady book, many move to commission, rent a booth or open their own salon."
+   ],
+   [
+    "Time it takes",
+    "A full-time cosmetology program usually takes about 9 to 15 months; part-time programs take longer. Building a full book of regular clients often takes another one to three years."
+   ]
+  ],
+  "qa": [
+   [
+    "Do you need a license to be a hair stylist?",
+    "Yes. Every state requires a license to cut or color hair for pay, though many states exempt natural hair braiding and a few exempt blow-dry styling only. You usually earn it by finishing a state-approved cosmetology program, or an apprenticeship where the state allows it, and passing the state board’s written and practical exams. Some states also offer a narrower license for hair only."
+   ],
+   [
+    "How long does it take to become a hair stylist?",
+    "Usually about a year. Full-time cosmetology programs often take 9 to 15 months, depending on the hours your state requires, then you take the state board exams. Part-time programs and apprenticeships take longer. Most stylists then spend a year or more building their clientele."
+   ]
+  ]
+ },
  "hardware-engineer": {
   "steps": [
    [
@@ -8032,6 +8104,44 @@
    [
     "How long does it take to become a help desk technician?",
     "Usually a few months to two years. Self-study plus a certification like CompTIA A+ can get someone ready in three months to a year. An associate degree in IT takes about two years. Prior customer service work often shortens the path, since employers value people who stay calm and explain things clearly."
+   ]
+  ]
+ },
+ "home-health-aide": {
+  "steps": [
+   [
+    "Basic requirements",
+    "Agencies usually ask for a high school diploma or GED, though not all do, plus a background check, a tuberculosis test and often a driver’s license and car to travel between clients. Patience and physical stamina matter as much as schooling."
+   ],
+   [
+    "Training",
+    "Aides at home health agencies certified by Medicare or Medicaid must complete at least 75 hours of training, including at least 16 hours of supervised practical training, or pass a competency evaluation. Some states require more hours. Many community colleges, vocational schools and agencies run the courses."
+   ],
+   [
+    "Competency and certification",
+    "Aides must show they can do skills such as bathing, transfers and taking vital signs before working alone. Some states keep a registry or issue a certificate, such as a certified home health aide credential. In many states a certified nursing assistant can work as a home health aide, sometimes after extra training."
+   ],
+   [
+    "First job",
+    "Most start at a home health or home care agency, a hospice or an assisted living community. Aides are supervised by a registered nurse, who writes the care plan and visits clients regularly."
+   ],
+   [
+    "Keep learning",
+    "Aides at certified agencies need at least 12 hours of in-service training every year. Many add CPR, dementia care or hospice training, and some go on to become nursing assistants, licensed practical nurses or registered nurses."
+   ],
+   [
+    "Time it takes",
+    "Training usually takes a few weeks, so many people start their first job within a month or two of beginning a course."
+   ]
+  ],
+  "qa": [
+   [
+    "How many hours of training does a home health aide need?",
+    "At least 75 hours, including at least 16 hours of supervised practical training, for aides at home health agencies certified by Medicare or Medicaid; the other route is passing a competency evaluation. Some states require more hours, and aides who give only personal care at other agencies may face different state rules."
+   ],
+   [
+    "Can a CNA work as a home health aide?",
+    "Often, yes. Many states let a certified nursing assistant work as a home health aide, sometimes after extra hours of home care training or a state step such as a registry listing. Rules vary by state, so check with the state health department or the agency before applying."
    ]
   ]
  },
@@ -10713,6 +10823,44 @@
    ]
   ]
  },
+ "medical-assistant": {
+  "steps": [
+   [
+    "Education",
+    "Start with a high school diploma or GED. Biology, health science and keyboarding classes help, since medical assistants take vital signs, learn medical words and enter records into the computer all day."
+   ],
+   [
+    "Training program",
+    "Most medical assistants finish a certificate or diploma program at a community college or vocational school, usually in about a year, or a two-year associate degree. Programs cover anatomy, medical terms, vital signs, blood draws, injections, EKGs and front-office work, and most end with a supervised externship in a clinic."
+   ],
+   [
+    "Certification",
+    "Most states do not require certification, but many employers prefer or require it. The main credentials are the CMA from the American Association of Medical Assistants, the RMA from American Medical Technologists, the CCMA from the National Healthcareer Association and the NCMA from the National Center for Competency Testing. Graduates of programs accredited by CAAHEP or ABHES can sit for the CMA exam."
+   ],
+   [
+    "State rules",
+    "States decide which tasks a medical assistant may do, such as giving injections or taking X-rays, and a few, such as Washington, require medical assistants to hold a state credential. Check your state’s rules and the clinic’s policies before you take on a new task."
+   ],
+   [
+    "First job",
+    "Most people start as a medical assistant in a doctor’s office, urgent care or outpatient clinic, often at the site of their externship. With experience, medical assistants move into lead roles, specialty clinics, office management or further training in nursing and other health careers."
+   ],
+   [
+    "Time it takes",
+    "Usually about one to two years from starting a program to the first job. Some people are hired with on-the-job training sooner, and certification can follow within months of finishing a program."
+   ]
+  ],
+  "qa": [
+   [
+    "Do you need to be certified to work as a medical assistant?",
+    "In most states, no. There is no general state license for medical assistants, but many employers prefer or require certification such as the CMA, RMA, CCMA or NCMA, and some states require a credential or extra training for tasks like injections or X-rays. A few states, such as Washington, require every medical assistant to hold a state credential."
+   ],
+   [
+    "How long does it take to become a medical assistant?",
+    "Usually about a year. Certificate and diploma programs often take nine to twelve months and an associate degree about two years. Many programs end with an externship that leads to a first job, and certification exams can be taken soon after graduation."
+   ]
+  ]
+ },
  "medical-coder": {
   "steps": [
    [
@@ -11825,6 +11973,44 @@
    ]
   ]
  },
+ "patient-care-technician": {
+  "steps": [
+   [
+    "Education",
+    "Start with a high school diploma or GED. Biology and health classes help, and most hospitals ask for a current Basic Life Support (BLS) card."
+   ],
+   [
+    "Training program",
+    "Many technicians take a patient care technician program at a community college or vocational school, often a few months to a year long. Programs usually combine nursing assistant skills with blood draws and EKGs, plus clinical practice in a hospital or care home."
+   ],
+   [
+    "Certification",
+    "Many hospitals ask for a state nursing assistant certification, which means passing the state’s nurse aide exam and joining its registry. Others accept a national credential such as the Certified Patient Care Technician/Assistant (CPCT/A) from the National Healthcareer Association, and separate phlebotomy or EKG certificates help."
+   ],
+   [
+    "Dialysis technicians",
+    "Patient care technicians in dialysis clinics have their own federal rule: they must be certified by a state or national program, such as the CCHT, within 18 months of being hired. Dialysis employers usually train new technicians themselves before that."
+   ],
+   [
+    "First job",
+    "Most people start as a nursing assistant or a technician trainee on a medical-surgical unit, in an emergency department or in a dialysis clinic. Many hospitals help pay for nursing school, and the job is a common step toward becoming a nurse."
+   ],
+   [
+    "Time it takes",
+    "Usually a few months to a year of training before the first job, depending on the program and whether you start with a nursing assistant certificate."
+   ]
+  ],
+  "qa": [
+   [
+    "What is the difference between a CNA and a patient care technician?",
+    "A certified nursing assistant helps with bathing, moving, feeding and vital signs. A patient care technician does the same work and usually more technical tasks as well, such as drawing blood, running EKGs and removing catheters, depending on the hospital. Many hospitals ask PCTs to hold a nursing assistant certificate too."
+   ],
+   [
+    "How long does it take to become a patient care technician?",
+    "Usually a few months to a year. Many programs run for a semester or two, and people who already hold a nursing assistant certificate can add phlebotomy and EKG training in a few months. Dialysis technicians are trained by their employer and must be certified within 18 months of being hired."
+   ]
+  ]
+ },
  "payments-engineer": {
   "steps": [
    [
@@ -12337,6 +12523,44 @@
    ]
   ]
  },
+ "police-officer": {
+  "steps": [
+   [
+    "Basic requirements",
+    "Most agencies ask for US citizenship, a high school diploma or GED, a valid driver’s license and a clean record; a felony conviction usually disqualifies. The minimum age is often 21, though some agencies hire at 18 or 19. Some agencies ask for college credits, a degree or military service."
+   ],
+   [
+    "Hiring process",
+    "Applicants usually pass a written exam, a physical fitness test, an oral interview, a background investigation, and psychological and medical exams; many agencies add a polygraph. The process often takes several months, so many people apply to more than one agency."
+   ],
+   [
+    "Police academy",
+    "Recruits train at a state-approved academy, usually for several months, in law, patrol procedures, firearms, defensive tactics, emergency driving, first aid and report writing. Some agencies hire recruits first and pay them through the academy; others hire people who have already finished it."
+   ],
+   [
+    "State certification",
+    "After the academy, officers must be certified, or in some states licensed, by the state’s peace officer standards board, often called POST, and many states also require a state exam. Officers who move to another state may need to meet that state’s rules before working there."
+   ],
+   [
+    "Field training",
+    "New officers then ride with field training officers for several months and are evaluated shift by shift. A probation period, often a year, follows before the job is permanent."
+   ],
+   [
+    "Time it takes",
+    "From application to working a patrol shift alone usually takes about a year: months for hiring, several months in the academy and a few more in field training."
+   ]
+  ],
+  "qa": [
+   [
+    "Do you need a college degree to be a police officer?",
+    "Not in most departments. Most ask for a high school diploma or GED, and some ask for a number of college credits, an associate or bachelor’s degree, or military service instead. Federal agencies and some large city and state departments set higher education requirements, and a degree often helps with promotion."
+   ],
+   [
+    "How long is the police academy?",
+    "Usually several months, though length varies by state and agency. Training covers law, patrol, firearms, defensive tactics, driving, first aid and report writing. After graduation, new officers are certified by the state, often after a state exam, and spend several more months in field training before working alone."
+   ]
+  ]
+ },
  "policy": {
   "steps": [
    [
@@ -12584,6 +12808,44 @@
    [
     "Can you work in prediction markets without experience?",
     "Yes, especially in operations, research and support roles. Employers value deep knowledge of politics, sports, economics or weather, careful writing for contract rules, and comfort with data. For trading roles, a strong math or statistics background and experience in sports betting, futures or crypto trading help. A record of your own forecasts can show skill."
+   ]
+  ]
+ },
+ "preschool-teacher": {
+  "steps": [
+   [
+    "Education",
+    "Requirements depend on where you teach. Many child care centers hire with a high school diploma and some early childhood coursework, Head Start asks for at least an associate degree for most teachers, and public pre-K programs usually require a bachelor’s degree and a state teaching license."
+   ],
+   [
+    "CDA credential",
+    "The Child Development Associate credential from the Council for Professional Recognition is a common first step. It asks for 120 hours of early childhood training, 480 hours of work with children, a portfolio, an observation in the classroom and an exam."
+   ],
+   [
+    "State requirements",
+    "Each state licenses child care centers and sets the training lead teachers need. Staff usually need a criminal background check with fingerprints, health and safety training, and often pediatric first aid and CPR. Public school pre-K teachers need the state’s teaching license or certificate."
+   ],
+   [
+    "Degree options",
+    "An associate or bachelor’s degree in early childhood education opens lead teacher, Head Start and public school jobs and often brings higher pay. Many programs include student teaching in a preschool classroom."
+   ],
+   [
+    "First job",
+    "Many start as an assistant teacher or floater at a child care center, then become lead teachers. Experienced teachers can move into Head Start, public pre-K, coaching other teachers or directing a center."
+   ],
+   [
+    "Time it takes",
+    "An assistant job can start within weeks. A CDA usually takes several months to a year, an associate degree about two years and a bachelor’s degree about four."
+   ]
+  ],
+  "qa": [
+   [
+    "Do you need a degree to be a preschool teacher?",
+    "Not always. Many child care centers hire teachers with a high school diploma, some coursework or a CDA credential. Head Start asks for at least an associate degree for most preschool teachers, and half of its teachers nationwide must hold a bachelor’s degree. Public school pre-K usually requires a bachelor’s degree and a state teaching license."
+   ],
+   [
+    "What is a CDA credential?",
+    "The Child Development Associate credential is a national credential for early childhood educators from the Council for Professional Recognition. Candidates complete 120 hours of training and 480 hours of work with children, build a portfolio, are observed in a classroom and pass an exam. Many states and centers accept it for lead teacher jobs."
    ]
   ]
  },
@@ -16054,6 +16316,40 @@
    [
     "Do you need a license to work in sponsorships?",
     "No. There is no license or required certification for sponsorship managers in the US. Employers hire on sales results, contract and activation experience, and contacts in sports, entertainment or events. Sports agents who represent athletes are a different job, regulated by many states and certified by players’ unions."
+   ]
+  ]
+ },
+ "sports-coach": {
+  "steps": [
+   [
+    "Playing and education",
+    "Most coaches played the sport, and many have a bachelor’s degree, often in physical education, kinesiology or sports science. College coaching jobs usually ask for a degree; youth and club coaching often does not."
+   ],
+   [
+    "Safety training",
+    "Most programs require CPR and first aid, concussion training and a background check. Adults who work with minors in Olympic and Paralympic sport organizations must complete SafeSport training, and many schools and clubs require it too."
+   ],
+   [
+    "Coaching certification",
+    "High school coaches usually meet rules set by their state’s high school association or education department, which often include coaching courses such as those from the National Federation of State High School Associations; some states require a coaching permit for coaches who are not teachers. Many sports offer their own coaching licenses."
+   ],
+   [
+    "First job",
+    "Most coaches start as volunteers or assistants in youth leagues, high schools or clubs. College coaches often start as graduate assistants or volunteer assistants, and NCAA Division I coaches must pass a yearly recruiting rules test, and Division II coaches complete yearly rules training, before recruiting off campus."
+   ],
+   [
+    "Moving up",
+    "Coaches build a record, a network and references, then move to head coach, larger programs or college staffs. Many high school coaches are also teachers and coach for a stipend each season."
+   ]
+  ],
+  "qa": [
+   [
+    "Do you need a degree to be a sports coach?",
+    "Not always. Youth and club coaches often need only experience, safety training and a background check. Many high school coaches are teachers with a degree, and college coaching jobs usually ask for a bachelor’s degree. Each state’s high school association sets its own rules for coaches who are not teachers."
+   ],
+   [
+    "What certifications does a sports coach need?",
+    "It depends on the level and the sport. Most programs ask for CPR and first aid, concussion training and a background check. Adults who coach minors in Olympic and Paralympic sport organizations need SafeSport training, high school coaches meet their state association’s course rules, and many sports have their own coaching licenses."
    ]
   ]
  },

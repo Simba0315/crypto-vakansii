@@ -719,6 +719,26 @@
    "Familiarity with message queues, caching and distributed or event-driven system design"
   ]
  },
+ "bank-teller": {
+  "duties": [
+   "Process deposits, withdrawals, check cashing, loan payments and transfers accurately",
+   "Count, balance and secure the cash drawer at the start and end of every shift",
+   "Verify customer identity and check endorsements, holds and signs of fraud or counterfeits",
+   "Complete currency transaction reports and flag unusual activity under Bank Secrecy Act rules",
+   "Answer customer questions in person and by phone and refer them to bankers for other products",
+   "Follow dual control, vault and security procedures, including robbery procedures"
+  ],
+  "must": [
+   "High school diploma or equivalent",
+   "Cash handling or customer service experience, or ability to learn quickly on the job",
+   "Accuracy with numbers and attention to detail",
+   "Ability to pass a background check, as banks require"
+  ],
+  "nice": [
+   "Experience at a bank or credit union teller line",
+   "Fluency in a second language spoken by branch customers"
+  ]
+ },
  "banking-operations": {
   "duties": [
    "Manage day-to-day relationships with partner banks, including regular meetings, escalations and service reviews",
@@ -4178,6 +4198,26 @@
    "Working knowledge of lifecycle marketing, referral programs or search and paid acquisition channels"
   ]
  },
+ "hair-stylist": {
+  "duties": [
+   "Consult with clients about their hair history, goals, upkeep and price before each service",
+   "Cut, color, highlight and style hair, and perform treatments and chemical services",
+   "Clean and disinfect tools and stations between clients under state board rules",
+   "Recommend products and home care routines and book clients’ next appointments",
+   "Build and keep a book of regular clients through great service and follow-up",
+   "Keep to the schedule and keep accurate client records of formulas and services"
+  ],
+  "must": [
+   "Current state cosmetology or hair license",
+   "Skill in cutting, coloring and styling for a range of hair types",
+   "Friendly, clear communication with clients",
+   "Ability to stand for long periods and handle chemicals safely"
+  ],
+  "nice": [
+   "Experience with color correction, extensions or textured hair",
+   "An existing clientele or a portfolio of recent work"
+  ]
+ },
  "hardware-engineer": {
   "duties": [
    "Design schematics and circuit board layouts for digital, analog and power electronics in new products",
@@ -4356,6 +4396,26 @@
   "nice": [
    "Entry-level IT certification such as CompTIA A+ or similar",
    "Experience with user account and device management in a corporate environment"
+  ]
+ },
+ "home-health-aide": {
+  "duties": [
+   "Help clients bathe, dress, groom, use the toilet and eat according to the care plan",
+   "Assist clients with walking and transfers using gait belts and lifts as directed",
+   "Check and record vital signs and remind clients to take their medicines",
+   "Prepare meals, do light housekeeping and laundry and run errands as the plan lists",
+   "Watch for changes in health, skin, mood or behavior and report them to the nurse",
+   "Record each visit and clock in and out through electronic visit verification"
+  ],
+  "must": [
+   "Completion of home health aide training meeting state and federal rules, or a competency evaluation",
+   "Certification or registry listing where the state requires it",
+   "Ability to lift, transfer and assist clients safely",
+   "Ability to pass a background check and the agency’s health screening"
+  ],
+  "nice": [
+   "Certified nursing assistant certification and CPR",
+   "Experience with dementia, hospice or mechanical lifts"
   ]
  },
  "hospitality": {
@@ -5818,6 +5878,26 @@
    "Experience with hydraulic or pneumatic systems testing"
   ]
  },
+ "medical-assistant": {
+  "duties": [
+   "Room patients, take vital signs and record histories, allergies and medication lists",
+   "Assist providers with exams and minor procedures, preparing rooms and sterilizing instruments",
+   "Draw blood, give injections and run EKGs and waived tests as state law and policy allow",
+   "Schedule appointments, process referrals and prior authorizations and answer patient calls",
+   "Clean and restock exam rooms and follow infection control and sharps safety rules",
+   "Document every task accurately in the electronic health record and protect patient privacy"
+  ],
+  "must": [
+   "High school diploma and completion of a medical assistant program, or equivalent experience",
+   "Current Basic Life Support (BLS) certification",
+   "Medical assistant certification such as CMA, RMA, CCMA or NCMA, or ability to earn it",
+   "Ability to follow HIPAA and the tasks state law allows medical assistants to perform"
+  ],
+  "nice": [
+   "Experience in the specialty of the clinic, such as pediatrics or cardiology",
+   "Fluency in a second language spoken by the clinic’s patients"
+  ]
+ },
  "medical-coder": {
   "duties": [
    "Review physician notes, operative reports and test results to assign accurate diagnosis and procedure codes",
@@ -6418,6 +6498,26 @@
    "Background in B2B software, technology or other partner-led industries"
   ]
  },
+ "patient-care-technician": {
+  "duties": [
+   "Take and record vital signs, weights, blood sugar checks and intake and output",
+   "Help patients bathe, eat, use the toilet, turn and walk safely",
+   "Draw blood and perform 12-lead EKGs as trained and as hospital policy allows",
+   "Report changes in a patient’s condition to the registered nurse right away",
+   "Follow fall prevention, isolation and infection control procedures",
+   "Help with admissions, transfers and discharges and keep rooms stocked and clean"
+  ],
+  "must": [
+   "High school diploma or equivalent and completion of a patient care technician or nursing assistant program",
+   "Current Basic Life Support (BLS) certification",
+   "State nursing assistant certification or a national PCT certification, as the hospital requires",
+   "Ability to lift, move and position patients safely"
+  ],
+  "nice": [
+   "Phlebotomy or EKG technician certification",
+   "Hospital or dialysis experience"
+  ]
+ },
  "payments-engineer": {
   "duties": [
    "Build and maintain services that authorize, capture, void and refund card payments through processors and gateways",
@@ -6698,6 +6798,26 @@
    "Welding certification for steam or process piping"
   ]
  },
+ "police-officer": {
+  "duties": [
+   "Patrol assigned areas on foot, by car or by bike to prevent and detect crime",
+   "Respond to emergency and non-emergency calls for service and help people in need",
+   "Enforce traffic and criminal laws, conduct investigations and make lawful arrests",
+   "Write accurate incident, arrest and crash reports and collect and preserve evidence",
+   "Use de-escalation and only the force allowed by law and department policy",
+   "Testify in court and work with residents, schools and businesses on community problems"
+  ],
+  "must": [
+   "High school diploma or equivalent, the citizenship or residency status state law requires, and the minimum age",
+   "State peace officer certification, or completion of the academy and certification after hire",
+   "Valid driver’s license and a background free of disqualifying convictions",
+   "Passing the written, physical, psychological and medical tests the department requires"
+  ],
+  "nice": [
+   "College coursework or a degree in criminal justice or a related field",
+   "Fluency in a language spoken in the community"
+  ]
+ },
  "policy": {
   "duties": [
    "Track proposed bills, regulations and agency guidance that affect the company at federal, state and local levels",
@@ -6836,6 +6956,26 @@
   "nice": [
    "Background in sports, politics, weather or economic data",
    "Experience in market surveillance, compliance or derivatives exchange operations"
+  ]
+ },
+ "preschool-teacher": {
+  "duties": [
+   "Plan and lead play-based activities that meet the state’s early learning standards",
+   "Teach early literacy, math, science and social skills through centers, songs and stories",
+   "Supervise children at all times, keep ratios and follow health and safety routines",
+   "Observe, record and assess each child’s development and share progress with families",
+   "Guide behavior with positive methods and adapt activities for children with special needs",
+   "Keep the classroom clean, organized and ready for licensing and quality rating visits"
+  ],
+  "must": [
+   "Education the state requires for this role, such as a CDA, associate or bachelor’s degree in early childhood",
+   "Ability to pass a criminal background check with fingerprints",
+   "Pediatric first aid and CPR, or willingness to earn them",
+   "Ability to lift children and work on the floor and outdoors"
+  ],
+  "nice": [
+   "Experience with an early childhood curriculum or assessment tool",
+   "Fluency in a language spoken by children’s families"
   ]
  },
  "pricing": {
@@ -8736,6 +8876,26 @@
   "nice": [
    "Network of contacts in sports, esports, music or live events",
    "Knowledge of advertising rules for regulated products such as alcohol, gambling or financial services"
+  ]
+ },
+ "sports-coach": {
+  "duties": [
+   "Plan and run practices that teach skills, tactics and conditioning",
+   "Lead the team in games, choosing lineups and making in-game decisions",
+   "Keep athletes safe, following concussion, heat and emergency action plans",
+   "Follow league, school and athlete protection rules, including reporting abuse",
+   "Communicate with athletes, parents, staff and officials clearly and respectfully",
+   "Track athlete progress and eligibility and help develop each player"
+  ],
+  "must": [
+   "Knowledge of the sport’s skills, rules and coaching methods",
+   "CPR, first aid and concussion training, or willingness to complete them",
+   "Ability to pass a background check and complete required athlete protection training",
+   "Coaching certification the league, school or state association requires"
+  ],
+  "nice": [
+   "Playing or coaching experience at the level of the team",
+   "A degree in physical education, kinesiology or a related field"
   ]
  },
  "sql-developer": {
