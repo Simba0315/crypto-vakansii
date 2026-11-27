@@ -5828,3 +5828,10 @@ main.mjp .mj-data .mjdata .btn{margin:0}
    The theme button draws its one icon through .ic-t; the inline SVG it also carried showed the icon twice (◐◐). */
 header.site .hact .icon,header.site .hact .hmy{border-color:transparent}
 header.site .hact .icon:hover,header.site .hact .hmy:hover{border-color:transparent;background:var(--bg2)}
+/* ---- green words instead of the marker (owner, 27 Nov 2026: «вместо выделения зеленым сделать зеленый цвет прям», variant 1 of
+   three shown to him). The ending of every two-weight heading and every heading's .hl is brand green text, no fill behind it: light
+   theme #1f9d55 (3.2:1 on the page, headings only, large and bold), dark theme and the ink panels #5fd486. The "free" chip keeps its
+   own pill. Body-text .hl (if any) keeps the marker: green text that small would be too faint. ---- */
+:is(.khero h1 .hl,main.sp .khero h1 .hl,.hero.v2 h1 .hl,.sec-head h2.tw b,.sec-head.lst h2.tw b,.kcta h2.tw b:not(.free),.alertf h2.tw b,.guide h2.tw2 b,h1 .hl,h2 .hl){
+  background:none!important;padding:0;margin:0;color:var(--brand)}
+:is(.kpanel.ink,.inkband) :is(h1 .hl,h2.tw b:not(.free),h2.tw2 b,h2 .hl){color:var(--pop)!important}
