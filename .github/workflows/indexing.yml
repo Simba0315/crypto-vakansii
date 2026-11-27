@@ -18,6 +18,7 @@ on:
 
 permissions:
   contents: read
+  actions: write      # to start the next run when this one ends (the chain below)
 
 # one at a time, so two runs never start from the same record and send the same addresses
 concurrency:
@@ -27,7 +28,11 @@ concurrency:
 jobs:
   notify:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # 27 Nov 2026: in 4 hours GitHub started not one of the scheduled runs above (update.yml's own hourly schedule also fires only
+    # every 3-4 hours on this repository). So one run now lives up to about 5.5 hours: every 30 minutes it sends what is due of the
+    # day's quota, saves the record, and at the end starts the next run itself. The schedule stays as a second way in; a run that
+    # starts while another lives waits in the queue (concurrency above), and update.yml restarts the chain after each deploy.
+    timeout-minutes: 355
     steps:
       - uses: actions/checkout@v4
         with:
@@ -42,15 +47,25 @@ jobs:
           path: data/indexing_sent.json
           key: indexing-sent-${{ github.run_id }}
           restore-keys: indexing-sent-
-      - name: Tell Google about the newest jobs
+      - name: Tell Google about the newest jobs, every 30 minutes for about 5.5 hours
         env:
           GOOGLE_INDEXING_KEY: ${{ secrets.GOOGLE_INDEXING_KEY }}
           # Google's daily quota; unset means its default, 200. Set the repository variable when Google grants more.
           HRN_INDEXING_DAILY: ${{ vars.HRN_INDEXING_DAILY }}
-        run: python3 indexing.py --live
+        run: |
+          for i in $(seq 1 11); do
+            echo "== round $i, $(date -u +%H:%M) UTC"
+            python3 indexing.py --live || echo "round $i failed; the next round tries again"
+            [ "$i" -lt 11 ] && sleep 1800
+          done
       - name: Keep what was sent
         if: always() && hashFiles('data/indexing_sent.json') != ''
         uses: actions/cache/save@v4
         with:
           path: data/indexing_sent.json
           key: indexing-sent-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Start the next run
+        if: always() && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run indexing.yml --repo "${{ github.repository }}" --ref main || echo "could not start the next run"
