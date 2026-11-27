@@ -5271,6 +5271,7 @@ table.adm-log td:last-child{min-width:280px}
   main.srch #fwrap .morefilters .chipbtn{min-height:44px}
   .tabs .tab,.shot-tabs a{min-height:44px;display:inline-flex;align-items:center}
   .btn.sm{min-height:44px;padding:0 18px;font-size:15px;display:inline-flex;align-items:center;justify-content:center}
+  main td a:not(.btn){display:inline-block;padding:11px 0;margin:-11px 0}      /* a link in a table row (salaries, companies, rankings) was 17 px high: the tap area grows, the row does not */
   .lact a.btn.primary.sm{padding:5px 5px 5px 18px}
   .tablewrap select,main select,main input[type=text],main input[type=search],main input[type=email],main input[type=number],main input[type=url],main input[type=tel],main input:not([type]){min-height:44px}
   main .anch,main.lp .anch{gap:4px 22px;padding:0 20px;margin-left:-20px;margin-right:-20px;border-bottom:1px solid var(--line)}
