@@ -330,6 +330,9 @@ skills; My jobs, the resume match checker and For you save them), `hrn_alert_on`
 up"). "New today" needs the time we first saw a job: `search_engine.seen_at()` (from `first_seen_at`), row field 18 of the API and field
 15 of `data/index.json` (only in a job's first week), `j[28]` in site.js. "H-1B sponsor" reads `data/h1b-co.json` ({company: [certified
 LCAs, fiscal year]}). Tests: the fit block at the end of `tools_test.js` cuts these functions out of site.js.
+"Did you apply?" (27 Nov 2026): pressing Apply on a job page keeps the job in sessionStorage (`hrn_apply_ask`); back in the tab within 2
+hours, a small card in the corner asks once per job (`hrn_apply_asked`; `hrn_apply_never` stops it; rule `askApplied()`): Yes marks it
+Applied in `hrn_jobs` and offers a follow-up day 7 days on (`fu` in the job's record; `followDue()` puts a dot on the header's My jobs).
 
 ## Where the jobs could also come from (`SOURCES_RESEARCH.md`)
 

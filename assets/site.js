@@ -557,6 +557,14 @@
     if (h && h[0] > 0) out.push(['fitb h1b', 'H-1B sponsor', h[0].toLocaleString('en-US') + ' certified H-1B ' + (h[0] === 1 ? 'filing' : 'filings') + ', fiscal year ' + h[1] + ', US Department of Labor']);
     return out.slice(0, max || 2);
   }
+  function askApplied(me, now, never, asked, rec) {   // ask "Did you apply?" about the job whose Apply was pressed (me, sessionStorage)?
+    // only after a real press that took the visitor away (me.gone), within 2 hours, once per job, never after "Don't ask again", and not when
+    // My jobs already has it past "Saved"
+    return !!(me && me.s && me.gone && now - me.at <= 2 * 36e5 && now >= me.at && !never && !(asked && asked[me.s]) && !(rec && rec.st && rec.st !== 'saved'));
+  }
+  function followDue(all, now) {   // the applied jobs of My jobs whose follow-up day ("Remind me to follow up in 7 days") has come
+    return Object.keys(all || {}).filter(function (k) { var r = all[k]; return !!(r && r.fu && r.fu <= now && r.st === 'applied'); });
+  }
   // saved resumes (hrn_resumes): the list, the primary one, the skills a text names, and saving one (null when five are kept already)
   function cvList() {
     var x = get('hrn_resumes', []);
@@ -1398,7 +1406,14 @@
     set('hrn_jobs', jobs);
   }
   var badge = $('saved-n');
-  function paint() { if (badge) { var n = Object.keys(jobs).length; badge.textContent = n ? n : ''; } }
+  function paint() {
+    if (badge) { var n = Object.keys(jobs).length; badge.textContent = n ? n : ''; }
+    var due = followDue(jobs, Date.now()).length;          // a follow-up whose day has come: a dot on the header's My jobs (drawn over it, nothing moves)
+    Array.prototype.forEach.call(document.querySelectorAll('a.hmy'), function (a) {
+      a.classList.toggle('due', !!due);
+      if (due) a.setAttribute('title', due === 1 ? 'A follow-up is due today' : due + ' follow-ups are due'); else a.removeAttribute('title');
+    });
+  }
   function store() { set('hrn_jobs', jobs); paint(); }
   paint();
   var profile = get('hrn_profile', { skills: [], lvl: '', cat: '', sal: 0, remote: false });
@@ -1587,6 +1602,103 @@
   HRN.bindJob = bindJob;
   bindJob(document);
   near();
+
+  /* ---------- "Did you apply?" (27 Nov 2026, the owner after Jobright). Apply opens the employer's site in a new tab; the press is kept in this
+     tab's sessionStorage (hrn_apply_ask: slug, title, company, time). When the visitor comes back to this tab within 2 hours, a small card in
+     the corner asks once: "Yes, I applied" marks it Applied in My jobs with today's date and offers a reminder to follow up in 7 days (a day
+     kept in My jobs: the row shows it and the header's My jobs gets a dot when it comes) and the follow-up email writer; "Not yet" keeps it
+     as Saved; "Don't ask again" (hrn_apply_never) stops the question. A job is asked about once (hrn_apply_asked). Nothing without a press,
+     so a crawler never sees it; the card floats over the page, so nothing moves; Esc and the close button shut it. ---------- */
+  (function () {
+    var KEY = 'hrn_apply_ask';
+    var ss = function (v) {
+      try {
+        if (v === undefined) return JSON.parse(sessionStorage.getItem(KEY) || 'null');
+        if (v === null) sessionStorage.removeItem(KEY); else sessionStorage.setItem(KEY, JSON.stringify(v));
+      } catch (e) {}
+      return null;
+    };
+    document.addEventListener('click', function (ev) {
+      var a = ev.target.closest && ev.target.closest('a#apply, .jstick a.go, .mbar a');
+      if (!a || ev.button) return;
+      var scope = a.closest('.pane') || document, save = scope.querySelector('#save');
+      if (!save) return;
+      var s = save.getAttribute('data-slug'), rec = jobs[s];
+      if (get('hrn_apply_never', 0) || get('hrn_apply_asked', {})[s] || (rec && rec.st !== 'saved')) return;
+      ss({ s: s, t: save.getAttribute('data-title'), c: save.getAttribute('data-company'), l: scope.querySelector('.jhead .ava.has') ? 1 : 0, at: Date.now(), gone: 0 });
+    }, true);
+    var away = function () { var me = ss(); if (me && !me.gone) { me.gone = 1; ss(me); } };
+    var labels = function (slug) {             // the job page's own buttons say what My jobs now holds
+      var sb = document.getElementById('save'), ab = document.getElementById('applied'), r = jobs[slug];
+      if (!sb || sb.getAttribute('data-slug') !== slug) return;
+      sb.textContent = r ? 'Saved ✓' : 'Save job'; sb.setAttribute('aria-pressed', r ? 'true' : 'false');
+      if (ab) { var d = r && r.st !== 'saved'; ab.textContent = d ? 'Applied ✓' : 'Mark as applied'; ab.setAttribute('aria-pressed', d ? 'true' : 'false'); }
+    };
+    var show = function (me) {
+      var old = document.querySelector('.applyask'); if (old) old.remove();
+      var was = document.activeElement, box = document.createElement('div');
+      box.className = 'applyask'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'false'); box.setAttribute('aria-labelledby', 'aa-h');
+      box.innerHTML = '<button class="aa-x" type="button" aria-label="Close" data-aa="x">×</button>' +
+        '<p class="aa-h" id="aa-h">Did you apply to <b>' + esc(me.t) + '</b> at ' + esc(me.c) + '?</p>' +
+        '<p class="aa-act"><button class="btn primary sm" type="button" data-aa="yes">Yes, I applied</button><button class="btn ghost sm" type="button" data-aa="no">Not yet</button>' +
+        '<button class="linkbtn" type="button" data-aa="never">Don’t ask again</button></p>';
+      document.body.appendChild(box);
+      var key = function (ev) { if (ev.key === 'Escape') close(); };
+      var close = function () {
+        box.remove(); document.removeEventListener('keydown', key);
+        if (was && was.focus && document.body.contains(was)) try { was.focus({ preventScroll: true }); } catch (e) {}
+      };
+      document.addEventListener('keydown', key);
+      var first = box.querySelector('[data-aa="yes"]'); try { first.focus({ preventScroll: true }); } catch (e) {}
+      box.addEventListener('click', function (ev) {
+        var b = ev.target.closest && ev.target.closest('[data-aa]'); if (!b) return;
+        var what = b.getAttribute('data-aa'), rec = jobs[me.s], now = Date.now();
+        if (what === 'x') { close(); return; }
+        if (what === 'never') { set('hrn_apply_never', { at: Date.now() }); close(); return; }
+        if (what === 'no') {
+          if (!rec) jobs[me.s] = { t: me.t, c: me.c, l: me.l, st: 'saved', at: now, note: '' };
+          store(); labels(me.s);
+          box.querySelector('.aa-h').innerHTML = 'Kept in <a href="' + P + '/my-jobs/">My jobs</a> as saved, so you can come back to it. We will not ask about this job again.';
+          box.querySelector('.aa-act').innerHTML = '';
+          box.querySelector('.aa-x').focus();
+          return;
+        }
+        if (what === 'yes') {
+          jobs[me.s] = { t: me.t, c: me.c, l: me.l, st: 'applied', at: rec ? rec.at : now, sa: now, note: rec ? rec.note || '' : '' };
+          store(); labels(me.s);
+          box.querySelector('.aa-h').innerHTML = 'Saved to <a href="' + P + '/my-jobs/">My jobs</a> as applied, today.';
+          box.querySelector('.aa-act').innerHTML = '<button class="btn ghost sm" type="button" data-aa="fu" aria-pressed="false">Remind me to follow up in 7 days</button>' +
+            '<a class="aa-l" href="' + P + '/tools/follow-up-email/">Write the follow-up email</a>';
+          box.querySelector('[data-aa="fu"]').focus();
+          return;
+        }
+        if (what === 'fu' && rec) {
+          var on = b.getAttribute('aria-pressed') !== 'true';
+          if (on) rec.fu = now + 7 * 864e5; else delete rec.fu;
+          store();
+          b.setAttribute('aria-pressed', on ? 'true' : 'false');
+          b.textContent = on ? '✓ Reminder in My jobs for ' + new Date(rec.fu).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Remind me to follow up in 7 days';
+        }
+      });
+    };
+    var back = function () {
+      if (document.visibilityState === 'hidden') { away(); return; }
+      var me = ss();
+      if (!me || !me.gone) return;              // the tab never left: no employer's page was opened
+      ss(null);
+      var asked = get('hrn_apply_asked', {}) || {};
+      if (!askApplied(me, Date.now(), get('hrn_apply_never', 0), asked, jobs[me.s])) return;
+      asked[me.s] = Date.now();
+      var ks = Object.keys(asked); if (ks.length > 300) ks.sort(function (a, b) { return asked[a] - asked[b]; }).slice(0, ks.length - 300).forEach(function (k) { delete asked[k]; });
+      set('hrn_apply_asked', asked);
+      show(me);
+    };
+    document.addEventListener('visibilitychange', back);
+    window.addEventListener('blur', away);
+    window.addEventListener('focus', back);
+    window.addEventListener('pageshow', back);
+    back();                                     // the employer's page opened in this tab and the visitor came back
+  })();
 
   /* ---------- "jobs near me": the list for the visitor's place. Country from the time zone; nearest city only if the visitor allows location (worked out here, sent nowhere) ---------- */
   function nearMe() {
@@ -2145,6 +2257,7 @@
       $('mj-list').innerHTML = shownKeys.map(function (k) {
         var r = jobs[k], d = daysSince(r.sa || r.at);
         var since = r.st === 'applied' ? ' · applied ' + (d < 1 ? 'today' : d + (d === 1 ? ' day ago' : ' days ago')) : '';
+        if (r.st === 'applied' && r.fu) since += r.fu <= Date.now() ? ' · <a class="fu-due" href="' + P + '/tools/follow-up-email/">follow up today: write the email</a>' : ' · follow up on ' + esc(when(r.fu));
         var gone = openSet && !openSet[k] ? ' <span class="pill warn">Closed by the employer</span>' : '';
         return '<li class="trow" data-s="' + esc(k) + '">' + avatar(r.c, r.l ? slugOf(r.c) : '', false) +
           '<div class="main"><a class="tt" href="' + P + '/job/' + encodeURIComponent(k) + '/">' + esc(r.t) + '</a>' + gone + '<span class="js">' + esc(r.c) + ' · added ' + esc(when(r.at)) + since + '</span>' +
@@ -2224,7 +2337,7 @@
       $('mj-unhide').addEventListener('click', function () { hidden = {}; set('hrn_hidden', hidden); mute.c = {}; mute.w = []; set('hrn_mute', mute); hiddenNote.hidden = true; });
     }
     // your data: a copy to keep, a way to move it to another device, and a way to wipe it
-    var KEYS = ['hrn_jobs', 'hrn_searches', 'hrn_follow', 'hrn_profile', 'hrn_mute', 'hrn_hidden', 'hrn_seen', 'hrn_resume', 'hrn_resume_set', 'hrn_resumes', 'hrn_alert_on'], dataNote = $('mj-data-note'), fileIn = $('mj-file');
+    var KEYS = ['hrn_jobs', 'hrn_searches', 'hrn_follow', 'hrn_profile', 'hrn_mute', 'hrn_hidden', 'hrn_seen', 'hrn_resume', 'hrn_resume_set', 'hrn_resumes', 'hrn_alert_on', 'hrn_apply_never', 'hrn_apply_asked'], dataNote = $('mj-data-note'), fileIn = $('mj-file');
     if ($('mj-backup')) {
       $('mj-backup').addEventListener('click', function () {
         var data = {}; KEYS.forEach(function (k) { var v = get(k, null); if (v != null) data[k] = v; });

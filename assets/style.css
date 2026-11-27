@@ -5842,3 +5842,20 @@ main.mjp .mj-me .sec{margin-top:44px}
 .cvadd label{display:block;margin:10px 0 4px;font-size:13.5px;font-weight:600}
 .cvadd input,.cvadd textarea{width:100%;font:inherit;font-size:14.5px;padding:8px 10px;border:1px solid var(--line2);border-radius:8px;background:var(--card);color:var(--text)}
 .cvadd .mj-act{margin-top:10px}
+/* "Did you apply?" (site.js): a small card in the corner after the visitor comes back from the employer's page; it floats over the page,
+   so nothing moves. On a phone it stands above the job page's Apply bar. A dot on the header's My jobs when a follow-up is due. */
+.applyask{position:fixed;right:20px;bottom:20px;z-index:80;width:min(400px,calc(100vw - 32px));padding:16px 18px 16px;border:1px solid var(--line2);border-radius:18px;background:var(--card);color:var(--text);box-shadow:0 14px 44px rgba(0,0,0,.18)}
+.applyask .aa-h{margin:0 34px 12px 0;font-size:15.5px;line-height:1.45}
+.applyask .aa-h a{color:var(--text);text-decoration:underline;text-decoration-color:var(--brand);text-underline-offset:3px}
+.applyask .aa-act{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;margin:0}
+.applyask .aa-act:empty{display:none}
+.applyask .aa-act .btn{margin:0}
+.applyask .aa-act .linkbtn{font-size:13.5px;color:var(--muted)}
+.applyask .aa-l{font-size:14px;color:var(--text);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px}
+.applyask .aa-x{position:absolute;top:8px;right:8px;width:36px;height:36px;border:0;border-radius:50%;background:none;color:var(--muted);font:400 22px/36px system-ui,sans-serif;cursor:pointer}
+.applyask .aa-x:hover{background:var(--bg2);color:var(--text)}
+.applyask .btn[aria-pressed=true]{border-color:transparent;background:var(--green-soft);color:var(--green)}
+@media(max-width:560px){.applyask{left:12px;right:12px;bottom:84px;width:auto}}
+.hmy.due{position:relative}
+.hmy.due::after{content:"";position:absolute;top:-3px;right:-3px;width:10px;height:10px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 2px var(--bg)}
+a.fu-due{color:var(--amber);font-weight:600}

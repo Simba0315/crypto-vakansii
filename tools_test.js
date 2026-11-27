@@ -1424,8 +1424,8 @@ eq('severance: no salary', T.severance({ years: '3' }), null); eq('severance: ne
     const end = src.indexOf('\n  }\n', at);
     return src.slice(at + 1, end + 4);
   };
-  const F = new Function(['fitPlace', 'fitCat', 'fitAnswers', 'fitOf', 'fitNew', 'fitBadges'].map(cut).join('\n') +
-    '\nreturn { fitPlace: fitPlace, fitAnswers: fitAnswers, fitOf: fitOf, fitNew: fitNew, fitBadges: fitBadges };')();
+  const F = new Function(['fitPlace', 'fitCat', 'fitAnswers', 'fitOf', 'fitNew', 'fitBadges', 'askApplied', 'followDue'].map(cut).join('\n') +
+    '\nreturn { fitPlace: fitPlace, fitAnswers: fitAnswers, fitOf: fitOf, fitNew: fitNew, fitBadges: fitBadges, askApplied: askApplied, followDue: followDue };')();
   // a row as site.js keeps it: [0 slug, 1 title, 2 company, 3 place, 4 remote, 5 field, 6 level, 7 skills, 8 pay text, ... 13 top of the pay in USD,
   // 14 place slugs, ... 16 posted yyyymmdd, ... 20 remote anywhere, ... 25 hybrid, ... 28 first seen, minutes since 1970]
   const row = (o) => { const j = []; j[0] = 'a-job'; j[1] = o.title || 'Data Analyst'; j[2] = o.co || 'Acme'; j[3] = ''; j[4] = o.remote ? 1 : 0; j[5] = o.cat || 'data-research';
@@ -1480,6 +1480,19 @@ eq('severance: no salary', T.severance({ years: '3' }), null); eq('severance: ne
   eq('badges: one answer only gives no fit mark', F.fitBadges(fresh, F.fitAnswers({ where: 'remote' }), H1B, now, 2).map((x) => x[1]), ['New today · apply early', 'H-1B sponsor']);
   eq('badges: a contradiction gives the quiet look', F.fitBadges(row({ cat: 'sales' }), A, {}, now, 2)[0].slice(0, 2), ['fitb no', 'Fits you 1/5']);
   eq('badges: nothing to say', F.fitBadges(row({ co: 'Small' }), null, H1B, now, 2), []);
+  // "Did you apply?": only after a real press that took the visitor away, within 2 hours, once per job, never after "Don't ask again"
+  const press = { s: 'a-job', t: 'Data Analyst', c: 'Acme', at: now - 20 * 60000, gone: 1 };
+  eq('apply ask: back 20 minutes after pressing Apply', F.askApplied(press, now, 0, {}, null), true);
+  eq('apply ask: the tab never left (no employer page opened)', F.askApplied(Object.assign({}, press, { gone: 0 }), now, 0, {}, null), false);
+  eq('apply ask: back after 3 hours', F.askApplied(Object.assign({}, press, { at: now - 3 * 36e5 }), now, 0, {}, null), false);
+  eq('apply ask: "Don\'t ask again"', F.askApplied(press, now, { at: 1 }, {}, null), false);
+  eq('apply ask: asked about this job before', F.askApplied(press, now, 0, { 'a-job': now - 864e5 }, null), false);
+  eq('apply ask: already applied in My jobs', F.askApplied(press, now, 0, {}, { st: 'applied' }), false);
+  eq('apply ask: saved only, so asked', F.askApplied(press, now, 0, {}, { st: 'saved' }), true);
+  eq('apply ask: no press at all (a crawler)', F.askApplied(null, now, 0, {}, null), false);
+  const mine = { a: { st: 'applied', fu: now - 1000 }, b: { st: 'applied', fu: now + 864e5 }, c: { st: 'interview', fu: now - 1000 }, d: { st: 'applied' } };
+  eq('follow-up: due only for applied jobs whose day has come', F.followDue(mine, now), ['a']);
+  eq('follow-up: nothing saved', F.followDue(null, now), []);
 }
 
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
