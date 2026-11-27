@@ -1,4 +1,4 @@
-/* Your account, for job seekers and employers alike: sign in (email and password, or Google), job alerts, saved jobs on every device,
+/* Your account, for job seekers and employers alike: sign in (email and password; Google and LinkedIn only while switched on), job alerts, saved jobs on every device,
    your resumes, your resume for employers (only if you tick it), and for employers: free posting, what a job brought, company pages,
    the team, promotions and receipts. Everything you keep here can be downloaded or deleted in Settings. Talks to the API in data-api;
    the rules behind each part are in server/README.md. Nothing here needs a person on our side: a paid order switches itself on.
@@ -857,7 +857,7 @@
         '<div class="acc-two">' + field('Current password', 'current', 'type="password" autocomplete="current-password" required data-need="Enter your current password."') +
         field('New password', 'password', 'type="password" autocomplete="new-password" required minlength="8"', 'At least 8 characters.') + '</div>' + err +
         '<p class="acc-btns"><button class="btn primary" type="submit">Save the new password</button><button class="linkbtn" type="button" id="acc-pass">Forgot it? Email me a link</button></p></form></dd></div>'
-      : '<div><dt>Password</dt><dd><span>' + (me.has_password === false ? 'None yet: you sign in with Google or LinkedIn. To set one, we send a link to your email.' :
+      : '<div><dt>Password</dt><dd><span>' + (me.has_password === false ? 'None yet: you sign in with ' + ([pub.google === 'on' ? 'Google' : '', pub.linkedin === 'on' ? 'LinkedIn' : ''].filter(Boolean).join(' or ') || 'a linked account') + '. To set one, we send a link to your email.' :
         'To change it, we send a link to your email. Opening it lets you choose a new password and signs out every browser.') + '</span><button class="btn ghost sm" type="button" id="acc-pass">Send me the link</button></dd></div>';
     var two = me.two_step === undefined ? '' : '<div><dt>Two-step sign-in</dt><dd><span>' + (me.two_step ? state('live', 'On') + ' A sign-in with your password also asks for a code we email to you.' :
         'Off. Switch it on, and a sign-in with your password also asks for a code we email to you: a stolen password alone is then not enough.') + '</span>' +

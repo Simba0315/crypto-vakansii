@@ -12872,7 +12872,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
         + h2p("Accounts for employers and job seekers: what we keep")
         + "<p>Searching and applying need no account. If you open one, we keep your email address; your password as a salted hash (PBKDF2), never the password itself; "
           "a company name and the company domain the account is tied to, and how that domain was proved (an email on it, a DNS record or a file); "
-          "the name, member id and verified email LinkedIn gives us if you choose to attach a LinkedIn profile; the address, name and account id Google gives us if you sign in with Google; "
+          "the name, member id and verified email LinkedIn gives us if you choose to attach a LinkedIn profile; <span data-if-google hidden>the address, name and account id Google gives us if you sign in with Google; </span>"
           "the saved jobs, statuses and searches you choose to keep in sync between your devices; the colleagues you add to your company’s team; the jobs you post, with the notes of the person who reviewed them; "
           "the company pages you claim; and how many times a month you used paid AI tools, if you have them (counts only, never what you sent).</p>"
           "<p>To keep accounts safe we also keep a hash of the session key while you are signed in (30 days at most), one-time links to confirm an address, set a new password or sign in by email "
@@ -14699,7 +14699,7 @@ tick();setInterval(tick,20000);setTimeout(function(){{location.reload()}},360000
 
     lap('---- /post-a-job/')
     # ---- /post-a-job/
-    steps = ('<ol class="steps"><li><b>Create an employer account.</b> With your work email, or with Google.</li>'
+    steps = ('<ol class="steps"><li><b>Create an employer account.</b> With your work email<span data-if-google hidden>, or with Google</span>.</li>'
              "<li><b>Paste the job.</b> Title, link to apply, location, description. We open the link to check the job is really there.</li>"
              "<li><b>A standard listing is free.</b> It goes live after the check, at the next hourly update. To keep it higher, add a boost and pay at the crypto checkout (USDT, BTC, ETH and other coins) or with credits.</li>"
              "<li><b>A boost switches on by itself</b> once the network confirms the payment, at once when paid with credits. When its 30 days end, the job goes back to a standard listing: nothing renews and nothing more is charged.</li></ol>")

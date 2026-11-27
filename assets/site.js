@@ -2984,3 +2984,15 @@
   document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') hide(); });
   addEventListener('scroll', function () { if (cur) hide(); }, { passive: true });
 })();
+
+/* ---------- "or with Google" (27 Nov 2026): a page says it only while Google sign-in is switched on. The owner has not created the
+   Google sign-in client yet, so the server answers google: "off" in GET /api/public/products (server/src/worker.js) and the account
+   page shows no Google button; the words in [data-if-google] stay hidden until the same answer says "on". ---------- */
+(function () {
+  var els = document.querySelectorAll('[data-if-google]'), a = document.getElementById('hsign');
+  var api = a ? (a.getAttribute('data-api') || '').replace(/\/+$/, '') : '';
+  if (!els.length || !api || !window.fetch) return;
+  fetch(api + '/api/public/products').then(function (r) { return r.json(); }).then(function (p) {
+    if (p && p.google === 'on') Array.prototype.forEach.call(els, function (el) { el.hidden = false; });
+  }).catch(function () {});
+})();
