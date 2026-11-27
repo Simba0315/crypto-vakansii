@@ -754,3 +754,22 @@ plain HTML, so the page is readable without the map.
 - "Save this resume to My jobs" calls `HRN.cvSave` (site.js, `hrn_resumes`) with the id `rb-<resume id>`, so saving again updates it.
 - No view counts or "most popular" badges on the templates: nothing counts views. Item 6 of backlog/resume-cvmaker-brief.md (new job
   examples: medical assistant, police officer, bank teller...) needs new roles in roles_info.py first; not done.
+
+## The Android app (27 Nov 2026)
+
+- **What it is:** a Trusted Web Activity, package `com.jobseveryhour.app`, version 1.0.0 (code 1), made by the PWABuilder cloud packager
+  (`https://pwabuilder-cloudapk.azurewebsites.net`, `POST /enqueuePackageJob` with the AndroidPackageOptions JSON, then `GET /getPackageJob`
+  and `GET /downloadPackageZip` with `Authorization: Bearer <accessToken>` from the enqueue receipt; options are in pwa-builder/PWABuilder,
+  `apps/pwabuilder-google-play/models/androidPackageOptions.ts`). Name "Jobs Every Hour", launcher name "JobsEveryHour", start URL `/`,
+  status and navigation bar `#121110` (the manifest's theme_color), splash `#ffffff`, icon `/brand/icon-512.png`, fallback Custom Tabs,
+  notifications off, minSdk 24. Shortcuts: Remote jobs, Jobs near me, Newest jobs, Resume builder.
+- **The signing key** is on the owner's Mac only, in `~/.config/jobseveryhour/android/` (the keystore and the key info file with its
+  passwords, alias `jobseveryhour`). Never in the repository. Losing it means a Galaxy Store update cannot be signed. The packager made
+  its own passwords (the key info file is the one that counts). A new version: the same packager with `signingMode: "mine"`, the keystore
+  as a `data:` base64 string and those passwords, a higher `appVersionCode`.
+- **Certificate SHA-256:** `BA:6E:6E:7D:A1:E9:BA:34:DF:2E:67:04:27:47:E1:A9:4C:BB:34:37:9B:69:DD:2E:E8:8B:65:2B:7F:D7:C0:90` (not secret).
+  It is in `config.json` `android_app.sha256`; `build.py` writes `/.well-known/assetlinks.json` from it and `check.py` fails the build if
+  the file or the manifest's id, description, categories, shortcuts or screenshots go missing. When the app goes to Google Play, Play signs
+  it with its own key: add that certificate's SHA-256 (Play Console, App signing) to the list, keep the current one.
+- **Store screenshots** for the manifest are `assets/brand/app-*.jpg` (1080 x 1920, live pages on a 360 px phone). The 360 px header fix
+  at the end of style.css came from them: at that width (most Galaxy phones) the menu button was cut by 3 px.

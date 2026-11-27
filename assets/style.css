@@ -5819,3 +5819,7 @@ main.mjp .mj-data .mjdata-t{margin:0 0 14px;color:var(--muted);max-width:54ch}
 main.mjp .mj-data .mjdata{display:flex;flex-wrap:wrap;gap:8px;margin:0}
 main.mjp .mj-data .mjdata .btn{margin:0}
 @media(max-width:720px){main.mjp .mj-acts{margin-left:0}main.mjp .mj-grid .sec,main.mjp .mj-me .sec{margin-top:40px}}
+
+/* ---- the header at 360 px, the width of most Samsung Galaxy phones and of the Android app on them (27 Nov 2026): logo, saved jobs,
+   Sign in and the menu button needed 3 px more than the row has, so the menu button was cut at the right edge ---- */
+@media(max-width:380px){header.site .wrap{gap:6px}.hact{gap:4px}.hsign{padding:0 11px}.logo img{height:22px}}

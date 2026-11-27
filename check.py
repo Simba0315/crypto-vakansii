@@ -422,6 +422,49 @@ else:
         for csv_ in ("ghost-jobs.csv", "ghost-jobs-employers.csv"):
             if f"{FULL}/data/{csv_}" not in got_: fails["ghost jobs dataset"][f"no named text/csv DataDownload for {csv_}"] += 1
             if not (SITE / "data" / csv_).is_file(): fails["ghost jobs dataset"][f"data/{csv_} was not built"] += 1
+# The Android app (27 Nov 2026): the app com.jobseveryhour.app opens the site without the browser's address bar only while
+# /.well-known/assetlinks.json names it and its certificate (config.json "android_app"), and the store listing and Chrome's install sheet
+# read the manifest's id, description, categories, shortcuts and screenshots. None of it may quietly disappear.
+counts["android app"] = 1
+aa_cfg = CFG.get("android_app") or {}
+if not (aa_cfg.get("package") and aa_cfg.get("sha256")): fails["android app"]["config.json has no android_app package and sha256"] += 1
+al_f = SITE / ".well-known" / "assetlinks.json"
+if not al_f.is_file(): fails["android app"][".well-known/assetlinks.json was not built"] += 1
+else:
+    try: al_ = json.loads(al_f.read_text(encoding="utf-8"))
+    except ValueError: al_ = None; fails["android app"]["assetlinks.json does not parse"] += 1
+    ok_ = [x_ for x_ in (al_ if isinstance(al_, list) else []) if isinstance(x_, dict)
+           and "delegate_permission/common.handle_all_urls" in (x_.get("relation") or [])
+           and (x_.get("target") or {}).get("namespace") == "android_app" and (x_.get("target") or {}).get("package_name") == aa_cfg.get("package")]
+    if not ok_: fails["android app"]["assetlinks.json does not delegate handle_all_urls to the app's package"] += 1
+    fps_ = [f_ for x_ in ok_ for f_ in (x_["target"].get("sha256_cert_fingerprints") or [])]
+    if not fps_ or any(not re.fullmatch(r"(?:[0-9A-F]{2}:){31}[0-9A-F]{2}", f_) for f_ in fps_): fails["android app"]["assetlinks.json fingerprints missing or not SHA-256 AA:BB:..."] += 1
+    if set(fps_) != set(aa_cfg.get("sha256") or []): fails["android app"]["assetlinks.json fingerprints differ from config.json"] += 1
+mf_f = SITE / "manifest.json"
+try: mf_ = json.loads(mf_f.read_text(encoding="utf-8")) if mf_f.is_file() else {}
+except ValueError: mf_ = {}; fails["android app"]["manifest.json does not parse"] += 1
+for k_ in ("name", "short_name", "start_url", "scope", "display", "background_color", "theme_color", "icons", "id", "description", "categories", "shortcuts", "screenshots"):
+    if not mf_.get(k_): fails["android app"][f"manifest.json has no {k_}"] += 1
+if mf_ and not {"business", "productivity"} <= set(mf_.get("categories") or []): fails["android app"]["manifest.json categories lack business and productivity"] += 1
+if mf_ and not any(i_.get("sizes") == "512x512" and i_.get("type") == "image/png" for i_ in mf_.get("icons") or []): fails["android app"]["manifest.json has no 512x512 PNG icon"] += 1
+sc_urls_ = [s_.get("url", "") for s_ in mf_.get("shortcuts") or []]
+for want_ in ("/remote/", "/jobs-near-me/", "/new/", "/resume/"):
+    if P + want_ not in sc_urls_: fails["android app"][f"manifest.json has no shortcut to {want_}"] += 1
+for s_ in mf_.get("shortcuts") or []:
+    if not (s_.get("name") and s_.get("icons")): fails["android app"]["a manifest shortcut without a name or an icon (Android skips it)"] += 1
+    if not exists(s_.get("url", "")): fails["android app"][f"a manifest shortcut points to a page that was not built ({s_.get('url')})"] += 1
+    for i_ in s_.get("icons") or []:
+        if not exists(i_.get("src", "")): fails["android app"]["a shortcut icon that was not built"] += 1
+shots_ = mf_.get("screenshots") or []
+if mf_ and len([x_ for x_ in shots_ if x_.get("form_factor") == "narrow"]) < 4: fails["android app"]["manifest.json has fewer than 4 narrow screenshots"] += 1
+for x_ in shots_:
+    if not exists(x_.get("src", "")) or not re.fullmatch(r"\d+x\d+", x_.get("sizes", "")) or not x_.get("type"): fails["android app"][f"a manifest screenshot not built or without sizes/type ({x_.get('src')})"] += 1
+# /privacy/ says what the MCP connector receives and keeps (27 Nov 2026, asked for by a connector directory review)
+counts["privacy"] = 1
+pv_f = SITE / "privacy" / "index.html"
+pv_ = pv_f.read_text(encoding="utf-8", errors="replace") if pv_f.is_file() else ""
+if 'id="mcp"' not in pv_ or "MCP connector" not in pv_: fails["privacy"]["no section on the MCP connector"] += 1
+elif not all(w_ in pv_ for w_ in ("do not store those words", "read-only", "14 days")): fails["privacy"]["the MCP section lost what it receives, keeps or can do"] += 1
 print(f"checked {len(sample)} pages ({len(others)} non-job pages, {len(sample) - len(others)} job pages sampled" + (", built from records" if STORE else "") + ")")
 for t in sorted(counts):
     bad = fails[t]

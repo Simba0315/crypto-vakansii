@@ -12862,6 +12862,15 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
     api_on = bool(CFG["api_url"])
     h2p = lambda text, id_="": "<h2 class='h2s'" + (' id="' + id_ + '"' if id_ else "") + ">" + text + "</h2>"
     priv_who = mail_a("privacy") if MAIL.get("privacy") else "the address on the about page"
+    # The MCP connector (27 Nov 2026, for a connector directory review: what a remote MCP server receives and how long it keeps it). True
+    # to serve.py: mcp_call() keeps nothing, the service runs with HRN_QUIET=1 (no request log of its own), and nginx's access log holds
+    # the request line (POST /mcp), never the body. If the connector ever stores what it is sent, this section changes first.
+    priv_mcp = (h2p("AI assistants and the MCP connector: what we receive", "mcp")
+                + f"<p>Claude and other AI assistants can search our jobs through the connector at <code>{FULL}/mcp</code>. It needs no account and no key. "
+                  "When an assistant uses it, we receive only what the tool call contains: the search words, whether only remote jobs are wanted, or the job asked for. "
+                  "We answer and do not store those words, and we never see the rest of your conversation. As with every request, the web server’s own log keeps "
+                  "the IP address, the address asked for (/mcp) and the time, for 14 days, for security; the words sent to the connector are not in that log. "
+                  "The connector is read-only: it cannot apply, save or change anything for you.</p>")
     priv_server = (
         h2p("Job alerts by email: what we keep", "alerts")
         + "<p>When you ask for job alerts we keep your email address and the search you chose: the words, the category, the place, remote only or not, the least pay, "
@@ -12887,6 +12896,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
           "Limits on how often something can be done (signing in, signing up, asking for a link, posting, reporting) are counters kept under the IP address, "
           "the email address or a hash of them, and are deleted when their time is over: mostly an hour, a day for the limit on confirmation letters to one address. "
           "The web server’s own log (IP address, page, time) is kept for 14 days for security.</p>"
+        + priv_mcp
         + h2p("Counting visits", "visits")
         + "<p>To know which pages help people and where they come from, the pages report visits to our own server; no other company sees them. "
           "There are no cookies for it and nothing that follows you from one visit to the next: a tab keeps a random number until it is closed. "
@@ -12949,7 +12959,7 @@ document.getElementById('st-again').onclick=function(){f.reset();out.hidden=true
          "It uses your browser’s own speech service: in Chrome that service is run by Google and in Edge by Microsoft, so your words go to them to be "
          "turned into text, under their terms. This site receives none of it and keeps nothing. Typing the answer instead sends nothing anywhere.</p>"
          "<h2 class='h2s'>Your resume</h2><p>A resume you paste on the “For you” page or into a tool is read by a script in your browser. It is never uploaded. The resume builder and the tools keep what you typed in this browser so that it is still there next time.</p>"
-         + (priv_server if api_on else "")
+         + (priv_server if api_on else priv_mcp)
          + "<h2 class='h2s'>What we do not do</h2><p>No advertising trackers, no analytics cookies, no tracking pixels in letters, no selling of data.</p>"
          + ("" if api_on else "<h2 class='h2s'>Third parties</h2><p>The site is served by a hosting provider that, like any web server, sees your IP address when you load a page. Fonts, scripts and images are served from this site, not from other companies. "
                             "When you press “Apply”, you go to the employer's own site, which has its own privacy policy.</p>"
@@ -16628,10 +16638,29 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
           '<text x="46" y="21" fill="#fff" font-family="Inter,system-ui,-apple-system,Segoe UI,sans-serif" font-size="14" font-weight="700">We’re hiring</text>'
           f'<text x="46" y="37" fill="#b9b7ad" font-family="Inter,system-ui,-apple-system,Segoe UI,sans-serif" font-size="11">Open roles on {e(SITE)}</text></svg>', sitemap=False)
     (OUT / ".nojekyll").write_text("")
+    # The manifest is also what the Android app is made from (a Trusted Web Activity, com.jobseveryhour.app, 27 Nov 2026; AGENT_NOTES.md
+    # "The Android app"). "id" keeps an installed app tied to the start address; "shortcuts" are what a long press on the app's icon
+    # offers (Android shows at most four, and each needs an icon); "screenshots" (live pages on a 360 px phone, 1080 x 1920) are shown by
+    # Chrome's install sheet. check.py keeps every one of these fields.
+    app_shots_ = [("home", "Search open jobs from employers' own career pages"), ("search-nurse", "Search results for nurse jobs"),
+                  ("job", "A job page: pay, workplace and the employer's own Apply link"), ("resume-builder", "The free resume builder"),
+                  ("remote", "Remote jobs, newest first")]
+    sc_icon_ = [{"src": f"{P}/brand/icon-192.png", "sizes": "192x192", "type": "image/png"}]
     write("manifest.json", json.dumps({"name": SITE, "short_name": SITE, "start_url": P + "/", "scope": P + "/", "display": "standalone", "background_color": "#ffffff", "theme_color": "#121110",
                                        "icons": [{"src": P + "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}]
                                                 + [{"src": f"{P}/brand/icon-{n_}.png", "sizes": f"{n_}x{n_}", "type": "image/png", "purpose": "any maskable"}
-                                                   for n_ in (192, 512) if (ROOT / "assets" / "brand" / f"icon-{n_}.png").exists()]}), sitemap=False)
+                                                   for n_ in (192, 512) if (ROOT / "assets" / "brand" / f"icon-{n_}.png").exists()],
+                                       "id": P + "/",
+                                       "description": "Search open jobs read from employers' own career pages and rechecked around the clock: remote jobs, "
+                                                      "jobs near you, the newest jobs and a free resume builder. Free, no sign-up.",
+                                       "categories": ["business", "productivity"],
+                                       "shortcuts": [{"name": n_, "short_name": s_, "description": d_, "url": P + u_, "icons": sc_icon_} for n_, s_, d_, u_ in (
+                                           ("Remote jobs", "Remote", "Remote jobs, newest first", "/remote/"),
+                                           ("Jobs near me", "Near me", "Open jobs in your city", "/jobs-near-me/"),
+                                           ("Newest jobs", "New jobs", "Jobs posted in the last days", "/new/"),
+                                           ("Resume builder", "Resume", "Free resume builder with PDF and Word download", "/resume/"))],
+                                       "screenshots": [{"src": f"{P}/brand/app-{f_}.jpg", "sizes": "1080x1920", "type": "image/jpeg", "form_factor": "narrow", "label": l_}
+                                                       for f_, l_ in app_shots_ if (ROOT / "assets" / "brand" / f"app-{f_}.jpg").exists()]}), sitemap=False)
     lap('every narrow page linked up, down and across (crosslinks.py)')
     # every narrow page linked up, down and across (crosslinks.py): long-tail pages must not be orphans
     import crosslinks
@@ -16743,6 +16772,13 @@ self.addEventListener('notificationclick',function(e){{e.notification.close();e.
     if _gc.exists() and re.fullmatch(r"glama_claim_[\w-]+", (_gct := _gc.read_text().strip())):
         (OUT / ".well-known").mkdir(parents=True, exist_ok=True)
         (OUT / ".well-known" / "glama.json").write_text(json.dumps({"$schema": "https://glama.ai/mcp/schemas/connector.json", "claim": _gct}, indent=2) + "\n", encoding="utf-8")
+    # Digital Asset Links for the Android app (27 Nov 2026): the app com.jobseveryhour.app shows the site full screen, without the
+    # browser's address bar, only while this file names the app and the SHA-256 of the certificate it is signed with (config.json
+    # "android_app"). When Google Play signs the app with its own key, that certificate's SHA-256 is added to the list, not swapped in.
+    if (aa_ := CFG.get("android_app") or {}).get("package") and aa_.get("sha256"):
+        write(".well-known/assetlinks.json", json.dumps([{"relation": ["delegate_permission/common.handle_all_urls"],
+                                                          "target": {"namespace": "android_app", "package_name": aa_["package"],
+                                                                     "sha256_cert_fingerprints": aa_["sha256"]}}], indent=2) + "\n", sitemap=False)
     # ShapBot stays allowed (26 Nov 2026): it comes with a "Shap-User" agent, the pattern of an AI assistant's crawler (PerplexityBot /
     # Perplexity-User, GPTBot / ChatGPT-User). The owner wants every AI assistant to read the site, so it is not blocked; its rate is a
     # server matter, not a robots.txt one.

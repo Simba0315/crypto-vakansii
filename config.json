@@ -145,5 +145,9 @@
     "google": "",
     "bing": "",
     "yandex": "f62fc05ecd727624", "pinterest": "1b5bfdb64c35ee33d53387c84643fbbb"
+  },
+  "android_app": {
+    "package": "com.jobseveryhour.app",
+    "sha256": ["BA:6E:6E:7D:A1:E9:BA:34:DF:2E:67:04:27:47:E1:A9:4C:BB:34:37:9B:69:DD:2E:E8:8B:65:2B:7F:D7:C0:90"]
   }
 }
