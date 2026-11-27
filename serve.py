@@ -102,20 +102,30 @@ def brief_card(j):
 # Model Context Protocol over plain HTTP: one POST per JSON-RPC message, the answer in the same response, no session and no stream.
 # Read-only and public, like the site: no account and nothing about the person asking is kept.
 MCP_VERSIONS = ("2025-06-18", "2025-03-26", "2024-11-05")
+# What the jobs are, said the same way in the instructions and in search_jobs (27 Nov 2026: both said "open tech jobs" while the site has
+# every field; the Claude and ChatGPT directories turn down a connector whose words do not match what it does).
+MCP_COVERAGE = ("open jobs in every field: healthcare, engineering, sales, skilled trades, retail, office, education, government and more, "
+                "mostly in the United States, plus remote jobs and jobs in many other countries")
+MCP_SOURCE = ("Every job is read from the employer's own careers page (US federal jobs from USAJOBS), and the lists are read again around the clock, "
+              "so a job the employer takes down leaves the results.")
+# Read-only, never destructive; open world because the jobs are public postings of thousands of employers, not one closed account.
+MCP_READ = {"readOnlyHint": True, "destructiveHint": False, "openWorldHint": True}
 MCP_TOOLS = [
     {"name": "search_jobs", "title": "Search open jobs",
-     "description": "Search the open tech jobs on " + build.SITE + ": every job is read from the employer's own careers page, and the lists are read again around the clock. "
-                    "Words are matched in the title, company, skills, place and text of each posting, best match first. Add 'remote' for remote jobs only.",
+     "description": f"Search {build.SITE}: {MCP_COVERAGE}. {MCP_SOURCE} "
+                    "Words are matched in the title, company, skills, place and text of each posting, best match first, e.g. 'registered nurse houston', "
+                    "'entry level accounting', 'warehouse night shift' or 'python remote'. The word 'remote' (or remote_only) keeps remote jobs only. "
+                    "Each result has the place, the pay when the posting states it, the posting date and the job's page.",
      "inputSchema": {"type": "object", "properties": {
-         "query": {"type": "string", "description": "Words to look for, e.g. 'senior python engineer berlin' or 'solidity remote'"},
+         "query": {"type": "string", "description": "Words to look for: a role, skill, company or place, e.g. 'entry level nurse texas' or 'customer service remote'"},
          "remote_only": {"type": "boolean", "description": "Only remote jobs", "default": False},
          "limit": {"type": "integer", "minimum": 1, "maximum": 20, "default": 10}}, "required": ["query"]},
-     "annotations": {"readOnlyHint": True, "openWorldHint": False}},
+     "annotations": MCP_READ},
     {"name": "get_job", "title": "Read one job",
      "description": "The full posting of one job: the employer's own text, place, pay, when it was posted, when it was last seen open, and the link to apply on the employer's site.",
      "inputSchema": {"type": "object", "properties": {
          "job": {"type": "string", "description": "The job's slug or its page address, as search_jobs gives them"}}, "required": ["job"]},
-     "annotations": {"readOnlyHint": True, "openWorldHint": False}},
+     "annotations": MCP_READ},
 ]
 
 
@@ -151,9 +161,10 @@ def mcp(msg):
     if method == "initialize":
         want = prm.get("protocolVersion")
         return ok({"protocolVersion": want if want in MCP_VERSIONS else MCP_VERSIONS[0], "capabilities": {"tools": {"listChanged": False}},
-                   "serverInfo": {"name": "jobs", "title": build.SITE, "version": "1.0"},
-                   "instructions": f"Open tech jobs from {build.SITE}, read from employers' own careers pages around the clock. search_jobs finds jobs; get_job reads one. "
-                                   "Always give the person the job's page or apply link; you apply on the employer's site."})
+                   "serverInfo": {"name": "jobs", "title": build.SITE, "version": "1.0.2"},
+                   "instructions": f"{build.SITE}: {MCP_COVERAGE}. {MCP_SOURCE} search_jobs finds jobs by words (role, skill, company, place, "
+                                   "'remote', 'entry level'); get_job reads one posting in full. "
+                                   "Always give the person the job's page or apply link; people apply on the employer's site."})
     if method == "ping": return ok({})
     if method == "tools/list": return ok({"tools": MCP_TOOLS})
     if method == "tools/call":

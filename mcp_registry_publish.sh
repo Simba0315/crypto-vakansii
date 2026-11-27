@@ -5,8 +5,11 @@
 # The registry checks the domain: it reads https://jobseveryhour.com/.well-known/mcp-registry-auth (written by build.py from
 # mcp_registry_auth.txt, the public half of an Ed25519 key) and accepts a login signed with the private half, which stays on the
 # owner's Mac in ~/.config/jobseveryhour/ and never in the repository. Run it again with a higher VERSION after a change.
+# The entry below is the same as server.json in github.com/Simba0315/jobseveryhour-mcp: change both together.
+# 1.0.2 (27 Nov 2026): the real coverage (every field, mostly the US; it said nothing of it) and the repository, which the GitHub MCP
+# Registry and VS Code's gallery look for.
 #
-#     VERSION=1.0.1 ./mcp_registry_publish.sh
+#     VERSION=1.0.2 ./mcp_registry_publish.sh
 set -euo pipefail
 KEY="${KEY:-$HOME/.config/jobseveryhour/mcp-registry-ed25519.pem}"
 VERSION="${VERSION:-1.0.0}"
@@ -31,8 +34,9 @@ curl -sS -X POST "$REG/v0/publish" -H "Authorization: Bearer $token" -H 'Content
   "name": "com.jobseveryhour/jobs",
   "title": "Jobs Every Hour",
   "websiteUrl": "https://jobseveryhour.com/api/",
-  "description": "Search open jobs read every hour from employers' own career pages; closed jobs removed",
+  "description": "Jobs in every field, mostly in the US, from employers' own career pages, rechecked around the clock",
   "version": "$VERSION",
+  "repository": {"url": "https://github.com/Simba0315/jobseveryhour-mcp", "source": "github"},
   "remotes": [{"type": "streamable-http", "url": "https://jobseveryhour.com/mcp"}]
 }
 EOF
