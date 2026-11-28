@@ -6318,7 +6318,7 @@ def main():
                                 '<option value="120000">$120K+</option><option value="150000">$150K+</option><option value="180000">$180K+</option><option value="200000">$200K+</option>'
                                 '<option value="250000">$250K+</option><option value="300000">$300K+</option></optgroup></select>'
                                 '<div class="filters" style="margin-top:8px"><label hidden><input type="checkbox" id="f-nosal"> Also show jobs that do not state pay</label></div>')
-              + group("Work style", '<div class="filters"><label><input type="checkbox" id="f-remote"> Remote</label><label><input type="checkbox" id="f-hybrid"> Hybrid</label><label><input type="checkbox" id="f-any"> Work from anywhere</label>'
+              + group("Show only", '<div class="filters"><label><input type="checkbox" id="f-remote"> Remote</label><label><input type="checkbox" id="f-hybrid"> Hybrid</label><label><input type="checkbox" id="f-any"> Work from anywhere</label>'
                                     '<label><input type="checkbox" id="f-entry"> Entry-level</label><label><input type="checkbox" id="f-crypto"> Crypto &amp; web3</label></div>', "f-work")
               + '<details class="morefilters"><summary data-n="">All filters</summary><div class="mf">'
               + group("Search in", '<div class="filters"><label><input type="checkbox" id="f-ti"> Job titles only</label></div>')
