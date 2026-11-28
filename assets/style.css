@@ -3611,6 +3611,8 @@ main.rbp .feats{grid-template-columns:repeat(3,minmax(0,1fr));gap:0 44px}
   main.rbp .rb-actions::-webkit-scrollbar{display:none}
   main.rbp .rb-actions>*{flex:none}
   main.rbp .rb-actions .btn{white-space:nowrap}
+  /* the bar is wider than the screen: the third button is the one a job seeker wants after the downloads (jobs that fit this resume), not the backup file */
+  main.rbp .rb-actions #rb-print{order:1}main.rbp .rb-actions #rb-doc{order:2}main.rbp .rb-actions #rb-match{order:3}main.rbp .rb-actions #rb-json{order:4}main.rbp .rb-actions .rb-tplpick{order:5}main.rbp .rb-actions #rb-clear{order:6}
   main.rbp .rb-tplpick{margin-left:0}
   main.rbp .rb-hint{margin:0 0 14px}
   main.rbp .pane-empty{padding:44px 12px}
