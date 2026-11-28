@@ -175,7 +175,18 @@
   });
   var paintCount = function () {
     count.textContent = total ? total.toLocaleString('en-US') + (total === 1 ? ' job' : ' jobs') : 'No jobs match. Try removing a filter.';
+    // The list leaves out roles open 90+ days and talent pools unless asked; the figure above the list is then lower than the
+    // site's total, so say it here, next to the number, and give the way back in one tap (it was only in "All filters")
+    if (total && fReal && fReal.checked) {
+      count.appendChild(document.createTextNode(' · fresh openings only. '));
+      var more90 = document.createElement('button'); more90.type = 'button'; more90.className = 'linkbtn'; more90.setAttribute('data-old', '1');
+      more90.textContent = 'Include roles open 90+ days';
+      count.appendChild(more90);
+    }
   };
+  count.addEventListener('click', function (ev) {
+    if (ev.target.getAttribute && ev.target.getAttribute('data-old') && fReal) { fReal.checked = false; run(); }
+  });
   // rows of an answer into the list: a new list, or the next page under the rows already there ("Show more")
   var show = function (d, append) {
     clearTimeout(slow);
