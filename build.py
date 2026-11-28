@@ -6277,7 +6277,11 @@ def main():
                                                          for nm_, sl_ in sorted(v_, key=lambda x: x[0].removeprefix("the "))) + "</optgroup>" for g_, v_ in grp_l.items() if v_)
     skill_counts = Counter(t for j in active for t in j["tags"])
     top_skills = [t for t, _ in skill_counts.most_common(18)]
-    skill_chips = "".join(f'<button class="chipbtn" type="button" data-skill="{e(t)}" aria-pressed="false">{e(t)}</button>' for t in top_skills)
+    # a chip that is an abbreviation says what it is next to the name (BLS, CRM, SQL...), and every chip carries the plain line as a hover tip
+    skill_gloss = {"BLS": "life-support certificate", "CRM": "customer database", "SQL": "databases", "AWS": "Amazon cloud", "Agile": "short work cycles"}
+    skill_chips = "".join(f'<button class="chipbtn" type="button" data-skill="{e(t)}" aria-pressed="false"'
+                          + (f' title="{e(skills_info.plain(t))}"' if skills_info.plain(t) else "") + f'>{e(t)}'
+                          + (f' <small class="cgloss">({e(skill_gloss[t])})</small>' if t in skill_gloss else "") + '</button>' for t in top_skills)
     group = lambda label, inner, cls="": f'<div class="fgroup{" " + cls if cls else ""}"><span class="flabel">{label}</span>{inner}</div>'
     # the City box's suggestions: the first part of each posting's place line, most frequent first (the page used to count these
     # from the list of every job, which it no longer downloads)

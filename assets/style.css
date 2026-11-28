@@ -208,6 +208,7 @@ dl.meta time.new{color:var(--green)}
 .chipbtn{font:inherit;font-size:12.5px;font-weight:500;padding:4px 9px;border-radius:4px;border:1px solid var(--line2);background:var(--card);color:var(--muted);cursor:pointer}
 .chipbtn:hover{border-color:var(--text);color:var(--text)}
 .chipbtn[aria-pressed=true]{border-color:var(--hl);background:var(--hl);color:var(--hl-ink);font-weight:650}
+.chipbtn .cgloss{font-size:inherit;font-weight:400;margin-left:3px;opacity:.85}
 .rbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 12px}
 .rbar .note{margin:0;font-size:14px;color:var(--muted)}
 .rbar .btn{margin-top:0}
