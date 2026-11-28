@@ -399,12 +399,14 @@
   var rxEsc = function (x) { return x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); };
   // the cities in today's postings (the build counts them into the City box's suggestions)
   var cityNames = Array.prototype.map.call(($('city-list') || { options: [] }).options, function (o) { return o.value.toLowerCase(); });
+  var wantNear = false, nearGo = null;       // "jobs near me" typed in the box: the visitor's country (from the time zone), not the word "me"
   var smart = function () {
     var text = ' ' + q.value + ' ', took = false;
     var take = function (rx, fn) { if (rx.test(text)) { text = text.replace(rx, ' '); fn(); took = true; } };
     take(/\b(?:work(?:ing)? from anywhere|anywhere in the world|worldwide)\b/i, function () { fAny.checked = true; fRemote.checked = true; });
     take(/\b(?:fully[- ])?remote(?:ly)?\b/i, function () { fRemote.checked = true; });
     if (fHybrid) take(/\bhybrid\b/i, function () { fHybrid.checked = true; });
+    take(/\b(?:(?:near|close to|around) (?:me|my (?:area|location|home))|nearby|in my area)\b/i, function () { wantNear = true; });
     take(/\b(?:entry[- ]level|new[- ]grad(?:uate)?s?|graduate|no experience(?: needed| required)?)\b/i, function () { fEntry.checked = true; });
     // LinkedIn's search reads a plain sentence ("entry level design jobs in the US", 20 Nov 2026): the same here for the type of work,
     // how recent, the perks and "pay listed", each only when its filter is still empty
@@ -459,6 +461,7 @@
       }); });
       if (hit) { loc.value = hit.v; text = text.replace(hit.rx, ' '); took = true; }
     }
+    if (wantNear && !loc.value && nearGo) nearGo();
     if (!loc.value && !city.value.trim() && cityNames.length) {
       var cm = text.match(/\b(?:in|near|at)\s+([a-z][a-z .'-]{1,38}?)\s*$/i);
       if (cm && cityNames.indexOf(cm[1].trim().toLowerCase()) >= 0) { city.value = cm[1].trim(); text = text.replace(cm[0], ' '); took = true; }
@@ -494,6 +497,8 @@
     var b = document.createElement('button'); b.type = 'button'; b.className = 'linkbtn nearbtn';
     b.textContent = 'Near you: only ' + c[0] + ' (' + Number(c[2]).toLocaleString('en-US') + ')';
     b.addEventListener('click', function () { loc.value = c[1]; run(); b.hidden = true; });
+    nearGo = function () { loc.value = c[1]; b.hidden = true; };
+    if (wantNear && !loc.value) { nearGo(); run(); }       // "near me" was typed before the country was known
     b.hidden = !!loc.value;
     loc.addEventListener('change', function () { b.hidden = !!loc.value; });
     count.parentNode.insertBefore(b, count.nextSibling);
