@@ -5836,10 +5836,12 @@ header.site .hact .icon:hover,header.site .hact .hmy:hover{border-color:transpar
 /* ---- green words instead of the marker (owner, 27 Nov 2026: «вместо выделения зеленым сделать зеленый цвет прям», variant 1 of
    three shown to him). The ending of every two-weight heading and every heading's .hl is brand green text, no fill behind it: light
    theme #1f9d55 (3.2:1 on the page, headings only, large and bold), dark theme and the ink panels #5fd486. The "free" chip keeps its
-   own pill. Body-text .hl (if any) keeps the marker: green text that small would be too faint. ---- */
-:is(.khero h1 .hl,main.sp .khero h1 .hl,.hero.v2 h1 .hl,.sec-head h2.tw b,.sec-head.lst h2.tw b,.kcta h2.tw b:not(.free),.alertf h2.tw b,.guide h2.tw2 b,h1 .hl,h2 .hl){
+   own pill. Body-text .hl (if any) keeps the marker: green text that small would be too faint. Plain selector lists, never :is(...):
+   the per-page CSS cut (build.py css_cut) judges each selector of a list alone, and an :is() list naming classes of many kinds of page
+   was dropped from every page (28 Nov 2026: the green words never reached the site). ---- */
+.khero h1 .hl,main.sp .khero h1 .hl,.hero.v2 h1 .hl,.sec-head h2.tw b,.sec-head.lst h2.tw b,.kcta h2.tw b:not(.free),.alertf h2.tw b,.guide h2.tw2 b,h1 .hl,h2 .hl{
   background:none!important;padding:0;margin:0;color:var(--brand)}
-:is(.kpanel.ink,.inkband) :is(h1 .hl,h2.tw b:not(.free),h2.tw2 b,h2 .hl){color:var(--pop)!important}
+.kpanel.ink h1 .hl,.kpanel.ink h2.tw b:not(.free),.kpanel.ink h2.tw2 b,.kpanel.ink h2 .hl,.inkband h1 .hl,.inkband h2.tw b:not(.free),.inkband h2.tw2 b,.inkband h2 .hl{color:var(--pop)!important}
 /* ---- the header on a phone (27 Nov 2026): at 390 px the row (logo, theme, saved jobs, Sign in, menu) needed 43 px more than the screen has, so the menu button was cut off and the menu could not be opened; at 360 px it was 68 px more. Smaller taps in width (44 px high stays), a slightly smaller logo, and below 400 px "Sign in" is a person icon (the word stays for screen readers). Nothing removed. ---- */
 @media(max-width:560px){
   header.site .wrap{gap:8px}
